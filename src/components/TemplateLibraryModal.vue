@@ -18,7 +18,7 @@ export interface LayoutTemplate {
   name: string;
   description: string;
   icon: string;
-  previewLayout: string; // e.g. '[ Текст | Картинка ]'
+  previewLayout: string;
   category: 'Колонки' | 'Крафт и Схемы' | 'Разделы';
   blocks: GuideBlock[];
 }
@@ -26,22 +26,22 @@ export interface LayoutTemplate {
 const templates: LayoutTemplate[] = [
   {
     id: 'tpl_text_image',
-    name: 'Текст + Иллюстрация',
-    description: 'Две колонки 50/50: описание слева, скриншот справа.',
+    name: 'Текст + Иллюстрация (3/6 + 3/6)',
+    description: 'Две равные колонки по 3 спана: описание слева, картинка справа.',
     icon: 'Layout',
-    previewLayout: '[ Текст | Картинка ]',
+    previewLayout: '[ 3 спана | 3 спана ]',
     category: 'Колонки',
     blocks: [
       {
         id: 'tpl_b1',
         type: 'text',
-        width: 'half',
+        span: 'span-3',
         textContent: 'Опишите пошаговые действия или подробности процесса...'
       },
       {
         id: 'tpl_b2',
         type: 'image',
-        width: 'half',
+        span: 'span-3',
         imageUrl: '',
         imageCaption: 'Иллюстрация к шагу'
       }
@@ -49,29 +49,29 @@ const templates: LayoutTemplate[] = [
   },
   {
     id: 'tpl_image_text_image',
-    name: 'Картинка + Текст + Картинка',
-    description: 'Три колонки по 33%: картинка слева, описание по центру, картинка справа.',
+    name: 'Картинка + Текст + Картинка (2/6 + 2/6 + 2/6)',
+    description: 'Три колонки по 2 спана: картинка слева, описание в центре, картинка справа.',
     icon: 'Columns3',
-    previewLayout: '[ Картинка | Текст | Картинка ]',
+    previewLayout: '[ 2 спана | 2 спана | 2 спана ]',
     category: 'Колонки',
     blocks: [
       {
         id: 'tpl_b3_1',
         type: 'image',
-        width: 'third',
+        span: 'span-2',
         imageUrl: '',
         imageCaption: 'Вид слева'
       },
       {
         id: 'tpl_b3_2',
         type: 'text',
-        width: 'third',
+        span: 'span-2',
         textContent: 'Пояснение к иллюстрациям и сравнительные харатеристики...'
       },
       {
         id: 'tpl_b3_3',
         type: 'image',
-        width: 'third',
+        span: 'span-2',
         imageUrl: '',
         imageCaption: 'Вид справа'
       }
@@ -79,22 +79,22 @@ const templates: LayoutTemplate[] = [
   },
   {
     id: 'tpl_text_crafting',
-    name: 'Описание + Рецепт крафта',
-    description: 'Две колонки: описание с советом слева и интерактивная сетка верстака 3x3 справа.',
+    name: 'Описание + Рецепт крафта (3/6 + 3/6)',
+    description: 'Две колонки по 3 спана: описание процесса слева и рецепт крафта справа.',
     icon: 'Grid',
-    previewLayout: '[ Текст + Совет | Крафт 3x3 ]',
+    previewLayout: '[ 3 спана Текст | 3 спана Крафт ]',
     category: 'Крафт и Схемы',
     blocks: [
       {
         id: 'tpl_cr1',
         type: 'text',
-        width: 'half',
+        span: 'span-3',
         textContent: 'Для сборки данного компонента вам потребуются базовые ресурсы...'
       },
       {
         id: 'tpl_cr2',
         type: 'crafting',
-        width: 'half',
+        span: 'span-3',
         craftingGrid: Array(9).fill(null).map((_, i) => ({ index: i, item: null, count: 1 })),
         craftingOutput: { index: 9, item: PRESET_ITEMS[0], count: 1 }
       }
@@ -102,16 +102,16 @@ const templates: LayoutTemplate[] = [
   },
   {
     id: 'tpl_multi_checklist',
-    name: 'Схема постройки + Чек-лист',
-    description: 'Две колонки: конструктор слоев постройки слева и пошаговый чек-лист справа.',
+    name: 'Схема постройки + Чек-лист (3/6 + 3/6)',
+    description: 'Две колонки: схема слоев постройки слева и пошаговый чек-лист справа.',
     icon: 'Layers',
-    previewLayout: '[ Мультиструктура | Чек-лист ]',
+    previewLayout: '[ 3 спана Схема | 3 спана Чек-лист ]',
     category: 'Крафт и Схемы',
     blocks: [
       {
         id: 'tpl_mc1',
         type: 'multiblock',
-        width: 'half',
+        span: 'span-3',
         gridSize: 3,
         palette: [
           { id: 'reactor_casing', name: 'Корпус реактора', icon: 'Box', color: '#475569' },
@@ -125,7 +125,7 @@ const templates: LayoutTemplate[] = [
       {
         id: 'tpl_mc2',
         type: 'checklist',
-        width: 'half',
+        span: 'span-3',
         checklistTitle: 'Этапы постройки',
         checklistItems: [
           { id: 'mc_ch1', text: 'Заложить фундамент из корпусных блоков Y=1', completed: false },
@@ -137,10 +137,10 @@ const templates: LayoutTemplate[] = [
   },
   {
     id: 'tpl_warning_section',
-    name: 'Раздел с Важным Предупреждением',
-    description: 'Полная ширина: Заголовок, а снизу описание слева и блок предупреждения справа.',
+    name: 'Раздел с Важным Предупреждением (6/6 + 3/6 + 3/6)',
+    description: 'Заголовок на все 6 колонок, далее описание (3 спана) и блок предупреждения (3 спана).',
     icon: 'AlertTriangle',
-    previewLayout: '[ Заголовок H2 ]\n[ Текст | Предупреждение ]',
+    previewLayout: '[ 6 спанов Заголовок ]\n[ 3 спана Текст | 3 спана Предупреждение ]',
     category: 'Разделы',
     blocks: [
       {
@@ -148,18 +148,18 @@ const templates: LayoutTemplate[] = [
         type: 'heading',
         headingText: 'Правила Безопасности & Техника Боя',
         headingLevel: 'h2',
-        width: 'full'
+        span: 'span-6'
       },
       {
         id: 'tpl_w2',
         type: 'text',
-        width: 'half',
+        span: 'span-3',
         textContent: 'Перед началом боя убедитесь в наличии полного комплекта снаряжения...'
       },
       {
         id: 'tpl_w3',
         type: 'callout',
-        width: 'half',
+        span: 'span-3',
         calloutType: 'warning',
         calloutTitle: 'Внимание!',
         calloutText: 'Не заходите в зону без соответствия тира экипировки!'
@@ -172,7 +172,6 @@ const selectedCategory = ref<string>('Все');
 const categoriesList = ['Все', 'Колонки', 'Крафт и Схемы', 'Разделы'];
 
 const applyTemplate = (tpl: LayoutTemplate) => {
-  // Generate unique IDs for all blocks in template
   const newBlocks: GuideBlock[] = JSON.parse(JSON.stringify(tpl.blocks)).map((b: GuideBlock, idx: number) => ({
     ...b,
     id: `b_tpl_${Date.now()}_${idx}`
@@ -192,8 +191,8 @@ const applyTemplate = (tpl: LayoutTemplate) => {
             <IconRenderer name="Layout" size="20" />
           </div>
           <div>
-            <h3 class="text-base font-bold text-white">Библиотека шаблонов макета</h3>
-            <p class="text-xs text-dark-muted">Готовые комбинации блоков в 1, 2 или 3 колонки</p>
+            <h3 class="text-base font-bold text-white">Библиотека шаблонов макета (6 колонок)</h3>
+            <p class="text-xs text-dark-muted">Готовые сочетания блоков в 6-колоночной сетке</p>
           </div>
         </div>
         <button 
@@ -246,7 +245,6 @@ const applyTemplate = (tpl: LayoutTemplate) => {
             </p>
           </div>
 
-          <!-- Layout Wireframe Preview -->
           <div class="bg-[#0c0d0e] border border-[#26292d] p-3 rounded-lg flex items-center justify-center font-mono text-xs text-emerald-400 font-bold border-dashed group-hover:border-emerald-500/40">
             {{ tpl.previewLayout }}
           </div>
@@ -263,7 +261,7 @@ const applyTemplate = (tpl: LayoutTemplate) => {
 
       <!-- Footer -->
       <div class="px-6 py-3.5 border-t border-[#26292d] bg-[#121416] flex items-center justify-between">
-        <span class="text-xs text-dark-muted">Нажмите на шаблон, чтобы мгновенно добавить группу блоков в гайд</span>
+        <span class="text-xs text-dark-muted">Нажмите на шаблон для моментальной вставки группы блоков в 6-колоночную сетку</span>
         <button 
           type="button"
           @click="emit('close')"

@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import CalloutBlock from './CalloutBlock.vue';
 import LayerPainter from './LayerPainter.vue';
-import type { Guide, BlockWidth, BlockAlign, BlockVariant } from '../types/guide';
+import type { Guide, BlockSpan, BlockAlign, BlockVariant } from '../types/guide';
 
 const props = defineProps<{
   guide: Guide;
@@ -37,17 +37,19 @@ const scrollToBlock = (id: string) => {
   }
 };
 
-const getWidthClass = (width?: BlockWidth) => {
-  switch (width) {
-    case 'half':
-      return 'w-full md:w-[calc(50%-0.75rem)]';
-    case 'third':
-      return 'w-full md:w-[calc(33.333%-0.75rem)]';
-    case 'two-thirds':
-      return 'w-full md:w-[calc(66.666%-0.75rem)]';
-    case 'full':
+const getGridSpanClass = (span?: BlockSpan) => {
+  switch (span) {
+    case 'span-3':
+      return 'col-span-6 md:col-span-3'; // 3 of 6 (50%)
+    case 'span-2':
+      return 'col-span-6 md:col-span-2'; // 2 of 6 (33%)
+    case 'span-4':
+      return 'col-span-6 md:col-span-4'; // 4 of 6 (66%)
+    case 'span-1':
+      return 'col-span-6 md:col-span-1'; // 1 of 6 (16.6%)
+    case 'span-6':
     default:
-      return 'w-full';
+      return 'col-span-6'; // 6 of 6 (100%)
   }
 };
 
@@ -68,7 +70,7 @@ const getVariantClass = (variant?: BlockVariant) => {
 
 <template>
   <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] flex flex-col">
-    <!-- Top Reader Navigation Bar -->
+    <!-- Top Reader Navigation Bar (6/6 columns header) -->
     <header class="h-16 border-b border-[#26292d] bg-[#16181a]/80 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-8 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <button 
@@ -110,13 +112,13 @@ const getVariantClass = (variant?: BlockVariant) => {
       </div>
     </header>
 
-    <!-- Main Layout Container -->
-    <div class="flex-1 flex max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
+    <!-- 6-Column Grid Layout: 1 column sidebar + 5 columns content zone -->
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-6 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
       
-      <!-- LEFT SIDEBAR -->
+      <!-- SIDEBAR: 1 narrow column out of 6 -->
       <aside :class="[
-        'fixed lg:sticky top-20 z-40 lg:z-0 w-64 shrink-0 bg-[#16181a] lg:bg-transparent border lg:border-none border-[#26292d] rounded-2xl p-4 transition-all duration-300 max-h-[calc(100vh-6rem)] overflow-y-auto',
-        isMobileNavOpen ? 'left-4 shadow-2xl' : '-left-80 lg:left-0'
+        'col-span-1 fixed lg:sticky top-20 z-40 lg:z-0 bg-[#16181a] lg:bg-transparent border lg:border-none border-[#26292d] rounded-2xl p-4 transition-all duration-300 max-h-[calc(100vh-6rem)] overflow-y-auto',
+        isMobileNavOpen ? 'left-4 shadow-2xl w-64' : '-left-80 lg:left-0 w-full'
       ]">
         <div class="space-y-6">
           <div class="flex items-center justify-between pb-3 border-b border-[#26292d]">
@@ -151,8 +153,8 @@ const getVariantClass = (variant?: BlockVariant) => {
         </div>
       </aside>
 
-      <!-- CENTER ARTICLE -->
-      <main class="flex-1 min-w-0 max-w-4xl space-y-8">
+      <!-- CONTENT ZONE: 5 columns out of 6 -->
+      <main class="col-span-1 lg:col-span-5 min-w-0 space-y-8">
         <article class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-4">
           <div class="flex flex-wrap items-center gap-2">
             <span class="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-semibold border border-cyan-500/30">
@@ -174,15 +176,15 @@ const getVariantClass = (variant?: BlockVariant) => {
           </div>
         </article>
 
-        <!-- Dynamic Flex Blocks Container -->
-        <div class="flex flex-wrap gap-6 items-start">
+        <!-- Dynamic 6-Column Grid for Blocks -->
+        <div class="grid grid-cols-6 gap-6 items-start">
           <div 
             v-for="block in guide.blocks" 
             :key="block.id" 
             :id="`block-${block.id}`"
             :class="[
               'scroll-mt-24 transition-all',
-              getWidthClass(block.width)
+              getGridSpanClass(block.span)
             ]"
           >
             <!-- Heading Block -->
@@ -329,32 +331,6 @@ const getVariantClass = (variant?: BlockVariant) => {
           </div>
         </div>
       </main>
-
-      <!-- RIGHT SIDEBAR: Table of Contents -->
-      <aside v-if="tableOfContents.length > 0" class="hidden xl:block w-56 shrink-0 sticky top-20 h-fit space-y-4">
-        <div class="bg-[#16181a] border border-[#26292d] p-4 rounded-2xl space-y-3">
-          <div class="text-xs font-bold uppercase tracking-wider text-dark-muted flex items-center gap-1.5 border-b border-[#26292d] pb-2">
-            <IconRenderer name="Sliders" size="14" class="text-cyan-400" />
-            Содержание статьи
-          </div>
-
-          <nav class="space-y-1">
-            <button
-              v-for="item in tableOfContents"
-              :key="item.id"
-              @click="scrollToBlock(item.id)"
-              :class="[
-                'w-full text-left text-xs py-1.5 px-2 rounded-lg transition-all line-clamp-1',
-                activeHeadingId === item.id 
-                  ? 'bg-cyan-500/15 text-cyan-300 font-semibold border-l-2 border-cyan-400' 
-                  : 'text-dark-muted hover:text-white hover:bg-[#121416]'
-              ]"
-            >
-              {{ item.text }}
-            </button>
-          </nav>
-        </div>
-      </aside>
 
     </div>
   </div>

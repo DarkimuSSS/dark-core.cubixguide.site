@@ -6,7 +6,7 @@ import LayerPainter from './LayerPainter.vue';
 import CraftingSlotPicker from './CraftingSlotPicker.vue';
 import ImportExportModal from './ImportExportModal.vue';
 import TemplateLibraryModal from './TemplateLibraryModal.vue';
-import type { Guide, GuideBlock, Category, Difficulty, CraftingSlot, BlockType, BlockWidth, BlockAlign, BlockVariant } from '../types/guide';
+import type { Guide, GuideBlock, Category, Difficulty, CraftingSlot, BlockType, BlockSpan, BlockAlign, BlockVariant } from '../types/guide';
 import { PRESET_ITEMS } from '../data/presetItems';
 
 const props = defineProps<{
@@ -99,10 +99,10 @@ const addBlockAt = (index: number, type: BlockType) => {
 
   switch (type) {
     case 'heading':
-      newBlock = { id: `b_${Date.now()}`, type: 'heading', headingText: 'Новый раздел', headingLevel: 'h2', width: 'full' };
+      newBlock = { id: `b_${Date.now()}`, type: 'heading', headingText: 'Новый раздел', headingLevel: 'h2', span: 'span-6' };
       break;
     case 'text':
-      newBlock = { id: `b_${Date.now()}`, type: 'text', textContent: 'Опишите пошаговые инструкции или пояснения к гайду...', width: 'full' };
+      newBlock = { id: `b_${Date.now()}`, type: 'text', textContent: 'Опишите пошаговые инструкции или пояснения к гайду...', span: 'span-6' };
       break;
     case 'callout':
       newBlock = { 
@@ -111,14 +111,14 @@ const addBlockAt = (index: number, type: BlockType) => {
         calloutType: 'tip', 
         calloutTitle: 'Полезный совет', 
         calloutText: 'Добавьте важное примечание для игроков.',
-        width: 'full'
+        span: 'span-6'
       };
       break;
     case 'crafting':
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'crafting',
-        width: 'full',
+        span: 'span-6',
         craftingGrid: Array(9).fill(null).map((_, i) => ({ index: i, item: null, count: 1 })),
         craftingOutput: { index: 9, item: PRESET_ITEMS[0], count: 1 }
       };
@@ -127,7 +127,7 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'multiblock',
-        width: 'full',
+        span: 'span-6',
         gridSize: 3,
         palette: [
           { id: 'reactor_casing', name: 'Корпус реактора', icon: 'Box', color: '#475569' },
@@ -143,7 +143,7 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'checklist',
-        width: 'full',
+        span: 'span-6',
         checklistTitle: 'Чек-лист выполнения',
         checklistItems: [
           { id: 'c1', text: 'Собрать необходимые ресурсы', completed: false },
@@ -155,7 +155,7 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'image',
-        width: 'full',
+        span: 'span-6',
         imageUrl: '',
         imageCaption: 'Подпись к скриншоту / иллюстрации'
       };
@@ -166,13 +166,11 @@ const addBlockAt = (index: number, type: BlockType) => {
   emit('update:guide', { ...props.guide, blocks: newBlocks });
 };
 
-// Add Template Blocks Group
 const handleAppendTemplate = (templateBlocks: GuideBlock[]) => {
   const newBlocks = [...props.guide.blocks, ...templateBlocks];
   emit('update:guide', { ...props.guide, blocks: newBlocks });
 };
 
-// Crafting Slot Picker trigger
 const openSlotPicker = (blockId: string, slotIndex: number, isOutput: boolean = false) => {
   const block = props.guide.blocks.find(b => b.id === blockId);
   if (!block) return;
@@ -207,7 +205,6 @@ const handleSaveSlot = (updatedSlot: CraftingSlot) => {
   updateBlock(newBlock);
 };
 
-// Checklist helpers
 const addChecklistItem = (block: GuideBlock) => {
   const items = [...(block.checklistItems || [])];
   items.push({ id: `chk_${Date.now()}`, text: 'Новый этап выполнения', completed: false });
@@ -233,17 +230,20 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
   reader.readAsDataURL(file);
 };
 
-const getWidthClass = (width?: BlockWidth) => {
-  switch (width) {
-    case 'half':
-      return 'w-full md:w-[calc(50%-0.75rem)]';
-    case 'third':
-      return 'w-full md:w-[calc(33.333%-0.75rem)]';
-    case 'two-thirds':
-      return 'w-full md:w-[calc(66.666%-0.75rem)]';
-    case 'full':
+// 6-Column Grid Span CSS Helper
+const getGridSpanClass = (span?: BlockSpan) => {
+  switch (span) {
+    case 'span-3':
+      return 'col-span-6 md:col-span-3'; // 3 of 6 (50%)
+    case 'span-2':
+      return 'col-span-6 md:col-span-2'; // 2 of 6 (33%)
+    case 'span-4':
+      return 'col-span-6 md:col-span-4'; // 4 of 6 (66%)
+    case 'span-1':
+      return 'col-span-6 md:col-span-1'; // 1 of 6 (16.6%)
+    case 'span-6':
     default:
-      return 'w-full';
+      return 'col-span-6'; // 6 of 6 (100%)
   }
 };
 
@@ -263,25 +263,24 @@ const getVariantClass = (variant?: BlockVariant) => {
 </script>
 
 <template>
-  <div class="max-w-5xl mx-auto space-y-6 pb-24">
+  <div class="max-w-6xl mx-auto space-y-6 pb-24">
     <!-- Top Action Toolbar -->
     <div class="sticky top-4 z-30 bg-[#16181a]/90 backdrop-blur-md border border-[#26292d] p-3 rounded-2xl shadow-2xl flex items-center justify-between gap-3">
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Гибкий Конструктор
+          Сетка 6 колонок
         </span>
       </div>
 
       <div class="flex items-center gap-2">
-        <!-- Layout Template Button -->
         <button
           type="button"
           @click="isTemplateModalOpen = true"
           class="px-3.5 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
         >
           <IconRenderer name="Layout" size="14" />
-          Шаблоны макетов
+          Шаблоны колонок
         </button>
 
         <button
@@ -380,14 +379,14 @@ const getVariantClass = (variant?: BlockVariant) => {
       </div>
     </div>
 
-    <!-- Flexible Resizable Blocks Layout Container -->
-    <div class="flex flex-wrap gap-6 items-start">
+    <!-- 6-Column Grid Layout Container for Blocks -->
+    <div class="grid grid-cols-6 gap-6 items-start">
       <div 
         v-for="(block, index) in guide.blocks" 
         :key="block.id"
         :class="[
           'group relative p-5 rounded-2xl transition-all shadow-md',
-          getWidthClass(block.width),
+          getGridSpanClass(block.span),
           getVariantClass(block.variant)
         ]"
       >
@@ -399,6 +398,7 @@ const getVariantClass = (variant?: BlockVariant) => {
               {{ block.type }}
             </span>
 
+            <!-- Alignment -->
             <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d]">
               <button 
                 type="button" 
@@ -428,30 +428,39 @@ const getVariantClass = (variant?: BlockVariant) => {
           </div>
 
           <div class="flex items-center gap-1.5">
+            <!-- 6-Column Span Selector -->
             <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d]">
               <button 
                 type="button"
-                @click="updateBlock({ ...block, width: 'full' })"
-                :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.width === 'full' || !block.width ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
-                title="Ширина 100%"
+                @click="updateBlock({ ...block, span: 'span-6' })"
+                :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.span === 'span-6' || !block.span ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
+                title="6/6 (100%)"
               >
-                100%
+                6/6
               </button>
               <button 
                 type="button"
-                @click="updateBlock({ ...block, width: 'half' })"
-                :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.width === 'half' ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
-                title="Ширина 50% (два в ряд)"
+                @click="updateBlock({ ...block, span: 'span-3' })"
+                :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.span === 'span-3' ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
+                title="3/6 (50%)"
               >
-                50%
+                3/6
               </button>
               <button 
                 type="button"
-                @click="updateBlock({ ...block, width: 'third' })"
-                :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.width === 'third' ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
-                title="Ширина 33% (три в ряд)"
+                @click="updateBlock({ ...block, span: 'span-2' })"
+                :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.span === 'span-2' ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
+                title="2/6 (33%)"
               >
-                33%
+                2/6
+              </button>
+              <button 
+                type="button"
+                @click="updateBlock({ ...block, span: 'span-4' })"
+                :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.span === 'span-4' ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
+                title="4/6 (66%)"
+              >
+                4/6
               </button>
             </div>
 
