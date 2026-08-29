@@ -61,6 +61,57 @@ const updateBlock = (updatedBlock: GuideBlock) => {
   }
 };
 
+// Convert a single standalone block into a multi-block Section Column Stack
+const convertToColumnStack = (index: number, subType: BlockType = 'text') => {
+  const newBlocks = [...props.guide.blocks];
+  const targetBlock = newBlocks[index];
+
+  const width = targetBlock.customWidth || 70;
+  const rightWidth = Math.max(15, 100 - width);
+
+  const subBlock: GuideBlock = {
+    id: `sb_${Date.now()}`,
+    type: subType,
+    customWidth: 100,
+    headingText: subType === 'heading' ? 'Второй заголовок' : undefined,
+    textContent: subType === 'text' ? 'Второй блок в этой левой колонке...' : undefined,
+    calloutType: 'warning',
+    calloutTitle: 'Важная деталь',
+    calloutText: 'Предупреждение к левой колонке',
+    imageUrl: '',
+    imageCaption: 'Иллюстрация'
+  };
+
+  const sectionBlock: GuideBlock = {
+    id: `sec_${Date.now()}`,
+    type: 'section',
+    customWidth: 100,
+    columns: [
+      {
+        id: `col_left_${Date.now()}`,
+        span: width >= 66 ? 'span-4' : 'span-3',
+        blocks: [{ ...targetBlock, customWidth: 100 }, subBlock]
+      },
+      {
+        id: `col_right_${Date.now()}`,
+        span: width >= 66 ? 'span-2' : 'span-3',
+        blocks: [
+          {
+            id: `right_b_${Date.now()}`,
+            type: 'image',
+            imageUrl: '',
+            imageCaption: 'Правый блок на всю высоту колонки',
+            customWidth: 100
+          }
+        ]
+      }
+    ]
+  };
+
+  newBlocks[index] = sectionBlock;
+  emit('update:guide', { ...props.guide, blocks: newBlocks });
+};
+
 // Mouse Drag Resizing Logic
 const startResizing = (e: MouseEvent, block: GuideBlock) => {
   e.preventDefault();
@@ -407,7 +458,7 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Интерактивное растягивание мышью
+          Интерактивный Конструктор Стек-Колонок
         </span>
       </div>
 
@@ -556,7 +607,7 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
           <div class="flex items-center justify-between border-b border-[#26292d] pb-2 mb-4">
             <span class="text-xs font-bold text-cyan-400 flex items-center gap-2">
               <IconRenderer name="Layout" size="14" />
-              Составная Секция (Несколько блоков стопкой)
+              Составная Секция (Несколько блоков в одной колонке)
             </span>
             <div class="flex items-center gap-2">
               <button @click="duplicateBlock(index)" class="p-1 text-cyan-400 hover:text-cyan-300 rounded"><IconRenderer name="Copy" size="13" /></button>
@@ -642,7 +693,7 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
         </template>
 
         <template v-else>
-          <!-- Floating Controls Bar with Custom % Input & Quick Presets -->
+          <!-- Floating Controls Bar with Custom % Input & Quick Presets & Stack Action -->
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#26292d] pb-2 mb-3">
             <div class="flex items-center gap-2">
               <span class="text-[11px] font-bold uppercase tracking-wider text-dark-muted flex items-center gap-1">
@@ -680,6 +731,17 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
             </div>
 
             <div class="flex items-center gap-1.5">
+              <!-- Fast Stack Action: Add 2nd block into this column! -->
+              <button
+                type="button"
+                @click="convertToColumnStack(index, 'text')"
+                class="px-2 py-0.5 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold rounded flex items-center gap-1 transition-all"
+                title="Добавить 2-й блок снизу в эту же левую колонку"
+              >
+                <IconRenderer name="Plus" size="12" />
+                +2-й блок в колонку
+              </button>
+
               <!-- Custom Width Percentage Selector / Input -->
               <div class="flex items-center bg-[#0c0d0e] px-2 py-0.5 rounded border border-[#26292d] gap-1 text-[10px]">
                 <span class="text-dark-muted font-semibold">Ширина:</span>
