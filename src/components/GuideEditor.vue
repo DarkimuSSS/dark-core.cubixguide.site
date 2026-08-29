@@ -591,63 +591,93 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto space-y-6 pb-24">
-    <!-- Top Action Toolbar -->
-    <div class="sticky top-4 z-30 bg-[#16181a]/90 backdrop-blur-md border border-[#26292d] p-3 rounded-2xl shadow-2xl flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2">
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Интерактивное Перетягивание Колонок Мышкой
-        </span>
-      </div>
-
-      <div class="flex items-center gap-2">
+  <div class="max-w-6xl mx-auto space-y-6 pb-24 relative">
+    
+    <!-- COMPACT FLOATING VERTICAL TOOLBAR DOCK (POSITIONED RIGHT) -->
+    <aside class="fixed top-24 right-4 z-40 bg-[#16181a]/95 backdrop-blur-md border border-[#26292d] p-2 rounded-2xl shadow-2xl flex flex-col gap-2.5 items-center">
+      <!-- 1. Layout Templates -->
+      <div class="relative group/tool">
         <button
           type="button"
           @click="isTemplateModalOpen = true"
-          class="px-3.5 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
+          class="w-10 h-10 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center transition-all shadow-md"
         >
-          <IconRenderer name="Layout" size="14" />
-          Шаблоны колонок
+          <IconRenderer name="Layout" size="18" />
         </button>
+        <!-- Hover Context Tooltip -->
+        <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
+          <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+            Библиотека шаблонов колонок
+          </div>
+        </div>
+      </div>
 
+      <!-- 2. JSON Import/Export -->
+      <div class="relative group/tool">
         <button
           type="button"
           @click="isImportExportOpen = true"
-          class="px-3 py-1.5 rounded-lg border border-[#26292d] bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white text-xs font-medium flex items-center gap-1.5 transition-all"
+          class="w-10 h-10 rounded-xl bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white border border-[#26292d] flex items-center justify-center transition-all"
         >
-          <IconRenderer name="FileText" size="14" />
-          JSON
+          <IconRenderer name="FileText" size="18" />
         </button>
+        <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
+          <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+            Импорт / Экспорт JSON
+          </div>
+        </div>
+      </div>
 
+      <!-- 3. Preview Wiki Reader -->
+      <div class="relative group/tool">
         <button
           type="button"
           @click="emit('toggle-preview')"
-          class="px-3.5 py-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
+          class="w-10 h-10 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 flex items-center justify-center transition-all shadow-md"
         >
-          <IconRenderer name="Eye" size="14" />
-          Просмотр
+          <IconRenderer name="Eye" size="18" />
         </button>
+        <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
+          <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+            Предпросмотр Вики
+          </div>
+        </div>
+      </div>
 
+      <div class="w-full h-[1px] bg-[#26292d] my-0.5"></div>
+
+      <!-- 4. Save Guide to DB -->
+      <div class="relative group/tool">
         <button
           type="button"
           @click="emit('publish')"
-          class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-950/50"
+          class="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all shadow-lg shadow-emerald-950/50"
         >
-          <IconRenderer name="Check" size="14" />
-          Сохранить
+          <IconRenderer name="Check" size="18" />
         </button>
+        <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
+          <div class="bg-emerald-950 border border-emerald-500/50 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+            Сохранить гайд в базу данных
+          </div>
+        </div>
+      </div>
 
+      <!-- 5. Delete Guide -->
+      <div class="relative group/tool">
         <button
           type="button"
           @click="emit('delete')"
-          class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-semibold transition-all"
-          title="Удалить гайд"
+          class="w-10 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center transition-all"
         >
-          <IconRenderer name="Trash2" size="16" />
+          <IconRenderer name="Trash2" size="18" />
         </button>
+        <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
+          <div class="bg-rose-950 border border-rose-500/50 text-rose-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+            Удалить этот гайд
+          </div>
+        </div>
       </div>
-    </div>
+    </aside>
 
     <!-- Meta Header Card -->
     <div class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-5">
