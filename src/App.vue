@@ -1,16 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import GuideEditor from './components/GuideEditor.vue';
 import GuideView from './components/GuideView.vue';
 import IconRenderer from './components/IconRenderer.vue';
+import AuthModal from './components/AuthModal.vue';
 import { PRESET_ITEMS } from './data/presetItems';
 import type { Guide } from './types/guide';
 
 const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
 const activeGuide = ref<Guide | null>(null);
-const mode = ref<'editor' | 'reader'>('editor');
+
+// DEFAULT MODE: Always default to 'reader' (Вики / База Знаний) for regular readers!
+const mode = ref<'editor' | 'reader'>('reader');
 const isLoading = ref<boolean>(true);
+
+// Auth & Protection State
+const isAuthModalOpen = ref(false);
+const isAuthenticated = ref(false);
 
 const hasUnsavedDraft = ref<boolean>(false);
 const draftSavedTime = ref<string>('');
@@ -22,6 +29,45 @@ const showToast = (msg: string) => {
   setTimeout(() => {
     toastMessage.value = '';
   }, 3000);
+};
+
+// Check Session Auth Status
+onMounted(() => {
+  const savedAuth = sessionStorage.getItem('cubix_author_authed');
+  if (savedAuth === 'true') {
+    isAuthenticated.value = true;
+  }
+  fetchGuides();
+  window.addEventListener('beforeunload', handleBeforeUnload);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload);
+});
+
+const openEditorProtection = () => {
+  if (isAuthenticated.value) {
+    mode.value = 'editor';
+  } else {
+    isAuthModalOpen.value = true;
+  }
+};
+
+const handleAuthentication = (success: boolean) => {
+  if (success) {
+    isAuthenticated.value = true;
+    sessionStorage.setItem('cubix_author_authed', 'true');
+    isAuthModalOpen.value = false;
+    mode.value = 'editor';
+    showToast('Доступ автора подтвержден!');
+  }
+};
+
+const logoutAuthor = () => {
+  isAuthenticated.value = false;
+  sessionStorage.removeItem('cubix_author_authed');
+  mode.value = 'reader';
+  showToast('Вы вышли из режима редактирования');
 };
 
 // Check & Save Draft in LocalStorage
@@ -105,7 +151,7 @@ const fetchGuides = async () => {
         activeGuideId.value = data[0].meta.id;
       }
       const draft = checkDraftInLocalStorage(activeGuideId.value);
-      if (draft) {
+      if (draft && isAuthenticated.value) {
         activeGuide.value = draft;
       } else {
         const current = data.find(g => g.meta.id === activeGuideId.value);
@@ -122,21 +168,12 @@ const fetchGuides = async () => {
   }
 };
 
-onMounted(() => {
-  fetchGuides();
-  window.addEventListener('beforeunload', handleBeforeUnload);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('beforeunload', handleBeforeUnload);
-});
-
 const selectGuide = (guideId: string) => {
   activeGuideId.value = guideId;
   const draft = checkDraftInLocalStorage(guideId);
-  if (draft) {
+  if (draft && isAuthenticated.value) {
     activeGuide.value = draft;
-    showToast(`Загружен автосохраненный черновик (${draftSavedTime.value})`);
+    showToast(`Загружен черновик (${draftSavedTime.value})`);
   } else {
     const found = guides.value.find(g => g.meta.id === guideId);
     if (found) {
@@ -152,6 +189,11 @@ const updateActiveGuide = (updated: Guide) => {
 };
 
 const createNewGuide = async () => {
+  if (!isAuthenticated.value) {
+    isAuthModalOpen.value = true;
+    return;
+  }
+
   const newGuide: Guide = {
     meta: {
       id: `guide_${Date.now()}`,
@@ -255,7 +297,7 @@ const handleDeleteGuide = async () => {
 
 <template>
   <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] font-sans antialiased">
-    <!-- Top Bar -->
+    <!-- Top Reader Header Bar -->
     <header class="bg-[#16181a] border-b border-[#26292d] h-16 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40">
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/50">
@@ -268,16 +310,16 @@ const handleDeleteGuide = async () => {
             <span class="text-base font-extrabold text-white tracking-tight">CubixGuide</span>
             <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">База Знаний</span>
           </div>
-          <p class="text-[11px] text-dark-muted hidden sm:block">Платформа интерактивных гайдов Minecraft</p>
+          <p class="text-[11px] text-dark-muted hidden sm:block">Интерактивные руководства для игроков</p>
         </div>
       </div>
 
-      <!-- Center Guide Switcher & Mode Toggles -->
+      <!-- Center & Right Navigation -->
       <div class="flex items-center gap-2 sm:gap-3">
-        <!-- Unsaved LocalStorage Draft Alert Badge -->
-        <div v-if="hasUnsavedDraft" class="hidden lg:flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl">
+        <!-- Draft restoration banner -->
+        <div v-if="hasUnsavedDraft && isAuthenticated" class="hidden lg:flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl">
           <IconRenderer name="Sliders" size="14" class="text-amber-400 animate-pulse" />
-          <span class="text-[11px] text-amber-300 font-semibold">Черновик в памяти ({{ draftSavedTime }})</span>
+          <span class="text-[11px] text-amber-300 font-semibold">Черновик ({{ draftSavedTime }})</span>
           <button @click="restoreDraft" class="text-[10px] bg-amber-600 text-white font-bold px-2 py-0.5 rounded hover:bg-amber-500 transition-colors">
             Восстановить
           </button>
@@ -286,7 +328,7 @@ const handleDeleteGuide = async () => {
           </button>
         </div>
 
-        <!-- Guide Select Dropdown -->
+        <!-- Guide Selector -->
         <div v-if="guides.length > 0" class="relative hidden md:block">
           <select 
             :value="activeGuideId"
@@ -300,6 +342,7 @@ const handleDeleteGuide = async () => {
         </div>
 
         <button
+          v-if="isAuthenticated"
           type="button"
           @click="createNewGuide"
           class="px-3 py-2 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold flex items-center gap-1.5 transition-all"
@@ -308,33 +351,56 @@ const handleDeleteGuide = async () => {
           <span class="hidden sm:inline">Новый гайд</span>
         </button>
 
-        <!-- Mode Switcher -->
-        <div class="flex items-center bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
+        <!-- Viewer Mode & Password Protected Author Access Button -->
+        <div v-if="!isAuthenticated">
           <button
             type="button"
-            @click="mode = 'editor'"
-            :class="[
-              'px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
-              mode === 'editor' 
-                ? 'bg-emerald-600 text-white shadow-md' 
-                : 'text-dark-muted hover:text-white'
-            ]"
+            @click="openEditorProtection"
+            class="px-3.5 py-1.5 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-dark-muted hover:text-white text-xs font-medium flex items-center gap-1.5 transition-all"
           >
-            <IconRenderer name="Edit3" size="14" />
-            <span>Конструктор</span>
+            <IconRenderer name="Lock" size="14" class="text-amber-400" />
+            <span>Вход для авторов</span>
           </button>
+        </div>
+
+        <!-- Authenticated Author Toggles -->
+        <div v-else class="flex items-center gap-2">
+          <div class="flex items-center bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
+            <button
+              type="button"
+              @click="mode = 'reader'"
+              :class="[
+                'px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
+                mode === 'reader' 
+                  ? 'bg-cyan-600 text-white shadow-md' 
+                  : 'text-dark-muted hover:text-white'
+              ]"
+            >
+              <IconRenderer name="BookOpen" size="14" />
+              <span>Вики</span>
+            </button>
+            <button
+              type="button"
+              @click="mode = 'editor'"
+              :class="[
+                'px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
+                mode === 'editor' 
+                  ? 'bg-emerald-600 text-white shadow-md' 
+                  : 'text-dark-muted hover:text-white'
+              ]"
+            >
+              <IconRenderer name="Edit3" size="14" />
+              <span>Конструктор</span>
+            </button>
+          </div>
+
           <button
             type="button"
-            @click="mode = 'reader'"
-            :class="[
-              'px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
-              mode === 'reader' 
-                ? 'bg-cyan-600 text-white shadow-md' 
-                : 'text-dark-muted hover:text-white'
-            ]"
+            @click="logoutAuthor"
+            class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs transition-all"
+            title="Выйти из режима автора"
           >
-            <IconRenderer name="BookOpen" size="14" />
-            <span>Вики</span>
+            <IconRenderer name="X" size="14" />
           </button>
         </div>
       </div>
@@ -349,17 +415,12 @@ const handleDeleteGuide = async () => {
 
       <div v-else-if="!activeGuide" class="text-center py-20 space-y-4">
         <h3 class="text-lg font-bold text-white">Нет доступных гайдов</h3>
-        <button 
-          @click="createNewGuide" 
-          class="bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg"
-        >
-          Создать первый гайд
-        </button>
       </div>
 
       <template v-else>
+        <!-- Editor View (Only when authenticated author clicks editor) -->
         <GuideEditor
-          v-if="mode === 'editor'"
+          v-if="mode === 'editor' && isAuthenticated"
           :guide="activeGuide"
           @update:guide="updateActiveGuide"
           @toggle-preview="mode = 'reader'"
@@ -367,15 +428,23 @@ const handleDeleteGuide = async () => {
           @delete="handleDeleteGuide"
         />
 
+        <!-- Default Wiki Reader View for regular visitors -->
         <GuideView
           v-else
           :guide="activeGuide"
           :all-guides="guides"
           @select-guide="selectGuide"
-          @edit-mode="mode = 'editor'"
+          @edit-mode="openEditorProtection"
         />
       </template>
     </div>
+
+    <!-- Password Protected Author Auth Modal -->
+    <AuthModal
+      :is-open="isAuthModalOpen"
+      @close="isAuthModalOpen = false"
+      @authenticate="handleAuthentication"
+    />
 
     <!-- Notification Toast -->
     <div v-if="toastMessage" class="fixed bottom-6 right-6 z-50 animate-bounce">
