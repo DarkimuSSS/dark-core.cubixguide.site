@@ -199,7 +199,7 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Визуальный Конструктор
+          Конструктор
         </span>
       </div>
 
@@ -219,7 +219,7 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
           class="px-3.5 py-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
         >
           <IconRenderer name="Eye" size="14" />
-          Просмотр вики
+          Просмотр
         </button>
 
         <button
@@ -228,14 +228,14 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
           class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-950/50"
         >
           <IconRenderer name="Check" size="14" />
-          Сохранить в БД
+          Сохранить
         </button>
 
         <button
           type="button"
           @click="emit('delete')"
           class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-semibold transition-all"
-          title="Удалить гайд из БД"
+          title="Удалить гайд"
         >
           <IconRenderer name="Trash2" size="16" />
         </button>
@@ -353,7 +353,7 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
         <!-- Block 1: Heading -->
         <div v-if="block.type === 'heading'" class="space-y-2">
           <div class="flex items-center justify-between text-xs text-dark-muted font-medium mb-1">
-            <span>Блок Заголовка</span>
+            <span>Заголовок раздела</span>
             <div class="flex items-center gap-1">
               <button 
                 type="button"
@@ -402,7 +402,7 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
           <div class="flex items-center justify-between text-xs text-dark-muted font-semibold uppercase tracking-wider">
             <span class="flex items-center gap-1.5 text-white">
               <IconRenderer name="Grid" size="16" class="text-emerald-400" />
-              Сетка верстака 3x3 (нажмите на слот для выбора предмета)
+              Сетка верстака 3x3
             </span>
           </div>
 

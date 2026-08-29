@@ -21,12 +21,12 @@ const showToast = (msg: string) => {
   }, 3000);
 };
 
-// Fetch guides from SQLite API
+// Fetch guides from backend API
 const fetchGuides = async () => {
   try {
     isLoading.value = true;
     const res = await fetch('/api/guides');
-    if (!res.ok) throw new Error('Ошибка загрузки данных из БД');
+    if (!res.ok) throw new Error('Ошибка загрузки данных');
     const data: Guide[] = await res.json();
     guides.value = data;
 
@@ -43,7 +43,7 @@ const fetchGuides = async () => {
     }
   } catch (err: any) {
     console.error(err);
-    showToast('Ошибка связи с SQLite БД');
+    showToast('Ошибка загрузки гайдов');
   } finally {
     isLoading.value = false;
   }
@@ -69,7 +69,6 @@ const updateActiveGuide = async (updated: Guide) => {
     guides.value[idx] = updated;
   }
 
-  // Save changes to SQLite DB via API
   try {
     await fetch(`/api/guides/${updated.meta.id}`, {
       method: 'PUT',
@@ -77,7 +76,7 @@ const updateActiveGuide = async (updated: Guide) => {
       body: JSON.stringify(updated)
     });
   } catch (err) {
-    console.error('Ошибка сохранения в БД:', err);
+    console.error('Ошибка сохранения:', err);
   }
 };
 
@@ -133,11 +132,11 @@ const createNewGuide = async () => {
       activeGuideId.value = newGuide.meta.id;
       activeGuide.value = newGuide;
       mode.value = 'editor';
-      showToast('Создан новый гайд в SQLite БД!');
+      showToast('Создан новый гайд!');
     }
   } catch (err) {
-    console.error('Ошибка создания гайда:', err);
-    showToast('Ошибка сохранения в SQLite');
+    console.error('Ошибка создания:', err);
+    showToast('Ошибка сохранения');
   }
 };
 
@@ -146,7 +145,7 @@ const handlePublish = async () => {
   activeGuide.value.meta.published = true;
   activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
   await updateActiveGuide(activeGuide.value);
-  showToast('Гайд успешно сохранен в SQLite БД!');
+  showToast('Гайд успешно сохранен!');
   mode.value = 'reader';
 };
 
@@ -156,7 +155,7 @@ const handleDeleteGuide = async () => {
   try {
     const res = await fetch(`/api/guides/${guideId}`, { method: 'DELETE' });
     if (res.ok) {
-      showToast('Гайд удален из БД');
+      showToast('Гайд удален');
       await fetchGuides();
     }
   } catch (err) {
@@ -178,9 +177,9 @@ const handleDeleteGuide = async () => {
         <div>
           <div class="flex items-center gap-2">
             <span class="text-base font-extrabold text-white tracking-tight">CubixGuide</span>
-            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">SQLite БД</span>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">База Знаний</span>
           </div>
-          <p class="text-[11px] text-dark-muted hidden sm:block">Платформа гайдов для Minecraft серверов</p>
+          <p class="text-[11px] text-dark-muted hidden sm:block">Платформа интерактивных гайдов Minecraft</p>
         </div>
       </div>
 
@@ -234,7 +233,7 @@ const handleDeleteGuide = async () => {
             ]"
           >
             <IconRenderer name="BookOpen" size="14" />
-            <span>Вики Ридер</span>
+            <span>Вики</span>
           </button>
         </div>
       </div>
@@ -244,11 +243,11 @@ const handleDeleteGuide = async () => {
     <div class="pt-6">
       <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 text-dark-muted space-y-3">
         <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-        <div class="text-xs">Загрузка данных из SQLite...</div>
+        <div class="text-xs">Загрузка гайдов...</div>
       </div>
 
       <div v-else-if="!activeGuide" class="text-center py-20 space-y-4">
-        <h3 class="text-lg font-bold text-white">Нет доступных гайдов в БД</h3>
+        <h3 class="text-lg font-bold text-white">Нет доступных гайдов</h3>
         <button 
           @click="createNewGuide" 
           class="bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg"
