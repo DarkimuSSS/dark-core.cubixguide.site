@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import GuideEditor from './components/GuideEditor.vue';
 import GuideView from './components/GuideView.vue';
 import IconRenderer from './components/IconRenderer.vue';
@@ -12,6 +12,9 @@ const activeGuide = ref<Guide | null>(null);
 const mode = ref<'editor' | 'reader'>('editor');
 const isLoading = ref<boolean>(true);
 
+const hasUnsavedDraft = ref<boolean>(false);
+const draftSavedTime = ref<string>('');
+
 // Notification Toast
 const toastMessage = ref('');
 const showToast = (msg: string) => {
@@ -19,6 +22,73 @@ const showToast = (msg: string) => {
   setTimeout(() => {
     toastMessage.value = '';
   }, 3000);
+};
+
+// Check & Save Draft in LocalStorage
+const getDraftKey = (id: string) => `cubixguide_draft_${id}`;
+
+const saveDraftToLocalStorage = (guide: Guide) => {
+  try {
+    const draftData = {
+      timestamp: new Date().toLocaleTimeString(),
+      guide
+    };
+    localStorage.setItem(getDraftKey(guide.meta.id), JSON.stringify(draftData));
+    hasUnsavedDraft.value = true;
+    draftSavedTime.value = draftData.timestamp;
+  } catch (err) {
+    console.error('LocalStorage write error:', err);
+  }
+};
+
+const checkDraftInLocalStorage = (guideId: string) => {
+  try {
+    const raw = localStorage.getItem(getDraftKey(guideId));
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.guide) {
+        hasUnsavedDraft.value = true;
+        draftSavedTime.value = parsed.timestamp || '';
+        return parsed.guide as Guide;
+      }
+    }
+  } catch (err) {
+    console.error('LocalStorage read error:', err);
+  }
+  hasUnsavedDraft.value = false;
+  return null;
+};
+
+const clearDraftLocalStorage = (id: string) => {
+  localStorage.removeItem(getDraftKey(id));
+  hasUnsavedDraft.value = false;
+};
+
+const restoreDraft = () => {
+  if (!activeGuideId.value) return;
+  const draft = checkDraftInLocalStorage(activeGuideId.value);
+  if (draft) {
+    activeGuide.value = JSON.parse(JSON.stringify(draft));
+    showToast('Черновик успешно восстановлен!');
+  }
+};
+
+const discardDraft = () => {
+  if (!activeGuideId.value) return;
+  clearDraftLocalStorage(activeGuideId.value);
+  const found = guides.value.find(g => g.meta.id === activeGuideId.value);
+  if (found) {
+    activeGuide.value = JSON.parse(JSON.stringify(found));
+  }
+  showToast('Черновик сброшен');
+};
+
+// Prevent accidental tab close/refresh if draft exists
+const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+  if (hasUnsavedDraft.value) {
+    e.preventDefault();
+    e.returnValue = 'У вас есть несохраненные изменения в гайде.';
+  }
 };
 
 // Fetch guides from backend API
@@ -33,7 +103,10 @@ const fetchGuides = async () => {
     if (data.length > 0) {
       if (!activeGuideId.value || !data.some(g => g.meta.id === activeGuideId.value)) {
         activeGuideId.value = data[0].meta.id;
-        activeGuide.value = JSON.parse(JSON.stringify(data[0]));
+      }
+      const draft = checkDraftInLocalStorage(activeGuideId.value);
+      if (draft) {
+        activeGuide.value = draft;
       } else {
         const current = data.find(g => g.meta.id === activeGuideId.value);
         if (current) activeGuide.value = JSON.parse(JSON.stringify(current));
@@ -51,33 +124,31 @@ const fetchGuides = async () => {
 
 onMounted(() => {
   fetchGuides();
+  window.addEventListener('beforeunload', handleBeforeUnload);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload);
 });
 
 const selectGuide = (guideId: string) => {
   activeGuideId.value = guideId;
-  const found = guides.value.find(g => g.meta.id === guideId);
-  if (found) {
-    activeGuide.value = JSON.parse(JSON.stringify(found));
-    showToast(`Загружен гайд: ${found.meta.title}`);
+  const draft = checkDraftInLocalStorage(guideId);
+  if (draft) {
+    activeGuide.value = draft;
+    showToast(`Загружен автосохраненный черновик (${draftSavedTime.value})`);
+  } else {
+    const found = guides.value.find(g => g.meta.id === guideId);
+    if (found) {
+      activeGuide.value = JSON.parse(JSON.stringify(found));
+      showToast(`Загружен гайд: ${found.meta.title}`);
+    }
   }
 };
 
-const updateActiveGuide = async (updated: Guide) => {
+const updateActiveGuide = (updated: Guide) => {
   activeGuide.value = updated;
-  const idx = guides.value.findIndex(g => g.meta.id === updated.meta.id);
-  if (idx !== -1) {
-    guides.value[idx] = updated;
-  }
-
-  try {
-    await fetch(`/api/guides/${updated.meta.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updated)
-    });
-  } catch (err) {
-    console.error('Ошибка сохранения:', err);
-  }
+  saveDraftToLocalStorage(updated);
 };
 
 const createNewGuide = async () => {
@@ -131,6 +202,7 @@ const createNewGuide = async () => {
       guides.value.unshift(newGuide);
       activeGuideId.value = newGuide.meta.id;
       activeGuide.value = newGuide;
+      saveDraftToLocalStorage(newGuide);
       mode.value = 'editor';
       showToast('Создан новый гайд!');
     }
@@ -144,9 +216,25 @@ const handlePublish = async () => {
   if (!activeGuide.value) return;
   activeGuide.value.meta.published = true;
   activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
-  await updateActiveGuide(activeGuide.value);
-  showToast('Гайд успешно сохранен!');
-  mode.value = 'reader';
+
+  try {
+    const res = await fetch(`/api/guides/${activeGuide.value.meta.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(activeGuide.value)
+    });
+
+    if (res.ok) {
+      const idx = guides.value.findIndex(g => g.meta.id === activeGuide.value?.meta.id);
+      if (idx !== -1) guides.value[idx] = activeGuide.value;
+      clearDraftLocalStorage(activeGuide.value.meta.id);
+      showToast('Гайд успешно сохранен в базу данных!');
+      mode.value = 'reader';
+    }
+  } catch (err) {
+    console.error('Ошибка сохранения:', err);
+    showToast('Ошибка при сохранении гайда');
+  }
 };
 
 const handleDeleteGuide = async () => {
@@ -155,6 +243,7 @@ const handleDeleteGuide = async () => {
   try {
     const res = await fetch(`/api/guides/${guideId}`, { method: 'DELETE' });
     if (res.ok) {
+      clearDraftLocalStorage(guideId);
       showToast('Гайд удален');
       await fetchGuides();
     }
@@ -185,6 +274,18 @@ const handleDeleteGuide = async () => {
 
       <!-- Center Guide Switcher & Mode Toggles -->
       <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Unsaved LocalStorage Draft Alert Badge -->
+        <div v-if="hasUnsavedDraft" class="hidden lg:flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl">
+          <IconRenderer name="Sliders" size="14" class="text-amber-400 animate-pulse" />
+          <span class="text-[11px] text-amber-300 font-semibold">Черновик в памяти ({{ draftSavedTime }})</span>
+          <button @click="restoreDraft" class="text-[10px] bg-amber-600 text-white font-bold px-2 py-0.5 rounded hover:bg-amber-500 transition-colors">
+            Восстановить
+          </button>
+          <button @click="discardDraft" class="text-[10px] text-amber-400 hover:text-white px-1">
+            Сбросить
+          </button>
+        </div>
+
         <!-- Guide Select Dropdown -->
         <div v-if="guides.length > 0" class="relative hidden md:block">
           <select 
