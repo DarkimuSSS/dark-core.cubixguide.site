@@ -23,11 +23,20 @@ const DEFAULT_SERVERS = [
 const searchQuery = ref('');
 const selectedCategory = ref<string>('Все');
 const selectedServer = ref<string>('Все');
+const isServerDropdownOpen = ref<boolean>(false);
+const serverSearchQuery = ref('');
 
 const serverList = ref<string[]>([...DEFAULT_SERVERS]);
 const isLiveApiConnected = ref<boolean>(true);
 
-const categoriesList = ['Все', 'ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий'];
+const categoriesList = [
+  { name: 'Все', icon: 'Grid', color: 'text-emerald-400' },
+  { name: 'ХайТек', icon: 'Zap', color: 'text-cyan-400' },
+  { name: 'Магия RPG', icon: 'Sparkles', color: 'text-purple-400' },
+  { name: 'СкайБлок', icon: 'Box', color: 'text-amber-400' },
+  { name: 'Автоматизация', icon: 'Layers', color: 'text-emerald-400' },
+  { name: 'Общий', icon: 'BookOpen', color: 'text-slate-400' }
+];
 
 onMounted(async () => {
   try {
@@ -44,6 +53,12 @@ onMounted(async () => {
   }
 });
 
+const filteredServers = computed(() => {
+  const q = serverSearchQuery.value.toLowerCase().trim();
+  if (!q) return serverList.value;
+  return serverList.value.filter(s => s.toLowerCase().includes(q));
+});
+
 const filteredGuides = computed(() => {
   return props.guides.filter(guide => {
     const matchesCategory = selectedCategory.value === 'Все' || guide.meta.category === selectedCategory.value;
@@ -58,6 +73,16 @@ const filteredGuides = computed(() => {
     return matchesCategory && matchesServer && matchesSearch;
   });
 });
+
+const getServerIcon = (serverName: string) => {
+  const name = serverName.toLowerCase();
+  if (name.includes('hitech') || name.includes('industrial') || name.includes('gregtech')) return 'Zap';
+  if (name.includes('magic') || name.includes('iceandfire')) return 'Sparkles';
+  if (name.includes('sky') || name.includes('oneblock') || name.includes('ocean')) return 'Box';
+  if (name.includes('create')) return 'Layers';
+  if (name.includes('pixelmon') || name.includes('cobblemon')) return 'Grid';
+  return 'Box';
+};
 
 const getCategoryColor = (cat: Category) => {
   switch (cat) {
@@ -155,72 +180,114 @@ const getDifficultyBadge = (diff: string) => {
       </div>
     </section>
 
-    <!-- LIVE CUBIXWORLD SERVERS MONITORING WIDGET -->
-    <div class="bg-[#16181a] border border-[#26292d] p-5 rounded-2xl shadow-xl space-y-3">
-      <div class="flex items-center justify-between flex-wrap gap-2">
-        <div class="flex items-center gap-2.5">
-          <span class="relative flex h-3 w-3">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-          </span>
-          <h3 class="text-xs font-bold text-white tracking-wider uppercase">Актуальный список серверов CubixWorld</h3>
+    <!-- ULTRA-CLEAN CUBIXWORLD SERVER SELECTOR BAR -->
+    <div class="bg-[#16181a] border border-[#26292d] p-5 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-sm">
+          <IconRenderer name="Box" size="20" />
         </div>
-
-        <span class="text-[11px] text-emerald-400 font-mono font-semibold">
-          LIVE API ({{ serverList.length }} активных серверов)
-        </span>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-extrabold text-white tracking-tight">Сервер CubixWorld</h3>
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              LIVE ({{ serverList.length }} активных)
+            </span>
+          </div>
+          <p class="text-xs text-dark-muted">Выберите ваш сервер для точной фильтрации статей</p>
+        </div>
       </div>
 
-      <!-- Server Pills List -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+      <!-- Compact Dropdown Selector with Quick Search & Icons -->
+      <div class="relative w-full md:w-72">
         <button
           type="button"
-          @click="selectedServer = 'Все'"
-          :class="[
-            'px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border',
-            selectedServer === 'Все'
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
-              : 'bg-[#0c0d0e] hover:bg-[#121416] text-dark-muted border-[#26292d]'
-          ]"
+          @click="isServerDropdownOpen = !isServerDropdownOpen"
+          class="w-full bg-[#0c0d0e] hover:bg-[#121416] border border-[#26292d] hover:border-emerald-500/50 text-white text-xs font-bold rounded-xl px-4 py-3 flex items-center justify-between transition-all shadow-md"
         >
-          🌐 Все сервера
+          <div class="flex items-center gap-2 truncate">
+            <span class="text-emerald-400 font-mono">🎮</span>
+            <span class="truncate">{{ selectedServer === 'Все' ? 'Все сервера CubixWorld' : selectedServer }}</span>
+          </div>
+          <IconRenderer name="ChevronDown" size="16" :class="['text-dark-muted transition-transform duration-200', isServerDropdownOpen ? 'rotate-180 text-emerald-400' : '']" />
         </button>
 
-        <button
-          v-for="srv in serverList"
-          :key="srv"
-          type="button"
-          @click="selectedServer = selectedServer === srv ? 'Все' : srv"
-          :class="[
-            'px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap border flex items-center gap-1.5',
-            selectedServer === srv
-              ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-sm'
-              : 'bg-[#0c0d0e] hover:bg-[#121416] text-slate-300 border-[#26292d]'
-          ]"
+        <!-- Dropdown Menu -->
+        <div
+          v-if="isServerDropdownOpen"
+          class="absolute top-full right-0 mt-2 w-full bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-2 z-50 space-y-2 animate-fadeIn"
         >
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span>{{ srv }}</span>
-        </button>
+          <!-- Search inside dropdown -->
+          <div class="relative">
+            <input
+              type="text"
+              v-model="serverSearchQuery"
+              placeholder="Поиск по 21 серверу..."
+              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:border-emerald-accent"
+            />
+            <IconRenderer name="Search" size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-muted" />
+          </div>
+
+          <!-- Server options list -->
+          <div class="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+            <button
+              type="button"
+              @click="selectedServer = 'Все'; isServerDropdownOpen = false;"
+              :class="[
+                'w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-all',
+                selectedServer === 'Все'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-slate-300 hover:bg-[#212429] hover:text-white'
+              ]"
+            >
+              <div class="flex items-center gap-2">
+                <span>🌐</span>
+                <span>Все сервера</span>
+              </div>
+              <IconRenderer v-if="selectedServer === 'Все'" name="Check" size="14" />
+            </button>
+
+            <button
+              v-for="srv in filteredServers"
+              :key="srv"
+              type="button"
+              @click="selectedServer = srv; isServerDropdownOpen = false;"
+              :class="[
+                'w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-all',
+                selectedServer === srv
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-slate-300 hover:bg-[#212429] hover:text-white'
+              ]"
+            >
+              <div class="flex items-center gap-2">
+                <IconRenderer :name="getServerIcon(srv)" size="14" class="text-cyan-400" />
+                <span>{{ srv }}</span>
+              </div>
+              <IconRenderer v-if="selectedServer === srv" name="Check" size="14" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- CATEGORY FILTER TABS -->
+    <!-- CATEGORY FILTER TABS WITH ICONS -->
     <div class="space-y-6">
       <div class="flex items-center justify-between flex-wrap gap-4 border-b border-[#26292d] pb-4">
         <div class="flex items-center gap-2 overflow-x-auto pb-1">
           <button
             v-for="cat in categoriesList"
-            :key="cat"
+            :key="cat.name"
             type="button"
-            @click="selectedCategory = cat"
+            @click="selectedCategory = cat.name"
             :class="[
-              'px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap',
-              selectedCategory === cat 
+              'px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2',
+              selectedCategory === cat.name 
                 ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/50' 
                 : 'bg-[#16181a] hover:bg-[#212429] text-dark-muted hover:text-white border border-[#26292d]'
             ]"
           >
-            {{ cat }}
+            <IconRenderer :name="cat.icon" size="15" :class="selectedCategory === cat.name ? 'text-white' : cat.color" />
+            <span>{{ cat.name }}</span>
           </button>
         </div>
 
