@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import crypto from 'crypto';
 import type { Guide, AuthorProfile } from '../src/types/guide';
 
 const dbPath = path.resolve(process.cwd(), 'database.sqlite');
@@ -10,6 +11,12 @@ db.pragma('journal_mode = WAL');
 
 // Initialize database schema
 db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    username TEXT PRIMARY KEY,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS guides (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
@@ -37,11 +44,66 @@ db.exec(`
   );
 `);
 
-// Add server column if missing in existing table
-try {
-  db.exec(`ALTER TABLE guides ADD COLUMN server TEXT;`);
-} catch (e) {
-  // Column already exists
+// Password hashing helper (SHA-256 with salt)
+export function hashPassword(password: string): string {
+  return crypto.createHmac('sha256', 'cubix_secret_salt_2026').update(password).digest('hex');
+}
+
+// User Auth Helpers
+export function registerUser(username: string, password: string) {
+  const cleanUsername = username.trim();
+  if (!cleanUsername || cleanUsername.length < 3) {
+    throw new Error('Никнейм должен состоять минимум из 3 символов');
+  }
+  if (!password || password.length < 4) {
+    throw new Error('Пароль должен состоять минимум из 4 символов');
+  }
+
+  const existing = db.prepare('SELECT username FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername);
+  if (existing) {
+    throw new Error('Пользователь с таким никнеймом уже зарегистрирован');
+  }
+
+  const pwdHash = hashPassword(password);
+  const createdAt = new Date().toISOString().split('T')[0];
+
+  const stmt = db.prepare('INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)');
+  stmt.run(cleanUsername, pwdHash, createdAt);
+
+  // Initialize default profile for new user
+  saveAuthorProfile({
+    username: cleanUsername,
+    avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${cleanUsername}`,
+    bio: `Автор руководств на серверах CubixWorld.`,
+    server: 'MagicRPG',
+    badges: ['Автор Гайдов'],
+    updatedAt: createdAt
+  });
+
+  return { username: cleanUsername, createdAt };
+}
+
+export function loginUser(username: string, password: string) {
+  const cleanUsername = username.trim();
+  const user = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
+  if (!user) {
+    throw new Error('Неверный никнейм или пароль');
+  }
+
+  const pwdHash = hashPassword(password);
+  if (user.password_hash !== pwdHash) {
+    throw new Error('Неверный никнейм или пароль');
+  }
+
+  return { username: user.username, createdAt: user.created_at };
+}
+
+// Seed initial default DarkimuSSS user if database empty
+const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
+if (userCount.count === 0) {
+  try {
+    registerUser('DarkimuSSS', 'cubix2026');
+  } catch (e) {}
 }
 
 // Helper to get or create profile
@@ -65,13 +127,13 @@ export function getAuthorProfile(username: string): AuthorProfile {
   // Default fallback profile
   return {
     username,
-    avatarUrl: '',
+    avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`,
     bio: `Автор руководств и сборщиков на серверах CubixWorld.`,
     server: 'MagicRPG',
     socialVk: '',
     socialTg: '',
     socialDs: '',
-    badges: ['Автор Гайдов', 'Опытный Крафтер'],
+    badges: ['Автор Гайдов'],
     pinnedGuideId: '',
     updatedAt: new Date().toISOString().split('T')[0]
   };

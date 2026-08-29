@@ -8,82 +8,216 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'authenticate', success: boolean): void;
+  (e: 'authenticate', username: string): void;
 }>();
 
-const passwordInput = ref('');
-const errorMsg = ref('');
+const tabMode = ref<'login' | 'register'>('login');
+const username = ref('');
+const password = ref('');
+const confirmPassword = ref('');
+const errorMessage = ref('');
+const isLoading = ref(false);
 
-const CORRECT_PASSWORD = 'cubix'; // Easy default author password for CubixWorld admins
+const handleLogin = async () => {
+  errorMessage.value = '';
+  if (!username.value.trim() || !password.value.trim()) {
+    errorMessage.value = 'Заполните никнейм и пароль';
+    return;
+  }
 
-const handleLogin = () => {
-  if (passwordInput.value.trim() === CORRECT_PASSWORD || passwordInput.value.trim() === 'admin' || passwordInput.value.trim() === 'cubix2026') {
-    errorMsg.value = '';
-    passwordInput.value = '';
-    emit('authenticate', true);
-  } else {
-    errorMsg.value = 'Неверный пароль автора!';
+  try {
+    isLoading.value = true;
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: username.value.trim(),
+        password: password.value.trim()
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.username) {
+      emit('authenticate', data.username);
+      username.value = '';
+      password.value = '';
+    } else {
+      errorMessage.value = data.error || 'Ошибка входа';
+    }
+  } catch (err) {
+    errorMessage.value = 'Ошибка соединения с сервером';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const handleRegister = async () => {
+  errorMessage.value = '';
+  if (!username.value.trim() || !password.value.trim()) {
+    errorMessage.value = 'Заполните все поля';
+    return;
+  }
+  if (password.value !== confirmPassword.value) {
+    errorMessage.value = 'Пароли не совпадают';
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: username.value.trim(),
+        password: password.value.trim()
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.username) {
+      emit('authenticate', data.username);
+      username.value = '';
+      password.value = '';
+      confirmPassword.value = '';
+    } else {
+      errorMessage.value = data.error || 'Ошибка регистрации';
+    }
+  } catch (err) {
+    errorMessage.value = 'Ошибка соединения с сервером';
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>
 
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-    <div class="bg-[#16181a] border border-[#26292d] w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-5 relative">
-      <button 
-        @click="emit('close')" 
-        class="absolute top-4 right-4 text-dark-muted hover:text-white p-1 rounded-lg hover:bg-[#26292d]"
-      >
-        <IconRenderer name="X" size="18" />
-      </button>
+  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn">
+    <div class="bg-[#16181a] border border-[#26292d] w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 flex items-center justify-center text-white font-bold shadow-md">
+            <IconRenderer name="Lock" size="18" />
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-white">Авторизация Авторов</h3>
+            <p class="text-[11px] text-dark-muted">Войдите или зарегистрируйтесь вручную</p>
+          </div>
+        </div>
 
-      <div class="flex items-center gap-3 border-b border-[#26292d] pb-4">
-        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-          <IconRenderer name="Lock" size="20" />
-        </div>
-        <div>
-          <h3 class="text-base font-bold text-white">Вход в конструктор гайдов</h3>
-          <p class="text-xs text-dark-muted">Введите секретный пароль администратора / автора</p>
-        </div>
+        <button @click="emit('close')" class="text-dark-muted hover:text-white p-1.5 rounded-lg bg-[#0c0d0e] border border-[#26292d]">
+          <IconRenderer name="X" size="16" />
+        </button>
       </div>
 
-      <form @submit.prevent="handleLogin" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-dark-muted mb-1.5 uppercase tracking-wider">Пароль автора</label>
+      <!-- Mode Switcher Tabs -->
+      <div class="flex items-center bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
+        <button
+          type="button"
+          @click="tabMode = 'login'; errorMessage = '';"
+          :class="[
+            'flex-1 py-2 text-xs font-bold rounded-lg transition-all',
+            tabMode === 'login' ? 'bg-emerald-600 text-white shadow-md' : 'text-dark-muted hover:text-white'
+          ]"
+        >
+          Вход
+        </button>
+        <button
+          type="button"
+          @click="tabMode = 'register'; errorMessage = '';"
+          :class="[
+            'flex-1 py-2 text-xs font-bold rounded-lg transition-all',
+            tabMode === 'register' ? 'bg-emerald-600 text-white shadow-md' : 'text-dark-muted hover:text-white'
+          ]"
+        >
+          Ручная Регистрация
+        </button>
+      </div>
+
+      <!-- Error Message -->
+      <div v-if="errorMessage" class="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs font-semibold flex items-center gap-2">
+        <IconRenderer name="AlertTriangle" size="16" class="text-rose-400 flex-shrink-0" />
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form v-if="tabMode === 'login'" @submit.prevent="handleLogin" class="space-y-4">
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted">Никнейм автора</label>
+          <input
+            type="text"
+            v-model="username"
+            placeholder="Введите ваш никнейм..."
+            required
+            class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-accent text-white text-sm rounded-xl px-4 py-3 focus:outline-none transition-all"
+          />
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted">Пароль</label>
           <input
             type="password"
-            v-model="passwordInput"
-            placeholder="Введите пароль..."
-            class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-emerald-accent/80 transition-all placeholder:text-dark-muted/50"
-            autofocus
+            v-model="password"
+            placeholder="Ваш пароль..."
+            required
+            class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-accent text-white text-sm rounded-xl px-4 py-3 focus:outline-none transition-all"
           />
-          <p v-if="errorMsg" class="text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
-            <IconRenderer name="AlertTriangle" size="13" />
-            {{ errorMsg }}
-          </p>
         </div>
 
-        <div class="bg-[#0c0d0e] p-3 rounded-xl border border-[#26292d] text-[11px] text-dark-muted flex items-center justify-between">
-          <span>Подсказка для администратора:</span>
-          <code class="bg-[#16181a] px-2 py-0.5 rounded text-emerald-400 font-mono font-bold">cubix</code>
+        <button
+          type="submit"
+          :disabled="isLoading"
+          class="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white py-3 rounded-xl font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2"
+        >
+          <span v-if="isLoading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span>Войти в аккаунт</span>
+        </button>
+      </form>
+
+      <!-- MANUAL REGISTER FORM -->
+      <form v-else @submit.prevent="handleRegister" class="space-y-4">
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted">Ваш Никнейм</label>
+          <input
+            type="text"
+            v-model="username"
+            placeholder="Придумайте никнейм (например: DarkimuSSS)..."
+            required
+            class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-accent text-white text-sm rounded-xl px-4 py-3 focus:outline-none transition-all"
+          />
         </div>
 
-        <div class="flex items-center justify-end gap-2 pt-2">
-          <button
-            type="button"
-            @click="emit('close')"
-            class="px-4 py-2 rounded-xl text-xs font-semibold text-dark-muted hover:text-white bg-[#121416] hover:bg-[#212429] border border-[#26292d] transition-all"
-          >
-            Отмена
-          </button>
-          <button
-            type="submit"
-            class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-950/50 flex items-center gap-1.5 transition-all"
-          >
-            <IconRenderer name="Check" size="14" />
-            Войти в редактор
-          </button>
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted">Пароль</label>
+          <input
+            type="password"
+            v-model="password"
+            placeholder="Придумайте надежный пароль..."
+            required
+            class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-accent text-white text-sm rounded-xl px-4 py-3 focus:outline-none transition-all"
+          />
         </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted">Повторите Пароль</label>
+          <input
+            type="password"
+            v-model="confirmPassword"
+            placeholder="Подтвердите ваш пароль..."
+            required
+            class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-accent text-white text-sm rounded-xl px-4 py-3 focus:outline-none transition-all"
+          />
+        </div>
+
+        <button
+          type="submit"
+          :disabled="isLoading"
+          class="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white py-3 rounded-xl font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2"
+        >
+          <span v-if="isLoading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span>Зарегистрировать аккаунт</span>
+        </button>
       </form>
     </div>
   </div>

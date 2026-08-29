@@ -20,9 +20,10 @@ const isLoading = ref<boolean>(true);
 // Bookmarked / Favorited guide IDs in LocalStorage
 const favoriteGuideIds = ref<string[]>([]);
 
-// Author Profile Modal & Current Author Data
+// Author Profile Modal & Current Logged In User
 const isProfileModalOpen = ref(false);
 const profileUsername = ref('DarkimuSSS');
+const currentUsername = ref<string | null>(null);
 const currentAuthorProfile = ref<AuthorProfile | null>(null);
 
 // Auth & Protection State
@@ -41,9 +42,10 @@ const showToast = (msg: string) => {
   }, 3000);
 };
 
-const fetchCurrentAuthorProfile = async () => {
+const fetchCurrentAuthorProfile = async (usernameToFetch?: string) => {
+  const targetUser = usernameToFetch || currentUsername.value || 'DarkimuSSS';
   try {
-    const res = await fetch('/api/profiles/DarkimuSSS');
+    const res = await fetch(`/api/profiles/${encodeURIComponent(targetUser)}`);
     if (res.ok) {
       currentAuthorProfile.value = await res.json();
     }
@@ -53,7 +55,7 @@ const fetchCurrentAuthorProfile = async () => {
 };
 
 const openAuthorProfile = (username?: string) => {
-  profileUsername.value = username || activeGuide.value?.meta.author || 'DarkimuSSS';
+  profileUsername.value = username || currentUsername.value || activeGuide.value?.meta.author || 'DarkimuSSS';
   isProfileModalOpen.value = true;
 };
 
@@ -116,9 +118,11 @@ watch([mode, activeGuideId, isProfileModalOpen, profileUsername], () => {
 
 // Check Session Auth Status & Favorites
 onMounted(() => {
-  const savedAuth = sessionStorage.getItem('cubix_author_authed');
-  if (savedAuth === 'true') {
+  const savedUser = localStorage.getItem('cubix_logged_username');
+  if (savedUser) {
     isAuthenticated.value = true;
+    currentUsername.value = savedUser;
+    fetchCurrentAuthorProfile(savedUser);
   }
   try {
     const rawFavs = localStorage.getItem('cubix_favorite_guides');
@@ -126,7 +130,6 @@ onMounted(() => {
   } catch (e) {}
 
   fetchGuides();
-  fetchCurrentAuthorProfile();
   window.addEventListener('beforeunload', handleBeforeUnload);
   window.addEventListener('popstate', handlePopState);
 });
@@ -163,21 +166,22 @@ const openEditorProtection = () => {
   }
 };
 
-const handleAuthentication = (success: boolean) => {
-  if (success) {
-    isAuthenticated.value = true;
-    sessionStorage.setItem('cubix_author_authed', 'true');
-    isAuthModalOpen.value = false;
-    mode.value = 'editor';
-    showToast('Доступ автора подтвержден!');
-  }
+const handleAuthentication = (username: string) => {
+  isAuthenticated.value = true;
+  currentUsername.value = username;
+  localStorage.setItem('cubix_logged_username', username);
+  isAuthModalOpen.value = false;
+  fetchCurrentAuthorProfile(username);
+  showToast(`Добро пожаловать, ${username}!`);
 };
 
 const logoutAuthor = () => {
   isAuthenticated.value = false;
-  sessionStorage.removeItem('cubix_author_authed');
+  currentUsername.value = null;
+  currentAuthorProfile.value = null;
+  localStorage.removeItem('cubix_logged_username');
   mode.value = 'home';
-  showToast('Вы вышли из режима редактирования');
+  showToast('Вы вышли из аккаунта');
 };
 
 // Check & Save Draft in LocalStorage
@@ -317,12 +321,14 @@ const createNewGuide = async () => {
     return;
   }
 
+  const authorName = currentUsername.value || 'DarkimuSSS';
+
   const newGuide: Guide = {
     meta: {
       id: `guide_${Date.now()}`,
       title: 'Новый майнкрафт гайд',
       category: 'ХайТек',
-      author: 'DarkimuSSS',
+      author: authorName,
       difficulty: 'Новичок',
       summary: 'Новое руководство по сборке.',
       updatedAt: new Date().toISOString().split('T')[0],
@@ -523,17 +529,18 @@ const handleDeleteGuide = async () => {
 
         <!-- Author Profile Quick Trigger Button with Live Avatar & Nickname -->
         <button
+          v-if="isAuthenticated && currentUsername"
           type="button"
-          @click="openAuthorProfile('DarkimuSSS')"
+          @click="openAuthorProfile(currentUsername)"
           class="px-3.5 py-1.5 rounded-xl bg-purple-600/10 hover:bg-purple-600/20 text-purple-300 border border-purple-500/30 text-xs font-bold flex items-center gap-2 transition-all shadow-md group"
           title="Открыть ваш профиль"
         >
           <div class="w-6 h-6 rounded-full bg-purple-500/30 border border-purple-400/40 text-purple-200 flex items-center justify-center font-bold text-[11px] overflow-hidden flex-shrink-0">
             <img v-if="currentAuthorProfile?.avatarUrl" :src="currentAuthorProfile.avatarUrl" class="w-full h-full object-cover" />
-            <span v-else>D</span>
+            <span v-else>{{ currentUsername.charAt(0).toUpperCase() }}</span>
           </div>
           <span class="font-extrabold text-white group-hover:text-purple-300 transition-colors">
-            {{ currentAuthorProfile?.username || 'DarkimuSSS' }}
+            {{ currentUsername }}
           </span>
         </button>
 
@@ -547,15 +554,15 @@ const handleDeleteGuide = async () => {
           <span class="hidden sm:inline">Новый гайд</span>
         </button>
 
-        <!-- Viewer Mode & Password Protected Author Access Button -->
+        <!-- Viewer Mode & Manual Registration / Login Button -->
         <div v-if="!isAuthenticated">
           <button
             type="button"
             @click="openEditorProtection"
-            class="px-3.5 py-2 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1.5 transition-all shadow-md"
+            class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-950/50"
           >
-            <IconRenderer name="Lock" size="14" class="text-amber-400" />
-            <span>Вход для авторов</span>
+            <IconRenderer name="Lock" size="14" />
+            <span>Вход / Регистрация</span>
           </button>
         </div>
 
@@ -579,7 +586,7 @@ const handleDeleteGuide = async () => {
             type="button"
             @click="logoutAuthor"
             class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs transition-all"
-            title="Выйти из режима автора"
+            title="Выйти из аккаунта"
           >
             <IconRenderer name="X" size="14" />
           </button>
@@ -680,7 +687,7 @@ const handleDeleteGuide = async () => {
     <AuthorProfileModal
       :is-open="isProfileModalOpen"
       :username="profileUsername"
-      :is-own-profile="isAuthenticated"
+      :is-own-profile="isAuthenticated && currentUsername?.toLowerCase() === profileUsername.toLowerCase()"
       :all-guides="guides"
       @close="isProfileModalOpen = false; fetchCurrentAuthorProfile();"
       @select-guide="selectGuide"

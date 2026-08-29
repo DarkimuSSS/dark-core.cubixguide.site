@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerUser, loginUser } from './db';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
 const app = express();
@@ -61,6 +61,36 @@ app.get('/api/servers', async (req, res) => {
     res.json(DEFAULT_CUBIX_SERVERS);
   } catch (err) {
     res.json(DEFAULT_CUBIX_SERVERS);
+  }
+});
+
+// MANUAL USER AUTHENTICATION ENDPOINTS
+
+// Register Author (Manual Registration Input)
+app.post('/api/auth/register', (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Заполните никнейм и пароль' });
+    }
+    const user = registerUser(username, password);
+    res.status(201).json(user);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Login Author (Manual Credentials Input)
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Заполните никнейм и пароль' });
+    }
+    const user = loginUser(username, password);
+    res.json(user);
+  } catch (err: any) {
+    res.status(401).json({ error: err.message });
   }
 });
 
