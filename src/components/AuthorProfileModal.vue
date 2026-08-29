@@ -255,37 +255,55 @@ const handleAvatarFileUpload = (e: Event) => {
                 <p class="text-xs text-dark-muted">Автор {{ authorGuides.length }} опубликованных гайдов</p>
               </div>
 
-              <!-- Admin / Edit Controls -->
-              <div class="flex flex-wrap items-center gap-2">
-                <button
-                  v-if="isAdmin"
-                  type="button"
-                  @click="isAdminPanelOpen = !isAdminPanelOpen"
-                  class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
-                >
-                  <IconRenderer name="Shield" size="14" />
-                  <span>{{ isAdminPanelOpen ? 'Закрыть Админку' : 'Админ Панель' }}</span>
-                </button>
+              <!-- Sleek Compact Icon-Only Action Buttons with Hover Tooltips -->
+              <div class="flex items-center gap-2">
+                <!-- 1. Admin Panel Button -->
+                <div v-if="isAdmin" class="relative group/tool">
+                  <button
+                    type="button"
+                    @click="isAdminPanelOpen = !isAdminPanelOpen"
+                    class="w-10 h-10 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-all shadow-md"
+                  >
+                    <IconRenderer name="Shield" size="18" />
+                  </button>
+                  <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+                    <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+                      {{ isAdminPanelOpen ? 'Закрыть Админку' : 'Админ Панель' }}
+                    </div>
+                  </div>
+                </div>
 
-                <button
-                  v-if="isOwnProfile"
-                  type="button"
-                  @click="isChangePasswordOpen = !isChangePasswordOpen; pwdMessage = '';"
-                  class="px-3 py-1.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all flex items-center gap-1.5"
-                >
-                  <IconRenderer name="Lock" size="14" />
-                  <span>Сменить пароль</span>
-                </button>
+                <!-- 2. Change Password Button -->
+                <div v-if="isOwnProfile" class="relative group/tool">
+                  <button
+                    type="button"
+                    @click="isChangePasswordOpen = !isChangePasswordOpen; pwdMessage = '';"
+                    class="w-10 h-10 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 flex items-center justify-center transition-all shadow-md"
+                  >
+                    <IconRenderer name="Lock" size="18" />
+                  </button>
+                  <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+                    <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+                      Сменить пароль
+                    </div>
+                  </div>
+                </div>
 
-                <button
-                  v-if="isOwnProfile && !isEditing"
-                  type="button"
-                  @click="isEditing = true"
-                  class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
-                >
-                  <IconRenderer name="Edit3" size="14" />
-                  <span>Редактировать профиль</span>
-                </button>
+                <!-- 3. Edit Profile Button -->
+                <div v-if="isOwnProfile && !isEditing" class="relative group/tool">
+                  <button
+                    type="button"
+                    @click="isEditing = true"
+                    class="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all shadow-md"
+                  >
+                    <IconRenderer name="Edit3" size="18" />
+                  </button>
+                  <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+                    <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+                      Редактировать профиль
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -444,7 +462,7 @@ const handleAvatarFileUpload = (e: Event) => {
               <span
                 v-for="a in registeredAuthorsList"
                 :key="a.username"
-                class="px-2.5 py-1 rounded-lg bg-[#0c0d0e] border border-[#26292d] text-xs font-semibold text-white flex items-center gap-1.5"
+                class="px-2.5 py-1 rounded-lg bg-[#0c0d0e] border border-[#26292d] text-xs font-semibold text-[#e2e8f0] flex items-center gap-1.5"
               >
                 <span>{{ a.username }}</span>
                 <span v-if="a.isAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1 rounded">Админ</span>
