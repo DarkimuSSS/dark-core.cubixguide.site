@@ -9,6 +9,14 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
+const DEFAULT_CUBIX_SERVERS = [
+  "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
+  "OneBlock-Mobile", "Pixelmon_1211", "HiTech", "TechnoMagic", "UltraSky", 
+  "HiTech-Mobile", "Cobblemon_1211", "TechnoMagic-Mobile", "OceanBlock_1165", 
+  "Industrial", "GregTech", "Pixelmon_1165", "Pixelmon", "TechnomagicTest", 
+  "SkyTech", "MagicalTech"
+];
+
 // Helper to format DB row to Guide object
 function formatGuideRow(row: any): Guide {
   return {
@@ -32,19 +40,27 @@ function formatGuideRow(row: any): Guide {
 // 0. Live CubixWorld Servers Proxy Endpoint
 app.get('/api/servers', async (req, res) => {
   try {
-    const response = await fetch('https://online.cubix.world/api/metrics/server-list');
-    if (!response.ok) throw new Error('CUBIX_API_ERROR');
-    const serversList = await response.json();
-    res.json(serversList);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const response = await fetch('https://online.cubix.world/api/metrics/server-list', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json'
+      },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return res.json(data);
+      }
+    }
+    res.json(DEFAULT_CUBIX_SERVERS);
   } catch (err) {
-    // Fallback list if external network error occurs
-    res.json([
-      "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
-      "OneBlock-Mobile", "Pixelmon_1211", "HiTech", "TechnoMagic", "UltraSky", 
-      "HiTech-Mobile", "Cobblemon_1211", "TechnoMagic-Mobile", "OceanBlock_1165", 
-      "Industrial", "GregTech", "Pixelmon_1165", "Pixelmon", "TechnomagicTest", 
-      "SkyTech", "MagicalTech"
-    ]);
+    res.json(DEFAULT_CUBIX_SERVERS);
   }
 });
 

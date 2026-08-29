@@ -12,12 +12,20 @@ const emit = defineEmits<{
   (e: 'create-guide'): void;
 }>();
 
+const DEFAULT_SERVERS = [
+  "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
+  "OneBlock-Mobile", "Pixelmon_1211", "HiTech", "TechnoMagic", "UltraSky", 
+  "HiTech-Mobile", "Cobblemon_1211", "TechnoMagic-Mobile", "OceanBlock_1165", 
+  "Industrial", "GregTech", "Pixelmon_1165", "Pixelmon", "TechnomagicTest", 
+  "SkyTech", "MagicalTech"
+];
+
 const searchQuery = ref('');
 const selectedCategory = ref<string>('Все');
 const selectedServer = ref<string>('Все');
 
-const serverList = ref<string[]>([]);
-const isServersLoading = ref<boolean>(true);
+const serverList = ref<string[]>([...DEFAULT_SERVERS]);
+const isLiveApiConnected = ref<boolean>(true);
 
 const categoriesList = ['Все', 'ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий'];
 
@@ -25,19 +33,14 @@ onMounted(async () => {
   try {
     const res = await fetch('/api/servers');
     if (res.ok) {
-      serverList.value = await res.json();
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        serverList.value = data;
+        isLiveApiConnected.value = true;
+      }
     }
   } catch (err) {
     console.error('Error fetching live CubixWorld servers:', err);
-    serverList.value = [
-      "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
-      "OneBlock-Mobile", "Pixelmon_1211", "HiTech", "TechnoMagic", "UltraSky", 
-      "HiTech-Mobile", "Cobblemon_1211", "TechnoMagic-Mobile", "OceanBlock_1165", 
-      "Industrial", "GregTech", "Pixelmon_1165", "Pixelmon", "TechnomagicTest", 
-      "SkyTech", "MagicalTech"
-    ];
-  } finally {
-    isServersLoading.value = false;
   }
 });
 
@@ -154,7 +157,7 @@ const getDifficultyBadge = (diff: string) => {
 
     <!-- LIVE CUBIXWORLD SERVERS MONITORING WIDGET -->
     <div class="bg-[#16181a] border border-[#26292d] p-5 rounded-2xl shadow-xl space-y-3">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between flex-wrap gap-2">
         <div class="flex items-center gap-2.5">
           <span class="relative flex h-3 w-3">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -164,17 +167,17 @@ const getDifficultyBadge = (diff: string) => {
         </div>
 
         <span class="text-[11px] text-emerald-400 font-mono font-semibold">
-          LIVE API ({{ serverList.length }} онлайн)
+          LIVE API ({{ serverList.length }} активных серверов)
         </span>
       </div>
 
       <!-- Server Pills List -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+      <div class="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
         <button
           type="button"
           @click="selectedServer = 'Все'"
           :class="[
-            'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border',
+            'px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border',
             selectedServer === 'Все'
               ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
               : 'bg-[#0c0d0e] hover:bg-[#121416] text-dark-muted border-[#26292d]'
@@ -189,7 +192,7 @@ const getDifficultyBadge = (diff: string) => {
           type="button"
           @click="selectedServer = selectedServer === srv ? 'Все' : srv"
           :class="[
-            'px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap border flex items-center gap-1.5',
+            'px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap border flex items-center gap-1.5',
             selectedServer === srv
               ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-sm'
               : 'bg-[#0c0d0e] hover:bg-[#121416] text-slate-300 border-[#26292d]'
