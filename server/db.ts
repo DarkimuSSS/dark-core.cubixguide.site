@@ -19,9 +19,17 @@ db.exec(`
     summary TEXT,
     updated_at TEXT NOT NULL,
     published INTEGER NOT NULL DEFAULT 1,
+    server TEXT,
     blocks TEXT NOT NULL
   );
 `);
+
+// Add server column if missing in existing table
+try {
+  db.exec(`ALTER TABLE guides ADD COLUMN server TEXT;`);
+} catch (e) {
+  // Column already exists
+}
 
 // Seed initial default guide if database is empty
 const guideCount = db.prepare('SELECT COUNT(*) as count FROM guides').get() as { count: number };
@@ -36,7 +44,8 @@ if (guideCount.count === 0) {
       difficulty: 'Новичок',
       summary: 'Подробное руководство по созданию МЭ Контроллера и автоматизации хранилища предметов.',
       updatedAt: new Date().toISOString().split('T')[0],
-      published: true
+      published: true,
+      server: 'HiTech'
     },
     blocks: [
       {
@@ -99,8 +108,8 @@ if (guideCount.count === 0) {
   };
 
   const stmt = db.prepare(`
-    INSERT INTO guides (id, title, category, author, difficulty, summary, updated_at, published, blocks)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO guides (id, title, category, author, difficulty, summary, updated_at, published, server, blocks)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   stmt.run(
@@ -112,6 +121,7 @@ if (guideCount.count === 0) {
     defaultGuide.meta.summary,
     defaultGuide.meta.updatedAt,
     defaultGuide.meta.published ? 1 : 0,
+    defaultGuide.meta.server || null,
     JSON.stringify(defaultGuide.blocks)
   );
 }

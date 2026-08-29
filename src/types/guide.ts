@@ -93,6 +93,7 @@ export interface GuideMeta {
   summary: string;
   updatedAt: string;
   published: boolean;
+  server?: string; // Live CubixWorld server tag (e.g. MagicRPG, HiTech, OneBlock, etc.)
 }
 
 export interface Guide {

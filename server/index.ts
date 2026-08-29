@@ -20,13 +20,33 @@ function formatGuideRow(row: any): Guide {
       difficulty: row.difficulty,
       summary: row.summary || '',
       updatedAt: row.updated_at,
-      published: Boolean(row.published)
+      published: Boolean(row.published),
+      server: row.server || undefined
     },
     blocks: JSON.parse(row.blocks || '[]')
   };
 }
 
 // REST API Endpoints
+
+// 0. Live CubixWorld Servers Proxy Endpoint
+app.get('/api/servers', async (req, res) => {
+  try {
+    const response = await fetch('https://online.cubix.world/api/metrics/server-list');
+    if (!response.ok) throw new Error('CUBIX_API_ERROR');
+    const serversList = await response.json();
+    res.json(serversList);
+  } catch (err) {
+    // Fallback list if external network error occurs
+    res.json([
+      "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
+      "OneBlock-Mobile", "Pixelmon_1211", "HiTech", "TechnoMagic", "UltraSky", 
+      "HiTech-Mobile", "Cobblemon_1211", "TechnoMagic-Mobile", "OceanBlock_1165", 
+      "Industrial", "GregTech", "Pixelmon_1165", "Pixelmon", "TechnomagicTest", 
+      "SkyTech", "MagicalTech"
+    ]);
+  }
+});
 
 // 1. Get all guides
 app.get('/api/guides', (req, res) => {
@@ -61,8 +81,8 @@ app.post('/api/guides', (req, res) => {
     }
 
     const stmt = db.prepare(`
-      INSERT INTO guides (id, title, category, author, difficulty, summary, updated_at, published, blocks)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO guides (id, title, category, author, difficulty, summary, updated_at, published, server, blocks)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -74,6 +94,7 @@ app.post('/api/guides', (req, res) => {
       guide.meta.summary || '',
       guide.meta.updatedAt || new Date().toISOString().split('T')[0],
       guide.meta.published ? 1 : 0,
+      guide.meta.server || null,
       JSON.stringify(guide.blocks || [])
     );
 
@@ -91,7 +112,7 @@ app.put('/api/guides/:id', (req, res) => {
 
     const stmt = db.prepare(`
       UPDATE guides
-      SET title = ?, category = ?, author = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, blocks = ?
+      SET title = ?, category = ?, author = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, server = ?, blocks = ?
       WHERE id = ?
     `);
 
@@ -103,6 +124,7 @@ app.put('/api/guides/:id', (req, res) => {
       guide.meta.summary || '',
       guide.meta.updatedAt || new Date().toISOString().split('T')[0],
       guide.meta.published ? 1 : 0,
+      guide.meta.server || null,
       JSON.stringify(guide.blocks || []),
       guideId
     );

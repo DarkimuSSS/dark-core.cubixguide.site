@@ -31,6 +31,8 @@ const isTemplateModalOpen = ref(false);
 const isHelpModalOpen = ref(false);
 const isTreeModalOpen = ref(false);
 
+const serverList = ref<string[]>([]);
+
 const activeResizingBlockId = ref<string | null>(null);
 
 // UNDO / REDO HISTORY STACK
@@ -49,9 +51,15 @@ const pushHistoryState = (guideState: Guide) => {
   historyIndex.value = historyStack.value.length - 1;
 };
 
-onMounted(() => {
+onMounted(async () => {
   pushHistoryState(props.guide);
   window.addEventListener('keydown', handleGlobalHotkeys);
+  try {
+    const res = await fetch('/api/servers');
+    if (res.ok) serverList.value = await res.json();
+  } catch (err) {
+    serverList.value = ["OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", "HiTech", "TechnoMagic", "UltraSky", "GregTech", "Pixelmon", "SkyTech"];
+  }
 });
 
 onUnmounted(() => {
@@ -111,6 +119,12 @@ const updateCategory = (val: Category) => {
 
 const updateDifficulty = (val: Difficulty) => {
   const updated = { ...props.guide, meta: { ...props.guide.meta, difficulty: val } };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
+};
+
+const updateServerTag = (val: string) => {
+  const updated = { ...props.guide, meta: { ...props.guide.meta, server: val } };
   emit('update:guide', updated);
   pushHistoryState(updated);
 };
@@ -939,7 +953,7 @@ const scrollToBlockInEditor = (id: string) => {
         />
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#26292d]">
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2 border-t border-[#26292d]">
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Категория</label>
           <select
@@ -948,6 +962,18 @@ const scrollToBlockInEditor = (id: string) => {
             class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-medium rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-accent"
           >
             <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Сервер CubixWorld</label>
+          <select
+            :value="guide.meta.server || ''"
+            @change="updateServerTag(($event.target as HTMLSelectElement).value)"
+            class="w-full bg-[#0c0d0e] border border-[#26292d] text-cyan-300 text-xs font-semibold rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-accent"
+          >
+            <option value="">(Все сервера)</option>
+            <option v-for="srv in serverList" :key="srv" :value="srv">{{ srv }}</option>
           </select>
         </div>
 
