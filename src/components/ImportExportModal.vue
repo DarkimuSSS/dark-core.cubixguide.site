@@ -39,12 +39,12 @@ const handleImport = () => {
   try {
     const parsed = JSON.parse(jsonInput.value);
     if (!parsed || !parsed.meta || !Array.isArray(parsed.blocks)) {
-      throw new Error('Invalid guide format. Object must contain "meta" and "blocks" array.');
+      throw new Error('Неверный формат гайда. Объект должен содержать "meta" и массив "blocks".');
     }
     emit('import', parsed);
     emit('close');
   } catch (err: any) {
-    importError.value = err.message || 'Syntax error in JSON string.';
+    importError.value = err.message || 'Синтаксическая ошибка в JSON строке.';
   }
 };
 </script>
@@ -59,8 +59,8 @@ const handleImport = () => {
             <IconRenderer name="FileText" size="18" />
           </div>
           <div>
-            <h3 class="text-sm font-semibold text-white">Import & Export Guide JSON</h3>
-            <p class="text-xs text-dark-muted">Share guides easily via copy-paste JSON payload</p>
+            <h3 class="text-sm font-semibold text-white">Импорт и Экспорт JSON гайда</h3>
+            <p class="text-xs text-dark-muted">Делитесь гайдами с помощью копирования JSON данных</p>
           </div>
         </div>
         <button 
@@ -79,7 +79,7 @@ const handleImport = () => {
           :class="['flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-all border-b-2', activeTab === 'export' ? 'border-cyan-500 text-cyan-400 bg-[#16181a]' : 'border-transparent text-dark-muted hover:text-white']"
         >
           <IconRenderer name="Download" size="15" />
-          Export JSON
+          Экспорт JSON
         </button>
         <button 
           type="button"
@@ -87,7 +87,7 @@ const handleImport = () => {
           :class="['flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-all border-b-2', activeTab === 'import' ? 'border-cyan-500 text-cyan-400 bg-[#16181a]' : 'border-transparent text-dark-muted hover:text-white']"
         >
           <IconRenderer name="Upload" size="15" />
-          Import Guide
+          Импорт гайда
         </button>
       </div>
 
@@ -96,14 +96,14 @@ const handleImport = () => {
         <!-- Export Tab -->
         <div v-if="activeTab === 'export'" class="space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs text-dark-muted">Copy this JSON structure to share or store offline:</span>
+            <span class="text-xs text-dark-muted">Скопируйте данный JSON код для передачи или сохранения:</span>
             <button 
               type="button"
               @click="copyToClipboard"
               :class="['text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all', copySuccess ? 'bg-emerald-600 text-white' : 'bg-cyan-600 hover:bg-cyan-500 text-white']"
             >
               <IconRenderer :name="copySuccess ? 'Check' : 'Copy'" size="14" />
-              {{ copySuccess ? 'Copied to Clipboard!' : 'Copy Payload' }}
+              {{ copySuccess ? 'Скопировано в буфер!' : 'Скопировать JSON' }}
             </button>
           </div>
           <pre class="bg-[#0c0d0e] border border-[#26292d] p-4 rounded-xl text-xs text-emerald-400 font-mono overflow-x-auto max-h-80 select-all">{{ formattedExportJson }}</pre>
@@ -111,10 +111,10 @@ const handleImport = () => {
 
         <!-- Import Tab -->
         <div v-else class="space-y-3">
-          <label class="block text-xs text-dark-muted">Paste guide JSON payload below to replace active editor state:</label>
+          <label class="block text-xs text-dark-muted">Вставьте сырой JSON гайда ниже для загрузки в редактор:</label>
           <textarea 
             v-model="jsonInput" 
-            placeholder="Paste raw JSON guide content here..." 
+            placeholder="Вставьте JSON содержимое гайда..." 
             rows="10"
             class="w-full bg-[#0c0d0e] border border-[#26292d] text-xs font-mono text-white p-3 rounded-xl focus:outline-none focus:border-cyan-accent"
           ></textarea>
@@ -132,7 +132,7 @@ const handleImport = () => {
           @click="emit('close')"
           class="text-xs text-dark-muted hover:text-white px-3 py-2 rounded-lg hover:bg-[#26292d] transition-colors"
         >
-          Close
+          Закрыть
         </button>
         <button 
           v-if="activeTab === 'import'"
@@ -141,7 +141,7 @@ const handleImport = () => {
           class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-all"
         >
           <IconRenderer name="Check" size="14" />
-          Apply & Load Guide
+          Загрузить в редактор
         </button>
       </div>
     </div>

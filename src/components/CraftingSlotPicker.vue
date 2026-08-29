@@ -20,10 +20,10 @@ const selectedItem = ref<ItemDefinition | null>(props.slot?.item || null);
 const itemCount = ref<number>(props.slot?.count || 1);
 const customTooltip = ref<string>(props.slot?.tooltip || '');
 
-// Custom item form inputs
+// Custom item form
 const isCustomMode = ref(false);
 const customName = ref('');
-const customMod = ref('Custom Mod');
+const customMod = ref('Свой Мод');
 const customIcon = ref('Box');
 const customColor = ref('#10b981');
 
@@ -49,7 +49,7 @@ const createCustomItem = () => {
   const item: ItemDefinition = {
     id: `custom_${Date.now()}`,
     name: customName.value.trim(),
-    mod: customMod.value.trim() || 'Custom',
+    mod: customMod.value.trim() || 'Свой предмет',
     icon: customIcon.value,
     color: customColor.value
   };
@@ -90,8 +90,8 @@ const clearSlot = () => {
             <IconRenderer name="Box" size="18" />
           </div>
           <div>
-            <h3 class="text-sm font-semibold text-white">Item Picker</h3>
-            <p class="text-xs text-dark-muted">{{ slotLabel || `Crafting Slot #${slot.index + 1}` }}</p>
+            <h3 class="text-sm font-semibold text-white">Выбор предмета</h3>
+            <p class="text-xs text-dark-muted">{{ slotLabel || `Слот крафта #${slot.index + 1}` }}</p>
           </div>
         </div>
         <button 
@@ -104,7 +104,7 @@ const clearSlot = () => {
 
       <!-- Content -->
       <div class="p-5 overflow-y-auto space-y-4 flex-1">
-        <!-- Selected Active Item Preview -->
+        <!-- Selected Item Preview -->
         <div class="bg-[#0c0d0e] border border-[#26292d] rounded-lg p-3.5 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div 
@@ -112,17 +112,17 @@ const clearSlot = () => {
               :style="{ borderColor: selectedItem ? selectedItem.color : '#26292d' }"
             >
               <IconRenderer v-if="selectedItem" :name="selectedItem.icon" size="24" :color="selectedItem.color" />
-              <span v-else class="text-xs text-dark-muted">Empty</span>
+              <span v-else class="text-xs text-dark-muted">Пусто</span>
               <span v-if="selectedItem && itemCount > 1" class="absolute -bottom-1 -right-1 bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full border border-black">
                 x{{ itemCount }}
               </span>
             </div>
             <div>
               <div class="text-sm font-semibold text-white">
-                {{ selectedItem ? selectedItem.name : 'No Item Selected' }}
+                {{ selectedItem ? selectedItem.name : 'Предмет не выбран' }}
               </div>
               <div class="text-xs text-dark-muted">
-                {{ selectedItem ? selectedItem.mod : 'Click a preset below or create custom' }}
+                {{ selectedItem ? selectedItem.mod : 'Выберите предмет из списка или создайте свой' }}
               </div>
             </div>
           </div>
@@ -133,14 +133,14 @@ const clearSlot = () => {
             class="text-xs text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1.5 rounded-md border border-rose-500/30 flex items-center gap-1 transition-all"
           >
             <IconRenderer name="Trash2" size="13" />
-            Clear
+            Очистить
           </button>
         </div>
 
-        <!-- Details Editor (Count & Tooltip Note) -->
+        <!-- Details Editor -->
         <div v-if="selectedItem" class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#121416] p-3 rounded-lg border border-[#26292d]">
           <div>
-            <label class="block text-xs font-medium text-dark-muted mb-1">Stack Count (1 - 64)</label>
+            <label class="block text-xs font-medium text-dark-muted mb-1">Количество в стаке (1 - 64)</label>
             <div class="flex items-center gap-2">
               <input 
                 type="number" 
@@ -159,24 +159,24 @@ const clearSlot = () => {
             </div>
           </div>
           <div>
-            <label class="block text-xs font-medium text-dark-muted mb-1">Custom Tooltip Note</label>
+            <label class="block text-xs font-medium text-dark-muted mb-1">Заметка / Тултип</label>
             <input 
               type="text" 
               v-model="customTooltip"
-              placeholder="e.g. Center slot / Requires 500 RF..."
+              placeholder="например: Верхний левый угол..."
               class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-emerald-accent"
             />
           </div>
         </div>
 
-        <!-- Mode Toggle & Search -->
+        <!-- Search & Toggle Custom -->
         <div class="flex items-center justify-between gap-3 pt-1">
           <div class="relative flex-1">
             <IconRenderer name="Search" size="15" class="absolute left-3 top-2.5 text-dark-muted" />
             <input 
               type="text"
               v-model="searchQuery"
-              placeholder="Search items by name or mod..."
+              placeholder="Поиск по названию или моду..."
               class="w-full bg-[#0c0d0e] border border-[#26292d] text-xs text-white pl-9 pr-3 py-2 rounded-lg focus:outline-none focus:border-emerald-accent/60"
             />
           </div>
@@ -186,30 +186,30 @@ const clearSlot = () => {
             class="text-xs text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 px-3 py-2 rounded-lg flex items-center gap-1.5 transition-all whitespace-nowrap"
           >
             <IconRenderer name="Plus" size="14" />
-            {{ isCustomMode ? 'Show Presets' : 'Custom Item' }}
+            {{ isCustomMode ? 'Показать пресеты' : 'Свой предмет' }}
           </button>
         </div>
 
         <!-- Custom Item Form -->
         <div v-if="isCustomMode" class="bg-[#121416] border border-[#26292d] p-3.5 rounded-lg space-y-3">
-          <h4 class="text-xs font-semibold text-white uppercase tracking-wider">Create Custom Item</h4>
+          <h4 class="text-xs font-semibold text-white uppercase tracking-wider">Создать свой предмет</h4>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-[11px] text-dark-muted">Item Name</label>
-              <input type="text" v-model="customName" placeholder="e.g. Quantum Core" class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs px-2.5 py-1.5 rounded" />
+              <label class="text-[11px] text-dark-muted">Название предмета</label>
+              <input type="text" v-model="customName" placeholder="например: Квантовое ядро" class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs px-2.5 py-1.5 rounded" />
             </div>
             <div>
-              <label class="text-[11px] text-dark-muted">Mod Name</label>
-              <input type="text" v-model="customMod" placeholder="e.g. Tech Mod" class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs px-2.5 py-1.5 rounded" />
+              <label class="text-[11px] text-dark-muted">Название мода</label>
+              <input type="text" v-model="customMod" placeholder="например: TechMod" class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs px-2.5 py-1.5 rounded" />
             </div>
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-[11px] text-dark-muted">Icon Name (Lucide)</label>
-              <input type="text" v-model="customIcon" placeholder="Cpu, Gem, Zap, etc." class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs px-2.5 py-1.5 rounded" />
+              <label class="text-[11px] text-dark-muted">Иконка (Lucide name)</label>
+              <input type="text" v-model="customIcon" placeholder="Cpu, Gem, Zap..." class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs px-2.5 py-1.5 rounded" />
             </div>
             <div>
-              <label class="text-[11px] text-dark-muted">Color Accent</label>
+              <label class="text-[11px] text-dark-muted">Цветовой акцент</label>
               <input type="color" v-model="customColor" class="w-full bg-[#0c0d0e] border border-[#26292d] h-8 rounded cursor-pointer" />
             </div>
           </div>
@@ -218,11 +218,11 @@ const clearSlot = () => {
             @click="createCustomItem"
             class="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold py-2 rounded-md transition-colors"
           >
-            Add Custom Item
+            Добавить предмет
           </button>
         </div>
 
-        <!-- Preset Items Grid -->
+        <!-- Presets List -->
         <div v-else class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
           <button
             v-for="item in filteredPresets"
@@ -257,7 +257,7 @@ const clearSlot = () => {
           @click="emit('close')"
           class="text-xs text-dark-muted hover:text-white px-3 py-2 rounded-lg hover:bg-[#26292d] transition-colors"
         >
-          Cancel
+          Отмена
         </button>
         <button 
           type="button"
@@ -265,7 +265,7 @@ const clearSlot = () => {
           class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg shadow-lg shadow-emerald-950/50 flex items-center gap-1.5 transition-all"
         >
           <IconRenderer name="Check" size="14" />
-          Apply Slot Item
+          Применить
         </button>
       </div>
     </div>

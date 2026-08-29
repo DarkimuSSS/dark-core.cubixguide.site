@@ -13,13 +13,9 @@ const emit = defineEmits<{
   (e: 'update', block: GuideBlock): void;
 }>();
 
-// Active layer tab index (0-based)
 const activeLayerIndex = ref<number>(0);
-
-// Selected palette material ID for painting
 const selectedMaterialId = ref<string>(props.block.palette?.[0]?.id || PRESET_MULTIBLOCK_MATERIALS[0].id);
 
-// Ensure block layers & palette exist
 const currentSize = computed(() => props.block.gridSize || 3);
 const currentPalette = computed<MultiblockMaterial[]>(() => props.block.palette && props.block.palette.length > 0 ? props.block.palette : PRESET_MULTIBLOCK_MATERIALS);
 
@@ -27,7 +23,6 @@ const layersList = computed<MultiblockLayer[]>(() => {
   if (props.block.layers && props.block.layers.length > 0) {
     return props.block.layers;
   }
-  // Initialize default 3 layers if missing
   const size = currentSize.value;
   return [
     { layerNumber: 1, grid: Array(size).fill(null).map(() => Array(size).fill(currentPalette.value[0].id)) },
@@ -36,10 +31,8 @@ const layersList = computed<MultiblockLayer[]>(() => {
   ];
 });
 
-// Active layer object
 const activeLayer = computed(() => layersList.value[activeLayerIndex.value] || layersList.value[0]);
 
-// Auto-calculated material totals
 const materialSummary = computed(() => {
   const counts: Record<string, number> = {};
   layersList.value.forEach(l => {
@@ -63,17 +56,15 @@ const materialSummary = computed(() => {
   });
 });
 
-// Paint cell action
 const paintCell = (rowIndex: number, colIndex: number) => {
   if (!props.isEditing) return;
   const newLayers = JSON.parse(JSON.stringify(layersList.value)) as MultiblockLayer[];
   const targetLayer = newLayers[activeLayerIndex.value];
   if (!targetLayer) return;
 
-  // Toggle or paint with selected material
   const currentCell = targetLayer.grid[rowIndex][colIndex];
   if (currentCell === selectedMaterialId.value) {
-    targetLayer.grid[rowIndex][colIndex] = null; // Clear
+    targetLayer.grid[rowIndex][colIndex] = null;
   } else {
     targetLayer.grid[rowIndex][colIndex] = selectedMaterialId.value;
   }
@@ -118,7 +109,6 @@ const removeLayer = (index: number) => {
   if (layersList.value.length <= 1) return;
   const newLayers = JSON.parse(JSON.stringify(layersList.value)) as MultiblockLayer[];
   newLayers.splice(index, 1);
-  // Re-index layers
   newLayers.forEach((l, i) => l.layerNumber = i + 1);
   emit('update', {
     ...props.block,
@@ -130,30 +120,30 @@ const removeLayer = (index: number) => {
 };
 
 const getMaterial = (id: string | null): MultiblockMaterial => {
-  if (!id) return { id: 'empty', name: 'Air / Empty', icon: 'Square', color: '#16181a' };
+  if (!id) return { id: 'empty', name: 'Воздух / Пусто', icon: 'Square', color: '#16181a' };
   return currentPalette.value.find(p => p.id === id) || { id, name: id, icon: 'Box', color: '#94a3b8' };
 };
 </script>
 
 <template>
   <div class="bg-[#16181a] border border-[#26292d] rounded-xl p-5 shadow-lg space-y-5">
-    <!-- Multiblock Header & Controls -->
+    <!-- Header -->
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#26292d] pb-4">
       <div class="flex items-center gap-2.5">
         <div class="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
           <IconRenderer name="Layers" size="20" />
         </div>
         <div>
-          <h3 class="text-sm font-semibold text-white">Multiblock Layer Painter</h3>
+          <h3 class="text-sm font-semibold text-white">Редактор слоев мультиструктуры</h3>
           <p class="text-xs text-dark-muted">
-            {{ isEditing ? 'Click blocks in the palette to paint grid squares layer-by-layer' : 'Interactive layer stepper for structure assembly' }}
+            {{ isEditing ? 'Выберите блок из палитры и нажимайте на клетки сетки по слоям' : 'Послойная схема постройки мультиструктуры' }}
           </p>
         </div>
       </div>
 
-      <!-- Size Switcher (Editor only) -->
+      <!-- Size Switcher -->
       <div v-if="isEditing" class="flex items-center gap-2 bg-[#0c0d0e] p-1 rounded-lg border border-[#26292d]">
-        <span class="text-xs text-dark-muted px-2 font-medium">Grid Size:</span>
+        <span class="text-xs text-dark-muted px-2 font-medium">Размер:</span>
         <button 
           type="button"
           @click="setGridSize(3)"
@@ -171,9 +161,9 @@ const getMaterial = (id: string | null): MultiblockMaterial => {
       </div>
     </div>
 
-    <!-- Palette Picker (Editing Mode) -->
+    <!-- Palette Picker -->
     <div v-if="isEditing" class="space-y-2">
-      <div class="text-xs font-medium text-dark-muted uppercase tracking-wider">Paint Palette (Select block to paint):</div>
+      <div class="text-xs font-medium text-dark-muted uppercase tracking-wider">Палитра блоков (нажмите для выбора):</div>
       <div class="flex flex-wrap gap-2">
         <button
           v-for="mat in currentPalette"
@@ -209,14 +199,14 @@ const getMaterial = (id: string | null): MultiblockMaterial => {
               : 'text-dark-muted hover:text-white hover:bg-[#16181a]'
           ]"
         >
-          <span>Layer {{ layer.layerNumber }}</span>
+          <span>Слой {{ layer.layerNumber }}</span>
           <span class="text-[10px] bg-black/40 px-1.5 py-0.5 rounded text-dark-muted">Y={{ layer.layerNumber }}</span>
           <button 
             v-if="isEditing && layersList.length > 1" 
             type="button"
             @click.stop="removeLayer(index)"
             class="text-rose-400 hover:text-rose-300 ml-1 p-0.5"
-            title="Delete Layer"
+            title="Удалить слой"
           >
             <IconRenderer name="X" size="12" />
           </button>
@@ -230,14 +220,14 @@ const getMaterial = (id: string | null): MultiblockMaterial => {
         class="px-3 py-1.5 rounded-xl border border-dashed border-[#26292d] hover:border-cyan-500/50 text-xs font-medium text-cyan-400 hover:bg-cyan-500/10 flex items-center gap-1.5 transition-all shrink-0"
       >
         <IconRenderer name="Plus" size="14" />
-        Add Layer Y={{ layersList.length + 1 }}
+        Добавить Слой Y={{ layersList.length + 1 }}
       </button>
     </div>
 
-    <!-- Active Layer Painting Grid -->
+    <!-- Grid Painter -->
     <div class="flex flex-col items-center justify-center p-6 bg-[#0c0d0e] rounded-xl border border-[#26292d]">
       <div class="text-xs font-medium text-dark-muted mb-3">
-        Layer {{ activeLayer.layerNumber }} Matrix ({{ currentSize }}x{{ currentSize }})
+        Матрица Слоя {{ activeLayer.layerNumber }} ({{ currentSize }}x{{ currentSize }})
       </div>
 
       <div 
@@ -266,7 +256,6 @@ const getMaterial = (id: string | null): MultiblockMaterial => {
             />
             <span v-else class="text-[10px] text-dark-muted font-mono">.</span>
 
-            <!-- Tooltip Hover for details -->
             <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block z-20 pointer-events-none">
               <div class="bg-black/90 border border-dark-border text-white text-[11px] font-medium px-2 py-1 rounded shadow-xl whitespace-nowrap">
                 {{ getMaterial(cellMatId).name }}
@@ -277,15 +266,15 @@ const getMaterial = (id: string | null): MultiblockMaterial => {
       </div>
     </div>
 
-    <!-- Auto-Calculated Materials Summary -->
+    <!-- Materials Summary -->
     <div class="bg-[#121416] border border-[#26292d] p-4 rounded-xl space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2 text-xs font-semibold text-white uppercase tracking-wider">
           <IconRenderer name="CheckCircle2" size="16" class="text-emerald-400" />
-          Required Blocks Summary
+          Сводка необходимых блоков
         </div>
         <span class="text-xs text-dark-muted font-mono">
-          Total Blocks: {{ materialSummary.reduce((acc, curr) => acc + curr.count, 0) }}
+          Всего блоков: {{ materialSummary.reduce((acc, curr) => acc + curr.count, 0) }}
         </span>
       </div>
 

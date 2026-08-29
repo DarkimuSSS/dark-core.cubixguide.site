@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import GuideEditor from './components/GuideEditor.vue';
 import GuideView from './components/GuideView.vue';
 import IconRenderer from './components/IconRenderer.vue';
-import { SAMPLE_GUIDES } from './data/sampleGuides';
 import { PRESET_ITEMS } from './data/presetItems';
 import type { Guide } from './types/guide';
 
-const guides = ref<Guide[]>(SAMPLE_GUIDES);
-const activeGuideId = ref<string>(SAMPLE_GUIDES[0].meta.id);
+const guides = ref<Guide[]>([]);
+const activeGuideId = ref<string>('');
+const activeGuide = ref<Guide | null>(null);
 const mode = ref<'editor' | 'reader'>('editor');
+const isLoading = ref<boolean>(true);
 
 // Notification Toast
 const toastMessage = ref('');
@@ -20,55 +21,96 @@ const showToast = (msg: string) => {
   }, 3000);
 };
 
-const activeGuide = ref<Guide>(JSON.parse(JSON.stringify(SAMPLE_GUIDES[0])));
+// Fetch guides from SQLite API
+const fetchGuides = async () => {
+  try {
+    isLoading.value = true;
+    const res = await fetch('/api/guides');
+    if (!res.ok) throw new Error('Ошибка загрузки данных из БД');
+    const data: Guide[] = await res.json();
+    guides.value = data;
+
+    if (data.length > 0) {
+      if (!activeGuideId.value || !data.some(g => g.meta.id === activeGuideId.value)) {
+        activeGuideId.value = data[0].meta.id;
+        activeGuide.value = JSON.parse(JSON.stringify(data[0]));
+      } else {
+        const current = data.find(g => g.meta.id === activeGuideId.value);
+        if (current) activeGuide.value = JSON.parse(JSON.stringify(current));
+      }
+    } else {
+      activeGuide.value = null;
+    }
+  } catch (err: any) {
+    console.error(err);
+    showToast('Ошибка связи с SQLite БД');
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchGuides();
+});
 
 const selectGuide = (guideId: string) => {
   activeGuideId.value = guideId;
   const found = guides.value.find(g => g.meta.id === guideId);
   if (found) {
     activeGuide.value = JSON.parse(JSON.stringify(found));
-    showToast(`Loaded guide: ${found.meta.title}`);
+    showToast(`Загружен гайд: ${found.meta.title}`);
   }
 };
 
-const updateActiveGuide = (updated: Guide) => {
+const updateActiveGuide = async (updated: Guide) => {
   activeGuide.value = updated;
   const idx = guides.value.findIndex(g => g.meta.id === updated.meta.id);
   if (idx !== -1) {
     guides.value[idx] = updated;
   }
+
+  // Save changes to SQLite DB via API
+  try {
+    await fetch(`/api/guides/${updated.meta.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated)
+    });
+  } catch (err) {
+    console.error('Ошибка сохранения в БД:', err);
+  }
 };
 
-const createNewGuide = () => {
+const createNewGuide = async () => {
   const newGuide: Guide = {
     meta: {
       id: `guide_${Date.now()}`,
-      title: 'Untitled Minecraft Guide',
-      category: 'HiTech',
-      author: 'Crafter',
-      difficulty: 'Beginner',
-      summary: 'New modded guide created with visual builder.',
+      title: 'Новый майнкрафт гайд',
+      category: 'ХайТек',
+      author: 'Игрок',
+      difficulty: 'Новичок',
+      summary: 'Новое руководство по сборке.',
       updatedAt: new Date().toISOString().split('T')[0],
-      published: false
+      published: true
     },
     blocks: [
       {
         id: `b_${Date.now()}_1`,
         type: 'heading',
-        headingText: 'Introduction & Setup',
+        headingText: 'Обзор и требования',
         headingLevel: 'h1'
       },
       {
         id: `b_${Date.now()}_2`,
         type: 'text',
-        textContent: 'Write your step-by-step modded guide instructions here without using markdown syntax...'
+        textContent: 'Опишите шаги постройки или крафта здесь...'
       },
       {
         id: `b_${Date.now()}_3`,
         type: 'callout',
         calloutType: 'tip',
-        calloutTitle: 'Getting Started Tip',
-        calloutText: 'Make sure to double check crafting recipes in JEI / REI.'
+        calloutTitle: 'Совет для игроков',
+        calloutText: 'Проверяйте рецепты в JEI / REI перед крафтом.'
       },
       {
         id: `b_${Date.now()}_4`,
@@ -79,25 +121,53 @@ const createNewGuide = () => {
     ]
   };
 
-  guides.value.push(newGuide);
-  activeGuideId.value = newGuide.meta.id;
-  activeGuide.value = newGuide;
-  mode.value = 'editor';
-  showToast('Created new empty guide!');
+  try {
+    const res = await fetch('/api/guides', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newGuide)
+    });
+
+    if (res.ok) {
+      guides.value.unshift(newGuide);
+      activeGuideId.value = newGuide.meta.id;
+      activeGuide.value = newGuide;
+      mode.value = 'editor';
+      showToast('Создан новый гайд в SQLite БД!');
+    }
+  } catch (err) {
+    console.error('Ошибка создания гайда:', err);
+    showToast('Ошибка сохранения в SQLite');
+  }
 };
 
-const handlePublish = () => {
+const handlePublish = async () => {
+  if (!activeGuide.value) return;
   activeGuide.value.meta.published = true;
   activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
-  updateActiveGuide(activeGuide.value);
-  showToast('Guide published successfully! Switched to Wiki Reader view.');
+  await updateActiveGuide(activeGuide.value);
+  showToast('Гайд успешно сохранен в SQLite БД!');
   mode.value = 'reader';
+};
+
+const handleDeleteGuide = async () => {
+  if (!activeGuide.value) return;
+  const guideId = activeGuide.value.meta.id;
+  try {
+    const res = await fetch(`/api/guides/${guideId}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('Гайд удален из БД');
+      await fetchGuides();
+    }
+  } catch (err) {
+    console.error('Ошибка удаления:', err);
+  }
 };
 </script>
 
 <template>
   <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] font-sans antialiased">
-    <!-- Top Platform Bar -->
+    <!-- Top Bar -->
     <header class="bg-[#16181a] border-b border-[#26292d] h-16 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40">
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/50">
@@ -108,16 +178,16 @@ const handlePublish = () => {
         <div>
           <div class="flex items-center gap-2">
             <span class="text-base font-extrabold text-white tracking-tight">CubixGuide</span>
-            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">No-Code Wiki</span>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">SQLite БД</span>
           </div>
-          <p class="text-[11px] text-dark-muted hidden sm:block">Modded Minecraft Guide Platform</p>
+          <p class="text-[11px] text-dark-muted hidden sm:block">Платформа гайдов для Minecraft серверов</p>
         </div>
       </div>
 
       <!-- Center Guide Switcher & Mode Toggles -->
       <div class="flex items-center gap-2 sm:gap-3">
-        <!-- Guide Dropdown Selector -->
-        <div class="relative hidden md:block">
+        <!-- Guide Select Dropdown -->
+        <div v-if="guides.length > 0" class="relative hidden md:block">
           <select 
             :value="activeGuideId"
             @change="selectGuide(($event.target as HTMLSelectElement).value)"
@@ -135,10 +205,10 @@ const handlePublish = () => {
           class="px-3 py-2 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold flex items-center gap-1.5 transition-all"
         >
           <IconRenderer name="Plus" size="15" />
-          <span class="hidden sm:inline">New Guide</span>
+          <span class="hidden sm:inline">Новый гайд</span>
         </button>
 
-        <!-- Mode Switcher Tabs -->
+        <!-- Mode Switcher -->
         <div class="flex items-center bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
           <button
             type="button"
@@ -151,7 +221,7 @@ const handlePublish = () => {
             ]"
           >
             <IconRenderer name="Edit3" size="14" />
-            <span>Builder</span>
+            <span>Конструктор</span>
           </button>
           <button
             type="button"
@@ -164,29 +234,47 @@ const handlePublish = () => {
             ]"
           >
             <IconRenderer name="BookOpen" size="14" />
-            <span>Wiki Reader</span>
+            <span>Вики Ридер</span>
           </button>
         </div>
       </div>
     </header>
 
-    <!-- Main View Mode Render -->
+    <!-- Main Content -->
     <div class="pt-6">
-      <GuideEditor
-        v-if="mode === 'editor'"
-        :guide="activeGuide"
-        @update:guide="updateActiveGuide"
-        @toggle-preview="mode = 'reader'"
-        @publish="handlePublish"
-      />
+      <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 text-dark-muted space-y-3">
+        <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <div class="text-xs">Загрузка данных из SQLite...</div>
+      </div>
 
-      <GuideView
-        v-else
-        :guide="activeGuide"
-        :all-guides="guides"
-        @select-guide="selectGuide"
-        @edit-mode="mode = 'editor'"
-      />
+      <div v-else-if="!activeGuide" class="text-center py-20 space-y-4">
+        <h3 class="text-lg font-bold text-white">Нет доступных гайдов в БД</h3>
+        <button 
+          @click="createNewGuide" 
+          class="bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg"
+        >
+          Создать первый гайд
+        </button>
+      </div>
+
+      <template v-else>
+        <GuideEditor
+          v-if="mode === 'editor'"
+          :guide="activeGuide"
+          @update:guide="updateActiveGuide"
+          @toggle-preview="mode = 'reader'"
+          @publish="handlePublish"
+          @delete="handleDeleteGuide"
+        />
+
+        <GuideView
+          v-else
+          :guide="activeGuide"
+          :all-guides="guides"
+          @select-guide="selectGuide"
+          @edit-mode="mode = 'editor'"
+        />
+      </template>
     </div>
 
     <!-- Notification Toast -->

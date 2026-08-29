@@ -16,6 +16,7 @@ const emit = defineEmits<{
   (e: 'update:guide', guide: Guide): void;
   (e: 'toggle-preview'): void;
   (e: 'publish'): void;
+  (e: 'delete'): void;
 }>();
 
 const isPickerOpen = ref(false);
@@ -26,8 +27,8 @@ const activeSlotData = ref<CraftingSlot | null>(null);
 
 const isImportExportOpen = ref(false);
 
-const categories: Category[] = ['HiTech', 'MagicRPG', 'SkyBlock', 'Automation', 'General'];
-const difficulties: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced'];
+const categories: Category[] = ['ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий'];
+const difficulties: Difficulty[] = ['Новичок', 'Опытный', 'Мастер'];
 
 // Meta Updates
 const updateTitle = (val: string) => {
@@ -88,18 +89,18 @@ const addBlockAt = (index: number, type: BlockType) => {
 
   switch (type) {
     case 'heading':
-      newBlock = { id: `b_${Date.now()}`, type: 'heading', headingText: 'New Section Header', headingLevel: 'h2' };
+      newBlock = { id: `b_${Date.now()}`, type: 'heading', headingText: 'Новый раздел', headingLevel: 'h2' };
       break;
     case 'text':
-      newBlock = { id: `b_${Date.now()}`, type: 'text', textContent: 'Write detailed step instructions here...' };
+      newBlock = { id: `b_${Date.now()}`, type: 'text', textContent: 'Опишите пошаговые инструкции или пояснения к гайду...' };
       break;
     case 'callout':
       newBlock = { 
         id: `b_${Date.now()}`, 
         type: 'callout', 
         calloutType: 'tip', 
-        calloutTitle: 'Useful Tip', 
-        calloutText: 'Add an important note for readers.' 
+        calloutTitle: 'Полезный совет', 
+        calloutText: 'Добавьте важное примечание для игроков.' 
       };
       break;
     case 'crafting':
@@ -116,8 +117,8 @@ const addBlockAt = (index: number, type: BlockType) => {
         type: 'multiblock',
         gridSize: 3,
         palette: [
-          { id: 'reactor_casing', name: 'Reactor Casing', icon: 'Box', color: '#475569' },
-          { id: 'reactor_glass', name: 'Reactor Glass', icon: 'Grid', color: '#38bdf8' }
+          { id: 'reactor_casing', name: 'Корпус реактора', icon: 'Box', color: '#475569' },
+          { id: 'reactor_glass', name: 'Стекло реактора', icon: 'Grid', color: '#38bdf8' }
         ],
         layers: [
           { layerNumber: 1, grid: Array(3).fill(null).map(() => Array(3).fill('reactor_casing')) },
@@ -129,10 +130,10 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'checklist',
-        checklistTitle: 'Action Steps Checklist',
+        checklistTitle: 'Чек-лист выполнения',
         checklistItems: [
-          { id: 'c1', text: 'Gather required components', completed: false },
-          { id: 'c2', text: 'Power on system controller', completed: false }
+          { id: 'c1', text: 'Собрать необходимые ресурсы', completed: false },
+          { id: 'c2', text: 'Установить и подключить питание', completed: false }
         ]
       };
       break;
@@ -180,7 +181,7 @@ const handleSaveSlot = (updatedSlot: CraftingSlot) => {
 // Checklist helpers
 const addChecklistItem = (block: GuideBlock) => {
   const items = [...(block.checklistItems || [])];
-  items.push({ id: `chk_${Date.now()}`, text: 'New progression step', completed: false });
+  items.push({ id: `chk_${Date.now()}`, text: 'Новый этап выполнения', completed: false });
   updateBlock({ ...block, checklistItems: items });
 };
 
@@ -198,7 +199,7 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          WYSIWYG Editor
+          Визуальный Конструктор
         </span>
       </div>
 
@@ -209,7 +210,7 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
           class="px-3 py-1.5 rounded-lg border border-[#26292d] bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white text-xs font-medium flex items-center gap-1.5 transition-all"
         >
           <IconRenderer name="FileText" size="14" />
-          JSON Share
+          JSON
         </button>
 
         <button
@@ -218,7 +219,7 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
           class="px-3.5 py-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
         >
           <IconRenderer name="Eye" size="14" />
-          Reader Preview
+          Просмотр вики
         </button>
 
         <button
@@ -227,7 +228,16 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
           class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-950/50"
         >
           <IconRenderer name="Check" size="14" />
-          Publish Guide
+          Сохранить в БД
+        </button>
+
+        <button
+          type="button"
+          @click="emit('delete')"
+          class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-semibold transition-all"
+          title="Удалить гайд из БД"
+        >
+          <IconRenderer name="Trash2" size="16" />
         </button>
       </div>
     </div>
@@ -235,12 +245,12 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
     <!-- Meta Header Card -->
     <div class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-5">
       <div class="space-y-2">
-        <label class="text-[11px] font-bold uppercase tracking-wider text-dark-muted">Guide Title</label>
+        <label class="text-[11px] font-bold uppercase tracking-wider text-dark-muted">Название гайда</label>
         <input
           type="text"
           :value="guide.meta.title"
           @input="updateTitle(($event.target as HTMLInputElement).value)"
-          placeholder="Name your guide (e.g., AE2 ME Controller Setup)..."
+          placeholder="Назовите ваш гайд (например: Настройка МЭ Сети)..."
           class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xl sm:text-2xl font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-accent/70 transition-all placeholder:text-dark-muted/50"
         />
       </div>
@@ -248,7 +258,7 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#26292d]">
         <!-- Category Selector -->
         <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Category</label>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Категория</label>
           <select
             :value="guide.meta.category"
             @change="updateCategory(($event.target as HTMLSelectElement).value as Category)"
@@ -260,19 +270,19 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
 
         <!-- Author Input -->
         <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Author Name</label>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Автор гайда</label>
           <input
             type="text"
             :value="guide.meta.author"
             @input="updateAuthor(($event.target as HTMLInputElement).value)"
-            placeholder="Your in-game / community tag..."
+            placeholder="Ваш никнейм..."
             class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-medium rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-accent"
           />
         </div>
 
-        <!-- Difficulty Pill Selector -->
+        <!-- Difficulty Selector -->
         <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Difficulty Level</label>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Сложность</label>
           <div class="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-lg border border-[#26292d]">
             <button
               v-for="diff in difficulties"
@@ -293,21 +303,21 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
       </div>
     </div>
 
-    <!-- Blocks List with Controls -->
+    <!-- Blocks List -->
     <div class="space-y-6">
       <div 
         v-for="(block, index) in guide.blocks" 
         :key="block.id"
         class="group relative bg-[#16181a] border border-[#26292d] hover:border-[#3b3f46] p-5 rounded-2xl transition-all shadow-md"
       >
-        <!-- Floating Block Control Handles (Hover Action Bar) -->
+        <!-- Floating Controls -->
         <div class="absolute -top-3 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center gap-1 bg-[#0c0d0e] border border-[#26292d] p-1 rounded-lg shadow-xl">
           <button
             type="button"
             @click="moveBlock(index, 'up')"
             :disabled="index === 0"
             class="p-1 text-dark-muted hover:text-white disabled:opacity-30 rounded hover:bg-[#26292d]"
-            title="Move Up"
+            title="Переместить вверх"
           >
             <IconRenderer name="ArrowUp" size="14" />
           </button>
@@ -316,7 +326,7 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
             @click="moveBlock(index, 'down')"
             :disabled="index === guide.blocks.length - 1"
             class="p-1 text-dark-muted hover:text-white disabled:opacity-30 rounded hover:bg-[#26292d]"
-            title="Move Down"
+            title="Переместить вниз"
           >
             <IconRenderer name="ArrowDown" size="14" />
           </button>
@@ -325,7 +335,7 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
             type="button"
             @click="duplicateBlock(index)"
             class="p-1 text-cyan-400 hover:text-cyan-300 rounded hover:bg-[#26292d]"
-            title="Duplicate Block"
+            title="Дублировать блок"
           >
             <IconRenderer name="Copy" size="14" />
           </button>
@@ -334,16 +344,16 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
             @click="deleteBlock(index)"
             :disabled="guide.blocks.length <= 1"
             class="p-1 text-rose-400 hover:text-rose-300 disabled:opacity-30 rounded hover:bg-[#26292d]"
-            title="Delete Block"
+            title="Удалить блок"
           >
             <IconRenderer name="Trash2" size="14" />
           </button>
         </div>
 
-        <!-- Block Type 1: Heading / Section Header -->
+        <!-- Block 1: Heading -->
         <div v-if="block.type === 'heading'" class="space-y-2">
           <div class="flex items-center justify-between text-xs text-dark-muted font-medium mb-1">
-            <span>Section Heading Block</span>
+            <span>Блок Заголовка</span>
             <div class="flex items-center gap-1">
               <button 
                 type="button"
@@ -365,39 +375,38 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
             type="text"
             :value="block.headingText"
             @input="updateBlock({ ...block, headingText: ($event.target as HTMLInputElement).value })"
-            placeholder="Section Title..."
+            placeholder="Текст заголовка..."
             class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-lg font-bold rounded-lg px-3.5 py-2 focus:outline-none focus:border-emerald-accent/60"
           />
         </div>
 
-        <!-- Block Type 2: Text / Paragraph -->
+        <!-- Block 2: Text -->
         <div v-else-if="block.type === 'text'" class="space-y-2">
-          <div class="text-xs text-dark-muted font-medium">Text Paragraph</div>
+          <div class="text-xs text-dark-muted font-medium">Текстовый блок</div>
           <textarea
             :value="block.textContent"
             @input="updateBlock({ ...block, textContent: ($event.target as HTMLTextAreaElement).value })"
-            placeholder="Write guide explanations..."
+            placeholder="Опишите подробности инструкции..."
             rows="3"
             class="w-full bg-[#0c0d0e] border border-[#26292d] text-slate-200 text-sm rounded-lg p-3 focus:outline-none focus:border-emerald-accent/60 resize-y"
           ></textarea>
         </div>
 
-        <!-- Block Type 3: Info / Alert Box -->
+        <!-- Block 3: Callout Box -->
         <div v-else-if="block.type === 'callout'">
           <CalloutBlock :block="block" :is-editing="true" @update="updateBlock" />
         </div>
 
-        <!-- Block Type 4: Visual Crafting Grid (3x3) -->
+        <!-- Block 4: Crafting Grid 3x3 -->
         <div v-else-if="block.type === 'crafting'" class="space-y-4">
           <div class="flex items-center justify-between text-xs text-dark-muted font-semibold uppercase tracking-wider">
             <span class="flex items-center gap-1.5 text-white">
               <IconRenderer name="Grid" size="16" class="text-emerald-400" />
-              Crafting Table Matrix (Click slot to select item)
+              Сетка верстака 3x3 (нажмите на слот для выбора предмета)
             </span>
           </div>
 
           <div class="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 bg-[#0c0d0e] rounded-xl border border-[#26292d]">
-            <!-- 3x3 Grid Matrix -->
             <div class="grid grid-cols-3 gap-2.5 p-3 bg-[#121416] rounded-xl border border-[#26292d]">
               <button
                 v-for="(slot, slotIdx) in (block.craftingGrid || Array(9).fill(null))"
@@ -414,7 +423,6 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
                 </div>
                 <span v-else class="text-dark-muted/40 text-xs font-mono">+</span>
                 
-                <!-- Hover name -->
                 <div v-if="slot && slot.item" class="absolute bottom-full mb-2 hidden group-hover:block z-20 pointer-events-none">
                   <div class="bg-black/90 border border-dark-border text-white text-[10px] px-2 py-1 rounded whitespace-nowrap shadow-xl">
                     {{ slot.item.name }}
@@ -423,15 +431,13 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
               </button>
             </div>
 
-            <!-- Arrow indicator -->
             <div class="text-emerald-400 flex flex-col items-center gap-1">
               <IconRenderer name="ChevronRight" size="32" class="hidden sm:block" />
               <IconRenderer name="ArrowDown" size="32" class="block sm:hidden" />
             </div>
 
-            <!-- Output Slot -->
             <div class="flex flex-col items-center gap-1.5">
-              <span class="text-[11px] font-semibold text-dark-muted">Result Output</span>
+              <span class="text-[11px] font-semibold text-dark-muted">Результат</span>
               <button
                 type="button"
                 @click="openSlotPicker(block.id, 9, true)"
@@ -443,24 +449,24 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
                     x{{ block.craftingOutput.count }}
                   </span>
                 </div>
-                <span v-else class="text-dark-muted text-xs">Result</span>
+                <span v-else class="text-dark-muted text-xs">Выход</span>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Block Type 5: Multiblock Layer Builder -->
+        <!-- Block 5: Multiblock Painter -->
         <div v-else-if="block.type === 'multiblock'">
           <LayerPainter :block="block" :is-editing="true" @update="updateBlock" />
         </div>
 
-        <!-- Block Type 6: Checklist Block -->
+        <!-- Block 6: Checklist -->
         <div v-else-if="block.type === 'checklist'" class="space-y-3">
           <input
             type="text"
             :value="block.checklistTitle"
             @input="updateBlock({ ...block, checklistTitle: ($event.target as HTMLInputElement).value })"
-            placeholder="Checklist title..."
+            placeholder="Заголовок чек-листа..."
             class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-sm font-semibold rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-accent/60 mb-2"
           />
 
@@ -506,11 +512,11 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
             class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium pt-1"
           >
             <IconRenderer name="Plus" size="14" />
-            Add Checklist Step
+            Добавить этап
           </button>
         </div>
 
-        <!-- Inline Floating "+ Add Section" Button between blocks -->
+        <!-- Inline Floating "+ Add Block" -->
         <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <div class="relative group/menu">
             <button
@@ -518,28 +524,27 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
               class="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 transition-transform transform hover:scale-105"
             >
               <IconRenderer name="Plus" size="13" />
-              Add Block
+              Добавить блок
             </button>
 
-            <!-- Dropdown Block Types -->
             <div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/menu:flex bg-[#16181a] border border-[#26292d] rounded-xl p-1.5 shadow-2xl flex-col gap-1 w-48 z-30">
               <button @click="addBlockAt(index, 'heading')" class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
-                <IconRenderer name="FileText" size="14" class="text-cyan-400" /> Header
+                <IconRenderer name="FileText" size="14" class="text-cyan-400" /> Заголовок
               </button>
               <button @click="addBlockAt(index, 'text')" class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
-                <IconRenderer name="Edit3" size="14" class="text-emerald-400" /> Rich Text
+                <IconRenderer name="Edit3" size="14" class="text-emerald-400" /> Текст
               </button>
               <button @click="addBlockAt(index, 'callout')" class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
-                <IconRenderer name="Lightbulb" size="14" class="text-amber-400" /> Info Box
+                <IconRenderer name="Lightbulb" size="14" class="text-amber-400" /> Уведомление / Совет
               </button>
               <button @click="addBlockAt(index, 'crafting')" class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
-                <IconRenderer name="Grid" size="14" class="text-purple-400" /> Crafting 3x3
+                <IconRenderer name="Grid" size="14" class="text-purple-400" /> Крафт 3x3
               </button>
               <button @click="addBlockAt(index, 'multiblock')" class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
-                <IconRenderer name="Layers" size="14" class="text-cyan-400" /> Multiblock Painter
+                <IconRenderer name="Layers" size="14" class="text-cyan-400" /> Мультиструктура
               </button>
               <button @click="addBlockAt(index, 'checklist')" class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
-                <IconRenderer name="CheckCircle2" size="14" class="text-emerald-400" /> Step Checklist
+                <IconRenderer name="CheckCircle2" size="14" class="text-emerald-400" /> Чек-лист этапов
               </button>
             </div>
           </div>
@@ -551,7 +556,7 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
     <CraftingSlotPicker
       :is-open="isPickerOpen"
       :slot="activeSlotData"
-      :slot-label="isOutputSlot ? 'Result Item' : `Grid Slot #${(activeSlotIndex || 0) + 1}`"
+      :slot-label="isOutputSlot ? 'Результат крафта' : `Слот #${(activeSlotIndex || 0) + 1}`"
       @close="isPickerOpen = false"
       @save="handleSaveSlot"
     />

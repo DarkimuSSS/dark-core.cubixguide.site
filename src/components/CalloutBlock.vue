@@ -16,7 +16,7 @@ const calloutConfig = computed(() => {
   switch (props.block.calloutType) {
     case 'warning':
       return {
-        label: 'Warning',
+        label: 'Предупреждение',
         icon: 'AlertTriangle',
         border: 'border-amber-500/40',
         bg: 'bg-amber-500/10',
@@ -25,7 +25,7 @@ const calloutConfig = computed(() => {
       };
     case 'danger':
       return {
-        label: 'Danger',
+        label: 'Опасность',
         icon: 'OctagonAlert',
         border: 'border-rose-500/40',
         bg: 'bg-rose-500/10',
@@ -35,7 +35,7 @@ const calloutConfig = computed(() => {
     case 'tip':
     default:
       return {
-        label: 'Tip',
+        label: 'Совет',
         icon: 'Lightbulb',
         border: 'border-emerald-500/40',
         bg: 'bg-emerald-500/10',
@@ -69,10 +69,10 @@ const updateText = (val: string) => {
 
 <template>
   <div :class="['rounded-lg p-4 border transition-all duration-200', calloutConfig.border, calloutConfig.bg]">
-    <!-- Editing Controls: Selector buttons -->
+    <!-- Editing Controls -->
     <div v-if="isEditing" class="flex flex-wrap items-center justify-between gap-3 mb-3 border-b border-dark-border/50 pb-3">
       <div class="flex items-center gap-2">
-        <span class="text-xs font-semibold uppercase tracking-wider text-dark-muted">Callout Type:</span>
+        <span class="text-xs font-semibold uppercase tracking-wider text-dark-muted">Тип уведомления:</span>
         <div class="flex items-center gap-1.5 bg-dark-bg p-1 rounded-md border border-dark-border">
           <button 
             type="button"
@@ -80,7 +80,7 @@ const updateText = (val: string) => {
             :class="['px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1.5 transition-all', props.block.calloutType === 'tip' || !props.block.calloutType ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-dark-muted hover:text-white']"
           >
             <IconRenderer name="Lightbulb" size="14" />
-            Tip
+            Совет
           </button>
           <button 
             type="button"
@@ -88,7 +88,7 @@ const updateText = (val: string) => {
             :class="['px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1.5 transition-all', props.block.calloutType === 'warning' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-dark-muted hover:text-white']"
           >
             <IconRenderer name="AlertTriangle" size="14" />
-            Warning
+            Важно
           </button>
           <button 
             type="button"
@@ -96,32 +96,31 @@ const updateText = (val: string) => {
             :class="['px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1.5 transition-all', props.block.calloutType === 'danger' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-dark-muted hover:text-white']"
           >
             <IconRenderer name="OctagonAlert" size="14" />
-            Danger
+            Опасность
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Callout Header -->
+    <!-- Callout Content -->
     <div class="flex items-start gap-3">
       <div :class="['p-2 rounded-lg shrink-0 mt-0.5', calloutConfig.badge]">
         <IconRenderer :name="calloutConfig.icon" size="20" />
       </div>
 
       <div class="flex-1 min-w-0">
-        <!-- Title Field -->
         <div v-if="isEditing">
           <input 
             type="text" 
             :value="block.calloutTitle" 
             @input="updateTitle(($event.target as HTMLInputElement).value)"
-            placeholder="Callout title (e.g. Pro Channel Management Tip)..."
+            placeholder="Заголовок (например: Совет по настройке)..."
             class="w-full bg-dark-bg/80 border border-dark-border text-white text-sm font-semibold rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-accent/60 mb-2"
           />
           <textarea 
             :value="block.calloutText"
             @input="updateText(($event.target as HTMLTextAreaElement).value)"
-            placeholder="Write helpful details or safety precautions..."
+            placeholder="Опишите важные детали или правила безопасности..."
             rows="2"
             class="w-full bg-dark-bg/80 border border-dark-border text-dark-muted focus:text-white text-xs rounded-md px-3 py-2 focus:outline-none focus:border-emerald-accent/60 resize-y"
           ></textarea>
@@ -132,7 +131,7 @@ const updateText = (val: string) => {
             {{ block.calloutTitle }}
           </h4>
           <p class="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-            {{ block.calloutText || 'No description provided.' }}
+            {{ block.calloutText || 'Описание отсутствует.' }}
           </p>
         </div>
       </div>

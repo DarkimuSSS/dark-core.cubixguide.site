@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import CalloutBlock from './CalloutBlock.vue';
 import LayerPainter from './LayerPainter.vue';
-import type { Guide, GuideBlock } from '../types/guide';
+import type { Guide } from '../types/guide';
 
 const props = defineProps<{
   guide: Guide;
@@ -17,7 +17,6 @@ const emit = defineEmits<{
 
 const isMobileNavOpen = ref(false);
 
-// Auto-generated Table of Contents from Heading blocks
 const tableOfContents = computed(() => {
   return props.guide.blocks
     .filter(b => b.type === 'heading' && b.headingText)
@@ -44,7 +43,6 @@ const scrollToBlock = (id: string) => {
     <!-- Top Reader Navigation Bar -->
     <header class="h-16 border-b border-[#26292d] bg-[#16181a]/80 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-8 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <!-- Mobile Drawer Toggle -->
         <button 
           @click="isMobileNavOpen = !isMobileNavOpen"
           class="lg:hidden text-dark-muted hover:text-white p-2 rounded-lg hover:bg-[#26292d]"
@@ -57,20 +55,19 @@ const scrollToBlock = (id: string) => {
             <IconRenderer name="BookOpen" size="18" />
           </div>
           <div>
-            <h1 class="text-sm font-bold text-white tracking-tight">CubixGuide Wiki</h1>
-            <p class="text-[10px] text-dark-muted font-medium">Modded Minecraft Knowledge Base</p>
+            <h1 class="text-sm font-bold text-white tracking-tight">CubixGuide Вики</h1>
+            <p class="text-[10px] text-dark-muted font-medium">База знаний майнкрафт серверов</p>
           </div>
         </div>
       </div>
 
-      <!-- Category Badges & Edit Button -->
       <div class="flex items-center gap-3">
         <div class="hidden sm:flex items-center gap-2">
           <span class="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-medium border border-cyan-500/20">
             {{ guide.meta.category }}
           </span>
           <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">
-            {{ guide.meta.difficulty }}
+            Уровень: {{ guide.meta.difficulty }}
           </span>
         </div>
 
@@ -80,15 +77,15 @@ const scrollToBlock = (id: string) => {
           class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
         >
           <IconRenderer name="Edit3" size="14" />
-          Edit Guide
+          Редактировать
         </button>
       </div>
     </header>
 
-    <!-- Main Layout Container (Left Nav + Center Content + Right ToC) -->
+    <!-- Main Layout Container -->
     <div class="flex-1 flex max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
       
-      <!-- LEFT SIDEBAR: Persistent Guide Navigation Tree -->
+      <!-- LEFT SIDEBAR -->
       <aside :class="[
         'fixed lg:sticky top-20 z-40 lg:z-0 w-64 shrink-0 bg-[#16181a] lg:bg-transparent border lg:border-none border-[#26292d] rounded-2xl p-4 transition-all duration-300 max-h-[calc(100vh-6rem)] overflow-y-auto',
         isMobileNavOpen ? 'left-4 shadow-2xl' : '-left-80 lg:left-0'
@@ -97,7 +94,7 @@ const scrollToBlock = (id: string) => {
           <div class="flex items-center justify-between pb-3 border-b border-[#26292d]">
             <div class="text-xs font-bold uppercase tracking-wider text-dark-muted flex items-center gap-1.5">
               <IconRenderer name="BookOpen" size="14" class="text-emerald-400" />
-              Community Guides
+              Каталог гайдов
             </div>
             <button @click="isMobileNavOpen = false" class="lg:hidden text-dark-muted hover:text-white">
               <IconRenderer name="X" size="16" />
@@ -118,7 +115,7 @@ const scrollToBlock = (id: string) => {
             >
               <div class="text-xs font-semibold line-clamp-1 mb-1">{{ item.meta.title }}</div>
               <div class="flex items-center justify-between text-[10px] text-dark-muted">
-                <span>by {{ item.meta.author }}</span>
+                <span>автор: {{ item.meta.author }}</span>
                 <span class="text-cyan-400 font-mono">{{ item.meta.category }}</span>
               </div>
             </div>
@@ -126,18 +123,17 @@ const scrollToBlock = (id: string) => {
         </div>
       </aside>
 
-      <!-- CENTER CONTENT AREA: Clean Reader Article -->
+      <!-- CENTER ARTICLE -->
       <main class="flex-1 min-w-0 max-w-3xl space-y-8">
-        <!-- Article Header -->
         <article class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-4">
           <div class="flex flex-wrap items-center gap-2">
             <span class="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-semibold border border-cyan-500/30">
               {{ guide.meta.category }}
             </span>
             <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
-              {{ guide.meta.difficulty }} Level
+              {{ guide.meta.difficulty }}
             </span>
-            <span class="text-xs text-dark-muted ml-auto">Updated: {{ guide.meta.updatedAt }}</span>
+            <span class="text-xs text-dark-muted ml-auto">Обновлено: {{ guide.meta.updatedAt }}</span>
           </div>
 
           <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-snug">
@@ -146,11 +142,11 @@ const scrollToBlock = (id: string) => {
 
           <div class="flex items-center gap-2 text-xs text-dark-muted border-t border-[#26292d] pt-3">
             <IconRenderer name="Edit3" size="14" class="text-emerald-400" />
-            <span>Author: <strong class="text-slate-200">{{ guide.meta.author }}</strong></span>
+            <span>Автор статьи: <strong class="text-slate-200">{{ guide.meta.author }}</strong></span>
           </div>
         </article>
 
-        <!-- Article Blocks Renderer -->
+        <!-- Article Blocks -->
         <div class="space-y-8">
           <div 
             v-for="block in guide.blocks" 
@@ -182,7 +178,7 @@ const scrollToBlock = (id: string) => {
             <div v-else-if="block.type === 'crafting'" class="bg-[#16181a] border border-[#26292d] p-6 rounded-2xl shadow-xl space-y-4">
               <div class="text-xs font-semibold text-white uppercase tracking-wider flex items-center gap-2">
                 <IconRenderer name="Grid" size="16" class="text-emerald-400" />
-                Crafting Recipe Matrix
+                Схема крафта
               </div>
 
               <div class="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 bg-[#0c0d0e] rounded-xl border border-[#26292d]">
@@ -201,7 +197,7 @@ const scrollToBlock = (id: string) => {
                     </template>
                     <span v-else class="text-dark-muted/20 text-xs font-mono">.</span>
 
-                    <!-- Interactive Tooltip on Hover -->
+                    <!-- Hover Tooltip -->
                     <div v-if="slot && slot.item" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block z-30 pointer-events-none">
                       <div class="bg-[#16181a] border border-[#26292d] p-2.5 rounded-lg shadow-2xl min-w-44 text-left">
                         <div class="text-xs font-bold text-white flex items-center gap-1.5" :style="{ color: slot.item.color }">
@@ -217,7 +213,7 @@ const scrollToBlock = (id: string) => {
                   </div>
                 </div>
 
-                <!-- Crafting Arrow -->
+                <!-- Arrow -->
                 <div class="text-emerald-400 flex flex-col items-center gap-1">
                   <IconRenderer name="ChevronRight" size="32" class="hidden sm:block" />
                   <IconRenderer name="ArrowDown" size="32" class="block sm:hidden" />
@@ -225,7 +221,7 @@ const scrollToBlock = (id: string) => {
 
                 <!-- Result Slot -->
                 <div class="flex flex-col items-center gap-1.5">
-                  <span class="text-[11px] font-semibold text-dark-muted">Yield</span>
+                  <span class="text-[11px] font-semibold text-dark-muted">Результат</span>
                   <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 border-emerald-500/60 bg-[#16181a] flex flex-col items-center justify-center relative transition-all group shadow-xl">
                     <template v-if="block.craftingOutput?.item">
                       <IconRenderer :name="block.craftingOutput.item.icon" size="32" :color="block.craftingOutput.item.color" />
@@ -233,9 +229,8 @@ const scrollToBlock = (id: string) => {
                         x{{ block.craftingOutput.count }}
                       </span>
                     </template>
-                    <span v-else class="text-dark-muted text-xs">Output</span>
+                    <span v-else class="text-dark-muted text-xs">Выход</span>
 
-                    <!-- Result Tooltip -->
                     <div v-if="block.craftingOutput?.item" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block z-30 pointer-events-none">
                       <div class="bg-[#16181a] border border-[#26292d] p-2.5 rounded-lg shadow-2xl min-w-44 text-left">
                         <div class="text-xs font-bold text-white flex items-center gap-1.5" :style="{ color: block.craftingOutput.item.color }">
@@ -260,7 +255,7 @@ const scrollToBlock = (id: string) => {
               <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
                 <div class="text-sm font-bold text-white flex items-center gap-2">
                   <IconRenderer name="CheckCircle2" size="18" class="text-emerald-400" />
-                  {{ block.checklistTitle || 'Progression Checklist' }}
+                  {{ block.checklistTitle || 'Пошаговый чек-лист' }}
                 </div>
               </div>
 
@@ -290,7 +285,7 @@ const scrollToBlock = (id: string) => {
         <div class="bg-[#16181a] border border-[#26292d] p-4 rounded-2xl space-y-3">
           <div class="text-xs font-bold uppercase tracking-wider text-dark-muted flex items-center gap-1.5 border-b border-[#26292d] pb-2">
             <IconRenderer name="Sliders" size="14" class="text-cyan-400" />
-            Table of Contents
+            Содержание статьи
           </div>
 
           <nav class="space-y-1">

@@ -1,11 +1,11 @@
-export type Category = 'HiTech' | 'MagicRPG' | 'SkyBlock' | 'Automation' | 'General';
-export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
+export type Category = 'ХайТек' | 'Магия RPG' | 'СкайБлок' | 'Автоматизация' | 'Общий';
+export type Difficulty = 'Новичок' | 'Опытный' | 'Мастер';
 
 export interface ItemDefinition {
   id: string;
   name: string;
   mod: string;
-  icon: string; // Lucide icon name or symbol
+  icon: string;
   color: string;
   defaultTooltip?: string;
 }
@@ -25,8 +25,8 @@ export interface MultiblockMaterial {
 }
 
 export interface MultiblockLayer {
-  layerNumber: number; // 1 = Bottom, 2 = Middle, 3 = Top, etc.
-  grid: (string | null)[][]; // 2D array of material IDs
+  layerNumber: number;
+  grid: (string | null)[][];
 }
 
 export interface ChecklistItem {
@@ -40,26 +40,17 @@ export type BlockType = 'heading' | 'text' | 'callout' | 'crafting' | 'multibloc
 export interface GuideBlock {
   id: string;
   type: BlockType;
-  // Heading & Text properties
   headingText?: string;
   headingLevel?: 'h1' | 'h2' | 'h3';
   textContent?: string;
-  
-  // Callout Box properties
   calloutType?: 'tip' | 'warning' | 'danger';
   calloutTitle?: string;
   calloutText?: string;
-  
-  // Crafting Grid properties
-  craftingGrid?: CraftingSlot[]; // Array of 9 slots
-  craftingOutput?: CraftingSlot; // 1 output slot
-  
-  // Multiblock Layer Builder properties
+  craftingGrid?: CraftingSlot[];
+  craftingOutput?: CraftingSlot;
   gridSize?: 3 | 5;
   layers?: MultiblockLayer[];
   palette?: MultiblockMaterial[];
-  
-  // Step Checklist properties
   checklistTitle?: string;
   checklistItems?: ChecklistItem[];
 }
