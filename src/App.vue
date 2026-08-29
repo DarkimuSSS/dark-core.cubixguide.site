@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
+import HomePage from './components/HomePage.vue';
 import GuideEditor from './components/GuideEditor.vue';
 import GuideView from './components/GuideView.vue';
 import IconRenderer from './components/IconRenderer.vue';
@@ -11,8 +12,8 @@ const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
 const activeGuide = ref<Guide | null>(null);
 
-// DEFAULT MODE: Always default to 'reader' (Вики / База Знаний) for regular readers!
-const mode = ref<'editor' | 'reader'>('reader');
+// MODE: 'home' (Главная) | 'reader' (Вики Гайда) | 'editor' (Конструктор)
+const mode = ref<'home' | 'reader' | 'editor'>('home');
 const isLoading = ref<boolean>(true);
 
 // Auth & Protection State
@@ -66,7 +67,7 @@ const handleAuthentication = (success: boolean) => {
 const logoutAuthor = () => {
   isAuthenticated.value = false;
   sessionStorage.removeItem('cubix_author_authed');
-  mode.value = 'reader';
+  mode.value = 'home';
   showToast('Вы вышли из режима редактирования');
 };
 
@@ -178,9 +179,13 @@ const selectGuide = (guideId: string) => {
     const found = guides.value.find(g => g.meta.id === guideId);
     if (found) {
       activeGuide.value = JSON.parse(JSON.stringify(found));
-      showToast(`Загружен гайд: ${found.meta.title}`);
     }
   }
+  mode.value = 'reader';
+};
+
+const handleHomeSelectGuide = (guideId: string) => {
+  selectGuide(guideId);
 };
 
 const updateActiveGuide = (updated: Guide) => {
@@ -288,6 +293,7 @@ const handleDeleteGuide = async () => {
       clearDraftLocalStorage(guideId);
       showToast('Гайд удален');
       await fetchGuides();
+      mode.value = 'home';
     }
   } catch (err) {
     console.error('Ошибка удаления:', err);
@@ -299,19 +305,57 @@ const handleDeleteGuide = async () => {
   <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] font-sans antialiased">
     <!-- SINGLE UNIFIED TOP HEADER BAR -->
     <header class="bg-[#16181a] border-b border-[#26292d] h-16 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40 shadow-xl">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/50">
-          <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center text-emerald-400">
-            <IconRenderer name="Box" size="20" />
+      <div class="flex items-center gap-4">
+        <!-- Logo -->
+        <button 
+          @click="mode = 'home'"
+          class="flex items-center gap-3 group text-left transition-opacity hover:opacity-90"
+        >
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/50">
+            <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
+              <IconRenderer name="Box" size="20" />
+            </div>
           </div>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-base font-extrabold text-white tracking-tight">CubixGuide</span>
-            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">База Знаний</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-base font-extrabold text-white tracking-tight">CubixGuide</span>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">База Знаний</span>
+            </div>
+            <p class="text-[11px] text-dark-muted hidden sm:block">Интерактивные руководства для игроков</p>
           </div>
-          <p class="text-[11px] text-dark-muted hidden sm:block">Интерактивные руководства для игроков</p>
-        </div>
+        </button>
+
+        <!-- Navigation Tabs: Главная / Вики -->
+        <nav class="hidden md:flex items-center bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d] ml-4">
+          <button
+            type="button"
+            @click="mode = 'home'"
+            :class="[
+              'px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
+              mode === 'home'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'text-dark-muted hover:text-white'
+            ]"
+          >
+            <IconRenderer name="Home" size="14" />
+            <span>Главная</span>
+          </button>
+
+          <button
+            v-if="activeGuide"
+            type="button"
+            @click="mode = 'reader'"
+            :class="[
+              'px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
+              mode === 'reader'
+                ? 'bg-cyan-600 text-white shadow-md'
+                : 'text-dark-muted hover:text-white'
+            ]"
+          >
+            <IconRenderer name="BookOpen" size="14" />
+            <span>Вики Статья</span>
+          </button>
+        </nav>
       </div>
 
       <!-- Center & Right Navigation Actions -->
@@ -328,12 +372,12 @@ const handleDeleteGuide = async () => {
           </button>
         </div>
 
-        <!-- Guide Selector -->
-        <div v-if="guides.length > 0" class="relative hidden md:block">
+        <!-- Quick Guide Selector -->
+        <div v-if="guides.length > 0 && mode !== 'home'" class="relative hidden sm:block">
           <select 
             :value="activeGuideId"
             @change="selectGuide(($event.target as HTMLSelectElement).value)"
-            class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold rounded-xl px-3.5 py-2 focus:outline-none focus:border-emerald-accent pr-8 cursor-pointer shadow-inner"
+            class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold rounded-xl px-3.5 py-2 focus:outline-none focus:border-emerald-accent pr-8 cursor-pointer shadow-inner max-w-[200px] truncate"
           >
             <option v-for="g in guides" :key="g.meta.id" :value="g.meta.id">
               {{ g.meta.title }}
@@ -365,34 +409,19 @@ const handleDeleteGuide = async () => {
 
         <!-- Authenticated Author Toggles -->
         <div v-else class="flex items-center gap-2">
-          <div class="flex items-center bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
-            <button
-              type="button"
-              @click="mode = 'reader'"
-              :class="[
-                'px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
-                mode === 'reader' 
-                  ? 'bg-cyan-600 text-white shadow-md' 
-                  : 'text-dark-muted hover:text-white'
-              ]"
-            >
-              <IconRenderer name="BookOpen" size="14" />
-              <span>Вики</span>
-            </button>
-            <button
-              type="button"
-              @click="mode = 'editor'"
-              :class="[
-                'px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
-                mode === 'editor' 
-                  ? 'bg-emerald-600 text-white shadow-md' 
-                  : 'text-dark-muted hover:text-white'
-              ]"
-            >
-              <IconRenderer name="Edit3" size="14" />
-              <span>Конструктор</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            @click="mode = 'editor'"
+            :class="[
+              'px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all',
+              mode === 'editor' 
+                ? 'bg-emerald-600 text-white shadow-md' 
+                : 'bg-[#121416] text-emerald-400 border border-emerald-500/30 hover:bg-[#212429]'
+            ]"
+          >
+            <IconRenderer name="Edit3" size="14" />
+            <span>Конструктор</span>
+          </button>
 
           <button
             type="button"
@@ -406,21 +435,25 @@ const handleDeleteGuide = async () => {
       </div>
     </header>
 
-    <!-- Main Content -->
-    <div>
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-8 pt-8">
       <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 text-dark-muted space-y-3">
         <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
         <div class="text-xs">Загрузка гайдов...</div>
       </div>
 
-      <div v-else-if="!activeGuide" class="text-center py-20 space-y-4">
-        <h3 class="text-lg font-bold text-white">Нет доступных гайдов</h3>
-      </div>
-
       <template v-else>
-        <!-- Editor View (Only when authenticated author clicks editor) -->
+        <!-- 1. HOMEPAGE CATALOG VIEW (DEFAULT LANDING) -->
+        <HomePage
+          v-if="mode === 'home'"
+          :guides="guides"
+          @select-guide="handleHomeSelectGuide"
+          @create-guide="createNewGuide"
+        />
+
+        <!-- 2. EDITOR VIEW (Only for authenticated author) -->
         <GuideEditor
-          v-if="mode === 'editor' && isAuthenticated"
+          v-else-if="mode === 'editor' && isAuthenticated && activeGuide"
           :guide="activeGuide"
           @update:guide="updateActiveGuide"
           @toggle-preview="mode = 'reader'"
@@ -428,16 +461,16 @@ const handleDeleteGuide = async () => {
           @delete="handleDeleteGuide"
         />
 
-        <!-- Default Wiki Reader View for regular visitors -->
+        <!-- 3. SINGLE GUIDE WIKI READER VIEW -->
         <GuideView
-          v-else
+          v-else-if="activeGuide"
           :guide="activeGuide"
           :all-guides="guides"
           @select-guide="selectGuide"
           @edit-mode="openEditorProtection"
         />
       </template>
-    </div>
+    </main>
 
     <!-- Password Protected Author Auth Modal -->
     <AuthModal
