@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import { db } from './db';
-import type { Guide, GuideMeta, GuideBlock } from '../src/types/guide';
+import { db, getAuthorProfile, saveAuthorProfile } from './db';
+import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -61,6 +61,35 @@ app.get('/api/servers', async (req, res) => {
     res.json(DEFAULT_CUBIX_SERVERS);
   } catch (err) {
     res.json(DEFAULT_CUBIX_SERVERS);
+  }
+});
+
+// AUTHOR PROFILES API
+
+// Get Author Profile
+app.get('/api/profiles/:username', (req, res) => {
+  try {
+    const profile = getAuthorProfile(req.params.username);
+    res.json(profile);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create / Save Author Profile
+app.post('/api/profiles/:username', (req, res) => {
+  try {
+    const profileData: AuthorProfile = req.body;
+    if (!profileData || !profileData.username) {
+      return res.status(400).json({ error: 'Неверные данные профиля' });
+    }
+    const saved = saveAuthorProfile({
+      ...profileData,
+      username: req.params.username
+    });
+    res.json(saved);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 });
 

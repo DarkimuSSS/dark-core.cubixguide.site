@@ -1,0 +1,380 @@
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue';
+import IconRenderer from './IconRenderer.vue';
+import type { AuthorProfile, Guide } from '../types/guide';
+
+const props = defineProps<{
+  isOpen: boolean;
+  username: string;
+  isOwnProfile: boolean;
+  allGuides: Guide[];
+}>();
+
+const emit = defineEmits<{
+  (e: 'close'): void;
+  (e: 'select-guide', guideId: string): void;
+}>();
+
+const isEditing = ref(false);
+const isLoading = ref(false);
+
+const profile = ref<AuthorProfile>({
+  username: props.username,
+  avatarUrl: '',
+  bio: '',
+  server: 'MagicRPG',
+  socialVk: '',
+  socialTg: '',
+  socialDs: '',
+  badges: [],
+  pinnedGuideId: ''
+});
+
+const newBadgeInput = ref('');
+
+const fetchProfile = async () => {
+  if (!props.username) return;
+  try {
+    isLoading.value = true;
+    const res = await fetch(`/api/profiles/${encodeURIComponent(props.username)}`);
+    if (res.ok) {
+      profile.value = await res.json();
+    }
+  } catch (err) {
+    console.error('Error fetching profile:', err);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+watch(() => props.username, (newVal) => {
+  if (newVal) fetchProfile();
+}, { immediate: true });
+
+const authorGuides = computed(() => {
+  return props.allGuides.filter(g => g.meta.author.toLowerCase() === props.username.toLowerCase());
+});
+
+const pinnedGuide = computed(() => {
+  if (!profile.value.pinnedGuideId) return null;
+  return props.allGuides.find(g => g.meta.id === profile.value.pinnedGuideId);
+});
+
+const saveProfile = async () => {
+  try {
+    isLoading.value = true;
+    const res = await fetch(`/api/profiles/${encodeURIComponent(props.username)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile.value)
+    });
+    if (res.ok) {
+      profile.value = await res.json();
+      isEditing.value = false;
+    }
+  } catch (err) {
+    console.error('Error saving profile:', err);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const addBadge = () => {
+  const val = newBadgeInput.value.trim();
+  if (val && !profile.value.badges?.includes(val)) {
+    profile.value.badges = [...(profile.value.badges || []), val];
+    newBadgeInput.value = '';
+  }
+};
+
+const removeBadge = (badge: string) => {
+  profile.value.badges = profile.value.badges?.filter(b => b !== badge) || [];
+};
+
+const handleAvatarFileUpload = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+  const file = target.files[0];
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    if (event.target?.result) {
+      profile.value.avatarUrl = event.target.result as string;
+    }
+  };
+  reader.readAsDataURL(file);
+};
+</script>
+
+<template>
+  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn">
+    <div class="bg-[#16181a] border border-[#26292d] w-full max-w-2xl rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar relative">
+      
+      <!-- Close Button -->
+      <button @click="emit('close')" class="absolute top-5 right-5 text-dark-muted hover:text-white p-2 rounded-xl bg-[#0c0d0e] border border-[#26292d] transition-all">
+        <IconRenderer name="X" size="18" />
+      </button>
+
+      <!-- Loading State -->
+      <div v-if="isLoading" class="py-12 text-center text-dark-muted space-y-2">
+        <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <div class="text-xs">Загрузка профиля...</div>
+      </div>
+
+      <template v-else>
+        <!-- PROFILE HEADER BADGE -->
+        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-[#26292d]">
+          <!-- Avatar with Glow -->
+          <div class="relative group">
+            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-2xl shadow-emerald-950/60 flex-shrink-0 overflow-hidden">
+              <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center overflow-hidden">
+                <img v-if="profile.avatarUrl" :src="profile.avatarUrl" class="w-full h-full object-cover" />
+                <div v-else class="text-3xl font-black text-emerald-400">
+                  {{ profile.username.charAt(0).toUpperCase() }}
+                </div>
+              </div>
+            </div>
+
+            <span class="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#16181a] shadow-lg" title="Онлайн"></span>
+          </div>
+
+          <!-- Profile Details -->
+          <div class="space-y-3 text-center sm:text-left flex-1">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-2">
+              <div>
+                <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2">
+                  <span>{{ profile.username }}</span>
+                  <span v-if="profile.server" class="text-xs font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2.5 py-0.5 rounded-lg">
+                    🎮 {{ profile.server }}
+                  </span>
+                </h2>
+                <p class="text-xs text-dark-muted">Автор {{ authorGuides.length }} опубликованных гайдов</p>
+              </div>
+
+              <!-- Edit Profile Button (For Profile Owner) -->
+              <button
+                v-if="isOwnProfile && !isEditing"
+                type="button"
+                @click="isEditing = true"
+                class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
+              >
+                <IconRenderer name="Edit3" size="14" />
+                <span>Редактировать профиль</span>
+              </button>
+            </div>
+
+            <!-- Badges List -->
+            <div v-if="profile.badges && profile.badges.length > 0" class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+              <span
+                v-for="badge in profile.badges"
+                :key="badge"
+                class="text-[11px] font-bold bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full shadow-inner"
+              >
+                {{ badge }}
+              </span>
+            </div>
+
+            <!-- Bio Text -->
+            <p v-if="profile.bio" class="text-xs text-slate-300 leading-relaxed max-w-lg whitespace-pre-line">
+              {{ profile.bio }}
+            </p>
+
+            <!-- Social Links -->
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-2">
+              <a v-if="profile.socialVk" :href="profile.socialVk" target="_blank" class="px-3 py-1 bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all">
+                <span>ВКонтакте</span>
+              </a>
+              <a v-if="profile.socialTg" :href="profile.socialTg" target="_blank" class="px-3 py-1 bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all">
+                <span>Telegram</span>
+              </a>
+              <span v-if="profile.socialDs" class="px-3 py-1 bg-[#121416] border border-[#26292d] text-purple-300 text-xs font-mono rounded-xl">
+                Discord: {{ profile.socialDs }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITING MODE FORM -->
+        <div v-if="isEditing" class="space-y-4 bg-[#0c0d0e] border border-[#26292d] p-5 rounded-2xl">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-[#26292d] pb-2">
+            <IconRenderer name="Sliders" size="14" class="text-emerald-400" />
+            Редактирование профиля автора
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] text-dark-muted mb-1 font-medium">Ссылка на Аватарку (URL)</label>
+              <input
+                type="text"
+                v-model="profile.avatarUrl"
+                placeholder="https://example.com/avatar.png..."
+                class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-accent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-[11px] text-dark-muted mb-1 font-medium">Или Загрузить файл с ПК</label>
+              <input
+                type="file"
+                accept="image/*"
+                @change="handleAvatarFileUpload"
+                class="w-full text-xs text-dark-muted file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/20 file:text-cyan-300 cursor-pointer"
+              />
+            </div>
+
+            <div>
+              <label class="block text-[11px] text-dark-muted mb-1 font-medium">Основной Сервер CubixWorld</label>
+              <input
+                type="text"
+                v-model="profile.server"
+                placeholder="MagicRPG, HiTech, OneBlock..."
+                class="w-full bg-[#16181a] border border-[#26292d] text-cyan-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-accent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-[11px] text-dark-muted mb-1 font-medium">Прикрепленный Гайд</label>
+              <select
+                v-model="profile.pinnedGuideId"
+                class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-accent"
+              >
+                <option value="">(Без прикрепленного гайда)</option>
+                <option v-for="g in authorGuides" :key="g.meta.id" :value="g.meta.id">{{ g.meta.title }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-dark-muted mb-1 font-medium">О себе (Био)</label>
+            <textarea
+              v-model="profile.bio"
+              rows="3"
+              placeholder="Расскажите игрокам о себе, вашем опыте и модах..."
+              class="w-full bg-[#16181a] border border-[#26292d] text-slate-200 text-xs rounded-xl p-3 focus:outline-none focus:border-emerald-accent resize-y"
+            ></textarea>
+          </div>
+
+          <!-- Social Inputs -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[10px] text-dark-muted mb-1">Ссылка VK</label>
+              <input
+                type="text"
+                v-model="profile.socialVk"
+                placeholder="https://vk.com/id..."
+                class="w-full bg-[#16181a] border border-[#26292d] text-xs rounded-lg px-2.5 py-1.5 text-white"
+              />
+            </div>
+            <div>
+              <label class="block text-[10px] text-dark-muted mb-1">Ссылка Telegram</label>
+              <input
+                type="text"
+                v-model="profile.socialTg"
+                placeholder="https://t.me/..."
+                class="w-full bg-[#16181a] border border-[#26292d] text-xs rounded-lg px-2.5 py-1.5 text-white"
+              />
+            </div>
+            <div>
+              <label class="block text-[10px] text-dark-muted mb-1">Discord Никнейм</label>
+              <input
+                type="text"
+                v-model="profile.socialDs"
+                placeholder="DarkimuSSS#0001"
+                class="w-full bg-[#16181a] border border-[#26292d] text-xs rounded-lg px-2.5 py-1.5 text-white"
+              />
+            </div>
+          </div>
+
+          <!-- Badges Manager -->
+          <div class="space-y-2">
+            <label class="block text-[11px] text-dark-muted font-medium">Достижения и Статусы</label>
+            <div class="flex items-center gap-2">
+              <input
+                type="text"
+                v-model="newBadgeInput"
+                placeholder="Новый статус (например: 🐲 Драконовед)..."
+                @keyup.enter="addBadge"
+                class="flex-1 bg-[#16181a] border border-[#26292d] text-xs rounded-xl px-3 py-1.5 text-white"
+              />
+              <button type="button" @click="addBadge" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl">
+                + Добавить
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              <span v-for="b in profile.badges" :key="b" class="text-xs bg-[#16181a] border border-[#26292d] text-emerald-300 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                <span>{{ b }}</span>
+                <button type="button" @click="removeBadge(b)" class="text-rose-400 hover:text-white">&times;</button>
+              </span>
+            </div>
+          </div>
+
+          <!-- Save / Cancel Controls -->
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#26292d]">
+            <button type="button" @click="isEditing = false" class="px-4 py-2 rounded-xl bg-[#16181a] text-dark-muted hover:text-white text-xs font-bold">
+              Отмена
+            </button>
+            <button type="button" @click="saveProfile" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg">
+              Сохранить профиль
+            </button>
+          </div>
+        </div>
+
+        <!-- PINNED GUIDE SECTION -->
+        <div v-if="pinnedGuide" class="space-y-3">
+          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+            <IconRenderer name="Star" size="14" />
+            Прикрепленное руководство автора
+          </h3>
+
+          <div
+            @click="emit('select-guide', pinnedGuide.meta.id); emit('close');"
+            class="group bg-gradient-to-r from-amber-500/10 via-[#121416] to-[#121416] border border-amber-500/30 p-5 rounded-2xl cursor-pointer hover:border-amber-400 transition-all flex items-center justify-between shadow-lg"
+          >
+            <div class="space-y-1">
+              <span class="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md">
+                📌 Главный Гайд
+              </span>
+              <h4 class="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
+                {{ pinnedGuide.meta.title }}
+              </h4>
+              <p class="text-xs text-dark-muted line-clamp-1">
+                {{ pinnedGuide.meta.summary }}
+              </p>
+            </div>
+            <IconRenderer name="ChevronRight" size="20" class="text-amber-400 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </div>
+
+        <!-- ALL AUTHOR'S GUIDES LIST -->
+        <div class="space-y-4 pt-2">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-[#26292d] pb-2">
+            <IconRenderer name="BookOpen" size="14" class="text-emerald-400" />
+            Все гайды автора ({{ authorGuides.length }})
+          </h3>
+
+          <div v-if="authorGuides.length === 0" class="text-center py-8 bg-[#0c0d0e] rounded-2xl border border-[#26292d] text-xs text-dark-muted">
+            У этого автора пока нет других опубликованных гайдов
+          </div>
+
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div
+              v-for="g in authorGuides"
+              :key="g.meta.id"
+              @click="emit('select-guide', g.meta.id); emit('close');"
+              class="group p-4 bg-[#0c0d0e] hover:bg-[#121416] border border-[#26292d] hover:border-emerald-500/50 rounded-xl cursor-pointer transition-all space-y-2"
+            >
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded">
+                  {{ g.meta.category }}
+                </span>
+                <span class="text-[10px] text-dark-muted">{{ g.meta.updatedAt }}</span>
+              </div>
+              <h4 class="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
+                {{ g.meta.title }}
+              </h4>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>

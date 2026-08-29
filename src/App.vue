@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import HomePage from './components/HomePage.vue';
 import GuideEditor from './components/GuideEditor.vue';
 import GuideView from './components/GuideView.vue';
+import AuthorProfileModal from './components/AuthorProfileModal.vue';
 import IconRenderer from './components/IconRenderer.vue';
 import AuthModal from './components/AuthModal.vue';
 import { PRESET_ITEMS } from './data/presetItems';
@@ -18,6 +19,10 @@ const isLoading = ref<boolean>(true);
 
 // Bookmarked / Favorited guide IDs in LocalStorage
 const favoriteGuideIds = ref<string[]>([]);
+
+// Author Profile Modal State
+const isProfileModalOpen = ref(false);
+const profileUsername = ref('DarkimuSSS');
 
 // Auth & Protection State
 const isAuthModalOpen = ref(false);
@@ -35,11 +40,19 @@ const showToast = (msg: string) => {
   }, 3000);
 };
 
+const openAuthorProfile = (username?: string) => {
+  profileUsername.value = username || activeGuide.value?.meta.author || 'DarkimuSSS';
+  isProfileModalOpen.value = true;
+};
+
 // URL Query Parameters Sync (tab=...&guide=...)
 const updateUrlRoute = () => {
   const params = new URLSearchParams();
 
-  if (mode.value === 'home') {
+  if (isProfileModalOpen.value && profileUsername.value) {
+    params.set('tab', 'Профиль');
+    params.set('author', profileUsername.value);
+  } else if (mode.value === 'home') {
     params.set('tab', 'Главная');
   } else if (mode.value === 'reader') {
     params.set('tab', 'Вики');
@@ -61,6 +74,12 @@ const syncFromUrlPath = () => {
   const params = new URLSearchParams(window.location.search);
   const tab = params.get('tab');
   const guideParam = params.get('guide');
+  const authorParam = params.get('author');
+
+  if (authorParam && tab === 'Профиль') {
+    profileUsername.value = authorParam;
+    isProfileModalOpen.value = true;
+  }
 
   if (guideParam) {
     activeGuideId.value = guideParam;
@@ -74,12 +93,12 @@ const syncFromUrlPath = () => {
     mode.value = isAuthenticated.value ? 'editor' : 'reader';
   } else if (tab === 'Закладки' || tab === 'favorites') {
     mode.value = 'favorites';
-  } else {
+  } else if (tab !== 'Профиль') {
     mode.value = 'home';
   }
 };
 
-watch([mode, activeGuideId], () => {
+watch([mode, activeGuideId, isProfileModalOpen, profileUsername], () => {
   updateUrlRoute();
 });
 
@@ -290,7 +309,7 @@ const createNewGuide = async () => {
       id: `guide_${Date.now()}`,
       title: 'Новый майнкрафт гайд',
       category: 'ХайТек',
-      author: 'Игрок',
+      author: 'DarkimuSSS',
       difficulty: 'Новичок',
       summary: 'Новое руководство по сборке.',
       updatedAt: new Date().toISOString().split('T')[0],
@@ -340,7 +359,7 @@ const createNewGuide = async () => {
       showToast('Создан новый гайд!');
     }
   } catch (err) {
-    console.error('Ошибка сохранения:', err);
+    console.error('Ошибка создания:', err);
     showToast('Ошибка сохранения');
   }
 };
@@ -489,6 +508,19 @@ const handleDeleteGuide = async () => {
           </button>
         </div>
 
+        <!-- Author Profile Quick Trigger Button -->
+        <button
+          type="button"
+          @click="openAuthorProfile('DarkimuSSS')"
+          class="px-3.5 py-2 rounded-xl bg-purple-600/10 hover:bg-purple-600/20 text-purple-300 border border-purple-500/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md"
+          title="Открыть профиль автора"
+        >
+          <div class="w-5 h-5 rounded-full bg-purple-500/30 text-purple-300 flex items-center justify-center font-bold text-[10px]">
+            D
+          </div>
+          <span class="hidden sm:inline">Профиль автора</span>
+        </button>
+
         <button
           v-if="isAuthenticated"
           type="button"
@@ -553,6 +585,7 @@ const handleDeleteGuide = async () => {
           :guides="guides"
           @select-guide="handleHomeSelectGuide"
           @create-guide="createNewGuide"
+          @open-author="openAuthorProfile"
         />
 
         <!-- 2. BOOKMARKS / FAVORITES VIEW -->
@@ -622,9 +655,20 @@ const handleDeleteGuide = async () => {
           :all-guides="guides"
           @select-guide="selectGuide"
           @edit-mode="openEditorProtection"
+          @open-author="openAuthorProfile"
         />
       </template>
     </main>
+
+    <!-- Author Profile Modal -->
+    <AuthorProfileModal
+      :is-open="isProfileModalOpen"
+      :username="profileUsername"
+      :is-own-profile="isAuthenticated"
+      :all-guides="guides"
+      @close="isProfileModalOpen = false"
+      @select-guide="selectGuide"
+    />
 
     <!-- Password Protected Author Auth Modal -->
     <AuthModal

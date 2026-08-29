@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import type { Guide } from '../src/types/guide';
+import type { Guide, AuthorProfile } from '../src/types/guide';
 
 const dbPath = path.resolve(process.cwd(), 'database.sqlite');
 export const db = new Database(dbPath);
@@ -22,6 +22,19 @@ db.exec(`
     server TEXT,
     blocks TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS profiles (
+    username TEXT PRIMARY KEY,
+    avatar_url TEXT,
+    bio TEXT,
+    server TEXT,
+    social_vk TEXT,
+    social_tg TEXT,
+    social_ds TEXT,
+    badges TEXT,
+    pinned_guide_id TEXT,
+    updated_at TEXT
+  );
 `);
 
 // Add server column if missing in existing table
@@ -29,6 +42,88 @@ try {
   db.exec(`ALTER TABLE guides ADD COLUMN server TEXT;`);
 } catch (e) {
   // Column already exists
+}
+
+// Helper to get or create profile
+export function getAuthorProfile(username: string): AuthorProfile {
+  const row = db.prepare('SELECT * FROM profiles WHERE LOWER(username) = LOWER(?)').get(username) as any;
+  if (row) {
+    return {
+      username: row.username,
+      avatarUrl: row.avatar_url || '',
+      bio: row.bio || '',
+      server: row.server || '',
+      socialVk: row.social_vk || '',
+      socialTg: row.social_tg || '',
+      socialDs: row.social_ds || '',
+      badges: JSON.parse(row.badges || '[]'),
+      pinnedGuideId: row.pinned_guide_id || '',
+      updatedAt: row.updated_at || ''
+    };
+  }
+
+  // Default fallback profile
+  return {
+    username,
+    avatarUrl: '',
+    bio: `Автор руководств и сборщиков на серверах CubixWorld.`,
+    server: 'MagicRPG',
+    socialVk: '',
+    socialTg: '',
+    socialDs: '',
+    badges: ['Автор Гайдов', 'Опытный Крафтер'],
+    pinnedGuideId: '',
+    updatedAt: new Date().toISOString().split('T')[0]
+  };
+}
+
+export function saveAuthorProfile(profile: AuthorProfile): AuthorProfile {
+  const stmt = db.prepare(`
+    INSERT INTO profiles (username, avatar_url, bio, server, social_vk, social_tg, social_ds, badges, pinned_guide_id, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(username) DO UPDATE SET
+      avatar_url=excluded.avatar_url,
+      bio=excluded.bio,
+      server=excluded.server,
+      social_vk=excluded.social_vk,
+      social_tg=excluded.social_tg,
+      social_ds=excluded.social_ds,
+      badges=excluded.badges,
+      pinned_guide_id=excluded.pinned_guide_id,
+      updated_at=excluded.updated_at
+  `);
+
+  stmt.run(
+    profile.username,
+    profile.avatarUrl || '',
+    profile.bio || '',
+    profile.server || '',
+    profile.socialVk || '',
+    profile.socialTg || '',
+    profile.socialDs || '',
+    JSON.stringify(profile.badges || []),
+    profile.pinnedGuideId || '',
+    profile.updatedAt || new Date().toISOString().split('T')[0]
+  );
+
+  return getAuthorProfile(profile.username);
+}
+
+// Seed default DarkimuSSS profile if database profiles empty
+const profileCount = db.prepare('SELECT COUNT(*) as count FROM profiles').get() as { count: number };
+if (profileCount.count === 0) {
+  saveAuthorProfile({
+    username: 'DarkimuSSS',
+    avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=DarkimuSSS',
+    bio: 'Создатель базы знаний CubixGuide. Создаю схемы алтарей драконов, гайды по Магия RPG и Автоматизации!',
+    server: 'MagicRPG',
+    socialVk: 'https://vk.com',
+    socialTg: 'https://t.me',
+    socialDs: 'DarkimuSSS#0001',
+    badges: ['🥇 Главный Архитектор', '🐉 Мастер Драконов', '⚡ Эксперт Сборок'],
+    pinnedGuideId: 'guide_dragon_100',
+    updatedAt: new Date().toISOString().split('T')[0]
+  });
 }
 
 // Seed initial default guide if database is empty

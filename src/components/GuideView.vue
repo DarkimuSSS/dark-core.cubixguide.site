@@ -13,6 +13,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'select-guide', guideId: string): void;
   (e: 'edit-mode'): void;
+  (e: 'open-author', username: string): void;
 }>();
 
 const isMobileNavOpen = ref(false);
@@ -163,9 +164,25 @@ const getVariantClass = (variant?: BlockVariant) => {
             {{ guide.meta.title }}
           </h1>
 
-          <div class="flex items-center gap-2 text-xs text-dark-muted border-t border-[#26292d] pt-3">
-            <IconRenderer name="Edit3" size="14" class="text-emerald-400" />
-            <span>Автор статьи: <strong class="text-slate-200">{{ guide.meta.author }}</strong></span>
+          <!-- Clickable Author Profile Link -->
+          <div class="flex items-center justify-between text-xs text-dark-muted border-t border-[#26292d] pt-3">
+            <div 
+              @click="emit('open-author', guide.meta.author)" 
+              class="flex items-center gap-2 cursor-pointer hover:text-emerald-400 transition-colors group/author"
+              title="Открыть профиль автора"
+            >
+              <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs group-hover/author:bg-emerald-500 group-hover/author:text-white transition-all">
+                {{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}
+              </div>
+              <span>Автор статьи: <strong class="text-slate-200 group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</strong></span>
+            </div>
+
+            <button 
+              @click="emit('open-author', guide.meta.author)"
+              class="px-3 py-1 bg-[#121416] hover:bg-[#212429] text-cyan-400 border border-[#26292d] rounded-xl text-[11px] font-bold transition-all"
+            >
+              👤 Профиль автора
+            </button>
           </div>
         </article>
 

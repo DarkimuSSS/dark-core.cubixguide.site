@@ -1,23 +1,43 @@
 export type Category = 'ХайТек' | 'Магия RPG' | 'СкайБлок' | 'Автоматизация' | 'Общий';
+
 export type Difficulty = 'Новичок' | 'Опытный' | 'Мастер';
 
-export interface ItemDefinition {
+export type BlockType = 
+  | 'heading' 
+  | 'text' 
+  | 'image' 
+  | 'callout' 
+  | 'crafting' 
+  | 'multiblock' 
+  | 'checklist'
+  | 'divider'
+  | 'section';
+
+// Legacy grid span widths
+export type BlockSpan = 'span-1' | 'span-2' | 'span-3' | 'span-4' | 'span-6';
+
+// Block Alignment
+export type BlockAlign = 'left' | 'center' | 'right';
+
+// Card Styling Variant
+export type BlockVariant = 'default' | 'subtle' | 'accent' | 'bordered';
+
+export interface CraftingItem {
   id: string;
   name: string;
   mod: string;
-  icon: string;
-  color: string;
-  defaultTooltip?: string;
+  icon: string; // Lucide icon name
+  color?: string; // Icon tint color
 }
 
 export interface CraftingSlot {
   index: number;
-  item: ItemDefinition | null;
+  item: CraftingItem | null;
   count: number;
   tooltip?: string;
 }
 
-export interface MultiblockMaterial {
+export interface MultiblockPaletteItem {
   id: string;
   name: string;
   icon: string;
@@ -26,7 +46,7 @@ export interface MultiblockMaterial {
 
 export interface MultiblockLayer {
   layerNumber: number;
-  grid: (string | null)[][];
+  grid: (string | null)[][]; // Matrix of palette IDs
 }
 
 export interface ChecklistItem {
@@ -35,52 +55,55 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
-export type BlockType = 'heading' | 'text' | 'callout' | 'crafting' | 'multiblock' | 'checklist' | 'image' | 'divider' | 'section';
-
-// Grid & Custom Freeform Layout
-export type BlockSpan = 'span-6' | 'span-3' | 'span-2' | 'span-4' | 'span-1';
-export type BlockAlign = 'left' | 'center' | 'right';
-export type BlockVariant = 'default' | 'subtle' | 'bordered' | 'accent';
-
 export interface SectionColumn {
   id: string;
   span?: BlockSpan;
-  customWidth?: number; // Custom percentage width (15% to 85%)
+  customWidth?: number; // Custom % width (e.g. 70%, 30%, 33%)
   blocks: GuideBlock[];
 }
 
 export interface GuideBlock {
   id: string;
   type: BlockType;
-  
-  // Freeform Mouse Drag Resizing & Layout Controls
-  customWidth?: number; // Custom percentage width (10% to 100%)
-  customHeight?: number; // Custom minimum height in px (80px to 1200px)
-
-  // Standard Presets fallback
-  span?: BlockSpan;
+  span?: BlockSpan; // 1 to 6 columns out of 6
+  customWidth?: number; // Freeform percentage width (15% to 100%)
+  customHeight?: number; // Freeform pixel minHeight (e.g. 200px)
   align?: BlockAlign;
   variant?: BlockVariant;
-
-  // Content Fields
+  
+  // Type: heading
   headingText?: string;
-  headingLevel?: 'h1' | 'h2' | 'h3';
+  headingLevel?: 'h1' | 'h2';
+  
+  // Type: text
   textContent?: string;
-  calloutType?: 'tip' | 'warning' | 'danger';
+  
+  // Type: callout
+  calloutType?: 'info' | 'warning' | 'danger' | 'tip';
   calloutTitle?: string;
   calloutText?: string;
-  craftingGrid?: CraftingSlot[];
-  craftingOutput?: CraftingSlot;
-  gridSize?: 3 | 5;
+  
+  // Type: crafting
+  craftingGrid?: CraftingSlot[]; // Array of 9 slots
+  craftingOutput?: CraftingSlot; // 1 output slot
+  
+  // Type: multiblock
+  gridSize?: number; // e.g., 3 for 3x3, 5 for 5x5
+  palette?: MultiblockPaletteItem[];
   layers?: MultiblockLayer[];
-  palette?: MultiblockMaterial[];
+  
+  // Type: checklist
   checklistTitle?: string;
   checklistItems?: ChecklistItem[];
+
+  // Type: image
   imageUrl?: string;
   imageCaption?: string;
-  dividerStyle?: 'line' | 'dashed' | 'dots' | 'icon';
 
-  // Nested Multi-Block Columns
+  // Type: divider (<hr>)
+  dividerStyle?: 'line' | 'dots' | 'dashed';
+
+  // Type: section (stacked columns card)
   columns?: SectionColumn[];
 }
 
@@ -90,13 +113,26 @@ export interface GuideMeta {
   category: Category;
   author: string;
   difficulty: Difficulty;
-  summary: string;
+  summary?: string;
   updatedAt: string;
   published: boolean;
-  server?: string; // Live CubixWorld server tag (e.g. MagicRPG, HiTech, OneBlock, etc.)
+  server?: string;
 }
 
 export interface Guide {
   meta: GuideMeta;
   blocks: GuideBlock[];
+}
+
+export interface AuthorProfile {
+  username: string;
+  avatarUrl?: string;
+  bio?: string;
+  server?: string;
+  socialVk?: string;
+  socialTg?: string;
+  socialDs?: string;
+  badges?: string[];
+  pinnedGuideId?: string;
+  updatedAt?: string;
 }

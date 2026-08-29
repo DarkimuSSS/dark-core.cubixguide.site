@@ -10,6 +10,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'select-guide', guideId: string): void;
   (e: 'create-guide'): void;
+  (e: 'open-author', username: string): void;
 }>();
 
 const DEFAULT_SERVERS = [
@@ -342,13 +343,17 @@ const getDifficultyBadge = (diff: string) => {
           </div>
 
           <div class="space-y-4 pt-4 border-t border-[#26292d]">
-            <!-- Meta Author & Date -->
+            <!-- Meta Author & Date with Clickable Author Profile -->
             <div class="flex items-center justify-between text-[11px] text-dark-muted">
-              <div class="flex items-center gap-1.5">
-                <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
+              <div 
+                @click.stop="emit('open-author', guide.meta.author)"
+                class="flex items-center gap-1.5 hover:text-emerald-400 transition-colors cursor-pointer group/author"
+                title="Просмотреть профиль автора"
+              >
+                <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px] group-hover/author:bg-emerald-500 group-hover/author:text-white transition-all">
                   {{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}
                 </div>
-                <span class="font-medium text-slate-300">{{ guide.meta.author }}</span>
+                <span class="font-medium text-slate-300 group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</span>
               </div>
               <span>{{ guide.meta.updatedAt }}</span>
             </div>
