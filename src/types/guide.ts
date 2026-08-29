@@ -36,10 +36,20 @@ export interface ChecklistItem {
 }
 
 export type BlockType = 'heading' | 'text' | 'callout' | 'crafting' | 'multiblock' | 'checklist' | 'image';
+export type BlockWidth = 'full' | 'half' | 'third' | 'two-thirds';
+export type BlockAlign = 'left' | 'center' | 'right';
+export type BlockVariant = 'default' | 'subtle' | 'bordered' | 'accent';
 
 export interface GuideBlock {
   id: string;
   type: BlockType;
+  
+  // Layout & Styling Controls
+  width?: BlockWidth; // full (100%), half (50%), third (33%), two-thirds (66%)
+  align?: BlockAlign; // left, center, right
+  variant?: BlockVariant; // default, subtle, bordered, accent
+
+  // Block Content Fields
   headingText?: string;
   headingLevel?: 'h1' | 'h2' | 'h3';
   textContent?: string;

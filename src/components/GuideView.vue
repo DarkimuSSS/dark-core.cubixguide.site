@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import CalloutBlock from './CalloutBlock.vue';
 import LayerPainter from './LayerPainter.vue';
-import type { Guide } from '../types/guide';
+import type { Guide, BlockWidth, BlockAlign, BlockVariant } from '../types/guide';
 
 const props = defineProps<{
   guide: Guide;
@@ -34,6 +34,34 @@ const scrollToBlock = (id: string) => {
   const el = document.getElementById(`block-${id}`);
   if (el) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
+const getWidthClass = (width?: BlockWidth) => {
+  switch (width) {
+    case 'half':
+      return 'w-full md:w-[calc(50%-0.75rem)]';
+    case 'third':
+      return 'w-full md:w-[calc(33.333%-0.75rem)]';
+    case 'two-thirds':
+      return 'w-full md:w-[calc(66.666%-0.75rem)]';
+    case 'full':
+    default:
+      return 'w-full';
+  }
+};
+
+const getVariantClass = (variant?: BlockVariant) => {
+  switch (variant) {
+    case 'accent':
+      return 'bg-emerald-950/20 border-emerald-500/40 shadow-emerald-950/20';
+    case 'subtle':
+      return 'bg-[#121416] border-[#26292d]';
+    case 'bordered':
+      return 'bg-[#16181a] border-2 border-cyan-500/40';
+    case 'default':
+    default:
+      return 'bg-[#16181a] border border-[#26292d]';
   }
 };
 </script>
@@ -124,7 +152,7 @@ const scrollToBlock = (id: string) => {
       </aside>
 
       <!-- CENTER ARTICLE -->
-      <main class="flex-1 min-w-0 max-w-3xl space-y-8">
+      <main class="flex-1 min-w-0 max-w-4xl space-y-8">
         <article class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-4">
           <div class="flex flex-wrap items-center gap-2">
             <span class="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-semibold border border-cyan-500/30">
@@ -146,31 +174,47 @@ const scrollToBlock = (id: string) => {
           </div>
         </article>
 
-        <!-- Article Blocks -->
-        <div class="space-y-8">
+        <!-- Dynamic Flex Blocks Container -->
+        <div class="flex flex-wrap gap-6 items-start">
           <div 
             v-for="block in guide.blocks" 
             :key="block.id" 
             :id="`block-${block.id}`"
-            class="scroll-mt-24"
+            :class="[
+              'scroll-mt-24 transition-all',
+              getWidthClass(block.width)
+            ]"
           >
             <!-- Heading Block -->
-            <div v-if="block.type === 'heading'" class="border-b border-[#26292d] pb-2 mb-4">
-              <h2 v-if="block.headingLevel === 'h1'" class="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            <div v-if="block.type === 'heading'" class="border-b border-[#26292d] pb-2">
+              <h2 
+                v-if="block.headingLevel === 'h1'" 
+                :class="['text-xl sm:text-2xl font-bold text-white tracking-tight', block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left']"
+              >
                 {{ block.headingText }}
               </h2>
-              <h3 v-else class="text-lg font-bold text-slate-100 tracking-tight">
+              <h3 
+                v-else 
+                :class="['text-lg font-bold text-slate-100 tracking-tight', block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left']"
+              >
                 {{ block.headingText }}
               </h3>
             </div>
 
             <!-- Text Block -->
-            <div v-else-if="block.type === 'text'" class="text-slate-300 text-sm sm:text-base leading-relaxed">
+            <div 
+              v-else-if="block.type === 'text'" 
+              :class="[
+                'p-4 rounded-xl text-slate-300 text-sm sm:text-base leading-relaxed',
+                getVariantClass(block.variant),
+                block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left'
+              ]"
+            >
               <p class="whitespace-pre-line">{{ block.textContent }}</p>
             </div>
 
-            <!-- Image / Screenshot Block -->
-            <div v-else-if="block.type === 'image'" class="bg-[#16181a] border border-[#26292d] p-4 rounded-2xl shadow-xl space-y-2">
+            <!-- Image Block -->
+            <div v-else-if="block.type === 'image'" :class="['p-4 rounded-2xl shadow-xl space-y-2', getVariantClass(block.variant)]">
               <div v-if="block.imageUrl" class="rounded-xl overflow-hidden bg-black/60 border border-[#26292d] flex items-center justify-center">
                 <img :src="block.imageUrl" :alt="block.imageCaption || 'Скриншот гайда'" class="max-h-[500px] w-auto object-contain rounded-xl" />
               </div>
@@ -185,7 +229,7 @@ const scrollToBlock = (id: string) => {
             </div>
 
             <!-- Visual Crafting Grid 3x3 -->
-            <div v-else-if="block.type === 'crafting'" class="bg-[#16181a] border border-[#26292d] p-6 rounded-2xl shadow-xl space-y-4">
+            <div v-else-if="block.type === 'crafting'" :class="['p-6 rounded-2xl shadow-xl space-y-4', getVariantClass(block.variant)]">
               <div class="text-xs font-semibold text-white uppercase tracking-wider flex items-center gap-2">
                 <IconRenderer name="Grid" size="16" class="text-emerald-400" />
                 Схема крафта
@@ -251,13 +295,13 @@ const scrollToBlock = (id: string) => {
               </div>
             </div>
 
-            <!-- Multiblock Painter in Reader Mode -->
+            <!-- Multiblock Painter -->
             <div v-else-if="block.type === 'multiblock'">
               <LayerPainter :block="block" :is-editing="false" />
             </div>
 
             <!-- Interactive Reader Step Checklist -->
-            <div v-else-if="block.type === 'checklist'" class="bg-[#16181a] border border-[#26292d] p-6 rounded-2xl shadow-xl space-y-4">
+            <div v-else-if="block.type === 'checklist'" :class="['p-6 rounded-2xl shadow-xl space-y-4', getVariantClass(block.variant)]">
               <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
                 <div class="text-sm font-bold text-white flex items-center gap-2">
                   <IconRenderer name="CheckCircle2" size="18" class="text-emerald-400" />

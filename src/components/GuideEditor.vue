@@ -5,7 +5,7 @@ import CalloutBlock from './CalloutBlock.vue';
 import LayerPainter from './LayerPainter.vue';
 import CraftingSlotPicker from './CraftingSlotPicker.vue';
 import ImportExportModal from './ImportExportModal.vue';
-import type { Guide, GuideBlock, Category, Difficulty, CraftingSlot, BlockType } from '../types/guide';
+import type { Guide, GuideBlock, Category, Difficulty, CraftingSlot, BlockType, BlockWidth, BlockAlign, BlockVariant } from '../types/guide';
 import { PRESET_ITEMS } from '../data/presetItems';
 
 const props = defineProps<{
@@ -57,13 +57,21 @@ const updateBlock = (updatedBlock: GuideBlock) => {
   }
 };
 
-const moveBlock = (index: number, direction: 'up' | 'down') => {
+const moveBlock = (index: number, direction: 'up' | 'down' | 'top' | 'bottom') => {
   const newBlocks = [...props.guide.blocks];
-  const targetIndex = direction === 'up' ? index - 1 : index + 1;
-  if (targetIndex < 0 || targetIndex >= newBlocks.length) return;
-  const temp = newBlocks[index];
-  newBlocks[index] = newBlocks[targetIndex];
-  newBlocks[targetIndex] = temp;
+  if (direction === 'top') {
+    const [item] = newBlocks.splice(index, 1);
+    newBlocks.unshift(item);
+  } else if (direction === 'bottom') {
+    const [item] = newBlocks.splice(index, 1);
+    newBlocks.push(item);
+  } else {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newBlocks.length) return;
+    const temp = newBlocks[index];
+    newBlocks[index] = newBlocks[targetIndex];
+    newBlocks[targetIndex] = temp;
+  }
   emit('update:guide', { ...props.guide, blocks: newBlocks });
 };
 
@@ -89,10 +97,10 @@ const addBlockAt = (index: number, type: BlockType) => {
 
   switch (type) {
     case 'heading':
-      newBlock = { id: `b_${Date.now()}`, type: 'heading', headingText: 'Новый раздел', headingLevel: 'h2' };
+      newBlock = { id: `b_${Date.now()}`, type: 'heading', headingText: 'Новый раздел', headingLevel: 'h2', width: 'full' };
       break;
     case 'text':
-      newBlock = { id: `b_${Date.now()}`, type: 'text', textContent: 'Опишите пошаговые инструкции или пояснения к гайду...' };
+      newBlock = { id: `b_${Date.now()}`, type: 'text', textContent: 'Опишите пошаговые инструкции или пояснения к гайду...', width: 'full' };
       break;
     case 'callout':
       newBlock = { 
@@ -100,13 +108,15 @@ const addBlockAt = (index: number, type: BlockType) => {
         type: 'callout', 
         calloutType: 'tip', 
         calloutTitle: 'Полезный совет', 
-        calloutText: 'Добавьте важное примечание для игроков.' 
+        calloutText: 'Добавьте важное примечание для игроков.',
+        width: 'full'
       };
       break;
     case 'crafting':
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'crafting',
+        width: 'full',
         craftingGrid: Array(9).fill(null).map((_, i) => ({ index: i, item: null, count: 1 })),
         craftingOutput: { index: 9, item: PRESET_ITEMS[0], count: 1 }
       };
@@ -115,6 +125,7 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'multiblock',
+        width: 'full',
         gridSize: 3,
         palette: [
           { id: 'reactor_casing', name: 'Корпус реактора', icon: 'Box', color: '#475569' },
@@ -130,6 +141,7 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'checklist',
+        width: 'full',
         checklistTitle: 'Чек-лист выполнения',
         checklistItems: [
           { id: 'c1', text: 'Собрать необходимые ресурсы', completed: false },
@@ -141,6 +153,7 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'image',
+        width: 'full',
         imageUrl: '',
         imageCaption: 'Подпись к скриншоту / иллюстрации'
       };
@@ -199,7 +212,6 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
   updateBlock({ ...block, checklistItems: items });
 };
 
-// Handle Image File Upload to DataURL
 const handleImageFileUpload = (e: Event, block: GuideBlock) => {
   const target = e.target as HTMLInputElement;
   if (!target.files || target.files.length === 0) return;
@@ -212,16 +224,45 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
   };
   reader.readAsDataURL(file);
 };
+
+// Helper for CSS width classes
+const getWidthClass = (width?: BlockWidth) => {
+  switch (width) {
+    case 'half':
+      return 'w-full md:w-[calc(50%-0.75rem)]';
+    case 'third':
+      return 'w-full md:w-[calc(33.333%-0.75rem)]';
+    case 'two-thirds':
+      return 'w-full md:w-[calc(66.666%-0.75rem)]';
+    case 'full':
+    default:
+      return 'w-full';
+  }
+};
+
+const getVariantClass = (variant?: BlockVariant) => {
+  switch (variant) {
+    case 'accent':
+      return 'bg-emerald-950/20 border-emerald-500/40 shadow-emerald-950/20';
+    case 'subtle':
+      return 'bg-[#121416] border-[#26292d]';
+    case 'bordered':
+      return 'bg-[#16181a] border-2 border-cyan-500/40';
+    case 'default':
+    default:
+      return 'bg-[#16181a] border border-[#26292d]';
+  }
+};
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto space-y-6 pb-24">
+  <div class="max-w-5xl mx-auto space-y-6 pb-24">
     <!-- Top Action Toolbar -->
     <div class="sticky top-4 z-30 bg-[#16181a]/90 backdrop-blur-md border border-[#26292d] p-3 rounded-2xl shadow-2xl flex items-center justify-between gap-3">
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Конструктор
+          Гибкий Конструктор
         </span>
       </div>
 
@@ -278,7 +319,6 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#26292d]">
-        <!-- Category Selector -->
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Категория</label>
           <select
@@ -290,7 +330,6 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
           </select>
         </div>
 
-        <!-- Author Input -->
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Автор гайда</label>
           <input
@@ -302,7 +341,6 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
           />
         </div>
 
-        <!-- Difficulty Selector -->
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Сложность</label>
           <div class="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-lg border border-[#26292d]">
@@ -325,51 +363,134 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
       </div>
     </div>
 
-    <!-- Blocks List -->
-    <div class="space-y-6">
+    <!-- Flexible Resizable Blocks Layout Container -->
+    <div class="flex flex-wrap gap-6 items-start">
       <div 
         v-for="(block, index) in guide.blocks" 
         :key="block.id"
-        class="group relative bg-[#16181a] border border-[#26292d] hover:border-[#3b3f46] p-5 rounded-2xl transition-all shadow-md"
+        :class="[
+          'group relative p-5 rounded-2xl transition-all shadow-md',
+          getWidthClass(block.width),
+          getVariantClass(block.variant)
+        ]"
       >
-        <!-- Floating Controls -->
-        <div class="absolute -top-3 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center gap-1 bg-[#0c0d0e] border border-[#26292d] p-1 rounded-lg shadow-xl">
-          <button
-            type="button"
-            @click="moveBlock(index, 'up')"
-            :disabled="index === 0"
-            class="p-1 text-dark-muted hover:text-white disabled:opacity-30 rounded hover:bg-[#26292d]"
-            title="Переместить вверх"
-          >
-            <IconRenderer name="ArrowUp" size="14" />
-          </button>
-          <button
-            type="button"
-            @click="moveBlock(index, 'down')"
-            :disabled="index === guide.blocks.length - 1"
-            class="p-1 text-dark-muted hover:text-white disabled:opacity-30 rounded hover:bg-[#26292d]"
-            title="Переместить вниз"
-          >
-            <IconRenderer name="ArrowDown" size="14" />
-          </button>
-          <span class="w-px h-3 bg-[#26292d]"></span>
-          <button
-            type="button"
-            @click="duplicateBlock(index)"
-            class="p-1 text-cyan-400 hover:text-cyan-300 rounded hover:bg-[#26292d]"
-            title="Дублировать блок"
-          >
-            <IconRenderer name="Copy" size="14" />
-          </button>
-          <button
-            type="button"
-            @click="deleteBlock(index)"
-            :disabled="guide.blocks.length <= 1"
-            class="p-1 text-rose-400 hover:text-rose-300 disabled:opacity-30 rounded hover:bg-[#26292d]"
-            title="Удалить блок"
-          >
-            <IconRenderer name="Trash2" size="14" />
-          </button>
+        <!-- Floating Customization Controls Bar (Top Right Header) -->
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#26292d] pb-2 mb-3">
+          <!-- Left: Block Type Label & Alignment -->
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-dark-muted flex items-center gap-1">
+              <IconRenderer name="Box" size="14" class="text-emerald-400" />
+              {{ block.type }}
+            </span>
+
+            <!-- Text Align Buttons -->
+            <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d]">
+              <button 
+                type="button" 
+                @click="updateBlock({ ...block, align: 'left' })"
+                :class="['px-1.5 py-0.5 rounded text-[10px] font-bold', block.align === 'left' || !block.align ? 'bg-emerald-500/20 text-emerald-400' : 'text-dark-muted hover:text-white']"
+                title="По левому краю"
+              >
+                L
+              </button>
+              <button 
+                type="button" 
+                @click="updateBlock({ ...block, align: 'center' })"
+                :class="['px-1.5 py-0.5 rounded text-[10px] font-bold', block.align === 'center' ? 'bg-emerald-500/20 text-emerald-400' : 'text-dark-muted hover:text-white']"
+                title="По центру"
+              >
+                C
+              </button>
+              <button 
+                type="button" 
+                @click="updateBlock({ ...block, align: 'right' })"
+                :class="['px-1.5 py-0.5 rounded text-[10px] font-bold', block.align === 'right' ? 'bg-emerald-500/20 text-emerald-400' : 'text-dark-muted hover:text-white']"
+                title="По правому краю"
+              >
+                R
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Width & Position Controls -->
+          <div class="flex items-center gap-1.5">
+            <!-- Width Selector Dropdown -->
+            <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d]">
+              <button 
+                type="button"
+                @click="updateBlock({ ...block, width: 'full' })"
+                :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.width === 'full' || !block.width ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
+                title="Ширина 100%"
+              >
+                100%
+              </button>
+              <button 
+                type="button"
+                @click="updateBlock({ ...block, width: 'half' })"
+                :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.width === 'half' ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
+                title="Ширина 50% (два в ряд)"
+              >
+                50%
+              </button>
+              <button 
+                type="button"
+                @click="updateBlock({ ...block, width: 'third' })"
+                :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.width === 'third' ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
+                title="Ширина 33% (три в ряд)"
+              >
+                33%
+              </button>
+            </div>
+
+            <!-- Variant Selector -->
+            <select
+              :value="block.variant || 'default'"
+              @change="updateBlock({ ...block, variant: ($event.target as HTMLSelectElement).value as BlockVariant })"
+              class="bg-[#0c0d0e] border border-[#26292d] text-dark-muted text-[10px] rounded px-1.5 py-0.5"
+            >
+              <option value="default">Обычный</option>
+              <option value="subtle">Темный</option>
+              <option value="accent">Акцент</option>
+              <option value="bordered">Рамка</option>
+            </select>
+
+            <!-- Re-order & Management Buttons -->
+            <button
+              type="button"
+              @click="moveBlock(index, 'up')"
+              :disabled="index === 0"
+              class="p-1 text-dark-muted hover:text-white disabled:opacity-30 rounded hover:bg-[#26292d]"
+              title="Переместить вверх"
+            >
+              <IconRenderer name="ArrowUp" size="13" />
+            </button>
+            <button
+              type="button"
+              @click="moveBlock(index, 'down')"
+              :disabled="index === guide.blocks.length - 1"
+              class="p-1 text-dark-muted hover:text-white disabled:opacity-30 rounded hover:bg-[#26292d]"
+              title="Переместить вниз"
+            >
+              <IconRenderer name="ArrowDown" size="13" />
+            </button>
+            <button
+              type="button"
+              @click="duplicateBlock(index)"
+              class="p-1 text-cyan-400 hover:text-cyan-300 rounded hover:bg-[#26292d]"
+              title="Дублировать блок"
+            >
+              <IconRenderer name="Copy" size="13" />
+            </button>
+            <button
+              type="button"
+              @click="deleteBlock(index)"
+              :disabled="guide.blocks.length <= 1"
+              class="p-1 text-rose-400 hover:text-rose-300 disabled:opacity-30 rounded hover:bg-[#26292d]"
+              title="Удалить блок"
+            >
+              <IconRenderer name="Trash2" size="13" />
+            </button>
+          </div>
         </div>
 
         <!-- Block 1: Heading -->
@@ -398,7 +519,10 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
             :value="block.headingText"
             @input="updateBlock({ ...block, headingText: ($event.target as HTMLInputElement).value })"
             placeholder="Текст заголовка..."
-            class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-lg font-bold rounded-lg px-3.5 py-2 focus:outline-none focus:border-emerald-accent/60"
+            :class="[
+              'w-full bg-[#0c0d0e] border border-[#26292d] text-white text-lg font-bold rounded-lg px-3.5 py-2 focus:outline-none focus:border-emerald-accent/60',
+              block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left'
+            ]"
           />
         </div>
 
@@ -410,7 +534,10 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
             @input="updateBlock({ ...block, textContent: ($event.target as HTMLTextAreaElement).value })"
             placeholder="Опишите подробности инструкции..."
             rows="3"
-            class="w-full bg-[#0c0d0e] border border-[#26292d] text-slate-200 text-sm rounded-lg p-3 focus:outline-none focus:border-emerald-accent/60 resize-y"
+            :class="[
+              'w-full bg-[#0c0d0e] border border-[#26292d] text-slate-200 text-sm rounded-lg p-3 focus:outline-none focus:border-emerald-accent/60 resize-y',
+              block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left'
+            ]"
           ></textarea>
         </div>
 
@@ -538,13 +665,12 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
           </button>
         </div>
 
-        <!-- Block 7: Image / Screenshot Block -->
+        <!-- Block 7: Image Block -->
         <div v-else-if="block.type === 'image'" class="space-y-3">
           <div class="text-xs text-dark-muted font-medium flex items-center justify-between">
             <span>Иллюстрация / Скриншот</span>
           </div>
 
-          <!-- Preview & URL Input -->
           <div class="bg-[#0c0d0e] border border-[#26292d] p-4 rounded-xl space-y-3">
             <div v-if="block.imageUrl" class="relative group/img rounded-lg overflow-hidden border border-[#26292d] max-h-96 flex items-center justify-center bg-black/50">
               <img :src="block.imageUrl" :alt="block.imageCaption" class="max-h-96 object-contain rounded-lg" />
@@ -593,7 +719,7 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
           </div>
         </div>
 
-        <!-- Inline Floating "+ Add Block" -->
+        <!-- Floating "+ Add Block" -->
         <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <div class="relative group/menu">
             <button
