@@ -194,7 +194,7 @@ const getVariantClass = (variant?: BlockVariant) => {
               minHeight: block.customHeight ? `${block.customHeight}px` : undefined
             }"
             :class="[
-              'scroll-mt-24 transition-all flex flex-col justify-between',
+              'scroll-mt-24 transition-all flex flex-col justify-start',
               block.type === 'divider' ? 'w-full my-2' : 
               block.type === 'section' ? 'w-full' :
               (!block.customWidth ? getGridSpanClass(block.span) : '') + ' h-full'
@@ -213,11 +213,11 @@ const getVariantClass = (variant?: BlockVariant) => {
                 :style="{ width: col.customWidth ? `calc(${col.customWidth}% - 0.75rem)` : undefined }"
                 :class="[
                   !col.customWidth ? getGridSpanClass(col.span) : '',
-                  'bg-[#16181a] border border-[#26292d] p-6 rounded-2xl shadow-xl flex flex-col justify-between gap-4 h-full'
+                  'bg-[#16181a] border border-[#26292d] p-6 rounded-2xl shadow-xl flex flex-col justify-start gap-4 h-full'
                 ]"
               >
-                <!-- Stacked Sub-blocks inside Unified Column Card -->
-                <div class="space-y-4 flex-1 flex flex-col justify-between">
+                <!-- Stacked Sub-blocks inside Unified Column Card (Top-Aligned) -->
+                <div class="space-y-4 flex-1 flex flex-col justify-start">
                   <div v-for="sub in col.blocks" :key="sub.id" :id="`block-${sub.id}`">
                     <!-- Sub Heading -->
                     <div v-if="sub.type === 'heading'" class="border-b border-[#26292d] pb-3 mb-2">
