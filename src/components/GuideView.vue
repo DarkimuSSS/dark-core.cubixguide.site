@@ -36,14 +36,6 @@ const tableOfContents = computed(() => {
 
 const activeHeadingId = ref<string>('');
 
-const scrollToBlock = (id: string) => {
-  activeHeadingId.value = id;
-  const el = document.getElementById(`block-${id}`);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-};
-
 const getGridSpanClass = (span?: BlockSpan) => {
   switch (span) {
     case 'span-3':
@@ -77,48 +69,6 @@ const getVariantClass = (variant?: BlockVariant) => {
 
 <template>
   <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] flex flex-col">
-    <!-- Top Reader Navigation Bar -->
-    <header class="h-16 border-b border-[#26292d] bg-[#16181a]/80 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-8 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <button 
-          @click="isMobileNavOpen = !isMobileNavOpen"
-          class="lg:hidden text-dark-muted hover:text-white p-2 rounded-lg hover:bg-[#26292d]"
-        >
-          <IconRenderer name="BookOpen" size="20" />
-        </button>
-
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
-            <IconRenderer name="BookOpen" size="18" />
-          </div>
-          <div>
-            <h1 class="text-sm font-bold text-white tracking-tight">CubixGuide Вики</h1>
-            <p class="text-[10px] text-dark-muted font-medium">База знаний майнкрафт серверов</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <div class="hidden sm:flex items-center gap-2">
-          <span class="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-medium border border-cyan-500/20">
-            {{ guide.meta.category }}
-          </span>
-          <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">
-            Уровень: {{ guide.meta.difficulty }}
-          </span>
-        </div>
-
-        <button
-          type="button"
-          @click="emit('edit-mode')"
-          class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
-        >
-          <IconRenderer name="Edit3" size="14" />
-          Редактировать
-        </button>
-      </div>
-    </header>
-
     <!-- Main Layout Container -->
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-6 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
       
@@ -168,7 +118,7 @@ const getVariantClass = (variant?: BlockVariant) => {
               {{ guide.meta.category }}
             </span>
             <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
-              {{ guide.meta.difficulty }}
+              Сложность: {{ guide.meta.difficulty }}
             </span>
             <span class="text-xs text-dark-muted ml-auto">Обновлено: {{ guide.meta.updatedAt }}</span>
           </div>

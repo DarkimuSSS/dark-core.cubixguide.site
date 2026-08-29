@@ -297,8 +297,8 @@ const handleDeleteGuide = async () => {
 
 <template>
   <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] font-sans antialiased">
-    <!-- Top Reader Header Bar -->
-    <header class="bg-[#16181a] border-b border-[#26292d] h-16 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40">
+    <!-- SINGLE UNIFIED TOP HEADER BAR -->
+    <header class="bg-[#16181a] border-b border-[#26292d] h-16 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40 shadow-xl">
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/50">
           <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center text-emerald-400">
@@ -314,7 +314,7 @@ const handleDeleteGuide = async () => {
         </div>
       </div>
 
-      <!-- Center & Right Navigation -->
+      <!-- Center & Right Navigation Actions -->
       <div class="flex items-center gap-2 sm:gap-3">
         <!-- Draft restoration banner -->
         <div v-if="hasUnsavedDraft && isAuthenticated" class="hidden lg:flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl">
@@ -333,7 +333,7 @@ const handleDeleteGuide = async () => {
           <select 
             :value="activeGuideId"
             @change="selectGuide(($event.target as HTMLSelectElement).value)"
-            class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-accent pr-8 cursor-pointer"
+            class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold rounded-xl px-3.5 py-2 focus:outline-none focus:border-emerald-accent pr-8 cursor-pointer shadow-inner"
           >
             <option v-for="g in guides" :key="g.meta.id" :value="g.meta.id">
               {{ g.meta.title }}
@@ -345,7 +345,7 @@ const handleDeleteGuide = async () => {
           v-if="isAuthenticated"
           type="button"
           @click="createNewGuide"
-          class="px-3 py-2 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold flex items-center gap-1.5 transition-all"
+          class="px-3.5 py-2 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
         >
           <IconRenderer name="Plus" size="15" />
           <span class="hidden sm:inline">Новый гайд</span>
@@ -356,7 +356,7 @@ const handleDeleteGuide = async () => {
           <button
             type="button"
             @click="openEditorProtection"
-            class="px-3.5 py-1.5 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-dark-muted hover:text-white text-xs font-medium flex items-center gap-1.5 transition-all"
+            class="px-3.5 py-2 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1.5 transition-all shadow-md"
           >
             <IconRenderer name="Lock" size="14" class="text-amber-400" />
             <span>Вход для авторов</span>
@@ -407,7 +407,7 @@ const handleDeleteGuide = async () => {
     </header>
 
     <!-- Main Content -->
-    <div class="pt-6">
+    <div>
       <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 text-dark-muted space-y-3">
         <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
         <div class="text-xs">Загрузка гайдов...</div>
