@@ -40,16 +40,16 @@ const scrollToBlock = (id: string) => {
 const getGridSpanClass = (span?: BlockSpan) => {
   switch (span) {
     case 'span-3':
-      return 'col-span-6 md:col-span-3'; // 3 of 6 (50%)
+      return 'col-span-6 md:col-span-3';
     case 'span-2':
-      return 'col-span-6 md:col-span-2'; // 2 of 6 (33%)
+      return 'col-span-6 md:col-span-2';
     case 'span-4':
-      return 'col-span-6 md:col-span-4'; // 4 of 6 (66%)
+      return 'col-span-6 md:col-span-4';
     case 'span-1':
-      return 'col-span-6 md:col-span-1'; // 1 of 6 (16.6%)
+      return 'col-span-6 md:col-span-1';
     case 'span-6':
     default:
-      return 'col-span-6'; // 6 of 6 (100%)
+      return 'col-span-6';
   }
 };
 
@@ -70,7 +70,7 @@ const getVariantClass = (variant?: BlockVariant) => {
 
 <template>
   <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] flex flex-col">
-    <!-- Top Reader Navigation Bar (6/6 columns header) -->
+    <!-- Top Reader Navigation Bar -->
     <header class="h-16 border-b border-[#26292d] bg-[#16181a]/80 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-8 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <button 
@@ -112,7 +112,7 @@ const getVariantClass = (variant?: BlockVariant) => {
       </div>
     </header>
 
-    <!-- 6-Column Grid Layout: 1 column sidebar + 5 columns content zone -->
+    <!-- Main Layout Container: 1 column sidebar + 5 columns content zone -->
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-6 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
       
       <!-- SIDEBAR: 1 narrow column out of 6 -->
@@ -176,19 +176,24 @@ const getVariantClass = (variant?: BlockVariant) => {
           </div>
         </article>
 
-        <!-- Dynamic 6-Column Grid for Blocks -->
-        <div class="grid grid-cols-6 gap-6 items-start">
+        <!-- Dynamic Equal-Height 6-Column Grid for Blocks (items-stretch) -->
+        <div class="grid grid-cols-6 gap-6 items-stretch">
           <div 
             v-for="block in guide.blocks" 
             :key="block.id" 
             :id="`block-${block.id}`"
             :class="[
-              'scroll-mt-24 transition-all',
-              getGridSpanClass(block.span)
+              'scroll-mt-24 transition-all flex flex-col justify-between',
+              block.type === 'divider' ? 'col-span-6 my-2' : getGridSpanClass(block.span) + ' h-full'
             ]"
           >
+            <!-- Divider Section Separator (<hr>) -->
+            <div v-if="block.type === 'divider'" class="w-full py-4 flex items-center justify-center">
+              <hr class="w-full border-t border-[#26292d]" />
+            </div>
+
             <!-- Heading Block -->
-            <div v-if="block.type === 'heading'" class="border-b border-[#26292d] pb-2">
+            <div v-else-if="block.type === 'heading'" :class="['p-5 rounded-2xl h-full flex flex-col justify-center border border-[#26292d]', getVariantClass(block.variant)]">
               <h2 
                 v-if="block.headingLevel === 'h1'" 
                 :class="['text-xl sm:text-2xl font-bold text-white tracking-tight', block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left']"
@@ -207,7 +212,7 @@ const getVariantClass = (variant?: BlockVariant) => {
             <div 
               v-else-if="block.type === 'text'" 
               :class="[
-                'p-4 rounded-xl text-slate-300 text-sm sm:text-base leading-relaxed',
+                'p-5 rounded-2xl h-full flex flex-col justify-center text-slate-300 text-sm sm:text-base leading-relaxed',
                 getVariantClass(block.variant),
                 block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left'
               ]"
@@ -216,8 +221,8 @@ const getVariantClass = (variant?: BlockVariant) => {
             </div>
 
             <!-- Image Block -->
-            <div v-else-if="block.type === 'image'" :class="['p-4 rounded-2xl shadow-xl space-y-2', getVariantClass(block.variant)]">
-              <div v-if="block.imageUrl" class="rounded-xl overflow-hidden bg-black/60 border border-[#26292d] flex items-center justify-center">
+            <div v-else-if="block.type === 'image'" :class="['p-5 rounded-2xl h-full flex flex-col justify-between shadow-xl space-y-2', getVariantClass(block.variant)]">
+              <div v-if="block.imageUrl" class="rounded-xl overflow-hidden bg-black/60 border border-[#26292d] flex items-center justify-center flex-1">
                 <img :src="block.imageUrl" :alt="block.imageCaption || 'Скриншот гайда'" class="max-h-[500px] w-auto object-contain rounded-xl" />
               </div>
               <p v-if="block.imageCaption" class="text-xs text-center text-dark-muted font-medium italic pt-1">
@@ -226,18 +231,18 @@ const getVariantClass = (variant?: BlockVariant) => {
             </div>
 
             <!-- Callout Box Block -->
-            <div v-else-if="block.type === 'callout'">
+            <div v-else-if="block.type === 'callout'" class="h-full flex flex-col justify-center">
               <CalloutBlock :block="block" :is-editing="false" />
             </div>
 
             <!-- Visual Crafting Grid 3x3 -->
-            <div v-else-if="block.type === 'crafting'" :class="['p-6 rounded-2xl shadow-xl space-y-4', getVariantClass(block.variant)]">
+            <div v-else-if="block.type === 'crafting'" :class="['p-6 rounded-2xl h-full flex flex-col justify-between shadow-xl space-y-4', getVariantClass(block.variant)]">
               <div class="text-xs font-semibold text-white uppercase tracking-wider flex items-center gap-2">
                 <IconRenderer name="Grid" size="16" class="text-emerald-400" />
                 Схема крафта
               </div>
 
-              <div class="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 bg-[#0c0d0e] rounded-xl border border-[#26292d]">
+              <div class="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 bg-[#0c0d0e] rounded-xl border border-[#26292d] flex-1">
                 <div class="grid grid-cols-3 gap-2.5 p-3 bg-[#121416] rounded-xl border border-[#26292d]">
                   <div
                     v-for="(slot, slotIdx) in (block.craftingGrid || Array(9).fill(null))"
@@ -298,12 +303,12 @@ const getVariantClass = (variant?: BlockVariant) => {
             </div>
 
             <!-- Multiblock Painter -->
-            <div v-else-if="block.type === 'multiblock'">
+            <div v-else-if="block.type === 'multiblock'" class="h-full flex flex-col justify-between">
               <LayerPainter :block="block" :is-editing="false" />
             </div>
 
             <!-- Interactive Reader Step Checklist -->
-            <div v-else-if="block.type === 'checklist'" :class="['p-6 rounded-2xl shadow-xl space-y-4', getVariantClass(block.variant)]">
+            <div v-else-if="block.type === 'checklist'" :class="['p-6 rounded-2xl h-full flex flex-col justify-between shadow-xl space-y-4', getVariantClass(block.variant)]">
               <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
                 <div class="text-sm font-bold text-white flex items-center gap-2">
                   <IconRenderer name="CheckCircle2" size="18" class="text-emerald-400" />
@@ -311,7 +316,7 @@ const getVariantClass = (variant?: BlockVariant) => {
                 </div>
               </div>
 
-              <div class="space-y-2">
+              <div class="space-y-2 flex-1">
                 <label 
                   v-for="item in (block.checklistItems || [])" 
                   :key="item.id"

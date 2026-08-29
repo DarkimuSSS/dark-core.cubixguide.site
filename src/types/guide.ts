@@ -35,7 +35,7 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
-export type BlockType = 'heading' | 'text' | 'callout' | 'crafting' | 'multiblock' | 'checklist' | 'image';
+export type BlockType = 'heading' | 'text' | 'callout' | 'crafting' | 'multiblock' | 'checklist' | 'image' | 'divider';
 
 // 6-Column Grid Spans
 export type BlockSpan = 'span-6' | 'span-3' | 'span-2' | 'span-4' | 'span-1';
@@ -47,9 +47,9 @@ export interface GuideBlock {
   type: BlockType;
   
   // 6-Column Grid & Styling Controls
-  span?: BlockSpan; // span-6 (full 6/6), span-3 (half 3/6), span-2 (third 2/6), span-4 (two-thirds 4/6), span-1 (1/6)
-  align?: BlockAlign; // left, center, right
-  variant?: BlockVariant; // default, subtle, bordered, accent
+  span?: BlockSpan;
+  align?: BlockAlign;
+  variant?: BlockVariant;
 
   // Content Fields
   headingText?: string;
@@ -67,6 +67,7 @@ export interface GuideBlock {
   checklistItems?: ChecklistItem[];
   imageUrl?: string;
   imageCaption?: string;
+  dividerStyle?: 'line' | 'dashed' | 'dots' | 'icon';
 }
 
 export interface GuideMeta {
