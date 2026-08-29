@@ -183,7 +183,7 @@ const getVariantClass = (variant?: BlockVariant) => {
           </div>
         </article>
 
-        <!-- Dynamic Freeform Resizable Blocks Layout (Flex Wrap with custom width % & height px) -->
+        <!-- Dynamic Freeform Resizable Blocks Layout -->
         <div class="flex flex-wrap gap-6 items-stretch">
           <div 
             v-for="block in guide.blocks" 
@@ -205,41 +205,48 @@ const getVariantClass = (variant?: BlockVariant) => {
               <hr class="w-full border-t border-[#26292d]" />
             </div>
 
-            <!-- Section Block (Stacked Multi-block Columns) -->
+            <!-- Unified Section Block (Stacked Multi-block Columns) -->
             <div v-else-if="block.type === 'section'" class="flex flex-wrap gap-6 items-stretch w-full">
               <div 
                 v-for="col in (block.columns || [])" 
                 :key="col.id"
                 :class="[
                   getGridSpanClass(col.span),
-                  'flex flex-col justify-between gap-4 h-full'
+                  'bg-[#16181a] border border-[#26292d] p-6 rounded-2xl shadow-xl flex flex-col justify-between gap-4 h-full'
                 ]"
               >
-                <div v-for="sub in col.blocks" :key="sub.id" :id="`block-${sub.id}`" class="flex-1 flex flex-col justify-center">
-                  <div v-if="sub.type === 'heading'" class="border-b border-[#26292d] pb-2">
-                    <h2 v-if="sub.headingLevel === 'h1'" class="text-xl font-bold text-white">{{ sub.headingText }}</h2>
-                    <h3 v-else class="text-lg font-bold text-slate-100">{{ sub.headingText }}</h3>
-                  </div>
-
-                  <div v-else-if="sub.type === 'text'" :class="['p-4 rounded-xl text-slate-300 text-sm leading-relaxed', getVariantClass(sub.variant)]">
-                    <p class="whitespace-pre-line">{{ sub.textContent }}</p>
-                  </div>
-
-                  <div v-else-if="sub.type === 'callout'">
-                    <CalloutBlock :block="sub" :is-editing="false" />
-                  </div>
-
-                  <div v-else-if="sub.type === 'image'" :class="['p-4 rounded-2xl shadow-xl space-y-2 h-full flex flex-col justify-center', getVariantClass(sub.variant)]">
-                    <div v-if="sub.imageUrl" class="rounded-xl overflow-hidden bg-black/60 border border-[#26292d] flex items-center justify-center h-full">
-                      <img :src="sub.imageUrl" :alt="sub.imageCaption" class="max-h-[500px] w-auto object-contain rounded-xl" />
+                <!-- Stacked Sub-blocks inside Unified Column Card -->
+                <div class="space-y-4 flex-1 flex flex-col justify-between">
+                  <div v-for="sub in col.blocks" :key="sub.id" :id="`block-${sub.id}`">
+                    <!-- Sub Heading -->
+                    <div v-if="sub.type === 'heading'" class="border-b border-[#26292d] pb-3 mb-2">
+                      <h2 v-if="sub.headingLevel === 'h1'" class="text-xl sm:text-2xl font-bold text-white tracking-tight">{{ sub.headingText }}</h2>
+                      <h3 v-else class="text-lg font-bold text-slate-100 tracking-tight">{{ sub.headingText }}</h3>
                     </div>
-                    <p v-if="sub.imageCaption" class="text-xs text-center text-dark-muted font-medium italic pt-1">{{ sub.imageCaption }}</p>
+
+                    <!-- Sub Text -->
+                    <div v-else-if="sub.type === 'text'" class="bg-[#121416] border border-[#26292d] p-4 rounded-xl text-slate-300 text-sm leading-relaxed shadow-sm">
+                      <p class="whitespace-pre-line">{{ sub.textContent }}</p>
+                    </div>
+
+                    <!-- Sub Callout -->
+                    <div v-else-if="sub.type === 'callout'">
+                      <CalloutBlock :block="sub" :is-editing="false" />
+                    </div>
+
+                    <!-- Sub Image -->
+                    <div v-else-if="sub.type === 'image'" class="h-full flex flex-col justify-center items-center space-y-2">
+                      <div v-if="sub.imageUrl" class="rounded-xl overflow-hidden bg-black/60 border border-[#26292d] flex items-center justify-center w-full h-full p-2">
+                        <img :src="sub.imageUrl" :alt="sub.imageCaption" class="max-h-[500px] w-auto object-contain rounded-xl" />
+                      </div>
+                      <p v-if="sub.imageCaption" class="text-xs text-center text-dark-muted font-medium italic pt-1">{{ sub.imageCaption }}</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Heading Block -->
+            <!-- Standalone Heading Block -->
             <div v-else-if="block.type === 'heading'" :class="['p-5 rounded-2xl h-full flex flex-col justify-center border border-[#26292d]', getVariantClass(block.variant)]">
               <h2 
                 v-if="block.headingLevel === 'h1'" 
@@ -255,7 +262,7 @@ const getVariantClass = (variant?: BlockVariant) => {
               </h3>
             </div>
 
-            <!-- Text Block -->
+            <!-- Standalone Text Block -->
             <div 
               v-else-if="block.type === 'text'" 
               :class="[
@@ -267,7 +274,7 @@ const getVariantClass = (variant?: BlockVariant) => {
               <p class="whitespace-pre-line">{{ block.textContent }}</p>
             </div>
 
-            <!-- Image Block -->
+            <!-- Standalone Image Block -->
             <div v-else-if="block.type === 'image'" :class="['p-5 rounded-2xl h-full flex flex-col justify-between shadow-xl space-y-2', getVariantClass(block.variant)]">
               <div v-if="block.imageUrl" class="rounded-xl overflow-hidden bg-black/60 border border-[#26292d] flex items-center justify-center flex-1">
                 <img :src="block.imageUrl" :alt="block.imageCaption || 'Скриншот гайда'" class="max-h-[500px] w-auto object-contain rounded-xl" />
@@ -277,7 +284,7 @@ const getVariantClass = (variant?: BlockVariant) => {
               </p>
             </div>
 
-            <!-- Callout Box Block -->
+            <!-- Standalone Callout Box Block -->
             <div v-else-if="block.type === 'callout'" class="h-full flex flex-col justify-center">
               <CalloutBlock :block="block" :is-editing="false" />
             </div>
