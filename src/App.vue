@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import HomePage from './components/HomePage.vue';
 import GuideEditor from './components/GuideEditor.vue';
 import GuideView from './components/GuideView.vue';
@@ -12,9 +12,12 @@ const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
 const activeGuide = ref<Guide | null>(null);
 
-// MODE: 'home' (Главная) | 'reader' (Вики Гайда) | 'editor' (Конструктор)
-const mode = ref<'home' | 'reader' | 'editor'>('home');
+// MODE: 'home' (Главная) | 'reader' (Вики Гайда) | 'editor' (Конструктор) | 'favorites' (Избранное)
+const mode = ref<'home' | 'reader' | 'editor' | 'favorites'>('home');
 const isLoading = ref<boolean>(true);
+
+// Bookmarked / Favorited guide IDs in LocalStorage
+const favoriteGuideIds = ref<string[]>([]);
 
 // Auth & Protection State
 const isAuthModalOpen = ref(false);
@@ -32,18 +35,38 @@ const showToast = (msg: string) => {
   }, 3000);
 };
 
-// Check Session Auth Status
+// Check Session Auth Status & Favorites
 onMounted(() => {
   const savedAuth = sessionStorage.getItem('cubix_author_authed');
   if (savedAuth === 'true') {
     isAuthenticated.value = true;
   }
+  try {
+    const rawFavs = localStorage.getItem('cubix_favorite_guides');
+    if (rawFavs) favoriteGuideIds.value = JSON.parse(rawFavs);
+  } catch (e) {}
+
   fetchGuides();
   window.addEventListener('beforeunload', handleBeforeUnload);
 });
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
+});
+
+const toggleBookmarkGuide = (guideId: string) => {
+  if (favoriteGuideIds.value.includes(guideId)) {
+    favoriteGuideIds.value = favoriteGuideIds.value.filter(id => id !== guideId);
+    showToast('Удалено из закладок');
+  } else {
+    favoriteGuideIds.value.push(guideId);
+    showToast('Добавлено в закладки ⭐');
+  }
+  localStorage.setItem('cubix_favorite_guides', JSON.stringify(favoriteGuideIds.value));
+};
+
+const favoritedGuidesList = computed(() => {
+  return guides.value.filter(g => favoriteGuideIds.value.includes(g.meta.id));
 });
 
 const openEditorProtection = () => {
@@ -182,6 +205,14 @@ const selectGuide = (guideId: string) => {
     }
   }
   mode.value = 'reader';
+};
+
+const openRandomGuide = () => {
+  if (guides.value.length === 0) return;
+  const randomIdx = Math.floor(Math.random() * guides.value.length);
+  const randomGuide = guides.value[randomIdx];
+  selectGuide(randomGuide.meta.id);
+  showToast(`Случайный гайд: ${randomGuide.meta.title}`);
 };
 
 const handleHomeSelectGuide = (guideId: string) => {
@@ -325,8 +356,9 @@ const handleDeleteGuide = async () => {
           </div>
         </button>
 
-        <!-- Navigation Tabs: Главная / Вики -->
-        <nav class="hidden md:flex items-center bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d] ml-4">
+        <!-- Expanded Top Navigation Tabs Bar -->
+        <nav class="hidden md:flex items-center bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d] ml-2">
+          <!-- 1. Главная -->
           <button
             type="button"
             @click="mode = 'home'"
@@ -341,6 +373,7 @@ const handleDeleteGuide = async () => {
             <span>Главная</span>
           </button>
 
+          <!-- 2. Вики Статья -->
           <button
             v-if="activeGuide"
             type="button"
@@ -354,6 +387,35 @@ const handleDeleteGuide = async () => {
           >
             <IconRenderer name="BookOpen" size="14" />
             <span>Вики Статья</span>
+          </button>
+
+          <!-- 3. Избранное / Закладки -->
+          <button
+            type="button"
+            @click="mode = 'favorites'"
+            :class="[
+              'px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
+              mode === 'favorites'
+                ? 'bg-amber-600 text-white shadow-md'
+                : 'text-dark-muted hover:text-white'
+            ]"
+          >
+            <IconRenderer name="Star" size="14" class="text-amber-400" />
+            <span>Закладки</span>
+            <span v-if="favoriteGuideIds.length > 0" class="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded-full font-bold">
+              {{ favoriteGuideIds.length }}
+            </span>
+          </button>
+
+          <!-- 4. Случайный гайд -->
+          <button
+            type="button"
+            @click="openRandomGuide"
+            class="px-3 py-1.5 rounded-lg text-xs font-bold text-purple-400 hover:text-purple-300 hover:bg-[#16181a] flex items-center gap-1.5 transition-all"
+            title="Открыть случайную полезную статью из базы"
+          >
+            <IconRenderer name="Sparkles" size="14" />
+            <span>Случайный</span>
           </button>
         </nav>
       </div>
@@ -377,7 +439,7 @@ const handleDeleteGuide = async () => {
           <select 
             :value="activeGuideId"
             @change="selectGuide(($event.target as HTMLSelectElement).value)"
-            class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold rounded-xl px-3.5 py-2 focus:outline-none focus:border-emerald-accent pr-8 cursor-pointer shadow-inner max-w-[200px] truncate"
+            class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold rounded-xl px-3.5 py-2 focus:outline-none focus:border-emerald-accent pr-8 cursor-pointer shadow-inner max-w-[180px] truncate"
           >
             <option v-for="g in guides" :key="g.meta.id" :value="g.meta.id">
               {{ g.meta.title }}
@@ -451,7 +513,57 @@ const handleDeleteGuide = async () => {
           @create-guide="createNewGuide"
         />
 
-        <!-- 2. EDITOR VIEW (Only for authenticated author) -->
+        <!-- 2. BOOKMARKS / FAVORITES VIEW -->
+        <div v-else-if="mode === 'favorites'" class="space-y-6 pb-24">
+          <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <IconRenderer name="Star" size="22" class="text-amber-400" />
+                Закладки статей ({{ favoritedGuidesList.length }})
+              </h2>
+              <p class="text-xs text-dark-muted">Сохранённые руководства для быстрого доступа</p>
+            </div>
+            <button @click="mode = 'home'" class="text-xs text-cyan-400 hover:underline">Вернуться на Главную</button>
+          </div>
+
+          <div v-if="favoritedGuidesList.length === 0" class="text-center py-20 bg-[#16181a] border border-[#26292d] rounded-2xl space-y-3">
+            <IconRenderer name="Star" size="36" class="mx-auto text-amber-400/40" />
+            <h3 class="text-base font-bold text-white">В закладках пока пусто</h3>
+            <p class="text-xs text-dark-muted">Нажмите на звёздочку при чтении гайда, чтобы сохранить его сюда</p>
+          </div>
+
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div
+              v-for="guide in favoritedGuidesList"
+              :key="guide.meta.id"
+              @click="selectGuide(guide.meta.id)"
+              class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 p-6 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between space-y-5 shadow-lg"
+            >
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    {{ guide.meta.category }}
+                  </span>
+                  <button @click.stop="toggleBookmarkGuide(guide.meta.id)" class="text-amber-400 hover:text-rose-400 p-1" title="Удалить из закладок">
+                    <IconRenderer name="Star" size="18" />
+                  </button>
+                </div>
+                <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
+                  {{ guide.meta.title }}
+                </h3>
+                <p class="text-xs text-dark-muted line-clamp-2 leading-relaxed">
+                  {{ guide.meta.summary }}
+                </p>
+              </div>
+
+              <button class="w-full bg-[#121416] group-hover:bg-emerald-600 text-slate-300 group-hover:text-white py-2 rounded-xl text-xs font-bold transition-all">
+                Открыть гайд
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. EDITOR VIEW (Only for authenticated author) -->
         <GuideEditor
           v-else-if="mode === 'editor' && isAuthenticated && activeGuide"
           :guide="activeGuide"
@@ -461,7 +573,7 @@ const handleDeleteGuide = async () => {
           @delete="handleDeleteGuide"
         />
 
-        <!-- 3. SINGLE GUIDE WIKI READER VIEW -->
+        <!-- 4. SINGLE GUIDE WIKI READER VIEW -->
         <GuideView
           v-else-if="activeGuide"
           :guide="activeGuide"
