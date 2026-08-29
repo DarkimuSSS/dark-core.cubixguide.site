@@ -14,6 +14,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     username TEXT PRIMARY KEY,
     password_hash TEXT NOT NULL,
+    is_admin INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL
   );
 
@@ -49,8 +50,8 @@ export function hashPassword(password: string): string {
   return crypto.createHmac('sha256', 'cubix_secret_salt_2026').update(password).digest('hex');
 }
 
-// User Auth Helpers
-export function registerUser(username: string, password: string) {
+// Admin-only Author Registration Helper (Only Admin registers authors)
+export function registerAuthorByAdmin(username: string, password: string, adminUsername: string) {
   const cleanUsername = username.trim();
   if (!cleanUsername || cleanUsername.length < 3) {
     throw new Error('Никнейм должен состоять минимум из 3 символов');
@@ -59,18 +60,24 @@ export function registerUser(username: string, password: string) {
     throw new Error('Пароль должен состоять минимум из 4 символов');
   }
 
+  // Check if caller is admin
+  const adminRow = db.prepare('SELECT is_admin FROM users WHERE LOWER(username) = LOWER(?)').get(adminUsername) as any;
+  if (!adminRow || !adminRow.is_admin) {
+    throw new Error('Только Главный Администратор может регистрировать новых авторов');
+  }
+
   const existing = db.prepare('SELECT username FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername);
   if (existing) {
-    throw new Error('Пользователь с таким никнеймом уже зарегистрирован');
+    throw new Error('Автор с таким никнеймом уже зарегистрирован');
   }
 
   const pwdHash = hashPassword(password);
   const createdAt = new Date().toISOString().split('T')[0];
 
-  const stmt = db.prepare('INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)');
-  stmt.run(cleanUsername, pwdHash, createdAt);
+  const stmt = db.prepare('INSERT INTO users (username, password_hash, is_admin, created_at) VALUES (?, ?, ?, ?)');
+  stmt.run(cleanUsername, pwdHash, 0, createdAt);
 
-  // Initialize default profile for new user
+  // Initialize default profile for new author
   saveAuthorProfile({
     username: cleanUsername,
     avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${cleanUsername}`,
@@ -95,14 +102,21 @@ export function loginUser(username: string, password: string) {
     throw new Error('Неверный никнейм или пароль');
   }
 
-  return { username: user.username, createdAt: user.created_at };
+  return { username: user.username, isAdmin: Boolean(user.is_admin), createdAt: user.created_at };
 }
 
-// Seed initial default DarkimuSSS user if database empty
-const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
-if (userCount.count === 0) {
+export function listAllAuthors() {
+  const rows = db.prepare('SELECT username, is_admin, created_at FROM users ORDER BY created_at DESC').all();
+  return rows.map((r: any) => ({ username: r.username, isAdmin: Boolean(r.is_admin), createdAt: r.created_at }));
+}
+
+// Seed Super Admin DarkimuSSS with password cubix2026
+const adminCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE LOWER(username) = ?').get('darkimusss') as { count: number };
+if (adminCount.count === 0) {
   try {
-    registerUser('DarkimuSSS', 'cubix2026');
+    const pwdHash = hashPassword('cubix2026');
+    const createdAt = new Date().toISOString().split('T')[0];
+    db.prepare('INSERT INTO users (username, password_hash, is_admin, created_at) VALUES (?, ?, 1, ?)').run('DarkimuSSS', pwdHash, createdAt);
   } catch (e) {}
 }
 
@@ -177,12 +191,12 @@ if (profileCount.count === 0) {
   saveAuthorProfile({
     username: 'DarkimuSSS',
     avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=DarkimuSSS',
-    bio: 'Создатель базы знаний CubixGuide. Создаю схемы алтарей драконов, гайды по Магия RPG и Автоматизации!',
+    bio: 'Главный Администратор базы знаний CubixGuide. Создаю схемы алтарей драконов, гайды по Магия RPG и Автоматизации!',
     server: 'MagicRPG',
     socialVk: 'https://vk.com',
     socialTg: 'https://t.me',
     socialDs: 'DarkimuSSS#0001',
-    badges: ['🥇 Главный Архитектор', '🐉 Мастер Драконов', '⚡ Эксперт Сборок'],
+    badges: ['👑 Главный Админ', '🐉 Мастер Драконов', '⚡ Эксперт Сборок'],
     pinnedGuideId: 'guide_dragon_100',
     updatedAt: new Date().toISOString().split('T')[0]
   });

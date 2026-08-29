@@ -24,6 +24,7 @@ const favoriteGuideIds = ref<string[]>([]);
 const isProfileModalOpen = ref(false);
 const profileUsername = ref('DarkimuSSS');
 const currentUsername = ref<string | null>(null);
+const currentUserIsAdmin = ref<boolean>(false);
 const currentAuthorProfile = ref<AuthorProfile | null>(null);
 
 // Auth & Protection State
@@ -119,9 +120,11 @@ watch([mode, activeGuideId, isProfileModalOpen, profileUsername], () => {
 // Check Session Auth Status & Favorites
 onMounted(() => {
   const savedUser = localStorage.getItem('cubix_logged_username');
+  const savedAdmin = localStorage.getItem('cubix_logged_is_admin');
   if (savedUser) {
     isAuthenticated.value = true;
     currentUsername.value = savedUser;
+    currentUserIsAdmin.value = savedAdmin === 'true';
     fetchCurrentAuthorProfile(savedUser);
   }
   try {
@@ -166,20 +169,24 @@ const openEditorProtection = () => {
   }
 };
 
-const handleAuthentication = (username: string) => {
+const handleAuthentication = (payload: { username: string; isAdmin: boolean }) => {
   isAuthenticated.value = true;
-  currentUsername.value = username;
-  localStorage.setItem('cubix_logged_username', username);
+  currentUsername.value = payload.username;
+  currentUserIsAdmin.value = payload.isAdmin;
+  localStorage.setItem('cubix_logged_username', payload.username);
+  localStorage.setItem('cubix_logged_is_admin', payload.isAdmin ? 'true' : 'false');
   isAuthModalOpen.value = false;
-  fetchCurrentAuthorProfile(username);
-  showToast(`Добро пожаловать, ${username}!`);
+  fetchCurrentAuthorProfile(payload.username);
+  showToast(`Добро пожаловать, ${payload.username}!`);
 };
 
 const logoutAuthor = () => {
   isAuthenticated.value = false;
   currentUsername.value = null;
+  currentUserIsAdmin.value = false;
   currentAuthorProfile.value = null;
   localStorage.removeItem('cubix_logged_username');
+  localStorage.removeItem('cubix_logged_is_admin');
   mode.value = 'home';
   showToast('Вы вышли из аккаунта');
 };
@@ -539,8 +546,9 @@ const handleDeleteGuide = async () => {
             <img v-if="currentAuthorProfile?.avatarUrl" :src="currentAuthorProfile.avatarUrl" class="w-full h-full object-cover" />
             <span v-else>{{ currentUsername.charAt(0).toUpperCase() }}</span>
           </div>
-          <span class="font-extrabold text-white group-hover:text-purple-300 transition-colors">
-            {{ currentUsername }}
+          <span class="font-extrabold text-white group-hover:text-purple-300 transition-colors flex items-center gap-1">
+            <span>{{ currentUsername }}</span>
+            <span v-if="currentUserIsAdmin" class="text-[9px] bg-purple-500/30 text-purple-300 border border-purple-400/40 px-1 rounded font-mono">Админ</span>
           </span>
         </button>
 
@@ -554,7 +562,7 @@ const handleDeleteGuide = async () => {
           <span class="hidden sm:inline">Новый гайд</span>
         </button>
 
-        <!-- Viewer Mode & Manual Registration / Login Button -->
+        <!-- Viewer Mode & Manual Author Login Button -->
         <div v-if="!isAuthenticated">
           <button
             type="button"
@@ -562,7 +570,7 @@ const handleDeleteGuide = async () => {
             class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-950/50"
           >
             <IconRenderer name="Lock" size="14" />
-            <span>Вход / Регистрация</span>
+            <span>Вход для Авторов</span>
           </button>
         </div>
 
@@ -688,6 +696,7 @@ const handleDeleteGuide = async () => {
       :is-open="isProfileModalOpen"
       :username="profileUsername"
       :is-own-profile="isAuthenticated && currentUsername?.toLowerCase() === profileUsername.toLowerCase()"
+      :is-admin="currentUserIsAdmin"
       :all-guides="guides"
       @close="isProfileModalOpen = false; fetchCurrentAuthorProfile();"
       @select-guide="selectGuide"

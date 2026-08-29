@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import type { AuthorProfile, Guide } from '../types/guide';
 
@@ -7,6 +7,7 @@ const props = defineProps<{
   isOpen: boolean;
   username: string;
   isOwnProfile: boolean;
+  isAdmin: boolean;
   allGuides: Guide[];
 }>();
 
@@ -17,6 +18,13 @@ const emit = defineEmits<{
 
 const isEditing = ref(false);
 const isLoading = ref(false);
+
+// Admin Author Creation State
+const isAdminPanelOpen = ref(false);
+const newAuthorUsername = ref('');
+const newAuthorPassword = ref('');
+const adminMessage = ref('');
+const registeredAuthorsList = ref<any[]>([]);
 
 const profile = ref<AuthorProfile>({
   username: props.username,
@@ -47,8 +55,21 @@ const fetchProfile = async () => {
   }
 };
 
+const fetchAdminAuthorsList = async () => {
+  if (!props.isAdmin) return;
+  try {
+    const res = await fetch('/api/admin/authors');
+    if (res.ok) {
+      registeredAuthorsList.value = await res.json();
+    }
+  } catch (e) {}
+};
+
 watch(() => props.username, (newVal) => {
-  if (newVal) fetchProfile();
+  if (newVal) {
+    fetchProfile();
+    if (props.isAdmin) fetchAdminAuthorsList();
+  }
 }, { immediate: true });
 
 const authorGuides = computed(() => {
@@ -76,6 +97,37 @@ const saveProfile = async () => {
     console.error('Error saving profile:', err);
   } finally {
     isLoading.value = false;
+  }
+};
+
+const handleAdminRegisterAuthor = async () => {
+  adminMessage.value = '';
+  if (!newAuthorUsername.value.trim() || !newAuthorPassword.value.trim()) {
+    adminMessage.value = 'Заполните никнейм и пароль для нового автора';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/register-author', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: newAuthorUsername.value.trim(),
+        password: newAuthorPassword.value.trim(),
+        adminUsername: props.username
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      adminMessage.value = `Успешно создан автор: ${data.username}!`;
+      newAuthorUsername.value = '';
+      newAuthorPassword.value = '';
+      fetchAdminAuthorsList();
+    } else {
+      adminMessage.value = data.error || 'Ошибка создания автора';
+    }
+  } catch (err) {
+    adminMessage.value = 'Ошибка обращения к серверу';
   }
 };
 
@@ -150,16 +202,28 @@ const handleAvatarFileUpload = (e: Event) => {
                 <p class="text-xs text-dark-muted">Автор {{ authorGuides.length }} опубликованных гайдов</p>
               </div>
 
-              <!-- Edit Profile Button (For Profile Owner) -->
-              <button
-                v-if="isOwnProfile && !isEditing"
-                type="button"
-                @click="isEditing = true"
-                class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
-              >
-                <IconRenderer name="Edit3" size="14" />
-                <span>Редактировать профиль</span>
-              </button>
+              <!-- Admin / Edit Controls -->
+              <div class="flex items-center gap-2">
+                <button
+                  v-if="isAdmin"
+                  type="button"
+                  @click="isAdminPanelOpen = !isAdminPanelOpen"
+                  class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
+                >
+                  <IconRenderer name="Shield" size="14" />
+                  <span>{{ isAdminPanelOpen ? 'Закрыть Админку' : 'Админ Панель' }}</span>
+                </button>
+
+                <button
+                  v-if="isOwnProfile && !isEditing"
+                  type="button"
+                  @click="isEditing = true"
+                  class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
+                >
+                  <IconRenderer name="Edit3" size="14" />
+                  <span>Редактировать профиль</span>
+                </button>
+              </div>
             </div>
 
             <!-- Badges List -->
@@ -188,6 +252,65 @@ const handleAvatarFileUpload = (e: Event) => {
               </a>
               <span v-if="profile.socialDs" class="px-3 py-1 bg-[#121416] border border-[#26292d] text-purple-300 text-xs font-mono rounded-xl">
                 Discord: {{ profile.socialDs }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADMIN PANEL: MANUAL AUTHOR CREATION (Only for Super Admin) -->
+        <div v-if="isAdminPanelOpen && isAdmin" class="space-y-4 bg-purple-950/20 border border-purple-500/40 p-5 rounded-2xl">
+          <div class="flex items-center justify-between border-b border-purple-500/30 pb-2">
+            <h3 class="text-xs font-extrabold text-purple-300 uppercase tracking-wider flex items-center gap-2">
+              <IconRenderer name="Shield" size="16" class="text-purple-400" />
+              Панель Главного Администратора — Ручное Создание Авторов
+            </h3>
+          </div>
+
+          <div v-if="adminMessage" class="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-300 text-xs font-bold">
+            {{ adminMessage }}
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-purple-200 font-bold mb-1">Никнейм нового автора</label>
+              <input
+                type="text"
+                v-model="newAuthorUsername"
+                placeholder="например: AlexCraft..."
+                class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-[11px] text-purple-200 font-bold mb-1">Пароль автора</label>
+              <input
+                type="text"
+                v-model="newAuthorPassword"
+                placeholder="Задайте пароль..."
+                class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500"
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            @click="handleAdminRegisterAuthor"
+            class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all"
+          >
+            + Зарегистрировать Автора Вручную
+          </button>
+
+          <!-- List of Registered Authors -->
+          <div class="space-y-2 pt-2 border-t border-purple-500/30">
+            <div class="text-[11px] font-bold text-purple-300 uppercase">Список всех авторов с доступом:</div>
+            <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto">
+              <span
+                v-for="a in registeredAuthorsList"
+                :key="a.username"
+                class="px-2.5 py-1 rounded-lg bg-[#0c0d0e] border border-[#26292d] text-xs font-semibold text-white flex items-center gap-1.5"
+              >
+                <span>{{ a.username }}</span>
+                <span v-if="a.isAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1 rounded">Админ</span>
               </span>
             </div>
           </div>

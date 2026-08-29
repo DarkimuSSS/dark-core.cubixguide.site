@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerUser, loginUser } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors } from './db';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
 const app = express();
@@ -64,21 +64,7 @@ app.get('/api/servers', async (req, res) => {
   }
 });
 
-// MANUAL USER AUTHENTICATION ENDPOINTS
-
-// Register Author (Manual Registration Input)
-app.post('/api/auth/register', (req, res) => {
-  try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Заполните никнейм и пароль' });
-    }
-    const user = registerUser(username, password);
-    res.status(201).json(user);
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
-  }
-});
+// AUTHENTICATION ENDPOINTS
 
 // Login Author (Manual Credentials Input)
 app.post('/api/auth/login', (req, res) => {
@@ -91,6 +77,32 @@ app.post('/api/auth/login', (req, res) => {
     res.json(user);
   } catch (err: any) {
     res.status(401).json({ error: err.message });
+  }
+});
+
+// ADMIN-ONLY AUTHOR MANAGEMENT ENDPOINTS
+
+// Register New Author (Only Admin can do this manually)
+app.post('/api/admin/register-author', (req, res) => {
+  try {
+    const { username, password, adminUsername } = req.body;
+    if (!username || !password || !adminUsername) {
+      return res.status(400).json({ error: 'Заполните никнейм и пароль нового автора' });
+    }
+    const result = registerAuthorByAdmin(username, password, adminUsername);
+    res.status(201).json(result);
+  } catch (err: any) {
+    res.status(403).json({ error: err.message });
+  }
+});
+
+// List All Authors (Admin)
+app.get('/api/admin/authors', (req, res) => {
+  try {
+    const authors = listAllAuthors();
+    res.json(authors);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 });
 
