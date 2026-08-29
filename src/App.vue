@@ -35,41 +35,44 @@ const showToast = (msg: string) => {
   }, 3000);
 };
 
-// URL Routing & Browser Address Bar Sync
+// URL Query Parameters Sync (tab=...&guide=...)
 const updateUrlRoute = () => {
-  let targetPath = '/';
-  if (mode.value === 'favorites') {
-    targetPath = '/favorites';
-  } else if (mode.value === 'reader' && activeGuideId.value) {
-    targetPath = `/guide/${activeGuideId.value}`;
-  } else if (mode.value === 'editor' && activeGuideId.value) {
-    targetPath = `/editor/${activeGuideId.value}`;
+  const params = new URLSearchParams();
+
+  if (mode.value === 'home') {
+    params.set('tab', 'Главная');
+  } else if (mode.value === 'reader') {
+    params.set('tab', 'Вики');
+    if (activeGuideId.value) params.set('guide', activeGuideId.value);
+  } else if (mode.value === 'editor') {
+    params.set('tab', 'Конструктор');
+    if (activeGuideId.value) params.set('guide', activeGuideId.value);
+  } else if (mode.value === 'favorites') {
+    params.set('tab', 'Закладки');
   }
 
-  if (window.location.pathname !== targetPath) {
-    window.history.pushState({ mode: mode.value, guideId: activeGuideId.value }, '', targetPath);
+  const queryString = params.toString() ? `?${params.toString()}` : '/';
+  if (window.location.search !== `?${params.toString()}` && window.location.pathname + window.location.search !== queryString) {
+    window.history.pushState({ mode: mode.value, guideId: activeGuideId.value }, '', queryString);
   }
 };
 
 const syncFromUrlPath = () => {
-  const path = window.location.pathname;
-  if (path.startsWith('/guide/')) {
-    const id = path.replace('/guide/', '');
-    if (id) {
-      activeGuideId.value = id;
-      mode.value = 'reader';
-      const found = guides.value.find(g => g.meta.id === id);
-      if (found) activeGuide.value = JSON.parse(JSON.stringify(found));
-    }
-  } else if (path.startsWith('/editor/')) {
-    const id = path.replace('/editor/', '');
-    if (id) {
-      activeGuideId.value = id;
-      mode.value = isAuthenticated.value ? 'editor' : 'reader';
-      const found = guides.value.find(g => g.meta.id === id);
-      if (found) activeGuide.value = JSON.parse(JSON.stringify(found));
-    }
-  } else if (path === '/favorites') {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  const guideParam = params.get('guide');
+
+  if (guideParam) {
+    activeGuideId.value = guideParam;
+    const found = guides.value.find(g => g.meta.id === guideParam);
+    if (found) activeGuide.value = JSON.parse(JSON.stringify(found));
+  }
+
+  if (tab === 'Вики' || tab === 'reader') {
+    mode.value = 'reader';
+  } else if (tab === 'Конструктор' || tab === 'editor') {
+    mode.value = isAuthenticated.value ? 'editor' : 'reader';
+  } else if (tab === 'Закладки' || tab === 'favorites') {
     mode.value = 'favorites';
   } else {
     mode.value = 'home';
@@ -337,7 +340,7 @@ const createNewGuide = async () => {
       showToast('Создан новый гайд!');
     }
   } catch (err) {
-    console.error('Ошибка создания:', err);
+    console.error('Ошибка сохранения:', err);
     showToast('Ошибка сохранения');
   }
 };
