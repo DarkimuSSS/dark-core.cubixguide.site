@@ -434,19 +434,6 @@ const handleDeleteGuide = async () => {
           </button>
         </div>
 
-        <!-- Quick Guide Selector -->
-        <div v-if="guides.length > 0 && mode !== 'home'" class="relative hidden sm:block">
-          <select 
-            :value="activeGuideId"
-            @change="selectGuide(($event.target as HTMLSelectElement).value)"
-            class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold rounded-xl px-3.5 py-2 focus:outline-none focus:border-emerald-accent pr-8 cursor-pointer shadow-inner max-w-[180px] truncate"
-          >
-            <option v-for="g in guides" :key="g.meta.id" :value="g.meta.id">
-              {{ g.meta.title }}
-            </option>
-          </select>
-        </div>
-
         <button
           v-if="isAuthenticated"
           type="button"
