@@ -69,18 +69,18 @@ const getVariantClass = (variant?: BlockVariant) => {
 
 <template>
   <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] flex flex-col">
-    <!-- Main Layout Container -->
-    <div class="flex-1 grid grid-cols-1 lg:grid-cols-6 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
+    <!-- Main Layout Container with Expanded 12-Column Grid (Sidebar: 3 cols = 25% width, Content: 9 cols = 75% width) -->
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
       
-      <!-- SIDEBAR -->
+      <!-- WIDER EXPANDED SIDEBAR -->
       <aside :class="[
-        'col-span-1 fixed lg:sticky top-20 z-40 lg:z-0 bg-[#16181a] lg:bg-transparent border lg:border-none border-[#26292d] rounded-2xl p-4 transition-all duration-300 max-h-[calc(100vh-6rem)] overflow-y-auto',
-        isMobileNavOpen ? 'left-4 shadow-2xl w-64' : '-left-80 lg:left-0 w-full'
+        'col-span-1 lg:col-span-3 fixed lg:sticky top-20 z-40 lg:z-0 bg-[#16181a] lg:bg-transparent border lg:border-none border-[#26292d] rounded-2xl p-4 sm:p-5 transition-all duration-300 max-h-[calc(100vh-6rem)] overflow-y-auto',
+        isMobileNavOpen ? 'left-4 shadow-2xl w-80' : '-left-96 lg:left-0 w-full'
       ]">
         <div class="space-y-6">
           <div class="flex items-center justify-between pb-3 border-b border-[#26292d]">
-            <div class="text-xs font-bold uppercase tracking-wider text-dark-muted flex items-center gap-1.5">
-              <IconRenderer name="BookOpen" size="14" class="text-emerald-400" />
+            <div class="text-xs font-extrabold uppercase tracking-wider text-dark-muted flex items-center gap-2">
+              <IconRenderer name="BookOpen" size="16" class="text-emerald-400" />
               Каталог гайдов
             </div>
             <button @click="isMobileNavOpen = false" class="lg:hidden text-dark-muted hover:text-white">
@@ -88,22 +88,22 @@ const getVariantClass = (variant?: BlockVariant) => {
             </button>
           </div>
 
-          <div class="space-y-2">
+          <div class="space-y-3">
             <div 
               v-for="item in allGuides" 
               :key="item.meta.id"
               @click="emit('select-guide', item.meta.id); isMobileNavOpen = false;"
               :class="[
-                'p-3 rounded-xl border text-left cursor-pointer transition-all',
+                'p-4 rounded-xl border text-left cursor-pointer transition-all space-y-2 shadow-sm',
                 guide.meta.id === item.meta.id 
-                  ? 'bg-emerald-500/15 border-emerald-500/50 text-white shadow-md' 
-                  : 'bg-[#121416] border-[#26292d] hover:border-[#3b3f46] text-slate-300'
+                  ? 'bg-emerald-500/15 border-emerald-500/50 text-white shadow-emerald-950/40 shadow-lg' 
+                  : 'bg-[#121416] border-[#26292d] hover:border-emerald-500/40 text-slate-200'
               ]"
             >
-              <div class="text-xs font-semibold line-clamp-1 mb-1">{{ item.meta.title }}</div>
-              <div class="flex items-center justify-between text-[10px] text-dark-muted">
-                <span>автор: {{ item.meta.author }}</span>
-                <span class="text-cyan-400 font-mono">{{ item.meta.category }}</span>
+              <div class="text-sm font-bold leading-snug line-clamp-2">{{ item.meta.title }}</div>
+              <div class="flex items-center justify-between text-[11px] text-dark-muted pt-1 border-t border-[#26292d]/60">
+                <span class="font-medium">автор: <strong class="text-slate-300">{{ item.meta.author }}</strong></span>
+                <span class="text-cyan-400 font-bold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">{{ item.meta.category }}</span>
               </div>
             </div>
           </div>
@@ -111,13 +111,16 @@ const getVariantClass = (variant?: BlockVariant) => {
       </aside>
 
       <!-- CONTENT ZONE -->
-      <main class="col-span-1 lg:col-span-5 min-w-0 space-y-8">
+      <main class="col-span-1 lg:col-span-9 min-w-0 space-y-8">
         <article class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-4">
           <div class="flex flex-wrap items-center gap-2">
             <span class="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-semibold border border-cyan-500/30">
               {{ guide.meta.category }}
             </span>
-            <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
+            <span v-if="guide.meta.server" class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
+              🎮 {{ guide.meta.server }}
+            </span>
+            <span class="px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-semibold border border-purple-500/30">
               Сложность: {{ guide.meta.difficulty }}
             </span>
             <span class="text-xs text-dark-muted ml-auto">Обновлено: {{ guide.meta.updatedAt }}</span>
