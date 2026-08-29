@@ -20,6 +20,14 @@ const emit = defineEmits<{
   (e: 'delete'): void;
 }>();
 
+const DEFAULT_SERVERS = [
+  "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
+  "OneBlock-Mobile", "Pixelmon_1211", "HiTech", "TechnoMagic", "UltraSky", 
+  "HiTech-Mobile", "Cobblemon_1211", "TechnoMagic-Mobile", "OceanBlock_1165", 
+  "Industrial", "GregTech", "Pixelmon_1165", "Pixelmon", "TechnomagicTest", 
+  "SkyTech", "MagicalTech"
+];
+
 const isPickerOpen = ref(false);
 const activeSlotBlockId = ref<string | null>(null);
 const activeSlotIndex = ref<number | null>(null);
@@ -31,7 +39,7 @@ const isTemplateModalOpen = ref(false);
 const isHelpModalOpen = ref(false);
 const isTreeModalOpen = ref(false);
 
-const serverList = ref<string[]>([]);
+const serverList = ref<string[]>([...DEFAULT_SERVERS]);
 
 const activeResizingBlockId = ref<string | null>(null);
 
@@ -56,9 +64,14 @@ onMounted(async () => {
   window.addEventListener('keydown', handleGlobalHotkeys);
   try {
     const res = await fetch('/api/servers');
-    if (res.ok) serverList.value = await res.json();
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        serverList.value = data;
+      }
+    }
   } catch (err) {
-    serverList.value = ["OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", "HiTech", "TechnoMagic", "UltraSky", "GregTech", "Pixelmon", "SkyTech"];
+    console.error('Error fetching servers in editor:', err);
   }
 });
 
