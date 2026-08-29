@@ -18,13 +18,20 @@ const emit = defineEmits<{
 const isMobileNavOpen = ref(false);
 
 const tableOfContents = computed(() => {
-  return props.guide.blocks
-    .filter(b => b.type === 'heading' && b.headingText)
-    .map(b => ({
-      id: b.id,
-      text: b.headingText as string,
-      level: b.headingLevel || 'h2'
-    }));
+  const result: { id: string; text: string; level: string }[] = [];
+  const collectHeadings = (blocks: any[]) => {
+    for (const b of blocks) {
+      if (b.type === 'heading' && b.headingText) {
+        result.push({ id: b.id, text: b.headingText, level: b.headingLevel || 'h2' });
+      } else if (b.type === 'section' && b.columns) {
+        for (const col of b.columns) {
+          collectHeadings(col.blocks);
+        }
+      }
+    }
+  };
+  collectHeadings(props.guide.blocks);
+  return result;
 });
 
 const activeHeadingId = ref<string>('');
@@ -184,12 +191,52 @@ const getVariantClass = (variant?: BlockVariant) => {
             :id="`block-${block.id}`"
             :class="[
               'scroll-mt-24 transition-all flex flex-col justify-between',
-              block.type === 'divider' ? 'col-span-6 my-2' : getGridSpanClass(block.span) + ' h-full'
+              block.type === 'divider' ? 'col-span-6 my-2' : 
+              block.type === 'section' ? 'col-span-6' :
+              getGridSpanClass(block.span) + ' h-full'
             ]"
           >
             <!-- Divider Section Separator (<hr>) -->
             <div v-if="block.type === 'divider'" class="w-full py-4 flex items-center justify-center">
               <hr class="w-full border-t border-[#26292d]" />
+            </div>
+
+            <!-- Section Block (Stacked Multi-block Columns) -->
+            <div v-else-if="block.type === 'section'" class="grid grid-cols-6 gap-6 items-stretch">
+              <div 
+                v-for="col in (block.columns || [])" 
+                :key="col.id"
+                :class="[
+                  getGridSpanClass(col.span),
+                  'flex flex-col justify-between gap-4 h-full'
+                ]"
+              >
+                <div v-for="sub in col.blocks" :key="sub.id" :id="`block-${sub.id}`" class="flex-1 flex flex-col justify-center">
+                  <!-- Sub Heading -->
+                  <div v-if="sub.type === 'heading'" class="border-b border-[#26292d] pb-2">
+                    <h2 v-if="sub.headingLevel === 'h1'" class="text-xl font-bold text-white">{{ sub.headingText }}</h2>
+                    <h3 v-else class="text-lg font-bold text-slate-100">{{ sub.headingText }}</h3>
+                  </div>
+
+                  <!-- Sub Text -->
+                  <div v-else-if="sub.type === 'text'" :class="['p-4 rounded-xl text-slate-300 text-sm leading-relaxed', getVariantClass(sub.variant)]">
+                    <p class="whitespace-pre-line">{{ sub.textContent }}</p>
+                  </div>
+
+                  <!-- Sub Callout -->
+                  <div v-else-if="sub.type === 'callout'">
+                    <CalloutBlock :block="sub" :is-editing="false" />
+                  </div>
+
+                  <!-- Sub Image -->
+                  <div v-else-if="sub.type === 'image'" :class="['p-4 rounded-2xl shadow-xl space-y-2 h-full flex flex-col justify-center', getVariantClass(sub.variant)]">
+                    <div v-if="sub.imageUrl" class="rounded-xl overflow-hidden bg-black/60 border border-[#26292d] flex items-center justify-center h-full">
+                      <img :src="sub.imageUrl" :alt="sub.imageCaption" class="max-h-[500px] w-auto object-contain rounded-xl" />
+                    </div>
+                    <p v-if="sub.imageCaption" class="text-xs text-center text-dark-muted font-medium italic pt-1">{{ sub.imageCaption }}</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Heading Block -->

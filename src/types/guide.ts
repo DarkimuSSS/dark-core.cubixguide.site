@@ -35,12 +35,18 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
-export type BlockType = 'heading' | 'text' | 'callout' | 'crafting' | 'multiblock' | 'checklist' | 'image' | 'divider';
+export type BlockType = 'heading' | 'text' | 'callout' | 'crafting' | 'multiblock' | 'checklist' | 'image' | 'divider' | 'section';
 
 // 6-Column Grid Spans
 export type BlockSpan = 'span-6' | 'span-3' | 'span-2' | 'span-4' | 'span-1';
 export type BlockAlign = 'left' | 'center' | 'right';
 export type BlockVariant = 'default' | 'subtle' | 'bordered' | 'accent';
+
+export interface SectionColumn {
+  id: string;
+  span: BlockSpan; // e.g. span-4, span-2, span-3
+  blocks: GuideBlock[];
+}
 
 export interface GuideBlock {
   id: string;
@@ -68,6 +74,9 @@ export interface GuideBlock {
   imageUrl?: string;
   imageCaption?: string;
   dividerStyle?: 'line' | 'dashed' | 'dots' | 'icon';
+
+  // Nested Multi-Block Columns (for 'section' block type)
+  columns?: SectionColumn[];
 }
 
 export interface GuideMeta {

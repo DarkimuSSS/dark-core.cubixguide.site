@@ -6,7 +6,7 @@ import LayerPainter from './LayerPainter.vue';
 import CraftingSlotPicker from './CraftingSlotPicker.vue';
 import ImportExportModal from './ImportExportModal.vue';
 import TemplateLibraryModal from './TemplateLibraryModal.vue';
-import type { Guide, GuideBlock, Category, Difficulty, CraftingSlot, BlockType, BlockSpan, BlockAlign, BlockVariant } from '../types/guide';
+import type { Guide, GuideBlock, Category, Difficulty, CraftingSlot, BlockType, BlockSpan, BlockAlign, BlockVariant, SectionColumn } from '../types/guide';
 import { PRESET_ITEMS } from '../data/presetItems';
 
 const props = defineProps<{
@@ -168,6 +168,30 @@ const addBlockAt = (index: number, type: BlockType) => {
         dividerStyle: 'line'
       };
       break;
+    case 'section':
+      newBlock = {
+        id: `b_${Date.now()}`,
+        type: 'section',
+        span: 'span-6',
+        columns: [
+          {
+            id: `col_${Date.now()}_1`,
+            span: 'span-4',
+            blocks: [
+              { id: `sb1_${Date.now()}`, type: 'heading', headingText: 'Заголовок секции', headingLevel: 'h2', span: 'span-6' },
+              { id: `sb2_${Date.now()}`, type: 'text', textContent: 'Описание шага инструкции...', span: 'span-6' }
+            ]
+          },
+          {
+            id: `col_${Date.now()}_2`,
+            span: 'span-2',
+            blocks: [
+              { id: `sb3_${Date.now()}`, type: 'image', imageUrl: '', imageCaption: 'Иллюстрация', span: 'span-6' }
+            ]
+          }
+        ]
+      };
+      break;
   }
 
   newBlocks.splice(index + 1, 0, newBlock);
@@ -180,7 +204,20 @@ const handleAppendTemplate = (templateBlocks: GuideBlock[]) => {
 };
 
 const openSlotPicker = (blockId: string, slotIndex: number, isOutput: boolean = false) => {
-  const block = props.guide.blocks.find(b => b.id === blockId);
+  const findBlockRecursive = (blocks: GuideBlock[]): GuideBlock | null => {
+    for (const b of blocks) {
+      if (b.id === blockId) return b;
+      if (b.type === 'section' && b.columns) {
+        for (const col of b.columns) {
+          const found = findBlockRecursive(col.blocks);
+          if (found) return found;
+        }
+      }
+    }
+    return null;
+  };
+
+  const block = findBlockRecursive(props.guide.blocks);
   if (!block) return;
   
   activeSlotBlockId.value = blockId;
@@ -198,19 +235,35 @@ const openSlotPicker = (blockId: string, slotIndex: number, isOutput: boolean = 
 
 const handleSaveSlot = (updatedSlot: CraftingSlot) => {
   if (!activeSlotBlockId.value) return;
-  const block = props.guide.blocks.find(b => b.id === activeSlotBlockId.value);
-  if (!block) return;
 
-  const newBlock = { ...block };
-  if (isOutputSlot.value) {
-    newBlock.craftingOutput = updatedSlot;
-  } else if (newBlock.craftingGrid) {
-    const grid = [...newBlock.craftingGrid];
-    grid[updatedSlot.index] = updatedSlot;
-    newBlock.craftingGrid = grid;
-  }
+  const updateBlockRecursive = (blocks: GuideBlock[]): GuideBlock[] => {
+    return blocks.map(b => {
+      if (b.id === activeSlotBlockId.value) {
+        const newBlock = { ...b };
+        if (isOutputSlot.value) {
+          newBlock.craftingOutput = updatedSlot;
+        } else if (newBlock.craftingGrid) {
+          const grid = [...newBlock.craftingGrid];
+          grid[updatedSlot.index] = updatedSlot;
+          newBlock.craftingGrid = grid;
+        }
+        return newBlock;
+      }
+      if (b.type === 'section' && b.columns) {
+        return {
+          ...b,
+          columns: b.columns.map(col => ({
+            ...col,
+            blocks: updateBlockRecursive(col.blocks)
+          }))
+        };
+      }
+      return b;
+    });
+  };
 
-  updateBlock(newBlock);
+  const newBlocks = updateBlockRecursive(props.guide.blocks);
+  emit('update:guide', { ...props.guide, blocks: newBlocks });
 };
 
 const addChecklistItem = (block: GuideBlock) => {
@@ -267,6 +320,56 @@ const getVariantClass = (variant?: BlockVariant) => {
       return 'bg-[#16181a] border border-[#26292d]';
   }
 };
+
+// Sub-block updater inside nested columns
+const updateSubBlock = (parentSection: GuideBlock, colId: string, subBlock: GuideBlock) => {
+  if (!parentSection.columns) return;
+  const newCols = parentSection.columns.map(col => {
+    if (col.id === colId) {
+      return {
+        ...col,
+        blocks: col.blocks.map(b => b.id === subBlock.id ? subBlock : b)
+      };
+    }
+    return col;
+  });
+  updateBlock({ ...parentSection, columns: newCols });
+};
+
+const addSubBlock = (parentSection: GuideBlock, colId: string, type: BlockType) => {
+  if (!parentSection.columns) return;
+  const newSubBlock: GuideBlock = {
+    id: `sb_${Date.now()}`,
+    type,
+    span: 'span-6',
+    headingText: type === 'heading' ? 'Новый подзаголовок' : undefined,
+    textContent: type === 'text' ? 'Текст подблока...' : undefined,
+    calloutType: 'tip',
+    calloutTitle: 'Совет',
+    calloutText: 'Важная информация',
+    imageUrl: '',
+    imageCaption: 'Иллюстрация'
+  };
+
+  const newCols = parentSection.columns.map(col => {
+    if (col.id === colId) {
+      return { ...col, blocks: [...col.blocks, newSubBlock] };
+    }
+    return col;
+  });
+  updateBlock({ ...parentSection, columns: newCols });
+};
+
+const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string) => {
+  if (!parentSection.columns) return;
+  const newCols = parentSection.columns.map(col => {
+    if (col.id === colId) {
+      return { ...col, blocks: col.blocks.filter(b => b.id !== subId) };
+    }
+    return col;
+  });
+  updateBlock({ ...parentSection, columns: newCols });
+};
 </script>
 
 <template>
@@ -276,7 +379,7 @@ const getVariantClass = (variant?: BlockVariant) => {
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Сетка 6 колонок (Выравнивание высоты)
+          Составные Колонки (Stacked Rows)
         </span>
       </div>
 
@@ -393,7 +496,9 @@ const getVariantClass = (variant?: BlockVariant) => {
         :key="block.id"
         :class="[
           'group relative rounded-2xl transition-all shadow-md flex flex-col justify-between',
-          block.type === 'divider' ? 'col-span-6 p-2 bg-transparent shadow-none border-none' : getGridSpanClass(block.span) + ' p-5 h-full ' + getVariantClass(block.variant)
+          block.type === 'divider' ? 'col-span-6 p-2 bg-transparent shadow-none border-none' : 
+          block.type === 'section' ? 'col-span-6 p-4 bg-[#121416] border border-[#26292d]' :
+          getGridSpanClass(block.span) + ' p-5 h-full ' + getVariantClass(block.variant)
         ]"
       >
         <!-- Divider Special Render -->
@@ -403,6 +508,94 @@ const getVariantClass = (variant?: BlockVariant) => {
             <div class="absolute bg-[#0c0d0e] px-3 text-dark-muted flex items-center gap-2 text-xs font-mono border border-[#26292d] rounded-full">
               <IconRenderer name="Sliders" size="12" class="text-cyan-400" />
               <span>Разделитель секций</span>
+            </div>
+          </div>
+        </template>
+
+        <!-- Nested Section Container (Stacked Columns Side-by-Side) -->
+        <template v-else-if="block.type === 'section'">
+          <div class="flex items-center justify-between border-b border-[#26292d] pb-2 mb-4">
+            <span class="text-xs font-bold text-cyan-400 flex items-center gap-2">
+              <IconRenderer name="Layout" size="14" />
+              Составная Секция (Несколько блоков стопкой)
+            </span>
+            <div class="flex items-center gap-2">
+              <button @click="duplicateBlock(index)" class="p-1 text-cyan-400 hover:text-cyan-300 rounded"><IconRenderer name="Copy" size="13" /></button>
+              <button @click="deleteBlock(index)" class="p-1 text-rose-400 hover:text-rose-300 rounded"><IconRenderer name="Trash2" size="13" /></button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-6 gap-6 items-stretch">
+            <div 
+              v-for="col in (block.columns || [])" 
+              :key="col.id"
+              :class="[
+                getGridSpanClass(col.span),
+                'flex flex-col gap-4 h-full justify-between bg-[#16181a] border border-[#26292d] p-4 rounded-xl'
+              ]"
+            >
+              <div class="space-y-4 flex-1 flex flex-col justify-between">
+                <div v-for="sub in col.blocks" :key="sub.id" class="p-3 bg-[#0c0d0e] border border-[#26292d] rounded-xl relative group/sub shadow-sm">
+                  <div class="flex items-center justify-between border-b border-[#26292d] pb-1.5 mb-2 text-[10px] text-dark-muted font-bold uppercase">
+                    <span>{{ sub.type }}</span>
+                    <button @click="removeSubBlock(block, col.id, sub.id)" class="text-rose-400 hover:text-rose-300"><IconRenderer name="X" size="12" /></button>
+                  </div>
+
+                  <div v-if="sub.type === 'heading'">
+                    <input
+                      type="text"
+                      :value="sub.headingText"
+                      @input="updateSubBlock(block, col.id, { ...sub, headingText: ($event.target as HTMLInputElement).value })"
+                      placeholder="Заголовок..."
+                      class="w-full bg-[#121416] border border-[#26292d] text-white text-base font-bold rounded p-2"
+                    />
+                  </div>
+
+                  <div v-else-if="sub.type === 'text'">
+                    <textarea
+                      :value="sub.textContent"
+                      @input="updateSubBlock(block, col.id, { ...sub, textContent: ($event.target as HTMLTextAreaElement).value })"
+                      placeholder="Текст..."
+                      rows="3"
+                      class="w-full bg-[#121416] border border-[#26292d] text-slate-200 text-xs rounded p-2 resize-y"
+                    ></textarea>
+                  </div>
+
+                  <div v-else-if="sub.type === 'callout'">
+                    <CalloutBlock :block="sub" :is-editing="true" @update="(updated) => updateSubBlock(block, col.id, updated)" />
+                  </div>
+
+                  <div v-else-if="sub.type === 'image'" class="space-y-2">
+                    <div v-if="sub.imageUrl" class="rounded border border-[#26292d] overflow-hidden bg-black/60 max-h-48 flex items-center justify-center">
+                      <img :src="sub.imageUrl" class="max-h-48 object-contain" />
+                    </div>
+                    <input
+                      type="text"
+                      :value="sub.imageUrl"
+                      @input="updateSubBlock(block, col.id, { ...sub, imageUrl: ($event.target as HTMLInputElement).value })"
+                      placeholder="URL картинки..."
+                      class="w-full bg-[#121416] border border-[#26292d] text-white text-xs rounded p-1.5"
+                    />
+                  </div>
+
+                  <div v-else-if="sub.type === 'crafting'" class="p-2 bg-[#121416] rounded border border-[#26292d]">
+                    <div class="text-[10px] text-emerald-400 font-bold mb-1">Крафт 3x3</div>
+                    <button type="button" @click="openSlotPicker(sub.id, 9, true)" class="w-full py-2 bg-emerald-600/20 text-emerald-300 text-xs font-semibold rounded border border-emerald-500/30">
+                      Настроить выходы крафта
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Add sub-block to column button -->
+              <div class="pt-2 border-t border-[#26292d] flex items-center justify-between">
+                <span class="text-[10px] text-dark-muted font-mono">{{ col.span }}</span>
+                <div class="flex items-center gap-1">
+                  <button @click="addSubBlock(block, col.id, 'text')" class="px-2 py-1 bg-[#121416] border border-[#26292d] hover:border-emerald-500 text-[10px] text-slate-200 rounded font-semibold">+ Текст</button>
+                  <button @click="addSubBlock(block, col.id, 'image')" class="px-2 py-1 bg-[#121416] border border-[#26292d] hover:border-pink-500 text-[10px] text-slate-200 rounded font-semibold">+ Картинка</button>
+                  <button @click="addSubBlock(block, col.id, 'callout')" class="px-2 py-1 bg-[#121416] border border-[#26292d] hover:border-amber-500 text-[10px] text-slate-200 rounded font-semibold">+ Совет</button>
+                </div>
+              </div>
             </div>
           </div>
         </template>
@@ -786,6 +979,9 @@ const getVariantClass = (variant?: BlockVariant) => {
                 </button>
                 <button @click="addBlockAt(index, 'crafting')" class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
                   <IconRenderer name="Grid" size="14" class="text-purple-400" /> Крафт 3x3
+                </button>
+                <button @click="addBlockAt(index, 'section')" class="text-left text-xs text-cyan-300 font-semibold hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
+                  <IconRenderer name="Layout" size="14" class="text-cyan-400" /> Составная Секция
                 </button>
                 <button @click="addBlockAt(index, 'multiblock')" class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
                   <IconRenderer name="Layers" size="14" class="text-cyan-400" /> Мультиструктура

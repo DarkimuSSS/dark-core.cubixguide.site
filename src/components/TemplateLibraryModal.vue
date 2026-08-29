@@ -19,11 +19,110 @@ export interface LayoutTemplate {
   description: string;
   icon: string;
   previewLayout: string;
-  category: 'Колонки' | 'Крафт и Схемы' | 'Разделы';
+  category: 'Составные колонки' | 'Колонки' | 'Крафт и Схемы' | 'Разделы';
   blocks: GuideBlock[];
 }
 
 const templates: LayoutTemplate[] = [
+  {
+    id: 'tpl_stacked_left_image_right',
+    name: '2 Блока слева (Заголовок + Текст) | 1 Картинка справа (4/6 + 2/6)',
+    description: 'Слева расположены Заголовок и Текст друг под другом, а справа — скриншот на всю общую высоту.',
+    icon: 'Layout',
+    previewLayout: '[ Заголовок + Текст (4/6) | Картинка (2/6) ]',
+    category: 'Составные колонки',
+    blocks: [
+      {
+        id: 'tpl_sec_1',
+        type: 'section',
+        span: 'span-6',
+        columns: [
+          {
+            id: 'col_left_1',
+            span: 'span-4',
+            blocks: [
+              {
+                id: 'tpl_sub_1',
+                type: 'heading',
+                headingText: 'Доступ в Мир Драконов',
+                headingLevel: 'h2',
+                span: 'span-6'
+              },
+              {
+                id: 'tpl_sub_2',
+                type: 'text',
+                textContent: 'После успешного завершения квеста «Орихалковая броня», в награду вы получите уникальный квестовый предмет. Его необходимо доставить Страннику (NPC) на спавне.',
+                span: 'span-6'
+              }
+            ]
+          },
+          {
+            id: 'col_right_1',
+            span: 'span-2',
+            blocks: [
+              {
+                id: 'tpl_sub_3',
+                type: 'image',
+                imageUrl: '',
+                imageCaption: 'Иллюстрация к гайду',
+                span: 'span-6'
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'tpl_stacked_text_callout_crafting',
+    name: '2 Блока слева (Текст + Предупреждение) | 1 Крафт справа (3/6 + 3/6)',
+    description: 'Слева стопкой стоят описательный текст и важный совет, а справа — схема верстака.',
+    icon: 'Grid',
+    previewLayout: '[ Текст + Совет (3/6) | Крафт 3x3 (3/6) ]',
+    category: 'Составные колонки',
+    blocks: [
+      {
+        id: 'tpl_sec_2',
+        type: 'section',
+        span: 'span-6',
+        columns: [
+          {
+            id: 'col_left_2',
+            span: 'span-3',
+            blocks: [
+              {
+                id: 'tpl_sub_4',
+                type: 'text',
+                textContent: 'Для создания предмета вам потребуются ресурсы высокого тира. Убедитесь в наличии базовых компонентов.',
+                span: 'span-6'
+              },
+              {
+                id: 'tpl_sub_5',
+                type: 'callout',
+                calloutType: 'warning',
+                calloutTitle: 'Опасности PvP зоны',
+                calloutText: 'В этом мире включено PvP и нельзя создавать приваты!',
+                span: 'span-6'
+              }
+            ]
+          },
+          {
+            id: 'col_right_2',
+            span: 'span-3',
+            blocks: [
+              {
+                id: 'tpl_sub_6',
+                type: 'crafting',
+                craftingGrid: Array(9).fill(null).map((_, i) => ({ index: i, item: null, count: 1 })),
+                craftingOutput: { index: 9, item: PRESET_ITEMS[0], count: 1 },
+                span: 'span-6'
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
   {
     id: 'tpl_text_image',
     name: 'Текст + Иллюстрация (3/6 + 3/6)',
@@ -76,100 +175,11 @@ const templates: LayoutTemplate[] = [
         imageCaption: 'Вид справа'
       }
     ]
-  },
-  {
-    id: 'tpl_text_crafting',
-    name: 'Описание + Рецепт крафта (3/6 + 3/6)',
-    description: 'Две колонки по 3 спана: описание процесса слева и рецепт крафта справа.',
-    icon: 'Grid',
-    previewLayout: '[ 3 спана Текст | 3 спана Крафт ]',
-    category: 'Крафт и Схемы',
-    blocks: [
-      {
-        id: 'tpl_cr1',
-        type: 'text',
-        span: 'span-3',
-        textContent: 'Для сборки данного компонента вам потребуются базовые ресурсы...'
-      },
-      {
-        id: 'tpl_cr2',
-        type: 'crafting',
-        span: 'span-3',
-        craftingGrid: Array(9).fill(null).map((_, i) => ({ index: i, item: null, count: 1 })),
-        craftingOutput: { index: 9, item: PRESET_ITEMS[0], count: 1 }
-      }
-    ]
-  },
-  {
-    id: 'tpl_multi_checklist',
-    name: 'Схема постройки + Чек-лист (3/6 + 3/6)',
-    description: 'Две колонки: схема слоев постройки слева и пошаговый чек-лист справа.',
-    icon: 'Layers',
-    previewLayout: '[ 3 спана Схема | 3 спана Чек-лист ]',
-    category: 'Крафт и Схемы',
-    blocks: [
-      {
-        id: 'tpl_mc1',
-        type: 'multiblock',
-        span: 'span-3',
-        gridSize: 3,
-        palette: [
-          { id: 'reactor_casing', name: 'Корпус реактора', icon: 'Box', color: '#475569' },
-          { id: 'reactor_glass', name: 'Стекло реактора', icon: 'Grid', color: '#38bdf8' }
-        ],
-        layers: [
-          { layerNumber: 1, grid: Array(3).fill(null).map(() => Array(3).fill('reactor_casing')) },
-          { layerNumber: 2, grid: Array(3).fill(null).map(() => Array(3).fill('reactor_glass')) }
-        ]
-      },
-      {
-        id: 'tpl_mc2',
-        type: 'checklist',
-        span: 'span-3',
-        checklistTitle: 'Этапы постройки',
-        checklistItems: [
-          { id: 'mc_ch1', text: 'Заложить фундамент из корпусных блоков Y=1', completed: false },
-          { id: 'mc_ch2', text: 'Установить стекла и порты доступа Y=2', completed: false },
-          { id: 'mc_ch3', text: 'Закрыть крышку структуры управляющим стержнем Y=3', completed: false }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'tpl_warning_section',
-    name: 'Раздел с Важным Предупреждением (6/6 + 3/6 + 3/6)',
-    description: 'Заголовок на все 6 колонок, далее описание (3 спана) и блок предупреждения (3 спана).',
-    icon: 'AlertTriangle',
-    previewLayout: '[ 6 спанов Заголовок ]\n[ 3 спана Текст | 3 спана Предупреждение ]',
-    category: 'Разделы',
-    blocks: [
-      {
-        id: 'tpl_w1',
-        type: 'heading',
-        headingText: 'Правила Безопасности & Техника Боя',
-        headingLevel: 'h2',
-        span: 'span-6'
-      },
-      {
-        id: 'tpl_w2',
-        type: 'text',
-        span: 'span-3',
-        textContent: 'Перед началом боя убедитесь в наличии полного комплекта снаряжения...'
-      },
-      {
-        id: 'tpl_w3',
-        type: 'callout',
-        span: 'span-3',
-        calloutType: 'warning',
-        calloutTitle: 'Внимание!',
-        calloutText: 'Не заходите в зону без соответствия тира экипировки!'
-      }
-    ]
   }
 ];
 
 const selectedCategory = ref<string>('Все');
-const categoriesList = ['Все', 'Колонки', 'Крафт и Схемы', 'Разделы'];
+const categoriesList = ['Все', 'Составные колонки', 'Колонки', 'Крафт и Схемы'];
 
 const applyTemplate = (tpl: LayoutTemplate) => {
   const newBlocks: GuideBlock[] = JSON.parse(JSON.stringify(tpl.blocks)).map((b: GuideBlock, idx: number) => ({
@@ -191,8 +201,8 @@ const applyTemplate = (tpl: LayoutTemplate) => {
             <IconRenderer name="Layout" size="20" />
           </div>
           <div>
-            <h3 class="text-base font-bold text-white">Библиотека шаблонов макета (6 колонок)</h3>
-            <p class="text-xs text-dark-muted">Готовые сочетания блоков в 6-колоночной сетке</p>
+            <h3 class="text-base font-bold text-white">Библиотека шаблонов макета (Составные колонки)</h3>
+            <p class="text-xs text-dark-muted">Размещение нескольких блоков стопкой в одной колонке</p>
           </div>
         </div>
         <button 
@@ -235,9 +245,6 @@ const applyTemplate = (tpl: LayoutTemplate) => {
                 <IconRenderer :name="tpl.icon" size="18" class="text-cyan-400" />
                 {{ tpl.name }}
               </div>
-              <span class="text-[10px] bg-[#0c0d0e] border border-[#26292d] px-2 py-0.5 rounded text-dark-muted font-mono">
-                {{ tpl.blocks.length }} {{ tpl.blocks.length === 1 ? 'блок' : 'блока' }}
-              </span>
             </div>
 
             <p class="text-xs text-dark-muted leading-relaxed">
@@ -261,7 +268,7 @@ const applyTemplate = (tpl: LayoutTemplate) => {
 
       <!-- Footer -->
       <div class="px-6 py-3.5 border-t border-[#26292d] bg-[#121416] flex items-center justify-between">
-        <span class="text-xs text-dark-muted">Нажмите на шаблон для моментальной вставки группы блоков в 6-колоночную сетку</span>
+        <span class="text-xs text-dark-muted">Вставляйте составные колонки с несколькими блоками слева и высоким блоком справа</span>
         <button 
           type="button"
           @click="emit('close')"
