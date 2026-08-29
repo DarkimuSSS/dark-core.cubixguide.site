@@ -23,6 +23,7 @@ const isLoading = ref(false);
 const isAdminPanelOpen = ref(false);
 const newAuthorUsername = ref('');
 const newAuthorPassword = ref('');
+const showNewAuthorPassword = ref(false);
 const adminMessage = ref('');
 const registeredAuthorsList = ref<any[]>([]);
 
@@ -283,12 +284,21 @@ const handleAvatarFileUpload = (e: Event) => {
 
             <div>
               <label class="block text-[11px] text-purple-200 font-bold mb-1">Пароль автора</label>
-              <input
-                type="text"
-                v-model="newAuthorPassword"
-                placeholder="Задайте пароль..."
-                class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500"
-              />
+              <div class="relative">
+                <input
+                  :type="showNewAuthorPassword ? 'text' : 'password'"
+                  v-model="newAuthorPassword"
+                  placeholder="Задайте пароль..."
+                  class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-9 py-2 focus:outline-none focus:border-purple-500"
+                />
+                <button
+                  type="button"
+                  @click="showNewAuthorPassword = !showNewAuthorPassword"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1"
+                >
+                  <IconRenderer :name="showNewAuthorPassword ? 'EyeOff' : 'Eye'" size="14" class="text-cyan-400" />
+                </button>
+              </div>
             </div>
           </div>
 

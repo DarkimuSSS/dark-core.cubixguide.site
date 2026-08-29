@@ -13,6 +13,7 @@ const emit = defineEmits<{
 
 const username = ref('');
 const password = ref('');
+const showPassword = ref(false);
 const errorMessage = ref('');
 const isLoading = ref(false);
 
@@ -101,13 +102,23 @@ const handleLogin = async () => {
 
         <div class="space-y-1.5">
           <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted">Пароль</label>
-          <input
-            type="password"
-            v-model="password"
-            placeholder="Ваш пароль..."
-            required
-            class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-accent text-white text-sm rounded-xl px-4 py-3 focus:outline-none transition-all"
-          />
+          <div class="relative">
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              v-model="password"
+              placeholder="Ваш пароль..."
+              required
+              class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-accent text-white text-sm rounded-xl pl-4 pr-11 py-3 focus:outline-none transition-all"
+            />
+            <button
+              type="button"
+              @click="showPassword = !showPassword"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1 rounded-lg transition-colors"
+              :title="showPassword ? 'Скрыть пароль' : 'Показать пароль'"
+            >
+              <IconRenderer :name="showPassword ? 'EyeOff' : 'Eye'" size="18" class="text-cyan-400" />
+            </button>
+          </div>
         </div>
 
         <button
