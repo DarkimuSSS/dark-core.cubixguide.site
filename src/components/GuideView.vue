@@ -169,6 +169,16 @@ const scrollToBlock = (id: string) => {
               <p class="whitespace-pre-line">{{ block.textContent }}</p>
             </div>
 
+            <!-- Image / Screenshot Block -->
+            <div v-else-if="block.type === 'image'" class="bg-[#16181a] border border-[#26292d] p-4 rounded-2xl shadow-xl space-y-2">
+              <div v-if="block.imageUrl" class="rounded-xl overflow-hidden bg-black/60 border border-[#26292d] flex items-center justify-center">
+                <img :src="block.imageUrl" :alt="block.imageCaption || 'Скриншот гайда'" class="max-h-[500px] w-auto object-contain rounded-xl" />
+              </div>
+              <p v-if="block.imageCaption" class="text-xs text-center text-dark-muted font-medium italic pt-1">
+                {{ block.imageCaption }}
+              </p>
+            </div>
+
             <!-- Callout Box Block -->
             <div v-else-if="block.type === 'callout'">
               <CalloutBlock :block="block" :is-editing="false" />
@@ -182,7 +192,6 @@ const scrollToBlock = (id: string) => {
               </div>
 
               <div class="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 bg-[#0c0d0e] rounded-xl border border-[#26292d]">
-                <!-- 3x3 Grid -->
                 <div class="grid grid-cols-3 gap-2.5 p-3 bg-[#121416] rounded-xl border border-[#26292d]">
                   <div
                     v-for="(slot, slotIdx) in (block.craftingGrid || Array(9).fill(null))"
@@ -197,7 +206,6 @@ const scrollToBlock = (id: string) => {
                     </template>
                     <span v-else class="text-dark-muted/20 text-xs font-mono">.</span>
 
-                    <!-- Hover Tooltip -->
                     <div v-if="slot && slot.item" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block z-30 pointer-events-none">
                       <div class="bg-[#16181a] border border-[#26292d] p-2.5 rounded-lg shadow-2xl min-w-44 text-left">
                         <div class="text-xs font-bold text-white flex items-center gap-1.5" :style="{ color: slot.item.color }">
@@ -213,13 +221,11 @@ const scrollToBlock = (id: string) => {
                   </div>
                 </div>
 
-                <!-- Arrow -->
                 <div class="text-emerald-400 flex flex-col items-center gap-1">
                   <IconRenderer name="ChevronRight" size="32" class="hidden sm:block" />
                   <IconRenderer name="ArrowDown" size="32" class="block sm:hidden" />
                 </div>
 
-                <!-- Result Slot -->
                 <div class="flex flex-col items-center gap-1.5">
                   <span class="text-[11px] font-semibold text-dark-muted">Результат</span>
                   <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 border-emerald-500/60 bg-[#16181a] flex flex-col items-center justify-center relative transition-all group shadow-xl">

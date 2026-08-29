@@ -35,7 +35,7 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
-export type BlockType = 'heading' | 'text' | 'callout' | 'crafting' | 'multiblock' | 'checklist';
+export type BlockType = 'heading' | 'text' | 'callout' | 'crafting' | 'multiblock' | 'checklist' | 'image';
 
 export interface GuideBlock {
   id: string;
@@ -53,6 +53,8 @@ export interface GuideBlock {
   palette?: MultiblockMaterial[];
   checklistTitle?: string;
   checklistItems?: ChecklistItem[];
+  imageUrl?: string;
+  imageCaption?: string;
 }
 
 export interface GuideMeta {

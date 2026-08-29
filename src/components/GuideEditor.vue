@@ -137,6 +137,14 @@ const addBlockAt = (index: number, type: BlockType) => {
         ]
       };
       break;
+    case 'image':
+      newBlock = {
+        id: `b_${Date.now()}`,
+        type: 'image',
+        imageUrl: '',
+        imageCaption: 'Подпись к скриншоту / иллюстрации'
+      };
+      break;
   }
 
   newBlocks.splice(index + 1, 0, newBlock);
@@ -189,6 +197,20 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
   const items = [...(block.checklistItems || [])];
   items.splice(itemIndex, 1);
   updateBlock({ ...block, checklistItems: items });
+};
+
+// Handle Image File Upload to DataURL
+const handleImageFileUpload = (e: Event, block: GuideBlock) => {
+  const target = e.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+  const file = target.files[0];
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    if (event.target?.result) {
+      updateBlock({ ...block, imageUrl: event.target.result as string });
+    }
+  };
+  reader.readAsDataURL(file);
 };
 </script>
 
@@ -516,6 +538,61 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
           </button>
         </div>
 
+        <!-- Block 7: Image / Screenshot Block -->
+        <div v-else-if="block.type === 'image'" class="space-y-3">
+          <div class="text-xs text-dark-muted font-medium flex items-center justify-between">
+            <span>Иллюстрация / Скриншот</span>
+          </div>
+
+          <!-- Preview & URL Input -->
+          <div class="bg-[#0c0d0e] border border-[#26292d] p-4 rounded-xl space-y-3">
+            <div v-if="block.imageUrl" class="relative group/img rounded-lg overflow-hidden border border-[#26292d] max-h-96 flex items-center justify-center bg-black/50">
+              <img :src="block.imageUrl" :alt="block.imageCaption" class="max-h-96 object-contain rounded-lg" />
+              <button 
+                type="button"
+                @click="updateBlock({ ...block, imageUrl: '' })"
+                class="absolute top-2 right-2 bg-rose-600/80 hover:bg-rose-600 text-white p-1.5 rounded-lg opacity-0 group-hover/img:opacity-100 transition-opacity"
+              >
+                <IconRenderer name="X" size="16" />
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] text-dark-muted mb-1">Ссылка на картинку (URL)</label>
+                <input
+                  type="text"
+                  :value="block.imageUrl"
+                  @input="updateBlock({ ...block, imageUrl: ($event.target as HTMLInputElement).value })"
+                  placeholder="https://example.com/screenshot.png..."
+                  class="w-full bg-[#121416] border border-[#26292d] text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-accent"
+                />
+              </div>
+
+              <div>
+                <label class="block text-[11px] text-dark-muted mb-1">Или Загрузить файл с ПК</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  @change="handleImageFileUpload($event, block)"
+                  class="w-full text-xs text-dark-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/20 file:text-cyan-300 hover:file:bg-cyan-500/30 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] text-dark-muted mb-1">Подпись к скриншоту</label>
+              <input
+                type="text"
+                :value="block.imageCaption"
+                @input="updateBlock({ ...block, imageCaption: ($event.target as HTMLInputElement).value })"
+                placeholder="например: Алтарь призыва драконов на спавне..."
+                class="w-full bg-[#121416] border border-[#26292d] text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-accent"
+              />
+            </div>
+          </div>
+        </div>
+
         <!-- Inline Floating "+ Add Block" -->
         <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <div class="relative group/menu">
@@ -533,6 +610,9 @@ const removeChecklistItem = (block: GuideBlock, itemIndex: number) => {
               </button>
               <button @click="addBlockAt(index, 'text')" class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
                 <IconRenderer name="Edit3" size="14" class="text-emerald-400" /> Текст
+              </button>
+              <button @click="addBlockAt(index, 'image')" class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
+                <IconRenderer name="Box" size="14" class="text-pink-400" /> Картинка / Скриншот
               </button>
               <button @click="addBlockAt(index, 'callout')" class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-2 rounded-lg flex items-center gap-2">
                 <IconRenderer name="Lightbulb" size="14" class="text-amber-400" /> Уведомление / Совет
