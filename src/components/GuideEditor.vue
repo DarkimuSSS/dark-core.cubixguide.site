@@ -6,7 +6,7 @@ import LayerPainter from './LayerPainter.vue';
 import CraftingSlotPicker from './CraftingSlotPicker.vue';
 import ImportExportModal from './ImportExportModal.vue';
 import TemplateLibraryModal from './TemplateLibraryModal.vue';
-import type { Guide, GuideBlock, Category, Difficulty, CraftingSlot, BlockType, BlockSpan, BlockAlign, BlockVariant } from '../types/guide';
+import type { Guide, GuideBlock, Category, Difficulty, CraftingSlot, BlockType, BlockSpan, BlockAlign, BlockVariant, SectionColumn } from '../types/guide';
 import { PRESET_ITEMS } from '../data/presetItems';
 
 const props = defineProps<{
@@ -61,6 +61,35 @@ const updateBlock = (updatedBlock: GuideBlock) => {
   }
 };
 
+// Add / Remove Column inside Section
+const addColumnToSection = (block: GuideBlock) => {
+  const columns = block.columns || [];
+  if (columns.length >= 4) return;
+  const count = columns.length + 1;
+  const equalWidth = Math.floor(100 / count);
+
+  const newCol: SectionColumn = {
+    id: `col_${Date.now()}`,
+    customWidth: equalWidth,
+    blocks: [
+      { id: `sb_${Date.now()}`, type: 'text', textContent: 'Новая колонка...', customWidth: 100 }
+    ]
+  };
+
+  const newCols = columns.map(c => ({ ...c, customWidth: equalWidth }));
+  newCols.push(newCol);
+  updateBlock({ ...block, columns: newCols });
+};
+
+const removeColumnFromSection = (block: GuideBlock, colIdx: number) => {
+  const columns = block.columns || [];
+  if (columns.length <= 1) return;
+  const newCols = columns.filter((_, idx) => idx !== colIdx);
+  const equalWidth = Math.floor(100 / newCols.length);
+  newCols.forEach(c => c.customWidth = equalWidth);
+  updateBlock({ ...block, columns: newCols });
+};
+
 // Interactive Mouse Drag Resizing for Columns inside Section
 const startColumnResizing = (e: MouseEvent, sectionBlock: GuideBlock, colIdx: number) => {
   e.preventDefault();
@@ -104,22 +133,69 @@ const startColumnResizing = (e: MouseEvent, sectionBlock: GuideBlock, colIdx: nu
   window.addEventListener('mouseup', onMouseUp);
 };
 
-// Change Column Proportions inside Section Block
-const setSectionProportions = (block: GuideBlock, preset: '70-30' | '50-50' | '30-70' | '33-33-33') => {
-  if (!block.columns) return;
-  const newCols = [...block.columns];
+// Extended Presets for Section Columns
+type SectionPreset = '80-20' | '75-25' | '70-30' | '60-40' | '50-50' | '40-60' | '30-70' | '25-75' | '20-80' | '33-33-33' | '25-50-25';
 
-  if (preset === '70-30' && newCols.length >= 2) {
-    newCols[0].customWidth = 70;
-    newCols[1].customWidth = 30;
-  } else if (preset === '50-50' && newCols.length >= 2) {
-    newCols[0].customWidth = 50;
-    newCols[1].customWidth = 50;
-  } else if (preset === '30-70' && newCols.length >= 2) {
-    newCols[0].customWidth = 30;
-    newCols[1].customWidth = 70;
+const setSectionProportions = (block: GuideBlock, preset: SectionPreset) => {
+  let newCols: SectionColumn[] = block.columns ? [...block.columns] : [];
+
+  if (preset === '80-20') {
+    newCols = [
+      { id: newCols[0]?.id || `c1_${Date.now()}`, customWidth: 80, blocks: newCols[0]?.blocks || [] },
+      { id: newCols[1]?.id || `c2_${Date.now()}`, customWidth: 20, blocks: newCols[1]?.blocks || [] }
+    ];
+  } else if (preset === '75-25') {
+    newCols = [
+      { id: newCols[0]?.id || `c1_${Date.now()}`, customWidth: 75, blocks: newCols[0]?.blocks || [] },
+      { id: newCols[1]?.id || `c2_${Date.now()}`, customWidth: 25, blocks: newCols[1]?.blocks || [] }
+    ];
+  } else if (preset === '70-30') {
+    newCols = [
+      { id: newCols[0]?.id || `c1_${Date.now()}`, customWidth: 70, blocks: newCols[0]?.blocks || [] },
+      { id: newCols[1]?.id || `c2_${Date.now()}`, customWidth: 30, blocks: newCols[1]?.blocks || [] }
+    ];
+  } else if (preset === '60-40') {
+    newCols = [
+      { id: newCols[0]?.id || `c1_${Date.now()}`, customWidth: 60, blocks: newCols[0]?.blocks || [] },
+      { id: newCols[1]?.id || `c2_${Date.now()}`, customWidth: 40, blocks: newCols[1]?.blocks || [] }
+    ];
+  } else if (preset === '50-50') {
+    newCols = [
+      { id: newCols[0]?.id || `c1_${Date.now()}`, customWidth: 50, blocks: newCols[0]?.blocks || [] },
+      { id: newCols[1]?.id || `c2_${Date.now()}`, customWidth: 50, blocks: newCols[1]?.blocks || [] }
+    ];
+  } else if (preset === '40-60') {
+    newCols = [
+      { id: newCols[0]?.id || `c1_${Date.now()}`, customWidth: 40, blocks: newCols[0]?.blocks || [] },
+      { id: newCols[1]?.id || `c2_${Date.now()}`, customWidth: 60, blocks: newCols[1]?.blocks || [] }
+    ];
+  } else if (preset === '30-70') {
+    newCols = [
+      { id: newCols[0]?.id || `c1_${Date.now()}`, customWidth: 30, blocks: newCols[0]?.blocks || [] },
+      { id: newCols[1]?.id || `c2_${Date.now()}`, customWidth: 70, blocks: newCols[1]?.blocks || [] }
+    ];
+  } else if (preset === '25-75') {
+    newCols = [
+      { id: newCols[0]?.id || `c1_${Date.now()}`, customWidth: 25, blocks: newCols[0]?.blocks || [] },
+      { id: newCols[1]?.id || `c2_${Date.now()}`, customWidth: 75, blocks: newCols[1]?.blocks || [] }
+    ];
+  } else if (preset === '20-80') {
+    newCols = [
+      { id: newCols[0]?.id || `c1_${Date.now()}`, customWidth: 20, blocks: newCols[0]?.blocks || [] },
+      { id: newCols[1]?.id || `c2_${Date.now()}`, customWidth: 80, blocks: newCols[1]?.blocks || [] }
+    ];
   } else if (preset === '33-33-33') {
-    newCols.forEach(col => col.customWidth = 33);
+    newCols = [
+      { id: newCols[0]?.id || `c1_${Date.now()}`, customWidth: 33, blocks: newCols[0]?.blocks || [] },
+      { id: newCols[1]?.id || `c2_${Date.now()}`, customWidth: 33, blocks: newCols[1]?.blocks || [] },
+      { id: newCols[2]?.id || `c3_${Date.now()}`, customWidth: 33, blocks: [{ id: `sb3_${Date.now()}`, type: 'text', textContent: '3-я колонка...' }] }
+    ];
+  } else if (preset === '25-50-25') {
+    newCols = [
+      { id: newCols[0]?.id || `c1_${Date.now()}`, customWidth: 25, blocks: newCols[0]?.blocks || [] },
+      { id: newCols[1]?.id || `c2_${Date.now()}`, customWidth: 50, blocks: newCols[1]?.blocks || [] },
+      { id: newCols[2]?.id || `c3_${Date.now()}`, customWidth: 25, blocks: [{ id: `sb3_${Date.now()}`, type: 'image', imageUrl: '', imageCaption: 'Правая иконка' }] }
+    ];
   }
 
   updateBlock({ ...block, columns: newCols });
@@ -665,24 +741,41 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
           </div>
         </template>
 
-        <!-- Nested Section Container with Interactive Column Divider Resizer -->
+        <!-- Nested Section Container with Expanded Presets Toolbar & Column Management -->
         <template v-else-if="block.type === 'section'">
-          <div class="flex items-center justify-between border-b border-[#26292d] pb-2 mb-4">
-            <div class="flex items-center gap-3">
-              <span class="text-xs font-bold text-cyan-400 flex items-center gap-2">
+          <div class="flex flex-wrap items-center justify-between border-b border-[#26292d] pb-2 mb-4 gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-bold text-cyan-400 flex items-center gap-1.5">
                 <IconRenderer name="Layout" size="14" />
-                Составная Секция (Зажмите линию разделителя мышкой для смены ширины)
+                Составная Секция
               </span>
 
-              <!-- Column Proportion Controls -->
-              <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d] text-[10px] gap-1">
-                <button @click="setSectionProportions(block, '70-30')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">70 / 30</button>
-                <button @click="setSectionProportions(block, '50-50')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">50 / 50</button>
-                <button @click="setSectionProportions(block, '30-70')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">30 / 70</button>
+              <!-- Expanded Preset Ratios Toolbar -->
+              <div class="flex flex-wrap items-center bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d] text-[10px] gap-1">
+                <button @click="setSectionProportions(block, '80-20')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-cyan-500/20 text-cyan-300 font-bold rounded">80/20</button>
+                <button @click="setSectionProportions(block, '75-25')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-cyan-500/20 text-cyan-300 font-bold rounded">75/25</button>
+                <button @click="setSectionProportions(block, '70-30')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-cyan-500/20 text-cyan-300 font-bold rounded">70/30</button>
+                <button @click="setSectionProportions(block, '60-40')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-cyan-500/20 text-cyan-300 font-bold rounded">60/40</button>
+                <button @click="setSectionProportions(block, '50-50')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-cyan-500/20 text-cyan-300 font-bold rounded">50/50</button>
+                <button @click="setSectionProportions(block, '40-60')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-cyan-500/20 text-cyan-300 font-bold rounded">40/60</button>
+                <button @click="setSectionProportions(block, '30-70')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-cyan-500/20 text-cyan-300 font-bold rounded">30/70</button>
+                <button @click="setSectionProportions(block, '25-75')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-cyan-500/20 text-cyan-300 font-bold rounded">25/75</button>
+                <button @click="setSectionProportions(block, '20-80')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-cyan-500/20 text-cyan-300 font-bold rounded">20/80</button>
+                <div class="h-3 w-[1px] bg-[#26292d] mx-0.5"></div>
+                <button @click="setSectionProportions(block, '33-33-33')" class="px-1.5 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded">3 Колонки (33x3)</button>
+                <button @click="setSectionProportions(block, '25-50-25')" class="px-1.5 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded">25 / 50 / 25</button>
               </div>
             </div>
 
             <div class="flex items-center gap-2">
+              <button 
+                @click="addColumnToSection(block)"
+                class="px-2.5 py-1 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold rounded-lg flex items-center gap-1 transition-all"
+                title="Добавить еще одну колонку в эту секцию"
+              >
+                <IconRenderer name="Plus" size="12" />
+                + Колонка
+              </button>
               <button @click="duplicateBlock(index)" class="p-1 text-cyan-400 hover:text-cyan-300 rounded"><IconRenderer name="Copy" size="13" /></button>
               <button @click="deleteBlock(index)" class="p-1 text-rose-400 hover:text-rose-300 rounded"><IconRenderer name="Trash2" size="13" /></button>
             </div>
@@ -692,11 +785,22 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
             <template v-for="(col, colIdx) in (block.columns || [])" :key="col.id">
               <div 
                 :style="{ width: `calc(${col.customWidth || (col.span === 'span-4' ? 66 : col.span === 'span-2' ? 33 : 50)}% - 0.75rem)` }"
-                class="flex flex-col gap-4 h-full justify-between bg-[#16181a] border border-[#26292d] p-4 rounded-xl shadow-md transition-all"
+                class="flex flex-col gap-4 h-full justify-between bg-[#16181a] border border-[#26292d] p-4 rounded-xl shadow-md transition-all relative group/col"
               >
                 <!-- Column Header & Custom % Input -->
                 <div class="flex items-center justify-between border-b border-[#26292d] pb-1.5 mb-1">
-                  <span class="text-[10px] text-dark-muted font-bold uppercase">Колонка #{{ colIdx + 1 }}</span>
+                  <span class="text-[10px] text-dark-muted font-bold uppercase flex items-center gap-1">
+                    Колонка #{{ colIdx + 1 }}
+                    <button 
+                      v-if="(block.columns?.length || 0) > 1" 
+                      @click="removeColumnFromSection(block, colIdx)"
+                      class="text-rose-400 hover:text-rose-300 ml-1" 
+                      title="Удалить эту колонку"
+                    >
+                      <IconRenderer name="X" size="12" />
+                    </button>
+                  </span>
+
                   <div class="flex items-center bg-[#0c0d0e] px-1.5 py-0.5 rounded border border-[#26292d] gap-1 text-[10px]">
                     <span class="text-dark-muted">Ширина:</span>
                     <input
