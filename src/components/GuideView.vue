@@ -210,8 +210,9 @@ const getVariantClass = (variant?: BlockVariant) => {
               <div 
                 v-for="col in (block.columns || [])" 
                 :key="col.id"
+                :style="{ width: col.customWidth ? `calc(${col.customWidth}% - 0.75rem)` : undefined }"
                 :class="[
-                  getGridSpanClass(col.span),
+                  !col.customWidth ? getGridSpanClass(col.span) : '',
                   'bg-[#16181a] border border-[#26292d] p-6 rounded-2xl shadow-xl flex flex-col justify-between gap-4 h-full'
                 ]"
               >

@@ -44,7 +44,8 @@ export type BlockVariant = 'default' | 'subtle' | 'bordered' | 'accent';
 
 export interface SectionColumn {
   id: string;
-  span: BlockSpan;
+  span?: BlockSpan;
+  customWidth?: number; // Custom percentage width (15% to 85%)
   blocks: GuideBlock[];
 }
 

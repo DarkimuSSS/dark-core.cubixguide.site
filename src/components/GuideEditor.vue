@@ -61,22 +61,65 @@ const updateBlock = (updatedBlock: GuideBlock) => {
   }
 };
 
+// Interactive Mouse Drag Resizing for Columns inside Section
+const startColumnResizing = (e: MouseEvent, sectionBlock: GuideBlock, colIdx: number) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (!sectionBlock.columns || sectionBlock.columns.length <= colIdx + 1) return;
+
+  const sectionEl = document.getElementById(`section-container-${sectionBlock.id}`);
+  if (!sectionEl) return;
+
+  const sectionRect = sectionEl.getBoundingClientRect();
+  const startX = e.clientX;
+
+  const col1 = sectionBlock.columns[colIdx];
+  const col2 = sectionBlock.columns[colIdx + 1];
+
+  const initialCol1Width = col1.customWidth || (col1.span === 'span-4' ? 66 : col1.span === 'span-2' ? 33 : 50);
+  const initialCol2Width = col2.customWidth || (col2.span === 'span-4' ? 66 : col2.span === 'span-2' ? 33 : 50);
+  const totalWidth = initialCol1Width + initialCol2Width;
+
+  const onMouseMove = (moveEv: MouseEvent) => {
+    const deltaX = moveEv.clientX - startX;
+    const deltaPercent = Math.round((deltaX / sectionRect.width) * 100);
+
+    let newCol1Width = Math.min(85, Math.max(15, initialCol1Width + deltaPercent));
+    let newCol2Width = Math.max(15, totalWidth - (newCol1Width - initialCol1Width));
+
+    const newCols = [...sectionBlock.columns!];
+    newCols[colIdx] = { ...col1, customWidth: newCol1Width };
+    newCols[colIdx + 1] = { ...col2, customWidth: newCol2Width };
+
+    updateBlock({ ...sectionBlock, columns: newCols });
+  };
+
+  const onMouseUp = () => {
+    window.removeEventListener('mousemove', onMouseMove);
+    window.removeEventListener('mouseup', onMouseUp);
+  };
+
+  window.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('mouseup', onMouseUp);
+};
+
 // Change Column Proportions inside Section Block
 const setSectionProportions = (block: GuideBlock, preset: '70-30' | '50-50' | '30-70' | '33-33-33') => {
   if (!block.columns) return;
   const newCols = [...block.columns];
 
   if (preset === '70-30' && newCols.length >= 2) {
-    newCols[0].span = 'span-4'; // 66%
-    newCols[1].span = 'span-2'; // 33%
+    newCols[0].customWidth = 70;
+    newCols[1].customWidth = 30;
   } else if (preset === '50-50' && newCols.length >= 2) {
-    newCols[0].span = 'span-3'; // 50%
-    newCols[1].span = 'span-3'; // 50%
+    newCols[0].customWidth = 50;
+    newCols[1].customWidth = 50;
   } else if (preset === '30-70' && newCols.length >= 2) {
-    newCols[0].span = 'span-2'; // 33%
-    newCols[1].span = 'span-4'; // 66%
+    newCols[0].customWidth = 30;
+    newCols[1].customWidth = 70;
   } else if (preset === '33-33-33') {
-    newCols.forEach(col => col.span = 'span-2');
+    newCols.forEach(col => col.customWidth = 33);
   }
 
   updateBlock({ ...block, columns: newCols });
@@ -109,12 +152,12 @@ const convertToColumnStack = (index: number, subType: BlockType = 'text') => {
     columns: [
       {
         id: `col_left_${Date.now()}`,
-        span: width >= 66 ? 'span-4' : 'span-3',
+        customWidth: width >= 66 ? 70 : 50,
         blocks: [{ ...targetBlock, customWidth: 100 }, subBlock]
       },
       {
         id: `col_right_${Date.now()}`,
-        span: width >= 66 ? 'span-2' : 'span-3',
+        customWidth: width >= 66 ? 30 : 50,
         blocks: [
           {
             id: `right_b_${Date.now()}`,
@@ -132,7 +175,7 @@ const convertToColumnStack = (index: number, subType: BlockType = 'text') => {
   emit('update:guide', { ...props.guide, blocks: newBlocks });
 };
 
-// Mouse Drag Resizing Logic
+// Mouse Drag Resizing Logic for standalone blocks
 const startResizing = (e: MouseEvent, block: GuideBlock) => {
   e.preventDefault();
   e.stopPropagation();
@@ -292,7 +335,7 @@ const addBlockAt = (index: number, type: BlockType) => {
         columns: [
           {
             id: `col_${Date.now()}_1`,
-            span: 'span-4',
+            customWidth: 70,
             blocks: [
               { id: `sb1_${Date.now()}`, type: 'heading', headingText: 'Заголовок секции', headingLevel: 'h2', customWidth: 100 },
               { id: `sb2_${Date.now()}`, type: 'text', textContent: 'Описание шага инструкции...', customWidth: 100 }
@@ -300,7 +343,7 @@ const addBlockAt = (index: number, type: BlockType) => {
           },
           {
             id: `col_${Date.now()}_2`,
-            span: 'span-2',
+            customWidth: 30,
             blocks: [
               { id: `sb3_${Date.now()}`, type: 'image', imageUrl: '', imageCaption: 'Иллюстрация', customWidth: 100 }
             ]
@@ -478,7 +521,7 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Интерактивный Конструктор Стек-Колонок
+          Интерактивное Перетягивание Колонок Мышкой
         </span>
       </div>
 
@@ -622,21 +665,20 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
           </div>
         </template>
 
-        <!-- Nested Section Container with Column Proportion Resizers -->
+        <!-- Nested Section Container with Interactive Column Divider Resizer -->
         <template v-else-if="block.type === 'section'">
           <div class="flex items-center justify-between border-b border-[#26292d] pb-2 mb-4">
             <div class="flex items-center gap-3">
               <span class="text-xs font-bold text-cyan-400 flex items-center gap-2">
                 <IconRenderer name="Layout" size="14" />
-                Составная Секция
+                Составная Секция (Зажмите линию разделителя мышкой для смены ширины)
               </span>
 
               <!-- Column Proportion Controls -->
               <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d] text-[10px] gap-1">
-                <span class="text-dark-muted font-semibold px-1">Пропорции:</span>
-                <button @click="setSectionProportions(block, '70-30')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">70% / 30%</button>
-                <button @click="setSectionProportions(block, '50-50')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">50% / 50%</button>
-                <button @click="setSectionProportions(block, '30-70')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">30% / 70%</button>
+                <button @click="setSectionProportions(block, '70-30')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">70 / 30</button>
+                <button @click="setSectionProportions(block, '50-50')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">50 / 50</button>
+                <button @click="setSectionProportions(block, '30-70')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">30 / 70</button>
               </div>
             </div>
 
@@ -646,90 +688,110 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
             </div>
           </div>
 
-          <div class="flex flex-wrap gap-6 items-stretch w-full">
-            <div 
-              v-for="col in (block.columns || [])" 
-              :key="col.id"
-              :class="[
-                col.span === 'span-4' ? 'w-full md:w-[calc(66.666%-0.75rem)]' :
-                col.span === 'span-2' ? 'w-full md:w-[calc(33.333%-0.75rem)]' :
-                'w-full md:w-[calc(50%-0.75rem)]',
-                'flex flex-col gap-4 h-full justify-between bg-[#16181a] border border-[#26292d] p-4 rounded-xl'
-              ]"
-            >
-              <!-- Column Header & Width Switcher -->
-              <div class="flex items-center justify-between border-b border-[#26292d] pb-1.5 mb-1">
-                <span class="text-[10px] text-dark-muted font-bold uppercase">Колонка ({{ col.span === 'span-4' ? '66%' : col.span === 'span-2' ? '33%' : '50%' }})</span>
-                <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d] gap-1">
-                  <button @click="col.span = 'span-4'" :class="['px-1 py-0.5 text-[9px] font-bold rounded', col.span === 'span-4' ? 'bg-cyan-500/20 text-cyan-300' : 'text-dark-muted']">66%</button>
-                  <button @click="col.span = 'span-3'" :class="['px-1 py-0.5 text-[9px] font-bold rounded', col.span === 'span-3' ? 'bg-cyan-500/20 text-cyan-300' : 'text-dark-muted']">50%</button>
-                  <button @click="col.span = 'span-2'" :class="['px-1 py-0.5 text-[9px] font-bold rounded', col.span === 'span-2' ? 'bg-cyan-500/20 text-cyan-300' : 'text-dark-muted']">33%</button>
-                </div>
-              </div>
-
-              <div class="space-y-4 flex-1 flex flex-col justify-between">
-                <div v-for="sub in col.blocks" :key="sub.id" class="p-3 bg-[#0c0d0e] border border-[#26292d] rounded-xl relative group/sub shadow-sm">
-                  <div class="flex items-center justify-between border-b border-[#26292d] pb-1.5 mb-2 text-[10px] text-dark-muted font-bold uppercase">
-                    <span>{{ sub.type }}</span>
-                    <button @click="removeSubBlock(block, col.id, sub.id)" class="text-rose-400 hover:text-rose-300"><IconRenderer name="X" size="12" /></button>
-                  </div>
-
-                  <div v-if="sub.type === 'heading'">
+          <div :id="`section-container-${block.id}`" class="flex flex-wrap items-stretch w-full relative">
+            <template v-for="(col, colIdx) in (block.columns || [])" :key="col.id">
+              <div 
+                :style="{ width: `calc(${col.customWidth || (col.span === 'span-4' ? 66 : col.span === 'span-2' ? 33 : 50)}% - 0.75rem)` }"
+                class="flex flex-col gap-4 h-full justify-between bg-[#16181a] border border-[#26292d] p-4 rounded-xl shadow-md transition-all"
+              >
+                <!-- Column Header & Custom % Input -->
+                <div class="flex items-center justify-between border-b border-[#26292d] pb-1.5 mb-1">
+                  <span class="text-[10px] text-dark-muted font-bold uppercase">Колонка #{{ colIdx + 1 }}</span>
+                  <div class="flex items-center bg-[#0c0d0e] px-1.5 py-0.5 rounded border border-[#26292d] gap-1 text-[10px]">
+                    <span class="text-dark-muted">Ширина:</span>
                     <input
-                      type="text"
-                      :value="sub.headingText"
-                      @input="updateSubBlock(block, col.id, { ...sub, headingText: ($event.target as HTMLInputElement).value })"
-                      placeholder="Заголовок..."
-                      class="w-full bg-[#121416] border border-[#26292d] text-white text-base font-bold rounded p-2"
+                      type="number"
+                      min="15"
+                      max="85"
+                      :value="col.customWidth || (col.span === 'span-4' ? 66 : col.span === 'span-2' ? 33 : 50)"
+                      @change="() => {
+                        const val = Number(($event.target as HTMLInputElement).value);
+                        col.customWidth = val;
+                        if (block.columns && block.columns[colIdx === 0 ? 1 : 0]) {
+                          block.columns[colIdx === 0 ? 1 : 0].customWidth = 100 - val;
+                        }
+                        updateBlock(block);
+                      }"
+                      class="w-8 bg-[#16181a] border border-[#26292d] text-cyan-300 font-bold text-center rounded"
                     />
+                    <span class="text-cyan-400 font-bold">%</span>
                   </div>
+                </div>
 
-                  <div v-else-if="sub.type === 'text'">
-                    <textarea
-                      :value="sub.textContent"
-                      @input="updateSubBlock(block, col.id, { ...sub, textContent: ($event.target as HTMLTextAreaElement).value })"
-                      placeholder="Текст..."
-                      rows="3"
-                      class="w-full bg-[#121416] border border-[#26292d] text-slate-200 text-xs rounded p-2 resize-y"
-                    ></textarea>
-                  </div>
-
-                  <div v-else-if="sub.type === 'callout'">
-                    <CalloutBlock :block="sub" :is-editing="true" @update="(updated) => updateSubBlock(block, col.id, updated)" />
-                  </div>
-
-                  <div v-else-if="sub.type === 'image'" class="space-y-2">
-                    <div v-if="sub.imageUrl" class="rounded border border-[#26292d] overflow-hidden bg-black/60 max-h-48 flex items-center justify-center">
-                      <img :src="sub.imageUrl" class="max-h-48 object-contain" />
+                <div class="space-y-4 flex-1 flex flex-col justify-between">
+                  <div v-for="sub in col.blocks" :key="sub.id" class="p-3 bg-[#0c0d0e] border border-[#26292d] rounded-xl relative group/sub shadow-sm">
+                    <div class="flex items-center justify-between border-b border-[#26292d] pb-1.5 mb-2 text-[10px] text-dark-muted font-bold uppercase">
+                      <span>{{ sub.type }}</span>
+                      <button @click="removeSubBlock(block, col.id, sub.id)" class="text-rose-400 hover:text-rose-300"><IconRenderer name="X" size="12" /></button>
                     </div>
-                    <input
-                      type="text"
-                      :value="sub.imageUrl"
-                      @input="updateSubBlock(block, col.id, { ...sub, imageUrl: ($event.target as HTMLInputElement).value })"
-                      placeholder="URL картинки..."
-                      class="w-full bg-[#121416] border border-[#26292d] text-white text-xs rounded p-1.5"
-                    />
-                  </div>
 
-                  <div v-else-if="sub.type === 'crafting'" class="p-2 bg-[#121416] rounded border border-[#26292d]">
-                    <div class="text-[10px] text-emerald-400 font-bold mb-1">Крафт 3x3</div>
-                    <button type="button" @click="openSlotPicker(sub.id, 9, true)" class="w-full py-2 bg-emerald-600/20 text-emerald-300 text-xs font-semibold rounded border border-emerald-500/30">
-                      Настроить выходы крафта
-                    </button>
+                    <div v-if="sub.type === 'heading'">
+                      <input
+                        type="text"
+                        :value="sub.headingText"
+                        @input="updateSubBlock(block, col.id, { ...sub, headingText: ($event.target as HTMLInputElement).value })"
+                        placeholder="Заголовок..."
+                        class="w-full bg-[#121416] border border-[#26292d] text-white text-base font-bold rounded p-2"
+                      />
+                    </div>
+
+                    <div v-else-if="sub.type === 'text'">
+                      <textarea
+                        :value="sub.textContent"
+                        @input="updateSubBlock(block, col.id, { ...sub, textContent: ($event.target as HTMLTextAreaElement).value })"
+                        placeholder="Текст..."
+                        rows="3"
+                        class="w-full bg-[#121416] border border-[#26292d] text-slate-200 text-xs rounded p-2 resize-y"
+                      ></textarea>
+                    </div>
+
+                    <div v-else-if="sub.type === 'callout'">
+                      <CalloutBlock :block="sub" :is-editing="true" @update="(updated) => updateSubBlock(block, col.id, updated)" />
+                    </div>
+
+                    <div v-else-if="sub.type === 'image'" class="space-y-2">
+                      <div v-if="sub.imageUrl" class="rounded border border-[#26292d] overflow-hidden bg-black/60 max-h-48 flex items-center justify-center">
+                        <img :src="sub.imageUrl" class="max-h-48 object-contain" />
+                      </div>
+                      <input
+                        type="text"
+                        :value="sub.imageUrl"
+                        @input="updateSubBlock(block, col.id, { ...sub, imageUrl: ($event.target as HTMLInputElement).value })"
+                        placeholder="URL картинки..."
+                        class="w-full bg-[#121416] border border-[#26292d] text-white text-xs rounded p-1.5"
+                      />
+                    </div>
+
+                    <div v-else-if="sub.type === 'crafting'" class="p-2 bg-[#121416] rounded border border-[#26292d]">
+                      <div class="text-[10px] text-emerald-400 font-bold mb-1">Крафт 3x3</div>
+                      <button type="button" @click="openSlotPicker(sub.id, 9, true)" class="w-full py-2 bg-emerald-600/20 text-emerald-300 text-xs font-semibold rounded border border-emerald-500/30">
+                        Настроить выходы крафта
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Add sub-block to column button -->
+                <div class="pt-2 border-t border-[#26292d] flex items-center justify-between">
+                  <span class="text-[10px] text-cyan-400 font-bold font-mono">{{ col.customWidth || 50 }}%</span>
+                  <div class="flex items-center gap-1">
+                    <button @click="addSubBlock(block, col.id, 'text')" class="px-2 py-1 bg-[#121416] border border-[#26292d] hover:border-emerald-500 text-[10px] text-slate-200 rounded font-semibold">+ Текст</button>
+                    <button @click="addSubBlock(block, col.id, 'image')" class="px-2 py-1 bg-[#121416] border border-[#26292d] hover:border-pink-500 text-[10px] text-slate-200 rounded font-semibold">+ Картинка</button>
+                    <button @click="addSubBlock(block, col.id, 'callout')" class="px-2 py-1 bg-[#121416] border border-[#26292d] hover:border-amber-500 text-[10px] text-slate-200 rounded font-semibold">+ Совет</button>
                   </div>
                 </div>
               </div>
 
-              <!-- Add sub-block to column button -->
-              <div class="pt-2 border-t border-[#26292d] flex items-center justify-between">
-                <span class="text-[10px] text-dark-muted font-mono">{{ col.span }}</span>
-                <div class="flex items-center gap-1">
-                  <button @click="addSubBlock(block, col.id, 'text')" class="px-2 py-1 bg-[#121416] border border-[#26292d] hover:border-emerald-500 text-[10px] text-slate-200 rounded font-semibold">+ Текст</button>
-                  <button @click="addSubBlock(block, col.id, 'image')" class="px-2 py-1 bg-[#121416] border border-[#26292d] hover:border-pink-500 text-[10px] text-slate-200 rounded font-semibold">+ Картинка</button>
-                  <button @click="addSubBlock(block, col.id, 'callout')" class="px-2 py-1 bg-[#121416] border border-[#26292d] hover:border-amber-500 text-[10px] text-slate-200 rounded font-semibold">+ Совет</button>
-                </div>
+              <!-- Interactive Mouse Drag Column Splitter / Divider Bar -->
+              <div 
+                v-if="colIdx < (block.columns?.length || 0) - 1"
+                @mousedown="(e) => startColumnResizing(e, block, colIdx)"
+                class="w-3 mx-1 flex items-center justify-center cursor-col-resize group/splitter hover:w-4 transition-all"
+                title="Зажмите мышку и двигайте влево/вправо для смены пропорций колонок"
+              >
+                <div class="w-1 h-12 bg-[#26292d] group-hover/splitter:bg-cyan-400 group-hover/splitter:w-1.5 rounded-full transition-all shadow-lg"></div>
               </div>
-            </div>
+            </template>
           </div>
         </template>
 
