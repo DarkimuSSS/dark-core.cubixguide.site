@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword } from './db';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
 const app = express();
@@ -66,7 +66,7 @@ app.get('/api/servers', async (req, res) => {
 
 // AUTHENTICATION ENDPOINTS
 
-// Login Author (Manual Credentials Input)
+// Login Author
 app.post('/api/auth/login', (req, res) => {
   try {
     const { username, password } = req.body;
@@ -77,6 +77,20 @@ app.post('/api/auth/login', (req, res) => {
     res.json(user);
   } catch (err: any) {
     res.status(401).json({ error: err.message });
+  }
+});
+
+// Author Self-Service Password Change Endpoint
+app.post('/api/auth/change-password', (req, res) => {
+  try {
+    const { username, oldPassword, newPassword } = req.body;
+    if (!username || !oldPassword || !newPassword) {
+      return res.status(400).json({ error: 'Укажите никнейм, текущий пароль и новый пароль' });
+    }
+    const result = changeUserPassword(username, oldPassword, newPassword);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 });
 

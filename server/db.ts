@@ -50,7 +50,7 @@ export function hashPassword(password: string): string {
   return crypto.createHmac('sha256', 'cubix_secret_salt_2026').update(password).digest('hex');
 }
 
-// Admin-only Author Registration Helper (Only Admin registers authors)
+// Admin-only Author Registration Helper
 export function registerAuthorByAdmin(username: string, password: string, adminUsername: string) {
   const cleanUsername = username.trim();
   if (!cleanUsername || cleanUsername.length < 3) {
@@ -88,6 +88,30 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
   });
 
   return { username: cleanUsername, createdAt };
+}
+
+// Change User Password Helper (Author self-service)
+export function changeUserPassword(username: string, oldPassword: string, newPassword: string) {
+  const cleanUsername = username.trim();
+  if (!newPassword || newPassword.length < 4) {
+    throw new Error('Новый пароль должен содержать минимум 4 символа');
+  }
+
+  const user = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
+  if (!user) {
+    throw new Error('Пользователь не найден');
+  }
+
+  const oldPwdHash = hashPassword(oldPassword);
+  if (user.password_hash !== oldPwdHash) {
+    throw new Error('Неверный старый пароль');
+  }
+
+  const newPwdHash = hashPassword(newPassword);
+  const stmt = db.prepare('UPDATE users SET password_hash = ? WHERE LOWER(username) = LOWER(?)');
+  stmt.run(newPwdHash, cleanUsername);
+
+  return { success: true, message: 'Пароль успешно обновлен!' };
 }
 
 export function loginUser(username: string, password: string) {

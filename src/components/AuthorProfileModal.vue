@@ -19,6 +19,16 @@ const emit = defineEmits<{
 const isEditing = ref(false);
 const isLoading = ref(false);
 
+// Change Password State
+const isChangePasswordOpen = ref(false);
+const oldPassword = ref('');
+const newPassword = ref('');
+const confirmNewPassword = ref('');
+const showOldPassword = ref(false);
+const showNewPassword = ref(false);
+const pwdMessage = ref('');
+const pwdIsSuccess = ref(false);
+
 // Admin Author Creation State
 const isAdminPanelOpen = ref(false);
 const newAuthorUsername = ref('');
@@ -98,6 +108,48 @@ const saveProfile = async () => {
     console.error('Error saving profile:', err);
   } finally {
     isLoading.value = false;
+  }
+};
+
+const handleChangePassword = async () => {
+  pwdMessage.value = '';
+  pwdIsSuccess.value = false;
+
+  if (!oldPassword.value || !newPassword.value) {
+    pwdMessage.value = 'Заполните старый и новый пароли';
+    return;
+  }
+  if (newPassword.value !== confirmNewPassword.value) {
+    pwdMessage.value = 'Новые пароли не совпадают';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: props.username,
+        oldPassword: oldPassword.value,
+        newPassword: newPassword.value
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      pwdIsSuccess.value = true;
+      pwdMessage.value = data.message || 'Пароль успешно изменен!';
+      oldPassword.value = '';
+      newPassword.value = '';
+      confirmNewPassword.value = '';
+      setTimeout(() => {
+        isChangePasswordOpen.value = false;
+        pwdMessage.value = '';
+      }, 2000);
+    } else {
+      pwdMessage.value = data.error || 'Ошибка смены пароля';
+    }
+  } catch (err) {
+    pwdMessage.value = 'Ошибка соединения с сервером';
   }
 };
 
@@ -204,7 +256,7 @@ const handleAvatarFileUpload = (e: Event) => {
               </div>
 
               <!-- Admin / Edit Controls -->
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <button
                   v-if="isAdmin"
                   type="button"
@@ -213,6 +265,16 @@ const handleAvatarFileUpload = (e: Event) => {
                 >
                   <IconRenderer name="Shield" size="14" />
                   <span>{{ isAdminPanelOpen ? 'Закрыть Админку' : 'Админ Панель' }}</span>
+                </button>
+
+                <button
+                  v-if="isOwnProfile"
+                  type="button"
+                  @click="isChangePasswordOpen = !isChangePasswordOpen; pwdMessage = '';"
+                  class="px-3 py-1.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all flex items-center gap-1.5"
+                >
+                  <IconRenderer name="Lock" size="14" />
+                  <span>Сменить пароль</span>
                 </button>
 
                 <button
@@ -255,6 +317,71 @@ const handleAvatarFileUpload = (e: Event) => {
                 Discord: {{ profile.socialDs }}
               </span>
             </div>
+          </div>
+        </div>
+
+        <!-- CHANGE PASSWORD FORM (Self Service for Author) -->
+        <div v-if="isChangePasswordOpen && isOwnProfile" class="space-y-4 bg-cyan-950/20 border border-cyan-500/40 p-5 rounded-2xl animate-fadeIn">
+          <div class="flex items-center justify-between border-b border-cyan-500/30 pb-2">
+            <h3 class="text-xs font-extrabold text-cyan-300 uppercase tracking-wider flex items-center gap-2">
+              <IconRenderer name="Lock" size="16" class="text-cyan-400" />
+              Смена собственного пароля
+            </h3>
+          </div>
+
+          <div v-if="pwdMessage" :class="['p-3 rounded-xl text-xs font-bold flex items-center gap-2', pwdIsSuccess ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40']">
+            <span>{{ pwdMessage }}</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] text-cyan-200 font-bold mb-1">Текущий пароль</label>
+              <div class="relative">
+                <input
+                  :type="showOldPassword ? 'text' : 'password'"
+                  v-model="oldPassword"
+                  placeholder="Введите текущий..."
+                  class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-cyan-400"
+                />
+                <button type="button" @click="showOldPassword = !showOldPassword" class="absolute right-2 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1">
+                  <IconRenderer :name="showOldPassword ? 'EyeOff' : 'Eye'" size="14" class="text-cyan-400" />
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] text-cyan-200 font-bold mb-1">Новый пароль</label>
+              <div class="relative">
+                <input
+                  :type="showNewPassword ? 'text' : 'password'"
+                  v-model="newPassword"
+                  placeholder="Новый пароль..."
+                  class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-cyan-400"
+                />
+                <button type="button" @click="showNewPassword = !showNewPassword" class="absolute right-2 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1">
+                  <IconRenderer :name="showNewPassword ? 'EyeOff' : 'Eye'" size="14" class="text-cyan-400" />
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] text-cyan-200 font-bold mb-1">Повтор нового пароля</label>
+              <input
+                :type="showNewPassword ? 'text' : 'password'"
+                v-model="confirmNewPassword"
+                placeholder="Подтвердите новый..."
+                class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-cyan-400"
+              />
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" @click="isChangePasswordOpen = false" class="px-4 py-2 rounded-xl bg-[#16181a] text-dark-muted hover:text-white text-xs font-bold">
+              Отмена
+            </button>
+            <button type="button" @click="handleChangePassword" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold shadow-lg">
+              Обновить пароль
+            </button>
           </div>
         </div>
 
