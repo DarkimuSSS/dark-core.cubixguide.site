@@ -7,7 +7,7 @@ import AuthorProfileModal from './components/AuthorProfileModal.vue';
 import IconRenderer from './components/IconRenderer.vue';
 import AuthModal from './components/AuthModal.vue';
 import { PRESET_ITEMS } from './data/presetItems';
-import type { Guide } from './types/guide';
+import type { Guide, AuthorProfile } from './types/guide';
 
 const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
@@ -20,9 +20,10 @@ const isLoading = ref<boolean>(true);
 // Bookmarked / Favorited guide IDs in LocalStorage
 const favoriteGuideIds = ref<string[]>([]);
 
-// Author Profile Modal State
+// Author Profile Modal & Current Author Data
 const isProfileModalOpen = ref(false);
 const profileUsername = ref('DarkimuSSS');
+const currentAuthorProfile = ref<AuthorProfile | null>(null);
 
 // Auth & Protection State
 const isAuthModalOpen = ref(false);
@@ -38,6 +39,17 @@ const showToast = (msg: string) => {
   setTimeout(() => {
     toastMessage.value = '';
   }, 3000);
+};
+
+const fetchCurrentAuthorProfile = async () => {
+  try {
+    const res = await fetch('/api/profiles/DarkimuSSS');
+    if (res.ok) {
+      currentAuthorProfile.value = await res.json();
+    }
+  } catch (err) {
+    console.error('Error fetching header author profile:', err);
+  }
 };
 
 const openAuthorProfile = (username?: string) => {
@@ -114,6 +126,7 @@ onMounted(() => {
   } catch (e) {}
 
   fetchGuides();
+  fetchCurrentAuthorProfile();
   window.addEventListener('beforeunload', handleBeforeUnload);
   window.addEventListener('popstate', handlePopState);
 });
@@ -508,17 +521,20 @@ const handleDeleteGuide = async () => {
           </button>
         </div>
 
-        <!-- Author Profile Quick Trigger Button -->
+        <!-- Author Profile Quick Trigger Button with Live Avatar & Nickname -->
         <button
           type="button"
           @click="openAuthorProfile('DarkimuSSS')"
-          class="px-3.5 py-2 rounded-xl bg-purple-600/10 hover:bg-purple-600/20 text-purple-300 border border-purple-500/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md"
-          title="Открыть профиль автора"
+          class="px-3.5 py-1.5 rounded-xl bg-purple-600/10 hover:bg-purple-600/20 text-purple-300 border border-purple-500/30 text-xs font-bold flex items-center gap-2 transition-all shadow-md group"
+          title="Открыть ваш профиль"
         >
-          <div class="w-5 h-5 rounded-full bg-purple-500/30 text-purple-300 flex items-center justify-center font-bold text-[10px]">
-            D
+          <div class="w-6 h-6 rounded-full bg-purple-500/30 border border-purple-400/40 text-purple-200 flex items-center justify-center font-bold text-[11px] overflow-hidden flex-shrink-0">
+            <img v-if="currentAuthorProfile?.avatarUrl" :src="currentAuthorProfile.avatarUrl" class="w-full h-full object-cover" />
+            <span v-else>D</span>
           </div>
-          <span class="hidden sm:inline">Профиль автора</span>
+          <span class="font-extrabold text-white group-hover:text-purple-300 transition-colors">
+            {{ currentAuthorProfile?.username || 'DarkimuSSS' }}
+          </span>
         </button>
 
         <button
@@ -666,7 +682,7 @@ const handleDeleteGuide = async () => {
       :username="profileUsername"
       :is-own-profile="isAuthenticated"
       :all-guides="guides"
-      @close="isProfileModalOpen = false"
+      @close="isProfileModalOpen = false; fetchCurrentAuthorProfile();"
       @select-guide="selectGuide"
     />
 
