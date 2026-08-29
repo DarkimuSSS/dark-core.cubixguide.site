@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import HomePage from './components/HomePage.vue';
 import GuideEditor from './components/GuideEditor.vue';
 import GuideView from './components/GuideView.vue';
@@ -35,6 +35,51 @@ const showToast = (msg: string) => {
   }, 3000);
 };
 
+// URL Routing & Browser Address Bar Sync
+const updateUrlRoute = () => {
+  let targetPath = '/';
+  if (mode.value === 'favorites') {
+    targetPath = '/favorites';
+  } else if (mode.value === 'reader' && activeGuideId.value) {
+    targetPath = `/guide/${activeGuideId.value}`;
+  } else if (mode.value === 'editor' && activeGuideId.value) {
+    targetPath = `/editor/${activeGuideId.value}`;
+  }
+
+  if (window.location.pathname !== targetPath) {
+    window.history.pushState({ mode: mode.value, guideId: activeGuideId.value }, '', targetPath);
+  }
+};
+
+const syncFromUrlPath = () => {
+  const path = window.location.pathname;
+  if (path.startsWith('/guide/')) {
+    const id = path.replace('/guide/', '');
+    if (id) {
+      activeGuideId.value = id;
+      mode.value = 'reader';
+      const found = guides.value.find(g => g.meta.id === id);
+      if (found) activeGuide.value = JSON.parse(JSON.stringify(found));
+    }
+  } else if (path.startsWith('/editor/')) {
+    const id = path.replace('/editor/', '');
+    if (id) {
+      activeGuideId.value = id;
+      mode.value = isAuthenticated.value ? 'editor' : 'reader';
+      const found = guides.value.find(g => g.meta.id === id);
+      if (found) activeGuide.value = JSON.parse(JSON.stringify(found));
+    }
+  } else if (path === '/favorites') {
+    mode.value = 'favorites';
+  } else {
+    mode.value = 'home';
+  }
+};
+
+watch([mode, activeGuideId], () => {
+  updateUrlRoute();
+});
+
 // Check Session Auth Status & Favorites
 onMounted(() => {
   const savedAuth = sessionStorage.getItem('cubix_author_authed');
@@ -48,11 +93,17 @@ onMounted(() => {
 
   fetchGuides();
   window.addEventListener('beforeunload', handleBeforeUnload);
+  window.addEventListener('popstate', handlePopState);
 });
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
+  window.removeEventListener('popstate', handlePopState);
 });
+
+const handlePopState = () => {
+  syncFromUrlPath();
+};
 
 const toggleBookmarkGuide = (guideId: string) => {
   if (favoriteGuideIds.value.includes(guideId)) {
@@ -171,6 +222,7 @@ const fetchGuides = async () => {
     guides.value = data;
 
     if (data.length > 0) {
+      syncFromUrlPath();
       if (!activeGuideId.value || !data.some(g => g.meta.id === activeGuideId.value)) {
         activeGuideId.value = data[0].meta.id;
       }

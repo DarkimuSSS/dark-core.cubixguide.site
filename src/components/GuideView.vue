@@ -16,6 +16,18 @@ const emit = defineEmits<{
 }>();
 
 const isMobileNavOpen = ref(false);
+const sidebarSearchQuery = ref('');
+
+const filteredAllGuides = computed(() => {
+  const q = sidebarSearchQuery.value.toLowerCase().trim();
+  if (!q) return props.allGuides;
+  return props.allGuides.filter(g => 
+    g.meta.title.toLowerCase().includes(q) ||
+    g.meta.author.toLowerCase().includes(q) ||
+    (g.meta.category && g.meta.category.toLowerCase().includes(q)) ||
+    (g.meta.server && g.meta.server.toLowerCase().includes(q))
+  );
+});
 
 const tableOfContents = computed(() => {
   const result: { id: string; text: string; level: string }[] = [];
@@ -33,8 +45,6 @@ const tableOfContents = computed(() => {
   collectHeadings(props.guide.blocks);
   return result;
 });
-
-const activeHeadingId = ref<string>('');
 
 const getGridSpanClass = (span?: BlockSpan) => {
   switch (span) {
@@ -69,15 +79,15 @@ const getVariantClass = (variant?: BlockVariant) => {
 
 <template>
   <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] flex flex-col">
-    <!-- Main Layout Container with Expanded 12-Column Grid (Sidebar: 3 cols = 25% width, Content: 9 cols = 75% width) -->
+    <!-- Main Layout Container with Expanded 12-Column Grid -->
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
       
-      <!-- WIDER EXPANDED SIDEBAR -->
+      <!-- WIDER EXPANDED SIDEBAR WITH LIVE SEARCH -->
       <aside :class="[
         'col-span-1 lg:col-span-3 fixed lg:sticky top-20 z-40 lg:z-0 bg-[#16181a] lg:bg-transparent border lg:border-none border-[#26292d] rounded-2xl p-4 sm:p-5 transition-all duration-300 max-h-[calc(100vh-6rem)] overflow-y-auto',
         isMobileNavOpen ? 'left-4 shadow-2xl w-80' : '-left-96 lg:left-0 w-full'
       ]">
-        <div class="space-y-6">
+        <div class="space-y-5">
           <div class="flex items-center justify-between pb-3 border-b border-[#26292d]">
             <div class="text-xs font-extrabold uppercase tracking-wider text-dark-muted flex items-center gap-2">
               <IconRenderer name="BookOpen" size="16" class="text-emerald-400" />
@@ -88,9 +98,32 @@ const getVariantClass = (variant?: BlockVariant) => {
             </button>
           </div>
 
+          <!-- SIDEBAR LIVE SEARCH INPUT -->
+          <div class="relative">
+            <input
+              type="text"
+              v-model="sidebarSearchQuery"
+              placeholder="Поиск по гайдам..."
+              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-8 pr-7 py-2.5 focus:outline-none focus:border-emerald-500/70 transition-all placeholder:text-dark-muted"
+            />
+            <IconRenderer name="Search" size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-muted" />
+            <button
+              v-if="sidebarSearchQuery"
+              @click="sidebarSearchQuery = ''"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white"
+            >
+              <IconRenderer name="X" size="13" />
+            </button>
+          </div>
+
+          <!-- GUIDES LIST -->
           <div class="space-y-3">
+            <div v-if="filteredAllGuides.length === 0" class="text-center py-6 text-xs text-dark-muted bg-[#0c0d0e] p-3 rounded-xl border border-[#26292d]">
+              Гайды не найдены
+            </div>
+
             <div 
-              v-for="item in allGuides" 
+              v-for="item in filteredAllGuides" 
               :key="item.meta.id"
               @click="emit('select-guide', item.meta.id); isMobileNavOpen = false;"
               :class="[
