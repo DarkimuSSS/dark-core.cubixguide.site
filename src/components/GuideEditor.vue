@@ -118,6 +118,12 @@ const updateTitle = (val: string) => {
   pushHistoryState(updated);
 };
 
+const updateSummary = (val: string) => {
+  const updated = { ...props.guide, meta: { ...props.guide.meta, summary: val } };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
+};
+
 const updateAuthor = (val: string) => {
   const updated = { ...props.guide, meta: { ...props.guide.meta, author: val } };
   emit('update:guide', updated);
@@ -955,18 +961,38 @@ const scrollToBlockInEditor = (id: string) => {
 
     <!-- Meta Header Card -->
     <div class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-5">
-      <div class="space-y-2">
-        <label class="text-[11px] font-bold uppercase tracking-wider text-dark-muted">Название гайда</label>
-        <input
-          type="text"
-          :value="guide.meta.title"
-          @input="updateTitle(($event.target as HTMLInputElement).value)"
-          placeholder="Назовите ваш гайд (например: Настройка МЭ Сети)..."
-          class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xl sm:text-2xl font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-accent/70 transition-all placeholder:text-dark-muted/50"
-        />
+      <div class="space-y-4">
+        <div>
+          <label class="text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1 block">Название гайда</label>
+          <input
+            type="text"
+            :value="guide.meta.title"
+            @input="updateTitle(($event.target as HTMLInputElement).value)"
+            placeholder="Назовите ваш гайд (например: Настройка МЭ Сети)..."
+            class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xl sm:text-2xl font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-accent/70 transition-all placeholder:text-dark-muted/50"
+          />
+        </div>
+
+        <!-- Dedicated Summary Field for Homepage Card -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-[11px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+              <IconRenderer name="FileText" size="14" />
+              Краткое описание (Отображается на карточке Главной страницы)
+            </label>
+            <span class="text-[10px] text-dark-muted font-mono">1-2 предложения</span>
+          </div>
+          <textarea
+            :value="guide.meta.summary || ''"
+            @input="updateSummary(($event.target as HTMLTextAreaElement).value)"
+            placeholder="Опишите в 1-2 предложениях, о чем этот гайд (например: Полное руководство по призыву драконов, схемам алтарей и амулетам)..."
+            rows="2"
+            class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-accent text-slate-200 text-xs rounded-xl p-3 focus:outline-none transition-all placeholder:text-dark-muted/50 resize-y"
+          ></textarea>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2 border-t border-[#26292d]">
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-3 border-t border-[#26292d]">
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Категория</label>
           <select
@@ -1702,7 +1728,7 @@ const scrollToBlockInEditor = (id: string) => {
         <div class="space-y-2 max-h-96 overflow-y-auto pr-1">
           <div 
             v-for="(b, idx) in guide.blocks" 
-            :key="b.id"
+            :key="b.id" 
             @click="scrollToBlockInEditor(b.id); isTreeModalOpen = false;"
             class="p-3 bg-[#0c0d0e] hover:bg-[#212429] border border-[#26292d] rounded-xl flex items-center justify-between cursor-pointer transition-all"
           >
