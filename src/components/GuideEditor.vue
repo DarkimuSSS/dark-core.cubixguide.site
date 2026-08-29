@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import CalloutBlock from './CalloutBlock.vue';
 import LayerPainter from './LayerPainter.vue';
@@ -28,27 +28,92 @@ const activeSlotData = ref<CraftingSlot | null>(null);
 
 const isImportExportOpen = ref(false);
 const isTemplateModalOpen = ref(false);
+const isHelpModalOpen = ref(false);
+const isTreeModalOpen = ref(false);
 
 const activeResizingBlockId = ref<string | null>(null);
+
+// UNDO / REDO HISTORY STACK
+const historyStack = ref<string[]>([]);
+const historyIndex = ref<number>(-1);
+const isHistoryNavigating = ref<boolean>(false);
+
+const pushHistoryState = (guideState: Guide) => {
+  if (isHistoryNavigating.value) return;
+  const snapshot = JSON.stringify(guideState);
+  if (historyStack.value[historyIndex.value] === snapshot) return;
+  
+  // Truncate redo states if new edit happens
+  historyStack.value = historyStack.value.slice(0, historyIndex.value + 1);
+  historyStack.value.push(snapshot);
+  if (historyStack.value.length > 30) historyStack.value.shift();
+  historyIndex.value = historyStack.value.length - 1;
+};
+
+onMounted(() => {
+  pushHistoryState(props.guide);
+  window.addEventListener('keydown', handleGlobalHotkeys);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalHotkeys);
+});
+
+const undoState = () => {
+  if (historyIndex.value > 0) {
+    isHistoryNavigating.value = true;
+    historyIndex.value--;
+    const restored = JSON.parse(historyStack.value[historyIndex.value]);
+    emit('update:guide', restored);
+    setTimeout(() => { isHistoryNavigating.value = false; }, 50);
+  }
+};
+
+const redoState = () => {
+  if (historyIndex.value < historyStack.value.length - 1) {
+    isHistoryNavigating.value = true;
+    historyIndex.value++;
+    const restored = JSON.parse(historyStack.value[historyIndex.value]);
+    emit('update:guide', restored);
+    setTimeout(() => { isHistoryNavigating.value = false; }, 50);
+  }
+};
+
+const handleGlobalHotkeys = (e: KeyboardEvent) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+    if (e.shiftKey) redoState();
+    else undoState();
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+    redoState();
+  }
+};
 
 const categories: Category[] = ['ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий'];
 const difficulties: Difficulty[] = ['Новичок', 'Опытный', 'Мастер'];
 
 // Meta Updates
 const updateTitle = (val: string) => {
-  emit('update:guide', { ...props.guide, meta: { ...props.guide.meta, title: val } });
+  const updated = { ...props.guide, meta: { ...props.guide.meta, title: val } };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 const updateAuthor = (val: string) => {
-  emit('update:guide', { ...props.guide, meta: { ...props.guide.meta, author: val } });
+  const updated = { ...props.guide, meta: { ...props.guide.meta, author: val } };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 const updateCategory = (val: Category) => {
-  emit('update:guide', { ...props.guide, meta: { ...props.guide.meta, category: val } });
+  const updated = { ...props.guide, meta: { ...props.guide.meta, category: val } };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 const updateDifficulty = (val: Difficulty) => {
-  emit('update:guide', { ...props.guide, meta: { ...props.guide.meta, difficulty: val } });
+  const updated = { ...props.guide, meta: { ...props.guide.meta, difficulty: val } };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 // Block Operations
@@ -57,8 +122,22 @@ const updateBlock = (updatedBlock: GuideBlock) => {
   if (index !== -1) {
     const newBlocks = [...props.guide.blocks];
     newBlocks[index] = updatedBlock;
-    emit('update:guide', { ...props.guide, blocks: newBlocks });
+    const updated = { ...props.guide, blocks: newBlocks };
+    emit('update:guide', updated);
+    pushHistoryState(updated);
   }
+};
+
+// Quick Clean empty blocks
+const cleanEmptyBlocks = () => {
+  const cleaned = props.guide.blocks.filter(b => {
+    if (b.type === 'text' && !b.textContent?.trim()) return false;
+    if (b.type === 'heading' && !b.headingText?.trim()) return false;
+    return true;
+  });
+  const updated = { ...props.guide, blocks: cleaned };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 // Add / Remove Column inside Section
@@ -248,7 +327,9 @@ const convertToColumnStack = (index: number, subType: BlockType = 'text') => {
   };
 
   newBlocks[index] = sectionBlock;
-  emit('update:guide', { ...props.guide, blocks: newBlocks });
+  const updated = { ...props.guide, blocks: newBlocks };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 // Mouse Drag Resizing Logic for standalone blocks
@@ -309,7 +390,9 @@ const moveBlock = (index: number, direction: 'up' | 'down' | 'top' | 'bottom') =
     newBlocks[index] = newBlocks[targetIndex];
     newBlocks[targetIndex] = temp;
   }
-  emit('update:guide', { ...props.guide, blocks: newBlocks });
+  const updated = { ...props.guide, blocks: newBlocks };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 const duplicateBlock = (index: number) => {
@@ -318,14 +401,18 @@ const duplicateBlock = (index: number) => {
   const copy: GuideBlock = JSON.parse(JSON.stringify(original));
   copy.id = `block_${Date.now()}`;
   newBlocks.splice(index + 1, 0, copy);
-  emit('update:guide', { ...props.guide, blocks: newBlocks });
+  const updated = { ...props.guide, blocks: newBlocks };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 const deleteBlock = (index: number) => {
   if (props.guide.blocks.length <= 1) return;
   const newBlocks = [...props.guide.blocks];
   newBlocks.splice(index, 1);
-  emit('update:guide', { ...props.guide, blocks: newBlocks });
+  const updated = { ...props.guide, blocks: newBlocks };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 const addBlockAt = (index: number, type: BlockType) => {
@@ -430,12 +517,16 @@ const addBlockAt = (index: number, type: BlockType) => {
   }
 
   newBlocks.splice(index + 1, 0, newBlock);
-  emit('update:guide', { ...props.guide, blocks: newBlocks });
+  const updated = { ...props.guide, blocks: newBlocks };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 const handleAppendTemplate = (templateBlocks: GuideBlock[]) => {
   const newBlocks = [...props.guide.blocks, ...templateBlocks];
-  emit('update:guide', { ...props.guide, blocks: newBlocks });
+  const updated = { ...props.guide, blocks: newBlocks };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 const openSlotPicker = (blockId: string, slotIndex: number, isOutput: boolean = false) => {
@@ -498,7 +589,9 @@ const handleSaveSlot = (updatedSlot: CraftingSlot) => {
   };
 
   const newBlocks = updateBlockRecursive(props.guide.blocks);
-  emit('update:guide', { ...props.guide, blocks: newBlocks });
+  const updated = { ...props.guide, blocks: newBlocks };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 const addChecklistItem = (block: GuideBlock) => {
@@ -588,14 +681,58 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
   });
   updateBlock({ ...parentSection, columns: newCols });
 };
+
+const scrollToBlockInEditor = (id: string) => {
+  const el = document.getElementById(`editor-block-${id}`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+};
 </script>
 
 <template>
   <div class="max-w-6xl mx-auto space-y-6 pb-24 relative">
     
-    <!-- COMPACT FLOATING VERTICAL TOOLBAR DOCK (POSITIONED RIGHT) -->
-    <aside class="fixed top-24 right-4 z-40 bg-[#16181a]/95 backdrop-blur-md border border-[#26292d] p-2 rounded-2xl shadow-2xl flex flex-col gap-2.5 items-center">
-      <!-- 1. Layout Templates -->
+    <!-- HIGH-FUNCTIONALITY VERTICAL FLOATING TOOLBAR DOCK -->
+    <aside class="fixed top-20 right-4 z-40 bg-[#16181a]/95 backdrop-blur-md border border-[#26292d] p-2 rounded-2xl shadow-2xl flex flex-col gap-2 items-center">
+      
+      <!-- 1. Undo Ctrl+Z -->
+      <div class="relative group/tool">
+        <button
+          type="button"
+          @click="undoState"
+          :disabled="historyIndex <= 0"
+          class="w-10 h-10 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all"
+        >
+          <IconRenderer name="RotateCcw" size="18" />
+        </button>
+        <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
+          <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+            Отменить (Ctrl+Z)
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Redo Ctrl+Y -->
+      <div class="relative group/tool">
+        <button
+          type="button"
+          @click="redoState"
+          :disabled="historyIndex >= historyStack.length - 1"
+          class="w-10 h-10 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all"
+        >
+          <IconRenderer name="RotateCw" size="18" />
+        </button>
+        <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
+          <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+            Повторить (Ctrl+Y)
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full h-[1px] bg-[#26292d] my-0.5"></div>
+
+      <!-- 3. Layout Templates Modal -->
       <div class="relative group/tool">
         <button
           type="button"
@@ -604,15 +741,46 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
         >
           <IconRenderer name="Layout" size="18" />
         </button>
-        <!-- Hover Context Tooltip -->
         <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
           <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
-            Библиотека шаблонов колонок
+            Библиотека шаблонов
           </div>
         </div>
       </div>
 
-      <!-- 2. JSON Import/Export -->
+      <!-- 4. Block Tree / Structure Organizer -->
+      <div class="relative group/tool">
+        <button
+          type="button"
+          @click="isTreeModalOpen = true"
+          class="w-10 h-10 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center transition-all"
+        >
+          <IconRenderer name="Layers" size="18" />
+        </button>
+        <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
+          <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+            Дерево и структура блоков
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Clean Empty Blocks -->
+      <div class="relative group/tool">
+        <button
+          type="button"
+          @click="cleanEmptyBlocks"
+          class="w-10 h-10 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center transition-all"
+        >
+          <IconRenderer name="Sparkles" size="18" />
+        </button>
+        <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
+          <div class="bg-[#0c0d0e] border border-amber-500/40 text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+            Очистить пустые блоки
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. JSON Import/Export -->
       <div class="relative group/tool">
         <button
           type="button"
@@ -628,7 +796,23 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
         </div>
       </div>
 
-      <!-- 3. Preview Wiki Reader -->
+      <!-- 7. Author Guide & Hotkeys Cheat Sheet -->
+      <div class="relative group/tool">
+        <button
+          type="button"
+          @click="isHelpModalOpen = true"
+          class="w-10 h-10 rounded-xl bg-[#121416] hover:bg-[#212429] text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all"
+        >
+          <IconRenderer name="HelpCircle" size="18" />
+        </button>
+        <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
+          <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+            Шпоргалка и горячие клавиши
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. Preview Wiki Reader -->
       <div class="relative group/tool">
         <button
           type="button"
@@ -639,14 +823,14 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
         </button>
         <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center">
           <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
-            Предпросмотр Вики
+            Предпросмотр в режиме Вики
           </div>
         </div>
       </div>
 
       <div class="w-full h-[1px] bg-[#26292d] my-0.5"></div>
 
-      <!-- 4. Save Guide to DB -->
+      <!-- 9. Save Guide to DB -->
       <div class="relative group/tool">
         <button
           type="button"
@@ -662,7 +846,7 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
         </div>
       </div>
 
-      <!-- 5. Delete Guide -->
+      <!-- 10. Delete Guide -->
       <div class="relative group/tool">
         <button
           type="button"
@@ -1356,6 +1540,69 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
             </div>
           </div>
         </template>
+      </div>
+    </div>
+
+    <!-- Structure Tree / Block Organizer Modal -->
+    <div v-if="isTreeModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div class="bg-[#16181a] border border-[#26292d] w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <IconRenderer name="Layers" size="18" class="text-purple-400" />
+            Структура блоков гайда
+          </h3>
+          <button @click="isTreeModalOpen = false" class="text-dark-muted hover:text-white"><IconRenderer name="X" size="18" /></button>
+        </div>
+
+        <div class="space-y-2 max-h-96 overflow-y-auto pr-1">
+          <div 
+            v-for="(b, idx) in guide.blocks" 
+            :key="b.id"
+            @click="scrollToBlockInEditor(b.id); isTreeModalOpen = false;"
+            class="p-3 bg-[#0c0d0e] hover:bg-[#212429] border border-[#26292d] rounded-xl flex items-center justify-between cursor-pointer transition-all"
+          >
+            <div class="flex items-center gap-2.5 text-xs text-white">
+              <span class="w-5 h-5 rounded bg-[#16181a] text-dark-muted font-mono flex items-center justify-center text-[10px] font-bold">#{{ idx + 1 }}</span>
+              <span class="font-bold text-cyan-400 uppercase text-[10px]">{{ b.type }}</span>
+              <span class="text-slate-300 line-clamp-1">
+                {{ b.headingText || b.textContent || b.checklistTitle || b.imageCaption || 'Блок без названия' }}
+              </span>
+            </div>
+            <span class="text-[10px] text-dark-muted font-mono bg-[#16181a] px-2 py-0.5 rounded">{{ b.customWidth || 100 }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Author Guide / Hotkeys Cheat Sheet Modal -->
+    <div v-if="isHelpModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div class="bg-[#16181a] border border-[#26292d] w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <IconRenderer name="HelpCircle" size="18" class="text-cyan-400" />
+            Горячие клавиши и Советы Авторам
+          </h3>
+          <button @click="isHelpModalOpen = false" class="text-dark-muted hover:text-white"><IconRenderer name="X" size="18" /></button>
+        </div>
+
+        <div class="space-y-3 text-xs text-slate-300">
+          <div class="p-3 bg-[#0c0d0e] rounded-xl border border-[#26292d] flex items-center justify-between">
+            <span>Отменить действие</span>
+            <code class="bg-[#16181a] px-2 py-0.5 rounded text-cyan-400 font-mono">Ctrl + Z</code>
+          </div>
+          <div class="p-3 bg-[#0c0d0e] rounded-xl border border-[#26292d] flex items-center justify-between">
+            <span>Повторить отмененное</span>
+            <code class="bg-[#16181a] px-2 py-0.5 rounded text-cyan-400 font-mono">Ctrl + Y</code>
+          </div>
+          <div class="p-3 bg-[#0c0d0e] rounded-xl border border-[#26292d] flex items-center justify-between">
+            <span>Интерактивный Drag-Resize</span>
+            <span class="text-emerald-400">Зажать зелёный значок мышкой в углу</span>
+          </div>
+          <div class="p-3 bg-[#0c0d0e] rounded-xl border border-[#26292d] flex items-center justify-between">
+            <span>Сменить ширину колонок</span>
+            <span class="text-cyan-400">Перетянуть вертикальную линию мышкой</span>
+          </div>
+        </div>
       </div>
     </div>
 
