@@ -5,6 +5,7 @@ import CalloutBlock from './CalloutBlock.vue';
 import LayerPainter from './LayerPainter.vue';
 import CraftingSlotPicker from './CraftingSlotPicker.vue';
 import ImportExportModal from './ImportExportModal.vue';
+import TemplateLibraryModal from './TemplateLibraryModal.vue';
 import type { Guide, GuideBlock, Category, Difficulty, CraftingSlot, BlockType, BlockWidth, BlockAlign, BlockVariant } from '../types/guide';
 import { PRESET_ITEMS } from '../data/presetItems';
 
@@ -26,6 +27,7 @@ const isOutputSlot = ref(false);
 const activeSlotData = ref<CraftingSlot | null>(null);
 
 const isImportExportOpen = ref(false);
+const isTemplateModalOpen = ref(false);
 
 const categories: Category[] = ['ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий'];
 const difficulties: Difficulty[] = ['Новичок', 'Опытный', 'Мастер'];
@@ -164,6 +166,12 @@ const addBlockAt = (index: number, type: BlockType) => {
   emit('update:guide', { ...props.guide, blocks: newBlocks });
 };
 
+// Add Template Blocks Group
+const handleAppendTemplate = (templateBlocks: GuideBlock[]) => {
+  const newBlocks = [...props.guide.blocks, ...templateBlocks];
+  emit('update:guide', { ...props.guide, blocks: newBlocks });
+};
+
 // Crafting Slot Picker trigger
 const openSlotPicker = (blockId: string, slotIndex: number, isOutput: boolean = false) => {
   const block = props.guide.blocks.find(b => b.id === blockId);
@@ -225,7 +233,6 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
   reader.readAsDataURL(file);
 };
 
-// Helper for CSS width classes
 const getWidthClass = (width?: BlockWidth) => {
   switch (width) {
     case 'half':
@@ -267,6 +274,16 @@ const getVariantClass = (variant?: BlockVariant) => {
       </div>
 
       <div class="flex items-center gap-2">
+        <!-- Layout Template Button -->
+        <button
+          type="button"
+          @click="isTemplateModalOpen = true"
+          class="px-3.5 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
+        >
+          <IconRenderer name="Layout" size="14" />
+          Шаблоны макетов
+        </button>
+
         <button
           type="button"
           @click="isImportExportOpen = true"
@@ -374,16 +391,14 @@ const getVariantClass = (variant?: BlockVariant) => {
           getVariantClass(block.variant)
         ]"
       >
-        <!-- Floating Customization Controls Bar (Top Right Header) -->
+        <!-- Floating Customization Controls Bar -->
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#26292d] pb-2 mb-3">
-          <!-- Left: Block Type Label & Alignment -->
           <div class="flex items-center gap-2">
             <span class="text-[11px] font-bold uppercase tracking-wider text-dark-muted flex items-center gap-1">
               <IconRenderer name="Box" size="14" class="text-emerald-400" />
               {{ block.type }}
             </span>
 
-            <!-- Text Align Buttons -->
             <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d]">
               <button 
                 type="button" 
@@ -412,9 +427,7 @@ const getVariantClass = (variant?: BlockVariant) => {
             </div>
           </div>
 
-          <!-- Right: Width & Position Controls -->
           <div class="flex items-center gap-1.5">
-            <!-- Width Selector Dropdown -->
             <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d]">
               <button 
                 type="button"
@@ -442,7 +455,6 @@ const getVariantClass = (variant?: BlockVariant) => {
               </button>
             </div>
 
-            <!-- Variant Selector -->
             <select
               :value="block.variant || 'default'"
               @change="updateBlock({ ...block, variant: ($event.target as HTMLSelectElement).value as BlockVariant })"
@@ -454,7 +466,6 @@ const getVariantClass = (variant?: BlockVariant) => {
               <option value="bordered">Рамка</option>
             </select>
 
-            <!-- Re-order & Management Buttons -->
             <button
               type="button"
               @click="moveBlock(index, 'up')"
@@ -719,7 +730,7 @@ const getVariantClass = (variant?: BlockVariant) => {
           </div>
         </div>
 
-        <!-- Floating "+ Add Block" -->
+        <!-- Inline Floating "+ Add Block" -->
         <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <div class="relative group/menu">
             <button
@@ -773,6 +784,13 @@ const getVariantClass = (variant?: BlockVariant) => {
       :guide="guide"
       @close="isImportExportOpen = false"
       @import="(newGuide) => emit('update:guide', newGuide)"
+    />
+
+    <!-- Layout Template Library Modal -->
+    <TemplateLibraryModal
+      :is-open="isTemplateModalOpen"
+      @close="isTemplateModalOpen = false"
+      @select-template="handleAppendTemplate"
     />
   </div>
 </template>
