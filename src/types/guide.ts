@@ -37,14 +37,14 @@ export interface ChecklistItem {
 
 export type BlockType = 'heading' | 'text' | 'callout' | 'crafting' | 'multiblock' | 'checklist' | 'image' | 'divider' | 'section';
 
-// 6-Column Grid Spans
+// Grid & Custom Freeform Layout
 export type BlockSpan = 'span-6' | 'span-3' | 'span-2' | 'span-4' | 'span-1';
 export type BlockAlign = 'left' | 'center' | 'right';
 export type BlockVariant = 'default' | 'subtle' | 'bordered' | 'accent';
 
 export interface SectionColumn {
   id: string;
-  span: BlockSpan; // e.g. span-4, span-2, span-3
+  span: BlockSpan;
   blocks: GuideBlock[];
 }
 
@@ -52,7 +52,11 @@ export interface GuideBlock {
   id: string;
   type: BlockType;
   
-  // 6-Column Grid & Styling Controls
+  // Freeform Mouse Drag Resizing & Layout Controls
+  customWidth?: number; // Custom percentage width (10% to 100%)
+  customHeight?: number; // Custom minimum height in px (80px to 1200px)
+
+  // Standard Presets fallback
   span?: BlockSpan;
   align?: BlockAlign;
   variant?: BlockVariant;
@@ -75,7 +79,7 @@ export interface GuideBlock {
   imageCaption?: string;
   dividerStyle?: 'line' | 'dashed' | 'dots' | 'icon';
 
-  // Nested Multi-Block Columns (for 'section' block type)
+  // Nested Multi-Block Columns
   columns?: SectionColumn[];
 }
 

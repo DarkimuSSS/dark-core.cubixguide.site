@@ -6,7 +6,7 @@ import LayerPainter from './LayerPainter.vue';
 import CraftingSlotPicker from './CraftingSlotPicker.vue';
 import ImportExportModal from './ImportExportModal.vue';
 import TemplateLibraryModal from './TemplateLibraryModal.vue';
-import type { Guide, GuideBlock, Category, Difficulty, CraftingSlot, BlockType, BlockSpan, BlockAlign, BlockVariant, SectionColumn } from '../types/guide';
+import type { Guide, GuideBlock, Category, Difficulty, CraftingSlot, BlockType, BlockSpan, BlockAlign, BlockVariant } from '../types/guide';
 import { PRESET_ITEMS } from '../data/presetItems';
 
 const props = defineProps<{
@@ -28,6 +28,8 @@ const activeSlotData = ref<CraftingSlot | null>(null);
 
 const isImportExportOpen = ref(false);
 const isTemplateModalOpen = ref(false);
+
+const activeResizingBlockId = ref<string | null>(null);
 
 const categories: Category[] = ['ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий'];
 const difficulties: Difficulty[] = ['Новичок', 'Опытный', 'Мастер'];
@@ -57,6 +59,49 @@ const updateBlock = (updatedBlock: GuideBlock) => {
     newBlocks[index] = updatedBlock;
     emit('update:guide', { ...props.guide, blocks: newBlocks });
   }
+};
+
+// Mouse Drag Resizing Logic
+const startResizing = (e: MouseEvent, block: GuideBlock) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  activeResizingBlockId.value = block.id;
+  const startX = e.clientX;
+  const startY = e.clientY;
+
+  const blockEl = document.getElementById(`editor-block-${block.id}`);
+  if (!blockEl) return;
+
+  const rect = blockEl.getBoundingClientRect();
+  const parentRect = blockEl.parentElement?.getBoundingClientRect() || rect;
+
+  const initialWidthPercent = block.customWidth || Math.round((rect.width / parentRect.width) * 100);
+  const initialHeightPx = block.customHeight || Math.round(rect.height);
+
+  const onMouseMove = (moveEv: MouseEvent) => {
+    const deltaX = moveEv.clientX - startX;
+    const deltaY = moveEv.clientY - startY;
+
+    const parentWidth = parentRect.width || 800;
+    const newWidthPercent = Math.min(100, Math.max(15, Math.round(initialWidthPercent + (deltaX / parentWidth) * 100)));
+    const newHeightPx = Math.min(1000, Math.max(90, Math.round(initialHeightPx + deltaY)));
+
+    updateBlock({
+      ...block,
+      customWidth: newWidthPercent,
+      customHeight: newHeightPx
+    });
+  };
+
+  const onMouseUp = () => {
+    activeResizingBlockId.value = null;
+    window.removeEventListener('mousemove', onMouseMove);
+    window.removeEventListener('mouseup', onMouseUp);
+  };
+
+  window.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('mouseup', onMouseUp);
 };
 
 const moveBlock = (index: number, direction: 'up' | 'down' | 'top' | 'bottom') => {
@@ -99,10 +144,10 @@ const addBlockAt = (index: number, type: BlockType) => {
 
   switch (type) {
     case 'heading':
-      newBlock = { id: `b_${Date.now()}`, type: 'heading', headingText: 'Новый раздел', headingLevel: 'h2', span: 'span-6' };
+      newBlock = { id: `b_${Date.now()}`, type: 'heading', headingText: 'Новый раздел', headingLevel: 'h2', customWidth: 100 };
       break;
     case 'text':
-      newBlock = { id: `b_${Date.now()}`, type: 'text', textContent: 'Опишите пошаговые инструкции или пояснения к гайду...', span: 'span-6' };
+      newBlock = { id: `b_${Date.now()}`, type: 'text', textContent: 'Опишите пошаговые инструкции или пояснения к гайду...', customWidth: 100 };
       break;
     case 'callout':
       newBlock = { 
@@ -111,14 +156,14 @@ const addBlockAt = (index: number, type: BlockType) => {
         calloutType: 'tip', 
         calloutTitle: 'Полезный совет', 
         calloutText: 'Добавьте важное примечание для игроков.',
-        span: 'span-6'
+        customWidth: 100
       };
       break;
     case 'crafting':
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'crafting',
-        span: 'span-6',
+        customWidth: 100,
         craftingGrid: Array(9).fill(null).map((_, i) => ({ index: i, item: null, count: 1 })),
         craftingOutput: { index: 9, item: PRESET_ITEMS[0], count: 1 }
       };
@@ -127,7 +172,7 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'multiblock',
-        span: 'span-6',
+        customWidth: 100,
         gridSize: 3,
         palette: [
           { id: 'reactor_casing', name: 'Корпус реактора', icon: 'Box', color: '#475569' },
@@ -143,7 +188,7 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'checklist',
-        span: 'span-6',
+        customWidth: 100,
         checklistTitle: 'Чек-лист выполнения',
         checklistItems: [
           { id: 'c1', text: 'Собрать необходимые ресурсы', completed: false },
@@ -155,7 +200,7 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'image',
-        span: 'span-6',
+        customWidth: 100,
         imageUrl: '',
         imageCaption: 'Подпись к скриншоту / иллюстрации'
       };
@@ -164,7 +209,7 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'divider',
-        span: 'span-6',
+        customWidth: 100,
         dividerStyle: 'line'
       };
       break;
@@ -172,21 +217,21 @@ const addBlockAt = (index: number, type: BlockType) => {
       newBlock = {
         id: `b_${Date.now()}`,
         type: 'section',
-        span: 'span-6',
+        customWidth: 100,
         columns: [
           {
             id: `col_${Date.now()}_1`,
             span: 'span-4',
             blocks: [
-              { id: `sb1_${Date.now()}`, type: 'heading', headingText: 'Заголовок секции', headingLevel: 'h2', span: 'span-6' },
-              { id: `sb2_${Date.now()}`, type: 'text', textContent: 'Описание шага инструкции...', span: 'span-6' }
+              { id: `sb1_${Date.now()}`, type: 'heading', headingText: 'Заголовок секции', headingLevel: 'h2', customWidth: 100 },
+              { id: `sb2_${Date.now()}`, type: 'text', textContent: 'Описание шага инструкции...', customWidth: 100 }
             ]
           },
           {
             id: `col_${Date.now()}_2`,
             span: 'span-2',
             blocks: [
-              { id: `sb3_${Date.now()}`, type: 'image', imageUrl: '', imageCaption: 'Иллюстрация', span: 'span-6' }
+              { id: `sb3_${Date.now()}`, type: 'image', imageUrl: '', imageCaption: 'Иллюстрация', customWidth: 100 }
             ]
           }
         ]
@@ -291,22 +336,6 @@ const handleImageFileUpload = (e: Event, block: GuideBlock) => {
   reader.readAsDataURL(file);
 };
 
-const getGridSpanClass = (span?: BlockSpan) => {
-  switch (span) {
-    case 'span-3':
-      return 'col-span-6 md:col-span-3';
-    case 'span-2':
-      return 'col-span-6 md:col-span-2';
-    case 'span-4':
-      return 'col-span-6 md:col-span-4';
-    case 'span-1':
-      return 'col-span-6 md:col-span-1';
-    case 'span-6':
-    default:
-      return 'col-span-6';
-  }
-};
-
 const getVariantClass = (variant?: BlockVariant) => {
   switch (variant) {
     case 'accent':
@@ -321,7 +350,6 @@ const getVariantClass = (variant?: BlockVariant) => {
   }
 };
 
-// Sub-block updater inside nested columns
 const updateSubBlock = (parentSection: GuideBlock, colId: string, subBlock: GuideBlock) => {
   if (!parentSection.columns) return;
   const newCols = parentSection.columns.map(col => {
@@ -341,7 +369,7 @@ const addSubBlock = (parentSection: GuideBlock, colId: string, type: BlockType) 
   const newSubBlock: GuideBlock = {
     id: `sb_${Date.now()}`,
     type,
-    span: 'span-6',
+    customWidth: 100,
     headingText: type === 'heading' ? 'Новый подзаголовок' : undefined,
     textContent: type === 'text' ? 'Текст подблока...' : undefined,
     calloutType: 'tip',
@@ -379,7 +407,7 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Составные Колонки (Stacked Rows)
+          Интерактивное растягивание мышью
         </span>
       </div>
 
@@ -489,18 +517,29 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
       </div>
     </div>
 
-    <!-- Equal-Height 6-Column Grid Layout Container for Blocks (items-stretch) -->
-    <div class="grid grid-cols-6 gap-6 items-stretch">
+    <!-- Freeform Resizable Block Container (Flex Wrap with custom width % and minHeight px) -->
+    <div class="flex flex-wrap gap-6 items-stretch">
       <div 
         v-for="(block, index) in guide.blocks" 
         :key="block.id"
+        :id="`editor-block-${block.id}`"
+        :style="{
+          width: block.type === 'divider' ? '100%' : (block.customWidth ? `calc(${block.customWidth}% - 1rem)` : '100%'),
+          minHeight: block.customHeight ? `${block.customHeight}px` : undefined
+        }"
         :class="[
-          'group relative rounded-2xl transition-all shadow-md flex flex-col justify-between',
-          block.type === 'divider' ? 'col-span-6 p-2 bg-transparent shadow-none border-none' : 
-          block.type === 'section' ? 'col-span-6 p-4 bg-[#121416] border border-[#26292d]' :
-          getGridSpanClass(block.span) + ' p-5 h-full ' + getVariantClass(block.variant)
+          'group relative rounded-2xl transition-all shadow-md flex flex-col justify-between select-none',
+          block.type === 'divider' ? 'w-full p-2 bg-transparent shadow-none border-none' : 
+          block.type === 'section' ? 'w-full p-4 bg-[#121416] border border-[#26292d]' :
+          'p-5 ' + getVariantClass(block.variant),
+          activeResizingBlockId === block.id ? 'ring-2 ring-emerald-400 shadow-2xl z-40' : ''
         ]"
       >
+        <!-- Resizing Badge Tooltip -->
+        <div v-if="activeResizingBlockId === block.id" class="absolute -top-7 right-4 bg-emerald-600 text-white font-mono text-[10px] px-2 py-0.5 rounded shadow-lg z-50 animate-bounce">
+          Ширина: {{ block.customWidth || 100 }}% | Высота: {{ block.customHeight || 'Авто' }}px
+        </div>
+
         <!-- Divider Special Render -->
         <template v-if="block.type === 'divider'">
           <div class="py-4 relative flex items-center justify-center">
@@ -512,7 +551,7 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
           </div>
         </template>
 
-        <!-- Nested Section Container (Stacked Columns Side-by-Side) -->
+        <!-- Nested Section Container -->
         <template v-else-if="block.type === 'section'">
           <div class="flex items-center justify-between border-b border-[#26292d] pb-2 mb-4">
             <span class="text-xs font-bold text-cyan-400 flex items-center gap-2">
@@ -525,12 +564,14 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
             </div>
           </div>
 
-          <div class="grid grid-cols-6 gap-6 items-stretch">
+          <div class="flex flex-wrap gap-6 items-stretch w-full">
             <div 
               v-for="col in (block.columns || [])" 
               :key="col.id"
               :class="[
-                getGridSpanClass(col.span),
+                col.span === 'span-4' ? 'w-full md:w-[calc(66.666%-0.75rem)]' :
+                col.span === 'span-2' ? 'w-full md:w-[calc(33.333%-0.75rem)]' :
+                'w-full md:w-[calc(50%-0.75rem)]',
                 'flex flex-col gap-4 h-full justify-between bg-[#16181a] border border-[#26292d] p-4 rounded-xl'
               ]"
             >
@@ -601,7 +642,7 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
         </template>
 
         <template v-else>
-          <!-- Floating Controls Bar -->
+          <!-- Floating Controls Bar with Custom % Input & Quick Presets -->
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#26292d] pb-2 mb-3">
             <div class="flex items-center gap-2">
               <span class="text-[11px] font-bold uppercase tracking-wider text-dark-muted flex items-center gap-1">
@@ -639,39 +680,49 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
             </div>
 
             <div class="flex items-center gap-1.5">
-              <!-- 6-Column Span Selector -->
+              <!-- Custom Width Percentage Selector / Input -->
+              <div class="flex items-center bg-[#0c0d0e] px-2 py-0.5 rounded border border-[#26292d] gap-1 text-[10px]">
+                <span class="text-dark-muted font-semibold">Ширина:</span>
+                <input
+                  type="number"
+                  min="15"
+                  max="100"
+                  :value="block.customWidth || 100"
+                  @change="updateBlock({ ...block, customWidth: Number(($event.target as HTMLInputElement).value) })"
+                  class="w-10 bg-[#16181a] border border-[#26292d] text-cyan-300 font-bold text-center rounded px-1"
+                />
+                <span class="text-cyan-400 font-bold">%</span>
+              </div>
+
+              <!-- Quick Presets -->
               <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d]">
                 <button 
                   type="button"
-                  @click="updateBlock({ ...block, span: 'span-6' })"
-                  :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.span === 'span-6' || !block.span ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
-                  title="6/6 (100%)"
+                  @click="updateBlock({ ...block, customWidth: 100 })"
+                  :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', (block.customWidth || 100) === 100 ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
                 >
-                  6/6
+                  100%
                 </button>
                 <button 
                   type="button"
-                  @click="updateBlock({ ...block, span: 'span-3' })"
-                  :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.span === 'span-3' ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
-                  title="3/6 (50%)"
+                  @click="updateBlock({ ...block, customWidth: 50 })"
+                  :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.customWidth === 50 ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
                 >
-                  3/6
+                  50%
                 </button>
                 <button 
                   type="button"
-                  @click="updateBlock({ ...block, span: 'span-2' })"
-                  :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.span === 'span-2' ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
-                  title="2/6 (33%)"
+                  @click="updateBlock({ ...block, customWidth: 33 })"
+                  :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.customWidth === 33 ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
                 >
-                  2/6
+                  33%
                 </button>
                 <button 
                   type="button"
-                  @click="updateBlock({ ...block, span: 'span-4' })"
-                  :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.span === 'span-4' ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
-                  title="4/6 (66%)"
+                  @click="updateBlock({ ...block, customWidth: 66 })"
+                  :class="['px-1.5 py-0.5 text-[10px] font-bold rounded', block.customWidth === 66 ? 'bg-cyan-500/20 text-cyan-400' : 'text-dark-muted hover:text-white']"
                 >
-                  4/6
+                  66%
                 </button>
               </div>
 
@@ -951,6 +1002,16 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Bottom-Right Interactive Mouse Drag Handle -->
+          <div 
+            v-if="block.type !== 'divider'"
+            @mousedown="(e) => startResizing(e, block)"
+            class="absolute bottom-1 right-1 w-6 h-6 bg-emerald-500/10 hover:bg-emerald-500/30 border border-emerald-500/40 rounded-br-xl rounded-tl-lg flex items-center justify-center cursor-se-resize text-emerald-400 opacity-60 hover:opacity-100 transition-all shadow-md group/handle"
+            title="Зажмите и тяните мышкой для изменения ширины и высоты блока"
+          >
+            <IconRenderer name="Sliders" size="12" />
           </div>
 
           <!-- Inline Floating "+ Add Block" -->

@@ -47,16 +47,16 @@ const scrollToBlock = (id: string) => {
 const getGridSpanClass = (span?: BlockSpan) => {
   switch (span) {
     case 'span-3':
-      return 'col-span-6 md:col-span-3';
+      return 'w-full md:w-[calc(50%-0.75rem)]';
     case 'span-2':
-      return 'col-span-6 md:col-span-2';
+      return 'w-full md:w-[calc(33.333%-0.75rem)]';
     case 'span-4':
-      return 'col-span-6 md:col-span-4';
+      return 'w-full md:w-[calc(66.666%-0.75rem)]';
     case 'span-1':
-      return 'col-span-6 md:col-span-1';
+      return 'w-full md:w-[calc(16.666%-0.75rem)]';
     case 'span-6':
     default:
-      return 'col-span-6';
+      return 'w-full';
   }
 };
 
@@ -119,10 +119,10 @@ const getVariantClass = (variant?: BlockVariant) => {
       </div>
     </header>
 
-    <!-- Main Layout Container: 1 column sidebar + 5 columns content zone -->
+    <!-- Main Layout Container -->
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-6 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
       
-      <!-- SIDEBAR: 1 narrow column out of 6 -->
+      <!-- SIDEBAR -->
       <aside :class="[
         'col-span-1 fixed lg:sticky top-20 z-40 lg:z-0 bg-[#16181a] lg:bg-transparent border lg:border-none border-[#26292d] rounded-2xl p-4 transition-all duration-300 max-h-[calc(100vh-6rem)] overflow-y-auto',
         isMobileNavOpen ? 'left-4 shadow-2xl w-64' : '-left-80 lg:left-0 w-full'
@@ -160,7 +160,7 @@ const getVariantClass = (variant?: BlockVariant) => {
         </div>
       </aside>
 
-      <!-- CONTENT ZONE: 5 columns out of 6 -->
+      <!-- CONTENT ZONE -->
       <main class="col-span-1 lg:col-span-5 min-w-0 space-y-8">
         <article class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-4">
           <div class="flex flex-wrap items-center gap-2">
@@ -183,17 +183,21 @@ const getVariantClass = (variant?: BlockVariant) => {
           </div>
         </article>
 
-        <!-- Dynamic Equal-Height 6-Column Grid for Blocks (items-stretch) -->
-        <div class="grid grid-cols-6 gap-6 items-stretch">
+        <!-- Dynamic Freeform Resizable Blocks Layout (Flex Wrap with custom width % & height px) -->
+        <div class="flex flex-wrap gap-6 items-stretch">
           <div 
             v-for="block in guide.blocks" 
             :key="block.id" 
             :id="`block-${block.id}`"
+            :style="{
+              width: block.type === 'divider' ? '100%' : (block.customWidth ? `calc(${block.customWidth}% - 1rem)` : undefined),
+              minHeight: block.customHeight ? `${block.customHeight}px` : undefined
+            }"
             :class="[
               'scroll-mt-24 transition-all flex flex-col justify-between',
-              block.type === 'divider' ? 'col-span-6 my-2' : 
-              block.type === 'section' ? 'col-span-6' :
-              getGridSpanClass(block.span) + ' h-full'
+              block.type === 'divider' ? 'w-full my-2' : 
+              block.type === 'section' ? 'w-full' :
+              (!block.customWidth ? getGridSpanClass(block.span) : '') + ' h-full'
             ]"
           >
             <!-- Divider Section Separator (<hr>) -->
@@ -202,7 +206,7 @@ const getVariantClass = (variant?: BlockVariant) => {
             </div>
 
             <!-- Section Block (Stacked Multi-block Columns) -->
-            <div v-else-if="block.type === 'section'" class="grid grid-cols-6 gap-6 items-stretch">
+            <div v-else-if="block.type === 'section'" class="flex flex-wrap gap-6 items-stretch w-full">
               <div 
                 v-for="col in (block.columns || [])" 
                 :key="col.id"
@@ -212,23 +216,19 @@ const getVariantClass = (variant?: BlockVariant) => {
                 ]"
               >
                 <div v-for="sub in col.blocks" :key="sub.id" :id="`block-${sub.id}`" class="flex-1 flex flex-col justify-center">
-                  <!-- Sub Heading -->
                   <div v-if="sub.type === 'heading'" class="border-b border-[#26292d] pb-2">
                     <h2 v-if="sub.headingLevel === 'h1'" class="text-xl font-bold text-white">{{ sub.headingText }}</h2>
                     <h3 v-else class="text-lg font-bold text-slate-100">{{ sub.headingText }}</h3>
                   </div>
 
-                  <!-- Sub Text -->
                   <div v-else-if="sub.type === 'text'" :class="['p-4 rounded-xl text-slate-300 text-sm leading-relaxed', getVariantClass(sub.variant)]">
                     <p class="whitespace-pre-line">{{ sub.textContent }}</p>
                   </div>
 
-                  <!-- Sub Callout -->
                   <div v-else-if="sub.type === 'callout'">
                     <CalloutBlock :block="sub" :is-editing="false" />
                   </div>
 
-                  <!-- Sub Image -->
                   <div v-else-if="sub.type === 'image'" :class="['p-4 rounded-2xl shadow-xl space-y-2 h-full flex flex-col justify-center', getVariantClass(sub.variant)]">
                     <div v-if="sub.imageUrl" class="rounded-xl overflow-hidden bg-black/60 border border-[#26292d] flex items-center justify-center h-full">
                       <img :src="sub.imageUrl" :alt="sub.imageCaption" class="max-h-[500px] w-auto object-contain rounded-xl" />
