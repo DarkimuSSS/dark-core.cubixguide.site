@@ -61,13 +61,33 @@ const updateBlock = (updatedBlock: GuideBlock) => {
   }
 };
 
+// Change Column Proportions inside Section Block
+const setSectionProportions = (block: GuideBlock, preset: '70-30' | '50-50' | '30-70' | '33-33-33') => {
+  if (!block.columns) return;
+  const newCols = [...block.columns];
+
+  if (preset === '70-30' && newCols.length >= 2) {
+    newCols[0].span = 'span-4'; // 66%
+    newCols[1].span = 'span-2'; // 33%
+  } else if (preset === '50-50' && newCols.length >= 2) {
+    newCols[0].span = 'span-3'; // 50%
+    newCols[1].span = 'span-3'; // 50%
+  } else if (preset === '30-70' && newCols.length >= 2) {
+    newCols[0].span = 'span-2'; // 33%
+    newCols[1].span = 'span-4'; // 66%
+  } else if (preset === '33-33-33') {
+    newCols.forEach(col => col.span = 'span-2');
+  }
+
+  updateBlock({ ...block, columns: newCols });
+};
+
 // Convert a single standalone block into a multi-block Section Column Stack
 const convertToColumnStack = (index: number, subType: BlockType = 'text') => {
   const newBlocks = [...props.guide.blocks];
   const targetBlock = newBlocks[index];
 
   const width = targetBlock.customWidth || 70;
-  const rightWidth = Math.max(15, 100 - width);
 
   const subBlock: GuideBlock = {
     id: `sb_${Date.now()}`,
@@ -602,13 +622,24 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
           </div>
         </template>
 
-        <!-- Nested Section Container -->
+        <!-- Nested Section Container with Column Proportion Resizers -->
         <template v-else-if="block.type === 'section'">
           <div class="flex items-center justify-between border-b border-[#26292d] pb-2 mb-4">
-            <span class="text-xs font-bold text-cyan-400 flex items-center gap-2">
-              <IconRenderer name="Layout" size="14" />
-              Составная Секция (Несколько блоков в одной колонке)
-            </span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-bold text-cyan-400 flex items-center gap-2">
+                <IconRenderer name="Layout" size="14" />
+                Составная Секция
+              </span>
+
+              <!-- Column Proportion Controls -->
+              <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d] text-[10px] gap-1">
+                <span class="text-dark-muted font-semibold px-1">Пропорции:</span>
+                <button @click="setSectionProportions(block, '70-30')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">70% / 30%</button>
+                <button @click="setSectionProportions(block, '50-50')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">50% / 50%</button>
+                <button @click="setSectionProportions(block, '30-70')" class="px-1.5 py-0.5 bg-[#16181a] hover:bg-[#26292d] text-cyan-300 font-bold rounded">30% / 70%</button>
+              </div>
+            </div>
+
             <div class="flex items-center gap-2">
               <button @click="duplicateBlock(index)" class="p-1 text-cyan-400 hover:text-cyan-300 rounded"><IconRenderer name="Copy" size="13" /></button>
               <button @click="deleteBlock(index)" class="p-1 text-rose-400 hover:text-rose-300 rounded"><IconRenderer name="Trash2" size="13" /></button>
@@ -626,6 +657,16 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
                 'flex flex-col gap-4 h-full justify-between bg-[#16181a] border border-[#26292d] p-4 rounded-xl'
               ]"
             >
+              <!-- Column Header & Width Switcher -->
+              <div class="flex items-center justify-between border-b border-[#26292d] pb-1.5 mb-1">
+                <span class="text-[10px] text-dark-muted font-bold uppercase">Колонка ({{ col.span === 'span-4' ? '66%' : col.span === 'span-2' ? '33%' : '50%' }})</span>
+                <div class="flex items-center bg-[#0c0d0e] p-0.5 rounded border border-[#26292d] gap-1">
+                  <button @click="col.span = 'span-4'" :class="['px-1 py-0.5 text-[9px] font-bold rounded', col.span === 'span-4' ? 'bg-cyan-500/20 text-cyan-300' : 'text-dark-muted']">66%</button>
+                  <button @click="col.span = 'span-3'" :class="['px-1 py-0.5 text-[9px] font-bold rounded', col.span === 'span-3' ? 'bg-cyan-500/20 text-cyan-300' : 'text-dark-muted']">50%</button>
+                  <button @click="col.span = 'span-2'" :class="['px-1 py-0.5 text-[9px] font-bold rounded', col.span === 'span-2' ? 'bg-cyan-500/20 text-cyan-300' : 'text-dark-muted']">33%</button>
+                </div>
+              </div>
+
               <div class="space-y-4 flex-1 flex flex-col justify-between">
                 <div v-for="sub in col.blocks" :key="sub.id" class="p-3 bg-[#0c0d0e] border border-[#26292d] rounded-xl relative group/sub shadow-sm">
                   <div class="flex items-center justify-between border-b border-[#26292d] pb-1.5 mb-2 text-[10px] text-dark-muted font-bold uppercase">
@@ -731,7 +772,7 @@ const removeSubBlock = (parentSection: GuideBlock, colId: string, subId: string)
             </div>
 
             <div class="flex items-center gap-1.5">
-              <!-- Fast Stack Action: Add 2nd block into this column! -->
+              <!-- Fast Stack Action -->
               <button
                 type="button"
                 @click="convertToColumnStack(index, 'text')"
