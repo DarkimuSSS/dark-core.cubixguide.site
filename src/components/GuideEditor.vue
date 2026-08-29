@@ -43,7 +43,6 @@ const pushHistoryState = (guideState: Guide) => {
   const snapshot = JSON.stringify(guideState);
   if (historyStack.value[historyIndex.value] === snapshot) return;
   
-  // Truncate redo states if new edit happens
   historyStack.value = historyStack.value.slice(0, historyIndex.value + 1);
   historyStack.value.push(snapshot);
   if (historyStack.value.length > 30) historyStack.value.shift();
@@ -126,6 +125,70 @@ const updateBlock = (updatedBlock: GuideBlock) => {
     emit('update:guide', updated);
     pushHistoryState(updated);
   }
+};
+
+// Extract Sub-block from Section to Top Level
+const extractSubBlockFromSection = (parentSection: GuideBlock, colId: string, subBlockId: string) => {
+  if (!parentSection.columns) return;
+  const newBlocks = [...props.guide.blocks];
+  const sectionIdx = newBlocks.findIndex(b => b.id === parentSection.id);
+  if (sectionIdx === -1) return;
+
+  let extractedBlock: GuideBlock | null = null;
+
+  const newCols = parentSection.columns.map(col => {
+    if (col.id === colId) {
+      const targetSub = col.blocks.find(b => b.id === subBlockId);
+      if (targetSub) {
+        extractedBlock = JSON.parse(JSON.stringify(targetSub));
+        extractedBlock!.id = `extracted_${Date.now()}`;
+        extractedBlock!.customWidth = 100;
+      }
+      return { ...col, blocks: col.blocks.filter(b => b.id !== subBlockId) };
+    }
+    return col;
+  });
+
+  if (extractedBlock) {
+    newBlocks[sectionIdx] = { ...parentSection, columns: newCols };
+    newBlocks.splice(sectionIdx + 1, 0, extractedBlock);
+    const updated = { ...props.guide, blocks: newBlocks };
+    emit('update:guide', updated);
+    pushHistoryState(updated);
+  }
+};
+
+// Pack Standalone Top-Level Block into adjacent Section Block
+const packBlockIntoSection = (blockIndex: number, targetSectionId: string, colId: string) => {
+  const newBlocks = [...props.guide.blocks];
+  const targetBlock = newBlocks[blockIndex];
+  if (!targetBlock || targetBlock.type === 'section') return;
+
+  const sectionIdx = newBlocks.findIndex(b => b.id === targetSectionId);
+  if (sectionIdx === -1) return;
+
+  const targetSection = newBlocks[sectionIdx];
+  if (!targetSection.columns) return;
+
+  const packedSubBlock: GuideBlock = {
+    ...JSON.parse(JSON.stringify(targetBlock)),
+    id: `packed_${Date.now()}`,
+    customWidth: 100
+  };
+
+  const newCols = targetSection.columns.map(col => {
+    if (col.id === colId) {
+      return { ...col, blocks: [...col.blocks, packedSubBlock] };
+    }
+    return col;
+  });
+
+  newBlocks[sectionIdx] = { ...targetSection, columns: newCols };
+  newBlocks.splice(blockIndex, 1);
+
+  const updated = { ...props.guide, blocks: newBlocks };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
 };
 
 // Quick Clean empty blocks
@@ -1040,7 +1103,21 @@ const scrollToBlockInEditor = (id: string) => {
                   <div v-for="sub in col.blocks" :key="sub.id" class="p-3 bg-[#0c0d0e] border border-[#26292d] rounded-xl relative group/sub shadow-sm">
                     <div class="flex items-center justify-between border-b border-[#26292d] pb-1.5 mb-2 text-[10px] text-dark-muted font-bold uppercase">
                       <span>{{ sub.type }}</span>
-                      <button @click="removeSubBlock(block, col.id, sub.id)" class="text-rose-400 hover:text-rose-300"><IconRenderer name="X" size="12" /></button>
+                      
+                      <div class="flex items-center gap-1.5">
+                        <!-- EXTRACT SUB-BLOCK TO TOP-LEVEL BUTTON -->
+                        <button
+                          type="button"
+                          @click="extractSubBlockFromSection(block, col.id, sub.id)"
+                          class="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 bg-[#121416] px-1.5 py-0.5 rounded border border-[#26292d]"
+                          title="Извлечь блок из секции в основной список"
+                        >
+                          <IconRenderer name="ExternalLink" size="11" />
+                          <span>Извлечь</span>
+                        </button>
+
+                        <button @click="removeSubBlock(block, col.id, sub.id)" class="text-rose-400 hover:text-rose-300"><IconRenderer name="X" size="12" /></button>
+                      </div>
                     </div>
 
                     <div v-if="sub.type === 'heading'">
@@ -1114,7 +1191,7 @@ const scrollToBlockInEditor = (id: string) => {
         </template>
 
         <template v-else>
-          <!-- Floating Controls Bar with Custom % Input & Quick Presets & Stack Action -->
+          <!-- Floating Controls Bar with Custom % Input & Quick Presets & Pack into Section Action -->
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#26292d] pb-2 mb-3">
             <div class="flex items-center gap-2">
               <span class="text-[11px] font-bold uppercase tracking-wider text-dark-muted flex items-center gap-1">
@@ -1152,15 +1229,44 @@ const scrollToBlockInEditor = (id: string) => {
             </div>
 
             <div class="flex items-center gap-1.5">
+              <!-- PACK STANDALONE BLOCK INTO SECTION -->
+              <template v-if="guide.blocks.some(b => b.type === 'section')">
+                <div class="relative group/pack">
+                  <button
+                    type="button"
+                    class="px-2 py-0.5 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/40 text-[10px] font-bold rounded flex items-center gap-1 transition-all"
+                  >
+                    <IconRenderer name="FolderInput" size="12" />
+                    Поместить в секцию
+                  </button>
+
+                  <div class="absolute right-0 top-full mt-1 hidden group-hover/pack:flex bg-[#16181a] border border-[#26292d] rounded-xl p-2 shadow-2xl flex-col gap-1 w-56 z-30">
+                    <div class="text-[10px] text-dark-muted font-bold px-2 py-0.5">Выберите секцию:</div>
+                    <template v-for="sec in guide.blocks.filter(b => b.type === 'section')" :key="sec.id">
+                      <div class="text-[10px] font-semibold text-cyan-400 px-2 pt-1">Секция #{{ sec.id.slice(-4) }}</div>
+                      <button
+                        v-for="(col, cIdx) in (sec.columns || [])"
+                        :key="col.id"
+                        @click="packBlockIntoSection(index, sec.id, col.id)"
+                        class="text-left text-xs text-slate-200 hover:bg-[#26292d] p-1.5 rounded flex items-center justify-between"
+                      >
+                        <span>Колонка #{{ cIdx + 1 }}</span>
+                        <span class="text-[10px] text-dark-muted font-mono">{{ col.customWidth || 50 }}%</span>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
               <!-- Fast Stack Action -->
               <button
                 type="button"
                 @click="convertToColumnStack(index, 'text')"
                 class="px-2 py-0.5 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold rounded flex items-center gap-1 transition-all"
-                title="Добавить 2-й блок снизу в эту же левую колонку"
+                title="Создать стек колонку из этого блока"
               >
                 <IconRenderer name="Plus" size="12" />
-                +2-й блок в колонку
+                +В колонку
               </button>
 
               <!-- Custom Width Percentage Selector / Input -->
@@ -1601,6 +1707,14 @@ const scrollToBlockInEditor = (id: string) => {
           <div class="p-3 bg-[#0c0d0e] rounded-xl border border-[#26292d] flex items-center justify-between">
             <span>Сменить ширину колонок</span>
             <span class="text-cyan-400">Перетянуть вертикальную линию мышкой</span>
+          </div>
+          <div class="p-3 bg-[#0c0d0e] rounded-xl border border-[#26292d] flex items-center justify-between">
+            <span>Извлечь блок из секции</span>
+            <span class="text-cyan-400">Кнопка «Извлечь» на шапке подблока</span>
+          </div>
+          <div class="p-3 bg-[#0c0d0e] rounded-xl border border-[#26292d] flex items-center justify-between">
+            <span>Поместить блок в секцию</span>
+            <span class="text-purple-400">Кнопка «Поместить в секцию»</span>
           </div>
         </div>
       </div>
