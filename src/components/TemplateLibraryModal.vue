@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import type { GuideBlock } from '../types/guide';
 import { PRESET_ITEMS } from '../data/presetItems';
@@ -23,6 +23,28 @@ export interface LayoutTemplate {
   blocks: GuideBlock[];
 }
 
+const favoriteIds = ref<string[]>([]);
+
+onMounted(() => {
+  try {
+    const raw = localStorage.getItem('cubix_favorite_templates');
+    if (raw) favoriteIds.value = JSON.parse(raw);
+  } catch (err) {
+    console.error('Error reading favorites:', err);
+  }
+});
+
+const toggleFavorite = (tplId: string, e: MouseEvent) => {
+  e.stopPropagation();
+  e.preventDefault();
+  if (favoriteIds.value.includes(tplId)) {
+    favoriteIds.value = favoriteIds.value.filter(id => id !== tplId);
+  } else {
+    favoriteIds.value.push(tplId);
+  }
+  localStorage.setItem('cubix_favorite_templates', JSON.stringify(favoriteIds.value));
+};
+
 const templates: LayoutTemplate[] = [
   {
     id: 'tpl_stacked_left_image_right',
@@ -39,33 +61,33 @@ const templates: LayoutTemplate[] = [
         columns: [
           {
             id: 'col_left_1',
-            span: 'span-4',
+            customWidth: 70,
             blocks: [
               {
                 id: 'tpl_sub_1',
                 type: 'heading',
                 headingText: 'Доступ в Мир Драконов',
                 headingLevel: 'h2',
-                span: 'span-6'
+                customWidth: 100
               },
               {
                 id: 'tpl_sub_2',
                 type: 'text',
                 textContent: 'После успешного завершения квеста «Орихалковая броня», в награду вы получите уникальный квестовый предмет. Его необходимо доставить Страннику (NPC) на спавне.',
-                span: 'span-6'
+                customWidth: 100
               }
             ]
           },
           {
             id: 'col_right_1',
-            span: 'span-2',
+            customWidth: 30,
             blocks: [
               {
                 id: 'tpl_sub_3',
                 type: 'image',
                 imageUrl: '',
                 imageCaption: 'Иллюстрация к гайду',
-                span: 'span-6'
+                customWidth: 100
               }
             ]
           }
@@ -88,13 +110,13 @@ const templates: LayoutTemplate[] = [
         columns: [
           {
             id: 'col_left_2',
-            span: 'span-3',
+            customWidth: 50,
             blocks: [
               {
                 id: 'tpl_sub_4',
                 type: 'text',
                 textContent: 'Для создания предмета вам потребуются ресурсы высокого тира. Убедитесь в наличии базовых компонентов.',
-                span: 'span-6'
+                customWidth: 100
               },
               {
                 id: 'tpl_sub_5',
@@ -102,20 +124,20 @@ const templates: LayoutTemplate[] = [
                 calloutType: 'warning',
                 calloutTitle: 'Опасности PvP зоны',
                 calloutText: 'В этом мире включено PvP и нельзя создавать приваты!',
-                span: 'span-6'
+                customWidth: 100
               }
             ]
           },
           {
             id: 'col_right_2',
-            span: 'span-3',
+            customWidth: 50,
             blocks: [
               {
                 id: 'tpl_sub_6',
                 type: 'crafting',
                 craftingGrid: Array(9).fill(null).map((_, i) => ({ index: i, item: null, count: 1 })),
                 craftingOutput: { index: 9, item: PRESET_ITEMS[0], count: 1 },
-                span: 'span-6'
+                customWidth: 100
               }
             ]
           }
@@ -134,13 +156,13 @@ const templates: LayoutTemplate[] = [
       {
         id: 'tpl_b1',
         type: 'text',
-        span: 'span-3',
+        customWidth: 50,
         textContent: 'Опишите пошаговые действия или подробности процесса...'
       },
       {
         id: 'tpl_b2',
         type: 'image',
-        span: 'span-3',
+        customWidth: 50,
         imageUrl: '',
         imageCaption: 'Иллюстрация к шагу'
       }
@@ -157,20 +179,20 @@ const templates: LayoutTemplate[] = [
       {
         id: 'tpl_b3_1',
         type: 'image',
-        span: 'span-2',
+        customWidth: 33,
         imageUrl: '',
         imageCaption: 'Вид слева'
       },
       {
         id: 'tpl_b3_2',
         type: 'text',
-        span: 'span-2',
+        customWidth: 33,
         textContent: 'Пояснение к иллюстрациям и сравнительные харатеристики...'
       },
       {
         id: 'tpl_b3_3',
         type: 'image',
-        span: 'span-2',
+        customWidth: 33,
         imageUrl: '',
         imageCaption: 'Вид справа'
       }
@@ -179,12 +201,22 @@ const templates: LayoutTemplate[] = [
 ];
 
 const selectedCategory = ref<string>('Все');
-const categoriesList = ['Все', 'Составные колонки', 'Колонки', 'Крафт и Схемы'];
+const categoriesList = ['Все', '⭐ Избранное', 'Составные колонки', 'Колонки', 'Крафт и Схемы'];
+
+const filteredTemplates = computed(() => {
+  if (selectedCategory.value === '⭐ Избранное') {
+    return templates.filter(t => favoriteIds.value.includes(t.id));
+  }
+  if (selectedCategory.value === 'Все') {
+    return templates;
+  }
+  return templates.filter(t => t.category === selectedCategory.value);
+});
 
 const applyTemplate = (tpl: LayoutTemplate) => {
   const newBlocks: GuideBlock[] = JSON.parse(JSON.stringify(tpl.blocks)).map((b: GuideBlock, idx: number) => ({
     ...b,
-    id: `b_tpl_${Date.now()}_${idx}`
+    id: `b_tpl_${Date.now()}__${idx}`
   }));
   emit('select-template', newBlocks);
   emit('close');
@@ -201,8 +233,13 @@ const applyTemplate = (tpl: LayoutTemplate) => {
             <IconRenderer name="Layout" size="20" />
           </div>
           <div>
-            <h3 class="text-base font-bold text-white">Библиотека шаблонов макета (Составные колонки)</h3>
-            <p class="text-xs text-dark-muted">Размещение нескольких блоков стопкой в одной колонке</p>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              Библиотека шаблонов макета
+              <span v-if="favoriteIds.length > 0" class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
+                ⭐ {{ favoriteIds.length }} в избранном
+              </span>
+            </h3>
+            <p class="text-xs text-dark-muted">Добавляйте часто используемые макеты в избранное</p>
           </div>
         </div>
         <button 
@@ -221,25 +258,55 @@ const applyTemplate = (tpl: LayoutTemplate) => {
           type="button"
           @click="selectedCategory = cat"
           :class="[
-            'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap',
+            'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5',
             selectedCategory === cat 
-              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+              ? (cat === '⭐ Избранное' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40')
               : 'text-dark-muted hover:text-white hover:bg-[#16181a]'
           ]"
         >
-          {{ cat }}
+          <span>{{ cat }}</span>
+          <span v-if="cat === '⭐ Избранное' && favoriteIds.length > 0" class="text-[10px] bg-amber-500/30 text-amber-300 px-1.5 py-0.2 rounded-full font-bold">
+            {{ favoriteIds.length }}
+          </span>
         </button>
       </div>
 
       <!-- Templates Grid -->
       <div class="p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-if="filteredTemplates.length === 0" class="col-span-2 text-center py-12 text-dark-muted space-y-2">
+          <IconRenderer name="Star" size="32" class="mx-auto text-amber-400/40" />
+          <p class="text-sm font-semibold text-white">В избранном пока нет шаблонов</p>
+          <p class="text-xs">Нажмите на звёздочку на любой карточке шаблона, чтобы добавить её сюда</p>
+        </div>
+
         <div
-          v-for="tpl in templates.filter(t => selectedCategory === 'Все' || t.category === selectedCategory)"
+          v-else
+          v-for="tpl in filteredTemplates"
           :key="tpl.id"
           @click="applyTemplate(tpl)"
-          class="group bg-[#121416] hover:bg-[#16181a] border border-[#26292d] hover:border-emerald-500/60 p-4 rounded-xl cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-3 shadow-md hover:shadow-emerald-950/20"
+          :class="[
+            'group bg-[#121416] hover:bg-[#16181a] border p-4 rounded-xl cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-3 shadow-md relative',
+            favoriteIds.includes(tpl.id) 
+              ? 'border-amber-500/50 bg-amber-500/5 shadow-amber-950/20' 
+              : 'border-[#26292d] hover:border-emerald-500/60 shadow-emerald-950/20'
+          ]"
         >
-          <div class="space-y-2">
+          <!-- Bookmark Star Icon Button -->
+          <button
+            type="button"
+            @click="(e) => toggleFavorite(tpl.id, e)"
+            :class="[
+              'absolute top-3 right-3 p-1.5 rounded-lg border transition-all z-10',
+              favoriteIds.includes(tpl.id)
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md'
+                : 'bg-[#0c0d0e] text-dark-muted hover:text-amber-300 border-[#26292d] hover:border-amber-500/40'
+            ]"
+            :title="favoriteIds.includes(tpl.id) ? 'Удалить из избранного' : 'Добавить в избранное'"
+          >
+            <IconRenderer name="Star" size="15" />
+          </button>
+
+          <div class="space-y-2 pr-8">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2 font-bold text-sm text-white group-hover:text-emerald-400 transition-colors">
                 <IconRenderer :name="tpl.icon" size="18" class="text-cyan-400" />
@@ -268,7 +335,7 @@ const applyTemplate = (tpl: LayoutTemplate) => {
 
       <!-- Footer -->
       <div class="px-6 py-3.5 border-t border-[#26292d] bg-[#121416] flex items-center justify-between">
-        <span class="text-xs text-dark-muted">Вставляйте составные колонки с несколькими блоками слева и высоким блоком справа</span>
+        <span class="text-xs text-dark-muted">Нажмите на звёздочку ⭐ на шаблоне, чтобы закрепить его в Избранном</span>
         <button 
           type="button"
           @click="emit('close')"
