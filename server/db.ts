@@ -37,6 +37,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS profiles (
     username TEXT PRIMARY KEY,
     avatar_url TEXT,
+    banner_url TEXT,
     bio TEXT,
     server TEXT,
     social_vk TEXT,
@@ -49,10 +50,11 @@ db.exec(`
   );
 `);
 
-// Migration helpers for permissions columns
+// Migration helpers for columns
 try { db.exec(`ALTER TABLE users ADD COLUMN can_edit_others INTEGER NOT NULL DEFAULT 0;`); } catch (e) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN can_create_guides INTEGER NOT NULL DEFAULT 1;`); } catch (e) {}
 try { db.exec(`ALTER TABLE profiles ADD COLUMN custom_links TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE profiles ADD COLUMN banner_url TEXT;`); } catch (e) {}
 
 // Password hashing helper (SHA-256 with salt)
 export function hashPassword(password: string): string {
@@ -238,6 +240,7 @@ export function getAuthorProfile(username: string): AuthorProfile {
     return {
       username: row.username,
       avatarUrl: row.avatar_url || '',
+      bannerUrl: row.banner_url || '',
       bio: row.bio || '',
       server: row.server || '',
       socialVk: row.social_vk || '',
@@ -254,6 +257,7 @@ export function getAuthorProfile(username: string): AuthorProfile {
   return {
     username,
     avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`,
+    bannerUrl: '',
     bio: `Автор руководств и сборщиков на серверах CubixWorld.`,
     server: 'MagicRPG',
     socialVk: '',
@@ -270,10 +274,11 @@ export function getAuthorProfile(username: string): AuthorProfile {
 
 export function saveAuthorProfile(profile: AuthorProfile): AuthorProfile {
   const stmt = db.prepare(`
-    INSERT INTO profiles (username, avatar_url, bio, server, social_vk, social_tg, social_ds, custom_links, badges, pinned_guide_id, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO profiles (username, avatar_url, banner_url, bio, server, social_vk, social_tg, social_ds, custom_links, badges, pinned_guide_id, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(username) DO UPDATE SET
       avatar_url=excluded.avatar_url,
+      banner_url=excluded.banner_url,
       bio=excluded.bio,
       server=excluded.server,
       social_vk=excluded.social_vk,
@@ -288,6 +293,7 @@ export function saveAuthorProfile(profile: AuthorProfile): AuthorProfile {
   stmt.run(
     profile.username,
     profile.avatarUrl || '',
+    profile.bannerUrl || '',
     profile.bio || '',
     profile.server || '',
     profile.socialVk || '',
@@ -308,6 +314,7 @@ if (profileCount.count === 0) {
   saveAuthorProfile({
     username: 'DarkimuSSS',
     avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=DarkimuSSS',
+    bannerUrl: '',
     bio: 'Главный Администратор базы знаний CubixGuide. Создаю схемы алтарей драконов, гайды по Магия RPG и Автоматизации!',
     server: 'MagicRPG',
     socialVk: '',

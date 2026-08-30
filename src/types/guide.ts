@@ -128,6 +128,7 @@ export interface CustomAuthorLink {
 export interface AuthorProfile {
   username: string;
   avatarUrl?: string;
+  bannerUrl?: string;
   bio?: string;
   server?: string;
   socialVk?: string;
