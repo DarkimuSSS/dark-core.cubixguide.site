@@ -142,13 +142,9 @@ const supportLinks = [
       <p class="text-[10px] text-dark-muted font-mono">
         © {{ currentYear }} CubixGuide Wiki · Dark Core System
       </p>
-      <div class="flex items-center gap-4 text-[10px] text-dark-muted">
-        <a href="https://cubixworld.net" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition-colors">
-          cubixworld.net
-        </a>
-        <span class="text-[#26292d]">|</span>
-        <span>Powered by Vue 3 + Vite</span>
-      </div>
+      <a href="https://cubixworld.net" target="_blank" rel="noopener noreferrer" class="text-[10px] text-dark-muted hover:text-emerald-400 transition-colors font-mono">
+        cubixworld.net
+      </a>
     </div>
   </footer>
 </template>
