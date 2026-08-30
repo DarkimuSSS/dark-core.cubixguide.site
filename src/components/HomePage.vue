@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import type { Guide, Category } from '../types/guide';
 
@@ -29,6 +29,7 @@ const serverSearchQuery = ref('');
 
 const serverList = ref<string[]>([...DEFAULT_SERVERS]);
 const isLiveApiConnected = ref<boolean>(true);
+const authorProfilesMap = ref<Record<string, { avatarUrl?: string; isVerified?: boolean }>>({});
 
 const categoriesList = [
   { name: 'Все', icon: 'Grid', color: 'text-emerald-400' },
@@ -39,7 +40,25 @@ const categoriesList = [
   { name: 'Общий', icon: 'BookOpen', color: 'text-slate-400' }
 ];
 
+const fetchAuthorProfiles = async () => {
+  const authors = Array.from(new Set(props.guides.map(g => g.meta.author).filter(Boolean)));
+  for (const author of authors) {
+    if (authorProfilesMap.value[author.toLowerCase()]) continue;
+    try {
+      const res = await fetch(`/api/profiles/${encodeURIComponent(author)}`);
+      if (res.ok) {
+        const data = await res.json();
+        authorProfilesMap.value[author.toLowerCase()] = {
+          avatarUrl: data.avatarUrl,
+          isVerified: Boolean(data.isVerified)
+        };
+      }
+    } catch (e) {}
+  }
+};
+
 onMounted(async () => {
+  fetchAuthorProfiles();
   try {
     const res = await fetch('/api/servers');
     if (res.ok) {
@@ -53,6 +72,10 @@ onMounted(async () => {
     console.error('Error fetching live CubixWorld servers:', err);
   }
 });
+
+watch(() => props.guides, () => {
+  fetchAuthorProfiles();
+}, { deep: true });
 
 const filteredServers = computed(() => {
   const q = serverSearchQuery.value.toLowerCase().trim();
@@ -117,7 +140,7 @@ const getDifficultyBadge = (diff: string) => {
 
 <template>
   <div class="space-y-10 pb-24">
-    <!-- HERO HERO BANNER SECTION -->
+    <!-- HERO BANNER SECTION -->
     <section class="relative rounded-3xl overflow-hidden bg-gradient-to-b from-[#16181a] via-[#121416] to-[#0c0d0e] border border-[#26292d] p-8 sm:p-14 shadow-2xl">
       <!-- Glow Decor Circles -->
       <div class="absolute -top-24 -left-24 w-96 h-96 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none"></div>
@@ -312,60 +335,85 @@ const getDifficultyBadge = (diff: string) => {
           v-for="guide in filteredGuides"
           :key="guide.meta.id"
           @click="emit('select-guide', guide.meta.id)"
-          class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 p-6 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between space-y-5 shadow-lg hover:shadow-2xl hover:shadow-emerald-950/30 hover:-translate-y-1"
+          class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-lg hover:shadow-2xl hover:shadow-emerald-950/30 hover:-translate-y-1 overflow-hidden"
         >
-          <div class="space-y-4">
-            <!-- Badges Bar -->
-            <div class="flex items-center justify-between flex-wrap gap-2">
-              <span :class="['text-[11px] font-bold px-2.5 py-1 rounded-lg border', getCategoryColor(guide.meta.category)]">
-                {{ guide.meta.category }}
-              </span>
-
-              <div class="flex items-center gap-1.5">
-                <span v-if="guide.meta.server" class="text-[10px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-md">
-                  🎮 {{ guide.meta.server }}
-                </span>
-                <span :class="['text-[10px] font-semibold px-2 py-0.5 rounded-full border', getDifficultyBadge(guide.meta.difficulty)]">
-                  {{ guide.meta.difficulty }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Title -->
-            <h3 class="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
-              {{ guide.meta.title }}
-            </h3>
-
-            <!-- Summary Excerpt -->
-            <p class="text-xs text-dark-muted line-clamp-3 leading-relaxed">
-              {{ guide.meta.summary || 'Интерактивное руководство по сборке...' }}
-            </p>
+          <!-- CARD COVER BANNER / PRESET GRADIENT -->
+          <div v-if="guide.meta.coverUrl" class="h-36 w-full relative overflow-hidden flex-shrink-0">
+            <img :src="guide.meta.coverUrl" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/40 to-transparent"></div>
+          </div>
+          <div v-else-if="guide.meta.coverGradient" :class="['h-28 w-full relative overflow-hidden flex-shrink-0 bg-gradient-to-tr', guide.meta.coverGradient]">
+            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-transparent to-black/30"></div>
           </div>
 
-          <div class="space-y-4 pt-4 border-t border-[#26292d]">
-            <!-- Meta Author & Date with Clickable Author Profile -->
-            <div class="flex items-center justify-between text-[11px] text-dark-muted">
-              <div 
-                @click.stop="emit('open-author', guide.meta.author)"
-                class="flex items-center gap-1.5 hover:text-emerald-400 transition-colors cursor-pointer group/author"
-                title="Просмотреть профиль автора"
-              >
-                <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px] group-hover/author:bg-emerald-500 group-hover/author:text-white transition-all">
-                  {{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}
+          <div class="p-6 space-y-4 flex-1 flex flex-col justify-between">
+            <div class="space-y-3">
+              <!-- Badges Bar -->
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <span :class="['text-[11px] font-bold px-2.5 py-1 rounded-lg border shadow-sm', getCategoryColor(guide.meta.category)]">
+                  {{ guide.meta.category }}
+                </span>
+
+                <div class="flex items-center gap-1.5">
+                  <span v-if="guide.meta.server" class="text-[10px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded-lg shadow-sm">
+                    🎮 {{ guide.meta.server }}
+                  </span>
+                  <span :class="['text-[10px] font-semibold px-2 py-0.5 rounded-full border shadow-sm', getDifficultyBadge(guide.meta.difficulty)]">
+                    {{ guide.meta.difficulty }}
+                  </span>
                 </div>
-                <span class="font-medium text-slate-300 group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</span>
               </div>
-              <span>{{ guide.meta.updatedAt }}</span>
+
+              <!-- Title -->
+              <h3 class="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+                {{ guide.meta.title }}
+              </h3>
+
+              <!-- Summary Excerpt -->
+              <p class="text-xs text-dark-muted line-clamp-3 leading-relaxed">
+                {{ guide.meta.summary || 'Интерактивное руководство по сборке...' }}
+              </p>
             </div>
 
-            <!-- Action Button -->
-            <button
-              type="button"
-              class="w-full bg-[#121416] group-hover:bg-emerald-600 text-slate-300 group-hover:text-white border border-[#26292d] group-hover:border-emerald-500/50 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
-            >
-              <span>Читать гайд</span>
-              <IconRenderer name="ChevronRight" size="16" class="group-hover:translate-x-1 transition-transform" />
-            </button>
+            <div class="space-y-4 pt-4 border-t border-[#26292d]/80">
+              <!-- Live Author Avatar & Verified Checkmark Badge with Clickable Profile -->
+              <div class="flex items-center justify-between text-[11px] text-dark-muted">
+                <div 
+                  @click.stop="emit('open-author', guide.meta.author)"
+                  class="flex items-center gap-2 hover:text-emerald-400 transition-colors cursor-pointer group/author"
+                  title="Просмотреть профиль автора"
+                >
+                  <!-- Avatar with Glow Ring -->
+                  <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md flex-shrink-0">
+                    <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center overflow-hidden">
+                      <img v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" :src="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" class="w-full h-full object-cover" />
+                      <span v-else class="text-xs font-black text-emerald-400">{{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Author Nickname + Verified Badge -->
+                  <div class="flex items-center gap-1">
+                    <span class="font-bold text-slate-200 text-xs group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</span>
+                    <span v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.isVerified" class="w-3.5 h-3.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 flex items-center justify-center shadow-sm" title="Проверенный Автор">
+                      <svg class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                <span class="font-mono text-[10px] text-slate-400">{{ guide.meta.updatedAt }}</span>
+              </div>
+
+              <!-- Action Button -->
+              <button
+                type="button"
+                class="w-full bg-[#121416] group-hover:bg-emerald-600 text-slate-300 group-hover:text-white border border-[#26292d] group-hover:border-emerald-500/50 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                <span>Читать гайд</span>
+                <IconRenderer name="ChevronRight" size="16" class="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -112,6 +112,8 @@ export interface GuideMeta {
   updatedAt: string;
   published: boolean;
   server?: string;
+  coverUrl?: string;
+  coverGradient?: string;
 }
 
 export interface Guide {

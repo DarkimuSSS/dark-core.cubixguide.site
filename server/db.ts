@@ -32,6 +32,8 @@ db.exec(`
     updated_at TEXT NOT NULL,
     published INTEGER NOT NULL DEFAULT 1,
     server TEXT,
+    cover_url TEXT,
+    cover_gradient TEXT,
     blocks TEXT NOT NULL
   );
 
@@ -57,6 +59,8 @@ try { db.exec(`ALTER TABLE users ADD COLUMN can_create_guides INTEGER NOT NULL D
 try { db.exec(`ALTER TABLE users ADD COLUMN is_verified INTEGER NOT NULL DEFAULT 0;`); } catch (e) {}
 try { db.exec(`ALTER TABLE profiles ADD COLUMN custom_links TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE profiles ADD COLUMN banner_url TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE guides ADD COLUMN cover_url TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE guides ADD COLUMN cover_gradient TEXT;`); } catch (e) {}
 
 // Password hashing helper (SHA-256 with salt)
 export function hashPassword(password: string): string {

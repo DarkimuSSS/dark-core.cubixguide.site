@@ -41,7 +41,9 @@ function formatGuideRow(row: any): Guide {
       summary: row.summary || '',
       updatedAt: row.updated_at,
       published: Boolean(row.published),
-      server: row.server || undefined
+      server: row.server || undefined,
+      coverUrl: row.cover_url || undefined,
+      coverGradient: row.cover_gradient || undefined
     },
     blocks: JSON.parse(row.blocks || '[]')
   };
@@ -240,8 +242,8 @@ app.post('/api/guides', (req, res) => {
     }
 
     const stmt = db.prepare(`
-      INSERT INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, server, blocks)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, server, cover_url, cover_gradient, blocks)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -255,6 +257,8 @@ app.post('/api/guides', (req, res) => {
       guide.meta.updatedAt || new Date().toISOString().split('T')[0],
       guide.meta.published ? 1 : 0,
       guide.meta.server || null,
+      guide.meta.coverUrl || null,
+      guide.meta.coverGradient || null,
       JSON.stringify(guide.blocks || [])
     );
 
@@ -272,7 +276,7 @@ app.put('/api/guides/:id', (req, res) => {
 
     const stmt = db.prepare(`
       UPDATE guides
-      SET title = ?, category = ?, author = ?, co_authors = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, server = ?, blocks = ?
+      SET title = ?, category = ?, author = ?, co_authors = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, server = ?, cover_url = ?, cover_gradient = ?, blocks = ?
       WHERE id = ?
     `);
 
@@ -286,6 +290,8 @@ app.put('/api/guides/:id', (req, res) => {
       guide.meta.updatedAt || new Date().toISOString().split('T')[0],
       guide.meta.published ? 1 : 0,
       guide.meta.server || null,
+      guide.meta.coverUrl || null,
+      guide.meta.coverGradient || null,
       JSON.stringify(guide.blocks || []),
       guideId
     );

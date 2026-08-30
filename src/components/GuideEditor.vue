@@ -155,6 +155,18 @@ const updateServerTag = (val: string) => {
   pushHistoryState(updated);
 };
 
+const updateCoverUrl = (val: string) => {
+  const updated = { ...props.guide, meta: { ...props.guide.meta, coverUrl: val } };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
+};
+
+const updateCoverGradient = (val: string) => {
+  const updated = { ...props.guide, meta: { ...props.guide.meta, coverGradient: val } };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
+};
+
 // Block Operations
 const updateBlock = (updatedBlock: GuideBlock) => {
   const index = props.guide.blocks.findIndex(b => b.id === updatedBlock.id);
@@ -996,6 +1008,35 @@ const scrollToBlockInEditor = (id: string) => {
             rows="2"
             class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-accent text-slate-200 text-xs rounded-xl p-3 focus:outline-none transition-all placeholder:text-dark-muted/50 resize-y"
           ></textarea>
+        </div>
+      </div>
+
+      <!-- Card Cover Banner & Gradient Settings -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#26292d]">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-purple-300 mb-1.5">Баннер-обложка карточки (URL)</label>
+          <input
+            type="text"
+            :value="guide.meta.coverUrl || ''"
+            @input="updateCoverUrl(($event.target as HTMLInputElement).value)"
+            placeholder="https://example.com/cover.jpg..."
+            class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-medium rounded-lg px-3 py-2 focus:outline-none focus:border-purple-400"
+          />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-purple-300 mb-1.5">Или Градиент Обложки</label>
+          <select
+            :value="guide.meta.coverGradient || ''"
+            @change="updateCoverGradient(($event.target as HTMLSelectElement).value)"
+            class="w-full bg-[#0c0d0e] border border-[#26292d] text-purple-200 text-xs font-semibold rounded-lg px-3 py-2 focus:outline-none focus:border-purple-400"
+          >
+            <option value="">(Без пресет-градиента)</option>
+            <option value="from-emerald-600 via-teal-700 to-cyan-900">Изумрудная Магия (Emerald-Teal)</option>
+            <option value="from-purple-700 via-indigo-800 to-slate-950">Космическая Бездна (Purple-Indigo)</option>
+            <option value="from-rose-600 via-orange-600 to-amber-700">Пламя Дракона (Dragon Fire)</option>
+            <option value="from-cyan-600 via-blue-700 to-indigo-950">Арканический Лёд (Arcane Ice)</option>
+          </select>
         </div>
       </div>
 
