@@ -330,7 +330,7 @@ const getDifficultyBadge = (diff: string) => {
         <p class="text-xs text-dark-muted">Попробуйте изменить поисковый запрос, категорию или выбранный сервер</p>
       </div>
 
-      <!-- SLEEK GUIDE CARDS GRID WITH EXTENDED COVER BANNER HEIGHT DOWNWARDS -->
+      <!-- ULTRA COMPACT SLEEK GUIDE CARDS GRID WITH BADGES OVERLAID ON BANNER -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <div
           v-for="guide in filteredGuides"
@@ -338,34 +338,35 @@ const getDifficultyBadge = (diff: string) => {
           @click="emit('select-guide', guide.meta.id)"
           class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl hover:shadow-emerald-950/30 hover:-translate-y-1 overflow-hidden"
         >
-          <!-- EXTENDED HEIGHT COVER BANNER DOWNWARDS (h-40 sm:h-44) -->
-          <div v-if="guide.meta.coverUrl" class="h-40 sm:h-44 w-full relative overflow-hidden flex-shrink-0">
-            <img :src="guide.meta.coverUrl" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" />
-            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/20 to-transparent"></div>
-          </div>
-          <div v-else-if="guide.meta.coverGradient" :class="['h-28 sm:h-32 w-full relative overflow-hidden flex-shrink-0 bg-gradient-to-tr', guide.meta.coverGradient]">
-            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-transparent to-black/30"></div>
+          <!-- COVER BANNER CONTAINER WITH BADGES OVERLAID ON TOP -->
+          <div class="h-28 sm:h-32 w-full relative overflow-hidden flex-shrink-0">
+            <img v-if="guide.meta.coverUrl" :src="guide.meta.coverUrl" class="w-full h-full object-cover object-[center_30%] group-hover:scale-105 transition-transform duration-500" />
+            <div v-else-if="guide.meta.coverGradient" :class="['w-full h-full bg-gradient-to-tr', guide.meta.coverGradient]"></div>
+            <div v-else class="w-full h-full bg-gradient-to-r from-slate-900 via-slate-800 to-[#121416]"></div>
+
+            <!-- Gradient Shadow Overlay for Readable Badges -->
+            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/20 to-black/30 pointer-events-none"></div>
+
+            <!-- BADGES OVERLAID DIRECTLY ON THE BANNER -->
+            <div class="absolute inset-x-0 bottom-2.5 px-4 sm:px-5 z-10 flex items-center justify-between flex-wrap gap-1.5">
+              <span :class="['text-[10px] font-bold px-2 py-0.5 rounded-md border shadow-md backdrop-blur-md', getCategoryColor(guide.meta.category)]">
+                {{ guide.meta.category }}
+              </span>
+
+              <div class="flex items-center gap-1">
+                <span v-if="guide.meta.server" class="text-[9px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-1.5 py-0.5 rounded shadow-md backdrop-blur-md">
+                  🎮 {{ guide.meta.server }}
+                </span>
+                <span :class="['text-[9px] font-semibold px-1.5 py-0.5 rounded-full border shadow-md backdrop-blur-md', getDifficultyBadge(guide.meta.difficulty)]">
+                  {{ guide.meta.difficulty }}
+                </span>
+              </div>
+            </div>
           </div>
 
           <!-- CARD BODY -->
           <div class="p-4 sm:p-5 space-y-3 flex-1 flex flex-col justify-between">
-            <div class="space-y-2.5">
-              <!-- Badges Bar -->
-              <div class="flex items-center justify-between flex-wrap gap-1.5">
-                <span :class="['text-[10px] font-bold px-2 py-0.5 rounded-md border shadow-sm', getCategoryColor(guide.meta.category)]">
-                  {{ guide.meta.category }}
-                </span>
-
-                <div class="flex items-center gap-1">
-                  <span v-if="guide.meta.server" class="text-[9px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-1.5 py-0.5 rounded shadow-sm">
-                    🎮 {{ guide.meta.server }}
-                  </span>
-                  <span :class="['text-[9px] font-semibold px-1.5 py-0.5 rounded-full border shadow-sm', getDifficultyBadge(guide.meta.difficulty)]">
-                    {{ guide.meta.difficulty }}
-                  </span>
-                </div>
-              </div>
-
+            <div class="space-y-1.5">
               <!-- Title -->
               <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
                 {{ guide.meta.title }}
@@ -378,7 +379,7 @@ const getDifficultyBadge = (diff: string) => {
             </div>
 
             <!-- COMPACT BOTTOM ROW: Author Avatar, Verified Checkmark, Date & Hover Arrow -->
-            <div class="flex items-center justify-between pt-3 border-t border-[#26292d]/80 text-[11px]">
+            <div class="flex items-center justify-between pt-2.5 border-t border-[#26292d]/80 text-[11px]">
               <div 
                 @click.stop="emit('open-author', guide.meta.author)"
                 class="flex items-center gap-2 hover:text-emerald-400 transition-colors cursor-pointer group/author"
