@@ -81,10 +81,10 @@ const getVariantClass = (variant?: BlockVariant) => {
     <!-- Main Layout Container with Expanded 12-Column Grid -->
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
       
-      <!-- WIDER EXPANDED SIDEBAR WITH LIVE SEARCH -->
+      <!-- WIDER EXPANDED SIDEBAR WITH INDEPENDENT SCROLLING -->
       <aside :class="[
-        'col-span-1 lg:col-span-3 fixed lg:sticky top-20 z-40 lg:z-0 bg-[#16181a] lg:bg-transparent border lg:border-none border-[#26292d] rounded-2xl p-4 sm:p-5 transition-all duration-300 max-h-[calc(100vh-6rem)] overflow-y-auto',
-        isMobileNavOpen ? 'left-4 shadow-2xl w-80' : '-left-96 lg:left-0 w-full'
+        'col-span-1 lg:col-span-3 lg:sticky lg:top-20 z-40 lg:z-0 bg-[#16181a] border border-[#26292d] rounded-2xl p-4 sm:p-5 transition-all duration-300 lg:h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar shadow-xl',
+        isMobileNavOpen ? 'fixed top-20 left-4 shadow-2xl w-80 max-h-[calc(100vh-6rem)]' : 'hidden lg:block w-full'
       ]">
         <div class="space-y-5">
           <div class="flex items-center justify-between pb-3 border-b border-[#26292d]">
