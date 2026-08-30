@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import IconRenderer from './IconRenderer.vue';
+import ConfirmModal from './ConfirmModal.vue';
 import type { AuthorProfile, Guide } from '../types/guide';
 
 const props = defineProps<{
@@ -38,6 +39,10 @@ const showNewAuthorPassword = ref(false);
 const adminMessage = ref('');
 const registeredAuthorsList = ref<any[]>([]);
 const authorAvatarsMap = ref<Record<string, string>>({});
+
+// Custom Confirm Modal State for Deletion
+const isDeleteConfirmOpen = ref(false);
+const authorToDelete = ref<string | null>(null);
 
 // Admin Password Reset Modal State
 const resetTargetUsername = ref<string | null>(null);
@@ -291,10 +296,16 @@ const handleAdminResetAuthorPassword = async (targetUser: string) => {
   }
 };
 
-const handleAdminDeleteAuthor = async (targetUser: string) => {
-  if (!confirm(`Вы действительно хотите удалить автора "${targetUser}"? Данное действие нельзя отменить!`)) {
-    return;
-  }
+const promptDeleteAuthor = (targetUser: string) => {
+  authorToDelete.value = targetUser;
+  isDeleteConfirmOpen.value = true;
+};
+
+const confirmDeleteAuthor = async () => {
+  if (!authorToDelete.value) return;
+  const targetUser = authorToDelete.value;
+  isDeleteConfirmOpen.value = false;
+  authorToDelete.value = null;
   adminMessage.value = '';
 
   try {
@@ -376,6 +387,18 @@ const handleBannerFileUpload = (e: Event) => {
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fadeIn">
     
+    <!-- CUSTOM DARK THEME CONFIRMATION MODAL -->
+    <ConfirmModal
+      :isOpen="isDeleteConfirmOpen"
+      title="Удаление аккаунта автора"
+      :message="`Вы действительно хотите удалить автора &quot;${authorToDelete}&quot;? Данное действие нельзя отменить!`"
+      confirmText="Удалить автора"
+      cancelText="Отмена"
+      type="danger"
+      @confirm="confirmDeleteAuthor"
+      @cancel="isDeleteConfirmOpen = false; authorToDelete = null;"
+    />
+
     <!-- Outer Relative Card Wrapper for Precise Floating Action Dock -->
     <div class="relative w-full max-w-2xl">
       
@@ -726,8 +749,8 @@ const handleBannerFileUpload = (e: Event) => {
                         <button
                           v-if="!a.isAdmin && a.username.toLowerCase() !== 'darkimusss'"
                           type="button"
-                          @click="handleAdminDeleteAuthor(a.username)"
-                          class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1"
+                          @click="promptDeleteAuthor(a.username)"
+                          class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer"
                           title="Удалить автора из базы"
                         >
                           <IconRenderer name="Trash2" size="12" />
