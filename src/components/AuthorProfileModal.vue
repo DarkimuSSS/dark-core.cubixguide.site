@@ -266,8 +266,8 @@ const handleAvatarFileUpload = (e: Event) => {
                   <p class="text-xs text-dark-muted pt-0.5">Автор {{ authorGuides.length }} опубликованных гайдов</p>
                 </div>
 
-                <!-- Action Buttons: Admin, Password, Edit Profile -->
-                <div class="flex items-center gap-2 flex-shrink-0">
+                <!-- Shifted Left Action Buttons: Admin, Password, Edit Profile with Bottom Tooltips -->
+                <div class="flex items-center gap-2 flex-shrink-0 sm:mr-8">
                   <!-- 1. Admin Panel Button -->
                   <div v-if="isAdmin" class="relative group/tool">
                     <button
@@ -277,7 +277,8 @@ const handleAvatarFileUpload = (e: Event) => {
                     >
                       <IconRenderer name="Shield" size="18" />
                     </button>
-                    <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+                    <!-- Bottom Tooltip to avoid colliding with top-right close X button -->
+                    <div class="absolute top-full mt-2 left-1/2 -translate-x-1/2 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
                       <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
                         {{ isAdminPanelOpen ? 'Закрыть Админку' : 'Админ Панель' }}
                       </div>
@@ -293,7 +294,8 @@ const handleAvatarFileUpload = (e: Event) => {
                     >
                       <IconRenderer name="Lock" size="18" />
                     </button>
-                    <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+                    <!-- Bottom Tooltip -->
+                    <div class="absolute top-full mt-2 left-1/2 -translate-x-1/2 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
                       <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
                         Сменить пароль
                       </div>
@@ -309,7 +311,8 @@ const handleAvatarFileUpload = (e: Event) => {
                     >
                       <IconRenderer name="Edit3" size="18" />
                     </button>
-                    <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+                    <!-- Bottom Tooltip -->
+                    <div class="absolute top-full mt-2 right-0 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
                       <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
                         Редактировать профиль
                       </div>
