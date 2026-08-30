@@ -40,6 +40,24 @@ const isHelpModalOpen = ref(false);
 const isTreeModalOpen = ref(false);
 
 const serverList = ref<string[]>([...DEFAULT_SERVERS]);
+const isEditorServerDropdownOpen = ref(false);
+const editorServerSearch = ref('');
+
+const filteredEditorServers = computed(() => {
+  const q = editorServerSearch.value.toLowerCase().trim();
+  if (!q) return serverList.value;
+  return serverList.value.filter(s => s.toLowerCase().includes(q));
+});
+
+const getServerIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('hitech') || n.includes('industrial') || n.includes('gregtech')) return 'Zap';
+  if (n.includes('magic') || n.includes('iceandfire')) return 'Sparkles';
+  if (n.includes('sky') || n.includes('oneblock') || n.includes('ocean')) return 'Box';
+  if (n.includes('create')) return 'Layers';
+  if (n.includes('pixelmon') || n.includes('cobblemon')) return 'Grid';
+  return 'Box';
+};
 
 const activeResizingBlockId = ref<string | null>(null);
 
@@ -1089,14 +1107,76 @@ const scrollToBlockInEditor = (id: string) => {
 
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Сервер CubixWorld</label>
-          <select
-            :value="guide.meta.server || ''"
-            @change="updateServerTag(($event.target as HTMLSelectElement).value)"
-            class="w-full bg-[#0c0d0e] border border-[#26292d] text-cyan-300 text-xs font-semibold rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-accent"
-          >
-            <option value="">(Все сервера)</option>
-            <option v-for="srv in serverList" :key="srv" :value="srv">{{ srv }}</option>
-          </select>
+          <!-- Custom multi-column dropdown -->
+          <div class="relative">
+            <button
+              type="button"
+              @click="isEditorServerDropdownOpen = !isEditorServerDropdownOpen"
+              class="w-full bg-[#0c0d0e] hover:bg-[#121416] border border-[#26292d] hover:border-emerald-500/50 text-xs font-bold rounded-xl px-3 py-2.5 flex items-center justify-between transition-all"
+            >
+              <div class="flex items-center gap-2 truncate">
+                <span class="text-emerald-400">🎮</span>
+                <span :class="guide.meta.server ? 'text-cyan-300' : 'text-dark-muted'">
+                  {{ guide.meta.server || '(Все сервера)' }}
+                </span>
+              </div>
+              <IconRenderer name="ChevronDown" size="14" :class="['text-dark-muted transition-transform duration-200 shrink-0', isEditorServerDropdownOpen ? 'rotate-180 text-emerald-400' : '']" />
+            </button>
+
+            <!-- Wide multi-column dropdown -->
+            <div
+              v-if="isEditorServerDropdownOpen"
+              class="absolute top-full left-0 mt-1 bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-3 z-50 space-y-2 w-[420px] max-w-[90vw] animate-fadeIn"
+            >
+              <!-- Search -->
+              <div class="relative">
+                <input
+                  type="text"
+                  v-model="editorServerSearch"
+                  :placeholder="`Поиск по ${serverList.length} серверам...`"
+                  class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:border-emerald-500/60 transition-all"
+                />
+                <IconRenderer name="Search" size="13" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-muted" />
+              </div>
+
+              <!-- All servers option -->
+              <button
+                type="button"
+                @click="updateServerTag(''); isEditorServerDropdownOpen = false; editorServerSearch = '';"
+                :class="[
+                  'w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-all',
+                  !guide.meta.server
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : 'text-slate-300 hover:bg-[#212429] hover:text-white border border-[#26292d]'
+                ]"
+              >
+                <div class="flex items-center gap-2">
+                  <span>🌐</span>
+                  <span>(Все сервера)</span>
+                </div>
+                <IconRenderer v-if="!guide.meta.server" name="Check" size="14" />
+              </button>
+
+              <!-- Grid: 3 columns -->
+              <div class="grid grid-cols-3 gap-1.5 max-h-52 overflow-y-auto custom-scrollbar pr-1">
+                <button
+                  v-for="srv in filteredEditorServers"
+                  :key="srv"
+                  type="button"
+                  @click="updateServerTag(srv); isEditorServerDropdownOpen = false; editorServerSearch = '';"
+                  :class="[
+                    'text-left px-2.5 py-2 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 transition-all truncate',
+                    guide.meta.server === srv
+                      ? 'bg-emerald-600 text-white shadow-md'
+                      : 'text-slate-300 hover:bg-[#212429] hover:text-white border border-[#26292d]'
+                  ]"
+                >
+                  <IconRenderer :name="getServerIcon(srv)" size="13" :class="guide.meta.server === srv ? 'text-white shrink-0' : 'text-cyan-400 shrink-0'" />
+                  <span class="truncate">{{ srv }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div>
