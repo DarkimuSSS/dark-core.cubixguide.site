@@ -335,7 +335,7 @@ const handleBannerFileUpload = (e: Event) => {
 </script>
 
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn">
+  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fadeIn">
     
     <!-- Outer Relative Card Wrapper for Precise Floating Action Dock -->
     <div class="relative w-full max-w-2xl">
@@ -408,13 +408,13 @@ const handleBannerFileUpload = (e: Event) => {
         </div>
       </div>
 
-      <!-- EXACT ORIGINAL COMPACT MODAL CONTAINER WITH FULL BODY BANNER BACKGROUND -->
+      <!-- EXACT ORIGINAL COMPACT MODAL CONTAINER WITH HIGH VISIBILITY FULL BODY BANNER -->
       <div class="bg-[#16181a] border border-[#26292d] w-full rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar relative overflow-hidden">
 
-        <!-- FULL BODY BANNER BACKGROUND LAYER -->
+        <!-- VIBRANT HIGH-VISIBILITY BODY BANNER BACKGROUND LAYER -->
         <div v-if="profile.bannerUrl" class="absolute inset-0 pointer-events-none z-0">
-          <img :src="profile.bannerUrl" class="w-full h-full object-cover opacity-35" />
-          <div class="absolute inset-0 bg-gradient-to-b from-[#16181a]/70 via-[#16181a]/90 to-[#16181a]"></div>
+          <img :src="profile.bannerUrl" class="w-full h-full object-cover opacity-85" />
+          <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-[#16181a]/95"></div>
         </div>
 
         <!-- MODAL CONTENT LAYER (FLOATING OVER THE BODY BANNER BACKGROUND) -->
@@ -428,10 +428,10 @@ const handleBannerFileUpload = (e: Event) => {
 
           <template v-else>
             <!-- PROFILE HEADER BADGE -->
-            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-[#26292d]">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-[#26292d]/80">
               <!-- Avatar with Glow -->
               <div class="relative flex-shrink-0">
-                <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-2xl shadow-emerald-950/60 overflow-hidden">
+                <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-2xl shadow-black/80 overflow-hidden ring-2 ring-black/40">
                   <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center overflow-hidden">
                     <img v-if="profile.avatarUrl" :src="profile.avatarUrl" class="w-full h-full object-cover" />
                     <div v-else class="text-3xl font-black text-emerald-400">
@@ -448,13 +448,13 @@ const handleBannerFileUpload = (e: Event) => {
               <div class="space-y-3 text-center sm:text-left flex-1 min-w-0 pr-8">
                 <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-3">
                   <div class="min-w-0">
-                    <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                    <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2 flex-wrap drop-shadow-md">
                       <span>{{ profile.username }}</span>
-                      <span v-if="profile.server" class="text-xs font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2.5 py-0.5 rounded-lg">
+                      <span v-if="profile.server" class="text-xs font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-2.5 py-0.5 rounded-lg shadow-md backdrop-blur-md">
                         🎮 {{ profile.server }}
                       </span>
                     </h2>
-                    <p class="text-xs text-dark-muted pt-0.5">Автор {{ authorGuides.length }} опубликованных гайдов</p>
+                    <p class="text-xs text-slate-300 font-medium pt-0.5 drop-shadow">Автор {{ authorGuides.length }} опубликованных гайдов</p>
                   </div>
                 </div>
 
@@ -463,14 +463,14 @@ const handleBannerFileUpload = (e: Event) => {
                   <span
                     v-for="badge in profile.badges"
                     :key="badge"
-                    class="text-[11px] font-bold bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full shadow-inner"
+                    class="text-[11px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 px-2.5 py-1 rounded-full shadow-md backdrop-blur-md"
                   >
                     {{ badge }}
                   </span>
                 </div>
 
                 <!-- Bio Text -->
-                <p v-if="profile.bio" class="text-xs text-slate-300 leading-relaxed max-w-lg whitespace-pre-line">
+                <p v-if="profile.bio" class="text-xs text-slate-100 font-medium leading-relaxed max-w-lg whitespace-pre-line drop-shadow-[#000_0_1px_4px]">
                   {{ profile.bio }}
                 </p>
 
@@ -481,14 +481,14 @@ const handleBannerFileUpload = (e: Event) => {
                       v-if="lnk.url.startsWith('http://') || lnk.url.startsWith('https://')"
                       :href="lnk.url"
                       target="_blank"
-                      class="px-3.5 py-1.5 bg-[#121416]/90 hover:bg-[#181d22] border border-cyan-500/30 hover:border-cyan-400 text-cyan-400 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all shadow-sm group/lnk backdrop-blur-sm"
+                      class="px-3.5 py-1.5 bg-[#0c0d0e]/85 hover:bg-[#181d22] border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-md group/lnk backdrop-blur-md"
                     >
                       <span>{{ lnk.label }}</span>
                       <IconRenderer name="ExternalLink" size="12" class="group-hover/lnk:translate-x-0.5 transition-transform" />
                     </a>
                     <span
                       v-else
-                      class="px-3.5 py-1.5 bg-[#121416]/90 border border-[#26292d] text-purple-300 text-xs font-mono rounded-xl shadow-sm backdrop-blur-sm"
+                      class="px-3.5 py-1.5 bg-[#0c0d0e]/85 border border-[#26292d] text-purple-300 text-xs font-mono rounded-xl shadow-md backdrop-blur-md"
                     >
                       {{ lnk.label }}: {{ lnk.url }}
                     </span>
@@ -498,7 +498,7 @@ const handleBannerFileUpload = (e: Event) => {
             </div>
 
             <!-- CHANGE PASSWORD FORM (Self Service for Author) -->
-            <div v-if="isChangePasswordOpen && isOwnProfile" class="space-y-4 bg-cyan-950/40 border border-cyan-500/40 p-5 rounded-2xl animate-fadeIn backdrop-blur-md">
+            <div v-if="isChangePasswordOpen && isOwnProfile" class="space-y-4 bg-[#0c0d0e]/90 border border-cyan-500/40 p-5 rounded-2xl animate-fadeIn backdrop-blur-md shadow-2xl">
               <div class="flex items-center justify-between border-b border-cyan-500/30 pb-2">
                 <h3 class="text-xs font-extrabold text-cyan-300 uppercase tracking-wider flex items-center gap-2">
                   <IconRenderer name="Lock" size="16" class="text-cyan-400" />
@@ -518,7 +518,7 @@ const handleBannerFileUpload = (e: Event) => {
                       :type="showOldPassword ? 'text' : 'password'"
                       v-model="oldPassword"
                       placeholder="Введите текущий..."
-                      class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-cyan-400"
+                      class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-cyan-400"
                     />
                     <button type="button" @click="showOldPassword = !showOldPassword" class="absolute right-2 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1">
                       <IconRenderer :name="showOldPassword ? 'EyeOff' : 'Eye'" size="14" class="text-cyan-400" />
@@ -533,7 +533,7 @@ const handleBannerFileUpload = (e: Event) => {
                       :type="showNewPassword ? 'text' : 'password'"
                       v-model="newPassword"
                       placeholder="Новый пароль..."
-                      class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-cyan-400"
+                      class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-cyan-400"
                     />
                     <button type="button" @click="showNewPassword = !showNewPassword" class="absolute right-2 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1">
                       <IconRenderer :name="showNewPassword ? 'EyeOff' : 'Eye'" size="14" class="text-cyan-400" />
@@ -547,7 +547,7 @@ const handleBannerFileUpload = (e: Event) => {
                     :type="showNewPassword ? 'text' : 'password'"
                     v-model="confirmNewPassword"
                     placeholder="Подтвердите новый..."
-                    class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-cyan-400"
+                    class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-cyan-400"
                   />
                 </div>
               </div>
@@ -563,7 +563,7 @@ const handleBannerFileUpload = (e: Event) => {
             </div>
 
             <!-- ADMIN PANEL: AUTHOR & PERMISSIONS MANAGEMENT (Super Admin Only) -->
-            <div v-if="isAdminPanelOpen && isAdmin" class="space-y-4 bg-purple-950/40 border border-purple-500/40 p-5 rounded-2xl backdrop-blur-md">
+            <div v-if="isAdminPanelOpen && isAdmin" class="space-y-4 bg-[#0c0d0e]/90 border border-purple-500/40 p-5 rounded-2xl backdrop-blur-md shadow-2xl">
               <div class="flex items-center justify-between border-b border-purple-500/30 pb-2">
                 <h3 class="text-xs font-extrabold text-purple-300 uppercase tracking-wider flex items-center gap-2">
                   <IconRenderer name="Shield" size="16" class="text-purple-400" />
@@ -576,7 +576,7 @@ const handleBannerFileUpload = (e: Event) => {
               </div>
 
               <!-- Registration Sub-Form -->
-              <div class="space-y-3 bg-[#0c0d0e]/90 p-4 rounded-xl border border-[#26292d]">
+              <div class="space-y-3 bg-[#16181a]/90 p-4 rounded-xl border border-[#26292d]">
                 <div class="text-[11px] font-bold text-purple-300 uppercase">Ручное создание нового автора</div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -585,7 +585,7 @@ const handleBannerFileUpload = (e: Event) => {
                       type="text"
                       v-model="newAuthorUsername"
                       placeholder="например: AlexCraft..."
-                      class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500"
+                      class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500"
                     />
                   </div>
 
@@ -596,7 +596,7 @@ const handleBannerFileUpload = (e: Event) => {
                         :type="showNewAuthorPassword ? 'text' : 'password'"
                         v-model="newAuthorPassword"
                         placeholder="Задайте пароль..."
-                        class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-9 py-2 focus:outline-none focus:border-purple-500"
+                        class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-9 py-2 focus:outline-none focus:border-purple-500"
                       />
                       <button
                         type="button"
@@ -625,7 +625,7 @@ const handleBannerFileUpload = (e: Event) => {
                   <div
                     v-for="a in registeredAuthorsList"
                     :key="a.username"
-                    class="p-3.5 rounded-xl bg-[#0c0d0e]/90 border border-[#26292d] space-y-2.5 text-xs"
+                    class="p-3.5 rounded-xl bg-[#16181a]/90 border border-[#26292d] space-y-2.5 text-xs"
                   >
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div class="flex items-center gap-2">
@@ -663,7 +663,7 @@ const handleBannerFileUpload = (e: Event) => {
 
                     <!-- GRANULAR PERMISSION TOGGLES -->
                     <div v-if="!a.isAdmin" class="flex flex-wrap items-center gap-3 pt-2 border-t border-[#26292d]">
-                      <label class="flex items-center gap-2 cursor-pointer bg-[#16181a] px-3 py-1.5 rounded-xl border border-[#26292d] hover:border-purple-500/40 transition-all">
+                      <label class="flex items-center gap-2 cursor-pointer bg-[#0c0d0e] px-3 py-1.5 rounded-xl border border-[#26292d] hover:border-purple-500/40 transition-all">
                         <input
                           type="checkbox"
                           :checked="a.canEditOthers"
@@ -673,7 +673,7 @@ const handleBannerFileUpload = (e: Event) => {
                         <span class="text-[11px] text-purple-200 font-semibold">✏️ Разрешить редактировать ЧУЖИЕ гайды</span>
                       </label>
 
-                      <label class="flex items-center gap-2 cursor-pointer bg-[#16181a] px-3 py-1.5 rounded-xl border border-[#26292d] hover:border-emerald-500/40 transition-all">
+                      <label class="flex items-center gap-2 cursor-pointer bg-[#0c0d0e] px-3 py-1.5 rounded-xl border border-[#26292d] hover:border-emerald-500/40 transition-all">
                         <input
                           type="checkbox"
                           :checked="a.canCreateGuides"
@@ -691,7 +691,7 @@ const handleBannerFileUpload = (e: Event) => {
                           :type="showResetPasswordToggle ? 'text' : 'password'"
                           v-model="resetNewPassword"
                           placeholder="Задайте новый пароль..."
-                          class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-lg pl-2.5 pr-7 py-1.5 focus:outline-none focus:border-cyan-400"
+                          class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-lg pl-2.5 pr-7 py-1.5 focus:outline-none focus:border-cyan-400"
                         />
                         <button type="button" @click="showResetPasswordToggle = !showResetPasswordToggle" class="absolute right-1.5 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-0.5">
                           <IconRenderer :name="showResetPasswordToggle ? 'EyeOff' : 'Eye'" size="12" />
@@ -711,7 +711,7 @@ const handleBannerFileUpload = (e: Event) => {
             </div>
 
             <!-- EDITING MODE FORM -->
-            <div v-if="isEditing" class="space-y-4 bg-[#0c0d0e]/90 border border-[#26292d] p-5 rounded-2xl backdrop-blur-md">
+            <div v-if="isEditing" class="space-y-4 bg-[#0c0d0e]/95 border border-[#26292d] p-5 rounded-2xl backdrop-blur-md shadow-2xl">
               <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-[#26292d] pb-2">
                 <IconRenderer name="Sliders" size="14" class="text-emerald-400" />
                 Редактирование профиля автора
@@ -882,14 +882,14 @@ const handleBannerFileUpload = (e: Event) => {
 
             <!-- PINNED GUIDE SECTION -->
             <div v-if="pinnedGuide" class="space-y-3">
-              <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+              <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2 drop-shadow">
                 <IconRenderer name="Star" size="14" />
                 Прикрепленное руководство автора
               </h3>
 
               <div
                 @click="emit('select-guide', pinnedGuide.meta.id); emit('close');"
-                class="group bg-gradient-to-r from-amber-500/10 via-[#121416]/90 to-[#121416]/90 border border-amber-500/30 p-5 rounded-2xl cursor-pointer hover:border-amber-400 transition-all flex items-center justify-between shadow-lg backdrop-blur-sm"
+                class="group bg-[#0c0d0e]/85 hover:bg-[#121416] border border-amber-500/40 p-5 rounded-2xl cursor-pointer hover:border-amber-400 transition-all flex items-center justify-between shadow-lg backdrop-blur-md"
               >
                 <div class="space-y-1">
                   <span class="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md">
@@ -898,7 +898,7 @@ const handleBannerFileUpload = (e: Event) => {
                   <h4 class="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
                     {{ pinnedGuide.meta.title }}
                   </h4>
-                  <p class="text-xs text-dark-muted line-clamp-1">
+                  <p class="text-xs text-slate-300 line-clamp-1">
                     {{ pinnedGuide.meta.summary }}
                   </p>
                 </div>
@@ -908,12 +908,12 @@ const handleBannerFileUpload = (e: Event) => {
 
             <!-- ALL AUTHOR'S GUIDES LIST -->
             <div class="space-y-4 pt-2">
-              <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-[#26292d] pb-2">
+              <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-[#26292d]/80 pb-2 drop-shadow">
                 <IconRenderer name="BookOpen" size="14" class="text-emerald-400" />
                 Все гайды автора ({{ authorGuides.length }})
               </h3>
 
-              <div v-if="authorGuides.length === 0" class="text-center py-8 bg-[#0c0d0e]/90 rounded-2xl border border-[#26292d] text-xs text-dark-muted backdrop-blur-sm">
+              <div v-if="authorGuides.length === 0" class="text-center py-8 bg-[#0c0d0e]/85 rounded-2xl border border-[#26292d] text-xs text-dark-muted backdrop-blur-md">
                 У этого автора пока нет других опубликованных гайдов
               </div>
 
@@ -922,13 +922,13 @@ const handleBannerFileUpload = (e: Event) => {
                   v-for="g in authorGuides"
                   :key="g.meta.id"
                   @click="emit('select-guide', g.meta.id); emit('close');"
-                  class="group p-4 bg-[#0c0d0e]/90 hover:bg-[#121416] border border-[#26292d] hover:border-emerald-500/50 rounded-xl cursor-pointer transition-all space-y-2 backdrop-blur-sm"
+                  class="group p-4 bg-[#0c0d0e]/85 hover:bg-[#121416] border border-[#26292d] hover:border-emerald-500/50 rounded-xl cursor-pointer transition-all space-y-2 backdrop-blur-md shadow-md"
                 >
                   <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded">
+                    <span class="text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded">
                       {{ g.meta.category }}
                     </span>
-                    <span class="text-[10px] text-dark-muted">{{ g.meta.updatedAt }}</span>
+                    <span class="text-[10px] text-slate-300 font-mono">{{ g.meta.updatedAt }}</span>
                   </div>
                   <h4 class="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
                     {{ g.meta.title }}
