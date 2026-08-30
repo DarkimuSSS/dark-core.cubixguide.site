@@ -229,72 +229,70 @@ const getDifficultyBadge = (diff: string) => {
         </div>
       </div>
 
-      <!-- Compact Dropdown Selector with Quick Search & Icons -->
-      <div class="relative w-full md:w-72">
+      <!-- Server Dropdown with multi-column grid -->
+      <div class="relative w-full md:w-auto">
         <button
           type="button"
           @click="isServerDropdownOpen = !isServerDropdownOpen"
-          class="w-full bg-[#0c0d0e] hover:bg-[#121416] border border-[#26292d] hover:border-emerald-500/50 text-white text-xs font-bold rounded-xl px-4 py-3 flex items-center justify-between transition-all shadow-md"
+          class="w-full md:w-64 bg-[#0c0d0e] hover:bg-[#121416] border border-[#26292d] hover:border-emerald-500/50 text-white text-xs font-bold rounded-xl px-4 py-3 flex items-center justify-between transition-all shadow-md"
         >
           <div class="flex items-center gap-2 truncate">
             <span class="text-emerald-400 font-mono">🎮</span>
             <span class="truncate">{{ selectedServer === 'Все' ? 'Все сервера CubixWorld' : selectedServer }}</span>
           </div>
-          <IconRenderer name="ChevronDown" size="16" :class="['text-dark-muted transition-transform duration-200', isServerDropdownOpen ? 'rotate-180 text-emerald-400' : '']" />
+          <IconRenderer name="ChevronDown" size="16" :class="['text-dark-muted transition-transform duration-200 shrink-0', isServerDropdownOpen ? 'rotate-180 text-emerald-400' : '']" />
         </button>
 
-        <!-- Dropdown Menu -->
+        <!-- Wide multi-column dropdown -->
         <div
           v-if="isServerDropdownOpen"
-          class="absolute top-full right-0 mt-2 w-full bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-2 z-50 space-y-2 animate-fadeIn"
+          class="absolute top-full right-0 mt-2 bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-3 z-50 space-y-3 animate-fadeIn w-[480px]"
         >
           <!-- Search inside dropdown -->
           <div class="relative">
             <input
               type="text"
               v-model="serverSearchQuery"
-              placeholder="Поиск по 21 серверу..."
-              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:border-emerald-accent"
+              :placeholder="`Поиск по ${serverList.length} серверу...`"
+              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:border-emerald-500/60 transition-all"
             />
             <IconRenderer name="Search" size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-muted" />
           </div>
 
-          <!-- Server options list -->
-          <div class="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-            <button
-              type="button"
-              @click="selectedServer = 'Все'; isServerDropdownOpen = false;"
-              :class="[
-                'w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-all',
-                selectedServer === 'Все'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-300 hover:bg-[#212429] hover:text-white'
-              ]"
-            >
-              <div class="flex items-center gap-2">
-                <span>🌐</span>
-                <span>Все сервера</span>
-              </div>
-              <IconRenderer v-if="selectedServer === 'Все'" name="Check" size="14" />
-            </button>
+          <!-- All servers button spanning full width -->
+          <button
+            type="button"
+            @click="selectedServer = 'Все'; isServerDropdownOpen = false;"
+            :class="[
+              'w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-all',
+              selectedServer === 'Все'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'text-slate-300 hover:bg-[#212429] hover:text-white border border-[#26292d]'
+            ]"
+          >
+            <div class="flex items-center gap-2">
+              <span>🌐</span>
+              <span>Все сервера CubixWorld</span>
+            </div>
+            <IconRenderer v-if="selectedServer === 'Все'" name="Check" size="14" />
+          </button>
 
+          <!-- Grid of servers: 3 columns -->
+          <div class="grid grid-cols-3 gap-1.5 max-h-64 overflow-y-auto custom-scrollbar pr-1">
             <button
               v-for="srv in filteredServers"
               :key="srv"
               type="button"
               @click="selectedServer = srv; isServerDropdownOpen = false;"
               :class="[
-                'w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-all',
+                'text-left px-2.5 py-2 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 transition-all truncate',
                 selectedServer === srv
                   ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-300 hover:bg-[#212429] hover:text-white'
+                  : 'text-slate-300 hover:bg-[#212429] hover:text-white border border-[#26292d]'
               ]"
             >
-              <div class="flex items-center gap-2">
-                <IconRenderer :name="getServerIcon(srv)" size="14" class="text-cyan-400" />
-                <span>{{ srv }}</span>
-              </div>
-              <IconRenderer v-if="selectedServer === srv" name="Check" size="14" />
+              <IconRenderer :name="getServerIcon(srv)" size="13" :class="selectedServer === srv ? 'text-white shrink-0' : 'text-cyan-400 shrink-0'" />
+              <span class="truncate">{{ srv }}</span>
             </button>
           </div>
         </div>
