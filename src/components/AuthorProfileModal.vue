@@ -131,7 +131,21 @@ watch(() => props.username, (newVal) => {
 }, { immediate: true });
 
 const authorGuides = computed(() => {
-  return props.allGuides.filter(g => g.meta.author.toLowerCase() === props.username.toLowerCase());
+  if (!props.username || !props.allGuides) return [];
+  const target = props.username.toLowerCase().trim();
+  return props.allGuides.filter(g => {
+    const mainAuthor = (g.meta.author || '').toLowerCase().trim();
+    if (mainAuthor === target) return true;
+    const coAuthors = (g.meta.coAuthors || []).map(s => s.toLowerCase().trim());
+    return coAuthors.includes(target);
+  });
+});
+
+const displayedAuthorGuides = computed(() => {
+  if (authorGuides.value.length <= 4) {
+    return authorGuides.value;
+  }
+  return authorGuides.value.slice(0, 3);
 });
 
 const pinnedGuide = computed(() => {
