@@ -218,15 +218,22 @@ const handleAvatarFileUpload = (e: Event) => {
       
       <!-- SLEEK VERTICAL FLOATING ACTION DOCK (Close Button + Profile Action Buttons) -->
       <div class="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 z-50 flex flex-col gap-2 items-center">
-        <!-- 1. Close Modal Button -->
-        <button
-          type="button"
-          @click="emit('close')"
-          class="w-10 h-10 rounded-2xl bg-[#0c0d0e] border-2 border-indigo-500 hover:border-purple-400 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition-all cursor-pointer"
-          title="Закрыть"
-        >
-          <IconRenderer name="X" size="20" class="stroke-[2.5]" />
-        </button>
+        
+        <!-- 1. Close Modal Button with Left Floating Tooltip -->
+        <div class="relative group/tool">
+          <button
+            type="button"
+            @click="emit('close')"
+            class="w-10 h-10 rounded-2xl bg-[#0c0d0e] border-2 border-indigo-500 hover:border-purple-400 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition-all cursor-pointer"
+          >
+            <IconRenderer name="X" size="20" class="stroke-[2.5]" />
+          </button>
+          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
+            <div class="bg-[#0c0d0e] border border-indigo-500/40 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+              Закрыть
+            </div>
+          </div>
+        </div>
 
         <!-- 2. Admin Panel Button -->
         <div v-if="isAdmin" class="relative group/tool">
