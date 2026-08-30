@@ -18,13 +18,15 @@ const navLinks = [
   { label: 'Закладки', mode: 'favorites', icon: 'Star' },
 ];
 
-const socialLinks = [
-  { label: 'ВКонтакте', icon: 'ExternalLink', url: 'https://vk.com/cubixworld', color: 'hover:text-blue-400 hover:border-blue-500/50' },
-  { label: 'Telegram', icon: 'Send', url: 'https://t.me/cubixworld', color: 'hover:text-sky-400 hover:border-sky-500/50' },
-  { label: 'Discord', icon: 'MessageCircle', url: 'https://discord.gg/cubixworld', color: 'hover:text-indigo-400 hover:border-indigo-500/50' },
+const cubixLinks = [
+  { label: 'Сайт CubixWorld', icon: 'Globe', url: 'https://cubixworld.net', color: 'hover:text-emerald-400 hover:border-emerald-500/50' },
+  { label: 'Мониторинг серверов', icon: 'Activity', url: 'https://online.cubix.world', color: 'hover:text-cyan-400 hover:border-cyan-500/50' },
 ];
 
-const categories = ['ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий'];
+const supportLinks = [
+  { label: 'Поддержка в Telegram', icon: 'Send', url: 'https://t.me/CubixWorldbot', color: 'hover:text-sky-400 hover:border-sky-500/50' },
+  { label: 'Поддержка в Discord', icon: 'MessageCircle', url: 'https://discord.gg/YY7RmMw', color: 'hover:text-indigo-400 hover:border-indigo-500/50' },
+];
 </script>
 
 <template>
@@ -49,7 +51,7 @@ const categories = ['ХайТек', 'Магия RPG', 'СкайБлок', 'Ав�
           </div>
         </div>
         <p class="text-xs text-dark-muted leading-relaxed">
-          Официальный портал руководств и гайдов по серверам CubixWorld. Пошаговые статьи, схемы крафтов, прохождения квестов и сборки механизмов.
+          База знаний и гайдов по серверам CubixWorld. Пошаговые статьи, схемы крафтов, прохождения квестов и сборки механизмов.
         </p>
         <!-- Live stats row -->
         <div class="flex items-center gap-3 flex-wrap">
@@ -79,55 +81,58 @@ const categories = ['ХайТек', 'Магия RPG', 'СкайБлок', 'Ав�
             </button>
           </li>
         </ul>
-      </div>
 
-      <!-- Column 3: Categories -->
-      <div class="space-y-4">
-        <h4 class="text-[10px] font-extrabold uppercase tracking-widest text-dark-muted">Категории</h4>
-        <ul class="space-y-2">
-          <li v-for="cat in categories" :key="cat">
-            <button
-              type="button"
-              @click="emit('navigate', 'home')"
-              class="text-xs text-slate-400 hover:text-emerald-400 transition-colors"
-            >
-              {{ cat }}
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Column 4: Socials + info -->
-      <div class="space-y-4">
-        <h4 class="text-[10px] font-extrabold uppercase tracking-widest text-dark-muted">Сообщество</h4>
-        <div class="space-y-2">
-          <a
-            v-for="social in socialLinks"
-            :key="social.label"
-            :href="social.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            :class="['flex items-center gap-2.5 px-3 py-2 rounded-xl border border-[#26292d] text-slate-400 text-xs font-semibold transition-all bg-[#16181a] hover:bg-[#1c1f22]', social.color]"
-          >
-            <IconRenderer :name="social.icon" size="14" />
-            {{ social.label }}
-          </a>
-        </div>
-
-        <!-- Author credit -->
-        <div class="pt-2">
+        <!-- Admin credit -->
+        <div class="pt-2 border-t border-[#26292d]">
+          <p class="text-[10px] text-dark-muted mb-2 uppercase tracking-widest font-bold">Авторы</p>
           <button
             type="button"
             @click="emit('open-author', 'DarkimuSSS')"
-            class="flex items-center gap-2 text-[10px] text-dark-muted hover:text-emerald-400 transition-colors"
+            class="flex items-center gap-2 text-xs text-slate-400 hover:text-emerald-400 transition-colors group"
           >
             <div class="w-5 h-5 rounded-md bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shrink-0">
               <div class="w-full h-full bg-[#0c0d0e] rounded-[4px] flex items-center justify-center">
                 <span class="text-[8px] font-black text-emerald-400">D</span>
               </div>
             </div>
-            Главный Администратор: DarkimuSSS
+            DarkimuSSS
           </button>
+        </div>
+      </div>
+
+      <!-- Column 3: CubixWorld links -->
+      <div class="space-y-4">
+        <h4 class="text-[10px] font-extrabold uppercase tracking-widest text-dark-muted">CubixWorld</h4>
+        <div class="space-y-2">
+          <a
+            v-for="link in cubixLinks"
+            :key="link.label"
+            :href="link.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            :class="['flex items-center gap-2.5 px-3 py-2 rounded-xl border border-[#26292d] text-slate-400 text-xs font-semibold transition-all bg-[#16181a] hover:bg-[#1c1f22]', link.color]"
+          >
+            <IconRenderer :name="link.icon" size="14" />
+            {{ link.label }}
+          </a>
+        </div>
+      </div>
+
+      <!-- Column 4: Support -->
+      <div class="space-y-4">
+        <h4 class="text-[10px] font-extrabold uppercase tracking-widest text-dark-muted">Поддержка</h4>
+        <div class="space-y-2">
+          <a
+            v-for="link in supportLinks"
+            :key="link.label"
+            :href="link.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            :class="['flex items-center gap-2.5 px-3 py-2 rounded-xl border border-[#26292d] text-slate-400 text-xs font-semibold transition-all bg-[#16181a] hover:bg-[#1c1f22]', link.color]"
+          >
+            <IconRenderer :name="link.icon" size="14" />
+            {{ link.label }}
+          </a>
         </div>
       </div>
     </div>
@@ -135,13 +140,12 @@ const categories = ['ХайТек', 'Магия RPG', 'СкайБлок', 'Ав�
     <!-- Bottom bar -->
     <div class="border-t border-[#26292d] px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
       <p class="text-[10px] text-dark-muted font-mono">
-        © {{ currentYear }} CubixGuide Wiki · Dark Core System · Все права защищены
+        © {{ currentYear }} CubixGuide Wiki · Dark Core System
       </p>
       <div class="flex items-center gap-4 text-[10px] text-dark-muted">
-        <span class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          Все сервисы работают штатно
-        </span>
+        <a href="https://cubixworld.net" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition-colors">
+          cubixworld.net
+        </a>
         <span class="text-[#26292d]">|</span>
         <span>Powered by Vue 3 + Vite</span>
       </div>
