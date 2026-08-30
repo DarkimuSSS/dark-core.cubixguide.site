@@ -4,6 +4,7 @@ import HomePage from './components/HomePage.vue';
 import GuideEditor from './components/GuideEditor.vue';
 import GuideView from './components/GuideView.vue';
 import AuthorProfileModal from './components/AuthorProfileModal.vue';
+import ConfirmModal from './components/ConfirmModal.vue';
 import IconRenderer from './components/IconRenderer.vue';
 import AuthModal from './components/AuthModal.vue';
 import { PRESET_ITEMS } from './data/presetItems';
