@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import CalloutBlock from './CalloutBlock.vue';
 import LayerPainter from './LayerPainter.vue';
