@@ -521,6 +521,41 @@ const duplicateBlock = (index: number) => {
   pushHistoryState(updated);
 };
 
+import ConfirmModal from './ConfirmModal.vue';
+
+const isDeleteBlockModalOpen = ref(false);
+const blockToDeleteIndex = ref<number | null>(null);
+
+const isDeleteSubBlockModalOpen = ref(false);
+const subBlockToDelete = ref<{ parentSection: GuideBlock; colId: string; subId: string } | null>(null);
+
+const requestDeleteBlock = (index: number) => {
+  blockToDeleteIndex.value = index;
+  isDeleteBlockModalOpen.value = true;
+};
+
+const confirmDeleteBlock = () => {
+  if (blockToDeleteIndex.value !== null) {
+    deleteBlock(blockToDeleteIndex.value);
+    blockToDeleteIndex.value = null;
+  }
+  isDeleteBlockModalOpen.value = false;
+};
+
+const requestDeleteSubBlock = (parentSection: GuideBlock, colId: string, subId: string) => {
+  subBlockToDelete.value = { parentSection, colId, subId };
+  isDeleteSubBlockModalOpen.value = true;
+};
+
+const confirmDeleteSubBlock = () => {
+  if (subBlockToDelete.value) {
+    const { parentSection, colId, subId } = subBlockToDelete.value;
+    removeSubBlock(parentSection, colId, subId);
+    subBlockToDelete.value = null;
+  }
+  isDeleteSubBlockModalOpen.value = false;
+};
+
 const deleteBlock = (index: number) => {
   if (props.guide.blocks.length <= 1) return;
   const newBlocks = [...props.guide.blocks];
@@ -1178,7 +1213,7 @@ const scrollToBlockInEditor = (id: string) => {
                 + Колонка
               </button>
               <button @click="duplicateBlock(index)" class="p-1 text-cyan-400 hover:text-cyan-300 rounded"><IconRenderer name="Copy" size="13" /></button>
-              <button @click="deleteBlock(index)" class="p-1 text-rose-400 hover:text-rose-300 rounded"><IconRenderer name="Trash2" size="13" /></button>
+              <button @click="requestDeleteBlock(index)" class="p-1 text-rose-400 hover:text-rose-300 rounded"><IconRenderer name="Trash2" size="13" /></button>
             </div>
           </div>
 
@@ -1240,7 +1275,7 @@ const scrollToBlockInEditor = (id: string) => {
                           <span>Извлечь</span>
                         </button>
 
-                        <button @click="removeSubBlock(block, col.id, sub.id)" class="text-rose-400 hover:text-rose-300"><IconRenderer name="X" size="12" /></button>
+                        <button @click="requestDeleteSubBlock(block, col.id, sub.id)" class="text-rose-400 hover:text-rose-300"><IconRenderer name="X" size="12" /></button>
                       </div>
                     </div>
 
@@ -1478,7 +1513,7 @@ const scrollToBlockInEditor = (id: string) => {
               </button>
               <button
                 type="button"
-                @click="deleteBlock(index)"
+                @click="requestDeleteBlock(index)"
                 :disabled="guide.blocks.length <= 1"
                 class="p-1 text-rose-400 hover:text-rose-300 disabled:opacity-30 rounded hover:bg-[#26292d]"
                 title="Удалить блок"
@@ -1866,6 +1901,30 @@ const scrollToBlockInEditor = (id: string) => {
       :is-open="isTemplateModalOpen"
       @close="isTemplateModalOpen = false"
       @select-template="handleAppendTemplate"
+    />
+
+    <!-- Block Deletion Confirm Modal -->
+    <ConfirmModal
+      :is-open="isDeleteBlockModalOpen"
+      title="Удаление блока"
+      message="Вы действительно хотите удалить этот блок из гайда?"
+      confirm-text="Удалить блок"
+      cancel-text="Отмена"
+      type="danger"
+      @confirm="confirmDeleteBlock"
+      @cancel="isDeleteBlockModalOpen = false"
+    />
+
+    <!-- Sub-block Deletion Confirm Modal -->
+    <ConfirmModal
+      :is-open="isDeleteSubBlockModalOpen"
+      title="Удаление элемента"
+      message="Вы действительно хотите удалить этот элемент из колонки?"
+      confirm-text="Удалить элемент"
+      cancel-text="Отмена"
+      type="danger"
+      @confirm="confirmDeleteSubBlock"
+      @cancel="isDeleteSubBlockModalOpen = false"
     />
   </div>
 </template>

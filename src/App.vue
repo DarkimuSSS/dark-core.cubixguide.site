@@ -434,19 +434,27 @@ const handlePublish = async () => {
   }
 };
 
-const handleDeleteGuide = async () => {
+const isDeleteGuideConfirmOpen = ref(false);
+
+const requestDeleteGuide = () => {
+  isDeleteGuideConfirmOpen.value = true;
+};
+
+const confirmDeleteGuide = async () => {
+  isDeleteGuideConfirmOpen.value = false;
   if (!activeGuide.value) return;
   const guideId = activeGuide.value.meta.id;
   try {
     const res = await fetch(`/api/guides/${guideId}`, { method: 'DELETE' });
     if (res.ok) {
       clearDraftLocalStorage(guideId);
-      showToast('Гайд удален');
+      showToast('Гайд успешно удален');
       await fetchGuides();
       mode.value = 'home';
     }
   } catch (err) {
     console.error('Ошибка удаления:', err);
+    showToast('Ошибка при удалении гайда');
   }
 };
 </script>
@@ -695,7 +703,7 @@ const handleDeleteGuide = async () => {
           @update:guide="updateActiveGuide"
           @toggle-preview="mode = 'reader'"
           @publish="handlePublish"
-          @delete="handleDeleteGuide"
+          @delete="requestDeleteGuide"
         />
 
         <!-- 4. SINGLE GUIDE WIKI READER VIEW -->
@@ -708,6 +716,18 @@ const handleDeleteGuide = async () => {
           @open-author="openAuthorProfile"
         />
       </template>
+
+      <!-- DELETE GUIDE CONFIRMATION MODAL -->
+      <ConfirmModal
+        :is-open="isDeleteGuideConfirmOpen"
+        title="Удаление гайда"
+        message="Вы действительно хотите безвозвратно удалить этот гайд? Все блоки и данные будут удалены из базы."
+        confirm-text="Да, удалить гайд"
+        cancel-text="Отмена"
+        type="danger"
+        @confirm="confirmDeleteGuide"
+        @cancel="isDeleteGuideConfirmOpen = false"
+      />
     </main>
 
     <!-- Author Profile Modal -->
