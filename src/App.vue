@@ -7,6 +7,7 @@ import AuthorProfileModal from './components/AuthorProfileModal.vue';
 import ConfirmModal from './components/ConfirmModal.vue';
 import IconRenderer from './components/IconRenderer.vue';
 import AuthModal from './components/AuthModal.vue';
+import SiteFooter from './components/SiteFooter.vue';
 import { PRESET_ITEMS } from './data/presetItems';
 import type { Guide, AuthorProfile } from './types/guide';
 
@@ -707,6 +708,11 @@ const handleViewAllAuthorGuides = (username: string) => {
             :initial-search-query="initialCatalogSearchQuery"
             @select-guide="handleHomeSelectGuide"
             @create-guide="createNewGuide"
+            @open-author="openAuthorProfile"
+          />
+          <SiteFooter
+            :guides-count="guides.length"
+            @navigate="(m) => { mode = m; initialCatalogSearchQuery = ''; }"
             @open-author="openAuthorProfile"
           />
         </div>
