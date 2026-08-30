@@ -330,90 +330,88 @@ const getDifficultyBadge = (diff: string) => {
         <p class="text-xs text-dark-muted">Попробуйте изменить поисковый запрос, категорию или выбранный сервер</p>
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- ULTRA COMPACT SLEEK GUIDE CARDS GRID -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <div
           v-for="guide in filteredGuides"
           :key="guide.meta.id"
           @click="emit('select-guide', guide.meta.id)"
-          class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-lg hover:shadow-2xl hover:shadow-emerald-950/30 hover:-translate-y-1 overflow-hidden"
+          class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl hover:shadow-emerald-950/30 hover:-translate-y-1 overflow-hidden"
         >
-          <!-- CARD COVER BANNER / PRESET GRADIENT -->
-          <div v-if="guide.meta.coverUrl" class="h-36 w-full relative overflow-hidden flex-shrink-0">
+          <!-- COMPACT COVER BANNER / PRESET GRADIENT -->
+          <div v-if="guide.meta.coverUrl" class="h-24 sm:h-28 w-full relative overflow-hidden flex-shrink-0">
             <img :src="guide.meta.coverUrl" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/40 to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/30 to-transparent"></div>
           </div>
-          <div v-else-if="guide.meta.coverGradient" :class="['h-28 w-full relative overflow-hidden flex-shrink-0 bg-gradient-to-tr', guide.meta.coverGradient]">
+          <div v-else-if="guide.meta.coverGradient" :class="['h-20 sm:h-24 w-full relative overflow-hidden flex-shrink-0 bg-gradient-to-tr', guide.meta.coverGradient]">
             <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-transparent to-black/30"></div>
           </div>
 
-          <div class="p-6 space-y-4 flex-1 flex flex-col justify-between">
-            <div class="space-y-3">
+          <!-- CARD BODY -->
+          <div class="p-4 sm:p-5 space-y-3 flex-1 flex flex-col justify-between">
+            <div class="space-y-2.5">
               <!-- Badges Bar -->
-              <div class="flex items-center justify-between flex-wrap gap-2">
-                <span :class="['text-[11px] font-bold px-2.5 py-1 rounded-lg border shadow-sm', getCategoryColor(guide.meta.category)]">
+              <div class="flex items-center justify-between flex-wrap gap-1.5">
+                <span :class="['text-[10px] font-bold px-2 py-0.5 rounded-md border shadow-sm', getCategoryColor(guide.meta.category)]">
                   {{ guide.meta.category }}
                 </span>
 
-                <div class="flex items-center gap-1.5">
-                  <span v-if="guide.meta.server" class="text-[10px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded-lg shadow-sm">
+                <div class="flex items-center gap-1">
+                  <span v-if="guide.meta.server" class="text-[9px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-1.5 py-0.5 rounded shadow-sm">
                     🎮 {{ guide.meta.server }}
                   </span>
-                  <span :class="['text-[10px] font-semibold px-2 py-0.5 rounded-full border shadow-sm', getDifficultyBadge(guide.meta.difficulty)]">
+                  <span :class="['text-[9px] font-semibold px-1.5 py-0.5 rounded-full border shadow-sm', getDifficultyBadge(guide.meta.difficulty)]">
                     {{ guide.meta.difficulty }}
                   </span>
                 </div>
               </div>
 
               <!-- Title -->
-              <h3 class="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+              <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
                 {{ guide.meta.title }}
               </h3>
 
               <!-- Summary Excerpt -->
-              <p class="text-xs text-dark-muted line-clamp-3 leading-relaxed">
+              <p class="text-xs text-dark-muted line-clamp-2 leading-relaxed">
                 {{ guide.meta.summary || 'Интерактивное руководство по сборке...' }}
               </p>
             </div>
 
-            <div class="space-y-4 pt-4 border-t border-[#26292d]/80">
-              <!-- Live Author Avatar & Verified Checkmark Badge with Clickable Profile -->
-              <div class="flex items-center justify-between text-[11px] text-dark-muted">
-                <div 
-                  @click.stop="emit('open-author', guide.meta.author)"
-                  class="flex items-center gap-2 hover:text-emerald-400 transition-colors cursor-pointer group/author"
-                  title="Просмотреть профиль автора"
-                >
-                  <!-- Avatar with Glow Ring -->
-                  <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md flex-shrink-0">
-                    <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center overflow-hidden">
-                      <img v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" :src="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" class="w-full h-full object-cover" />
-                      <span v-else class="text-xs font-black text-emerald-400">{{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}</span>
-                    </div>
-                  </div>
-
-                  <!-- Author Nickname + Verified Badge -->
-                  <div class="flex items-center gap-1">
-                    <span class="font-bold text-slate-200 text-xs group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</span>
-                    <span v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.isVerified" class="w-3.5 h-3.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 flex items-center justify-center shadow-sm" title="Проверенный Автор">
-                      <svg class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </span>
+            <!-- COMPACT BOTTOM ROW: Author Avatar, Verified Checkmark, Date & Hover Arrow -->
+            <div class="flex items-center justify-between pt-3 border-t border-[#26292d]/80 text-[11px]">
+              <div 
+                @click.stop="emit('open-author', guide.meta.author)"
+                class="flex items-center gap-2 hover:text-emerald-400 transition-colors cursor-pointer group/author"
+                title="Просмотреть профиль автора"
+              >
+                <!-- Avatar with Glow Ring -->
+                <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md flex-shrink-0">
+                  <div class="w-full h-full bg-[#0c0d0e] rounded-[6px] flex items-center justify-center overflow-hidden">
+                    <img v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" :src="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" class="w-full h-full object-cover" />
+                    <span v-else class="text-[10px] font-black text-emerald-400">{{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}</span>
                   </div>
                 </div>
 
-                <span class="font-mono text-[10px] text-slate-400">{{ guide.meta.updatedAt }}</span>
+                <!-- Author Nickname + Verified Badge -->
+                <div class="flex items-center gap-1">
+                  <span class="font-bold text-slate-200 text-xs group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</span>
+                  <span v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.isVerified" class="w-3.5 h-3.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 flex items-center justify-center shadow-sm" title="Проверенный Автор">
+                    <svg class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                </div>
               </div>
 
-              <!-- Action Button -->
-              <button
-                type="button"
-                class="w-full bg-[#121416] group-hover:bg-emerald-600 text-slate-300 group-hover:text-white border border-[#26292d] group-hover:border-emerald-500/50 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
-              >
-                <span>Читать гайд</span>
-                <IconRenderer name="ChevronRight" size="16" class="group-hover:translate-x-1 transition-transform" />
-              </button>
+              <!-- Date & Hover Arrow Action -->
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-[10px] text-slate-400">{{ guide.meta.updatedAt }}</span>
+                <div class="w-6 h-6 rounded-lg bg-[#121416] group-hover:bg-emerald-600 text-slate-400 group-hover:text-white border border-[#26292d] group-hover:border-emerald-500 flex items-center justify-center transition-all">
+                  <IconRenderer name="ChevronRight" size="14" class="group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </div>
             </div>
+
           </div>
         </div>
       </div>
