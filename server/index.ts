@@ -268,11 +268,39 @@ app.post('/api/guides', (req, res) => {
   }
 });
 
+// Helper to check author permission on guide modification
+function canUserModifyGuide(requestingUsername: string | undefined, guideId: string): boolean {
+  if (!requestingUsername) return true; // If unspecified in dev mode, allow; if present, check strictly
+  const userRow = db.prepare('SELECT is_admin, can_edit_others FROM users WHERE LOWER(username) = LOWER(?)').get(requestingUsername) as any;
+  if (!userRow) return false;
+
+  if (userRow.is_admin || userRow.can_edit_others) return true;
+
+  const existingGuide = db.prepare('SELECT author, co_authors FROM guides WHERE id = ?').get(guideId) as any;
+  if (!existingGuide) return true;
+
+  const isOwner = existingGuide.author.toLowerCase() === requestingUsername.toLowerCase();
+  if (isOwner) return true;
+
+  let isCoAuthor = false;
+  try {
+    const coAuthors: string[] = JSON.parse(existingGuide.co_authors || '[]');
+    isCoAuthor = coAuthors.some((ca: string) => ca.toLowerCase() === requestingUsername.toLowerCase());
+  } catch (e) {}
+
+  return isCoAuthor;
+}
+
 // 4. Update existing guide
 app.put('/api/guides/:id', (req, res) => {
   try {
     const guide: Guide = req.body;
     const guideId = req.params.id;
+    const requestingUser = (req.headers['x-author-username'] as string) || (req.query.requestingUsername as string);
+
+    if (requestingUser && !canUserModifyGuide(requestingUser, guideId)) {
+      return res.status(403).json({ error: 'У вас нет прав для редактирования чужого гайда' });
+    }
 
     const stmt = db.prepare(`
       UPDATE guides
@@ -309,8 +337,15 @@ app.put('/api/guides/:id', (req, res) => {
 // 5. Delete guide
 app.delete('/api/guides/:id', (req, res) => {
   try {
+    const guideId = req.params.id;
+    const requestingUser = (req.headers['x-author-username'] as string) || (req.query.requestingUsername as string);
+
+    if (requestingUser && !canUserModifyGuide(requestingUser, guideId)) {
+      return res.status(403).json({ error: 'У вас нет прав для удаления чужого гайда' });
+    }
+
     const stmt = db.prepare('DELETE FROM guides WHERE id = ?');
-    const result = stmt.run(req.params.id);
+    const result = stmt.run(guideId);
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Гайд не найден' });
     }

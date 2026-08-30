@@ -161,20 +161,49 @@ const favoritedGuidesList = computed(() => {
   return guides.value.filter(g => favoriteGuideIds.value.includes(g.meta.id));
 });
 
+const currentUserCanEditOthers = ref<boolean>(false);
+const currentUserCanCreateGuides = ref<boolean>(true);
+
+const canUserEditActiveGuide = computed(() => {
+  if (!isAuthenticated.value || !currentUsername.value || !activeGuide.value) return false;
+  
+  // Super Admin or Users with explicitly granted canEditOthers permission can edit all guides
+  if (currentUserIsAdmin.value || currentUserCanEditOthers.value) return true;
+  
+  const authorName = (activeGuide.value.meta.author || '').toLowerCase().trim();
+  const currentName = currentUsername.value.toLowerCase().trim();
+  if (authorName === currentName) return true;
+  
+  // Co-authors can also edit
+  const coAuthors = (activeGuide.value.meta.coAuthors || []).map(s => s.toLowerCase().trim());
+  if (coAuthors.includes(currentName)) return true;
+  
+  return false;
+});
+
 const openEditorProtection = () => {
-  if (isAuthenticated.value) {
+  if (!isAuthenticated.value) {
+    isAuthModalOpen.value = true;
+    return;
+  }
+  
+  if (canUserEditActiveGuide.value) {
     mode.value = 'editor';
   } else {
-    isAuthModalOpen.value = true;
+    showToast(`У вас нет прав на редактирование чужого гайда (Автор: ${activeGuide.value?.meta.author})`);
   }
 };
 
-const handleAuthentication = (payload: { username: string; isAdmin: boolean }) => {
+const handleAuthentication = (payload: { username: string; isAdmin: boolean; canEditOthers?: boolean; canCreateGuides?: boolean }) => {
   isAuthenticated.value = true;
   currentUsername.value = payload.username;
   currentUserIsAdmin.value = payload.isAdmin;
+  currentUserCanEditOthers.value = Boolean(payload.canEditOthers);
+  currentUserCanCreateGuides.value = payload.canCreateGuides !== undefined ? Boolean(payload.canCreateGuides) : true;
+
   localStorage.setItem('cubix_logged_username', payload.username);
   localStorage.setItem('cubix_logged_is_admin', payload.isAdmin ? 'true' : 'false');
+  localStorage.setItem('cubix_logged_can_edit_others', payload.canEditOthers ? 'true' : 'false');
   isAuthModalOpen.value = false;
   fetchCurrentAuthorProfile(payload.username);
   showToast(`Добро пожаловать, ${payload.username}!`);
@@ -392,13 +421,21 @@ const createNewGuide = async () => {
 
 const handlePublish = async () => {
   if (!activeGuide.value) return;
+  if (!canUserEditActiveGuide.value) {
+    showToast(`У вас нет прав для сохранения изменений в чужом гайде (Автор: ${activeGuide.value.meta.author})`);
+    return;
+  }
   activeGuide.value.meta.published = true;
   activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
 
   try {
+    const authorUser = currentUsername.value || '';
     let res = await fetch(`/api/guides/${activeGuide.value.meta.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-author-username': authorUser
+      },
       body: JSON.stringify(activeGuide.value)
     });
 
@@ -406,7 +443,10 @@ const handlePublish = async () => {
       // Fallback to POST if guide is not present in SQLite database yet
       res = await fetch('/api/guides', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-author-username': authorUser
+        },
         body: JSON.stringify(activeGuide.value)
       });
     }
@@ -437,6 +477,10 @@ const handlePublish = async () => {
 const isDeleteGuideConfirmOpen = ref(false);
 
 const requestDeleteGuide = () => {
+  if (!canUserEditActiveGuide.value) {
+    showToast(`У вас нет прав для удаления чужого гайда (Автор: ${activeGuide.value?.meta.author})`);
+    return;
+  }
   isDeleteGuideConfirmOpen.value = true;
 };
 
@@ -445,12 +489,21 @@ const confirmDeleteGuide = async () => {
   if (!activeGuide.value) return;
   const guideId = activeGuide.value.meta.id;
   try {
-    const res = await fetch(`/api/guides/${guideId}`, { method: 'DELETE' });
+    const authorUser = currentUsername.value || '';
+    const res = await fetch(`/api/guides/${guideId}?requestingUsername=${encodeURIComponent(authorUser)}`, {
+      method: 'DELETE',
+      headers: {
+        'x-author-username': authorUser
+      }
+    });
     if (res.ok) {
       clearDraftLocalStorage(guideId);
       showToast('Гайд успешно удален');
       await fetchGuides();
       mode.value = 'home';
+    } else {
+      const errData = await res.json();
+      showToast(errData.error || 'Ошибка при удалении гайда');
     }
   } catch (err) {
     console.error('Ошибка удаления:', err);
