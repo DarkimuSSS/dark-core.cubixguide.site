@@ -473,20 +473,25 @@ const handleBannerFileUpload = (e: Event) => {
               <div class="space-y-3 text-center sm:text-left flex-1 min-w-0 pr-8">
                 <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-3">
                   <div class="min-w-0">
-                    <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2 flex-wrap drop-shadow-md">
+                    <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2.5 flex-wrap drop-shadow-md">
                       <span>{{ profile.username }}</span>
 
-                      <!-- VERIFIED AUTHOR BADGE WITH HOVER TOOLTIP "Проверенный Автор" -->
+                      <!-- CRISP VERIFIED CHECKMARK BADGE WITH HOVER TOOLTIP "Проверенный Автор" -->
                       <div v-if="isAuthorVerified" class="relative group/vtool inline-flex items-center">
-                        <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 flex items-center justify-center shadow-lg cursor-help transition-transform hover:scale-110">
-                          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
-                            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                          </svg>
-                        </span>
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-400 p-0.5 shadow-lg shadow-emerald-950/60 cursor-help transition-transform hover:scale-110 flex items-center justify-center">
+                          <div class="w-full h-full bg-[#0c0d0e] rounded-full flex items-center justify-center">
+                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        </div>
                         <!-- Tooltip Popup -->
-                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/vtool:flex items-center pointer-events-none z-30">
-                          <div class="bg-[#0c0d0e] border border-emerald-500/50 text-emerald-300 text-[11px] font-bold px-2.5 py-1 rounded-xl whitespace-nowrap shadow-2xl backdrop-blur-md">
-                            ✔ Проверенный Автор
+                        <div class="absolute bottom-full left-1/2 -translate-y-1 -translate-x-1/2 mb-2.5 hidden group-hover/vtool:flex items-center pointer-events-none z-30">
+                          <div class="bg-[#0c0d0e] border border-emerald-500/50 text-emerald-300 text-xs font-extrabold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl backdrop-blur-md flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Проверенный Автор</span>
                           </div>
                         </div>
                       </div>
@@ -678,9 +683,13 @@ const handleBannerFileUpload = (e: Event) => {
                           </div>
                         </div>
 
-                        <span class="font-bold text-white text-sm flex items-center gap-1">
+                        <span class="font-bold text-white text-sm flex items-center gap-1.5">
                           <span>{{ a.username }}</span>
-                          <span v-if="a.isVerified" class="text-emerald-400" title="Проверенный Автор">✔</span>
+                          <span v-if="a.isVerified" class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 flex items-center justify-center" title="Проверенный Автор">
+                            <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
                         </span>
                         <span v-if="a.isAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded font-bold">Главный Админ</span>
                         <span v-else class="text-[9px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-1.5 py-0.5 rounded">Автор</span>
