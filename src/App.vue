@@ -396,18 +396,37 @@ const handlePublish = async () => {
   activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
 
   try {
-    const res = await fetch(`/api/guides/${activeGuide.value.meta.id}`, {
+    let res = await fetch(`/api/guides/${activeGuide.value.meta.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(activeGuide.value)
     });
 
+    if (!res.ok) {
+      // Fallback to POST if guide is not present in SQLite database yet
+      res = await fetch('/api/guides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(activeGuide.value)
+      });
+    }
+
     if (res.ok) {
+      const savedGuide = await res.json();
       const idx = guides.value.findIndex(g => g.meta.id === activeGuide.value?.meta.id);
-      if (idx !== -1) guides.value[idx] = activeGuide.value;
-      clearDraftLocalStorage(activeGuide.value.meta.id);
+      if (idx !== -1) {
+        guides.value[idx] = savedGuide;
+      } else {
+        guides.value.unshift(savedGuide);
+      }
+      activeGuide.value = savedGuide;
+      clearDraftLocalStorage(savedGuide.meta.id);
       showToast('Гайд успешно сохранен в базу данных!');
       mode.value = 'reader';
+      await fetchGuides();
+    } else {
+      const errData = await res.json();
+      showToast(errData.error || 'Ошибка при сохранении гайда');
     }
   } catch (err) {
     console.error('Ошибка сохранения:', err);
