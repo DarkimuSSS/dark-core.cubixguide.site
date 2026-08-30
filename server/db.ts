@@ -40,18 +40,17 @@ db.exec(`
     social_vk TEXT,
     social_tg TEXT,
     social_ds TEXT,
+    custom_links TEXT,
     badges TEXT,
     pinned_guide_id TEXT,
     updated_at TEXT
   );
 `);
 
-// Migration helper to add co_authors column to existing databases if missing
+// Migration helper to add custom_links column if missing
 try {
-  db.exec(`ALTER TABLE guides ADD COLUMN co_authors TEXT;`);
-} catch (e) {
-  // Column already exists
-}
+  db.exec(`ALTER TABLE profiles ADD COLUMN custom_links TEXT;`);
+} catch (e) {}
 
 // Password hashing helper (SHA-256 with salt)
 export function hashPassword(password: string): string {
@@ -156,6 +155,11 @@ if (adminCount.count === 0) {
 export function getAuthorProfile(username: string): AuthorProfile {
   const row = db.prepare('SELECT * FROM profiles WHERE LOWER(username) = LOWER(?)').get(username) as any;
   if (row) {
+    let customLinks = [];
+    try {
+      if (row.custom_links) customLinks = JSON.parse(row.custom_links);
+    } catch (e) {}
+
     return {
       username: row.username,
       avatarUrl: row.avatar_url || '',
@@ -164,6 +168,7 @@ export function getAuthorProfile(username: string): AuthorProfile {
       socialVk: row.social_vk || '',
       socialTg: row.social_tg || '',
       socialDs: row.social_ds || '',
+      customLinks: customLinks,
       badges: JSON.parse(row.badges || '[]'),
       pinnedGuideId: row.pinned_guide_id || '',
       updatedAt: row.updated_at || ''
@@ -179,6 +184,9 @@ export function getAuthorProfile(username: string): AuthorProfile {
     socialVk: '',
     socialTg: '',
     socialDs: '',
+    customLinks: [
+      { id: 'l1', label: 'Telegram', url: 'https://t.me/darkimusss' }
+    ],
     badges: ['Автор Гайдов'],
     pinnedGuideId: '',
     updatedAt: new Date().toISOString().split('T')[0]
@@ -187,8 +195,8 @@ export function getAuthorProfile(username: string): AuthorProfile {
 
 export function saveAuthorProfile(profile: AuthorProfile): AuthorProfile {
   const stmt = db.prepare(`
-    INSERT INTO profiles (username, avatar_url, bio, server, social_vk, social_tg, social_ds, badges, pinned_guide_id, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO profiles (username, avatar_url, bio, server, social_vk, social_tg, social_ds, custom_links, badges, pinned_guide_id, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(username) DO UPDATE SET
       avatar_url=excluded.avatar_url,
       bio=excluded.bio,
@@ -196,6 +204,7 @@ export function saveAuthorProfile(profile: AuthorProfile): AuthorProfile {
       social_vk=excluded.social_vk,
       social_tg=excluded.social_tg,
       social_ds=excluded.social_ds,
+      custom_links=excluded.custom_links,
       badges=excluded.badges,
       pinned_guide_id=excluded.pinned_guide_id,
       updated_at=excluded.updated_at
@@ -209,6 +218,7 @@ export function saveAuthorProfile(profile: AuthorProfile): AuthorProfile {
     profile.socialVk || '',
     profile.socialTg || '',
     profile.socialDs || '',
+    JSON.stringify(profile.customLinks || []),
     JSON.stringify(profile.badges || []),
     profile.pinnedGuideId || '',
     profile.updatedAt || new Date().toISOString().split('T')[0]
@@ -225,9 +235,12 @@ if (profileCount.count === 0) {
     avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=DarkimuSSS',
     bio: 'Главный Администратор базы знаний CubixGuide. Создаю схемы алтарей драконов, гайды по Магия RPG и Автоматизации!',
     server: 'MagicRPG',
-    socialVk: 'https://vk.com',
-    socialTg: 'https://t.me',
-    socialDs: 'DarkimuSSS#0001',
+    socialVk: '',
+    socialTg: '',
+    socialDs: '',
+    customLinks: [
+      { id: 'l1', label: 'Telegram', url: 'https://t.me/darkimusss' }
+    ],
     badges: ['👑 Главный Админ', '🐉 Мастер Драконов', '⚡ Эксперт Сборок'],
     pinnedGuideId: 'guide_dragon_100',
     updatedAt: new Date().toISOString().split('T')[0]

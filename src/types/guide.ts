@@ -119,6 +119,12 @@ export interface Guide {
   blocks: GuideBlock[];
 }
 
+export interface CustomAuthorLink {
+  id: string;
+  label: string;
+  url: string;
+}
+
 export interface AuthorProfile {
   username: string;
   avatarUrl?: string;
@@ -127,6 +133,7 @@ export interface AuthorProfile {
   socialVk?: string;
   socialTg?: string;
   socialDs?: string;
+  customLinks?: CustomAuthorLink[];
   badges?: string[];
   pinnedGuideId?: string;
   updatedAt?: string;

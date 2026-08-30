@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import IconRenderer from './IconRenderer.vue';
-import type { AuthorProfile, Guide } from '../types/guide';
+import type { AuthorProfile, Guide, CustomAuthorLink } from '../types/guide';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -45,11 +45,14 @@ const profile = ref<AuthorProfile>({
   socialVk: '',
   socialTg: '',
   socialDs: '',
+  customLinks: [],
   badges: [],
   pinnedGuideId: ''
 });
 
 const newBadgeInput = ref('');
+const newLinkLabel = ref('');
+const newLinkUrl = ref('');
 
 const fetchProfile = async () => {
   if (!props.username) return;
@@ -58,6 +61,7 @@ const fetchProfile = async () => {
     const res = await fetch(`/api/profiles/${encodeURIComponent(props.username)}`);
     if (res.ok) {
       profile.value = await res.json();
+      if (!profile.value.customLinks) profile.value.customLinks = [];
     }
   } catch (err) {
     console.error('Error fetching profile:', err);
@@ -196,6 +200,27 @@ const removeBadge = (badge: string) => {
   profile.value.badges = profile.value.badges?.filter(b => b !== badge) || [];
 };
 
+const addCustomLink = () => {
+  const lbl = newLinkLabel.value.trim();
+  const u = newLinkUrl.value.trim();
+  if (lbl && u) {
+    if (!profile.value.customLinks) profile.value.customLinks = [];
+    profile.value.customLinks.push({
+      id: `lnk_${Date.now()}`,
+      label: lbl,
+      url: u
+    });
+    newLinkLabel.value = '';
+    newLinkUrl.value = '';
+  }
+};
+
+const removeCustomLink = (id: string) => {
+  if (profile.value.customLinks) {
+    profile.value.customLinks = profile.value.customLinks.filter(l => l.id !== id);
+  }
+};
+
 const handleAvatarFileUpload = (e: Event) => {
   const target = e.target as HTMLInputElement;
   if (!target.files || target.files.length === 0) return;
@@ -216,7 +241,7 @@ const handleAvatarFileUpload = (e: Event) => {
     <!-- Outer Relative Card Wrapper for Precise Floating Action Dock -->
     <div class="relative w-full max-w-2xl">
       
-      <!-- FLOATING VERTICAL ACTION DOCK STYLED EXACTLY LIKE THE CLOSE BUTTON (BORDER-2 RING, DARK BG, ROUNDED-2XL) -->
+      <!-- FLOATING VERTICAL ACTION DOCK -->
       <div class="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 z-50 flex flex-col gap-2.5 items-center">
         
         <!-- 1. Close Modal Button -->
@@ -235,7 +260,7 @@ const handleAvatarFileUpload = (e: Event) => {
           </div>
         </div>
 
-        <!-- 2. Admin Panel Button (Border-2 Purple Ring) -->
+        <!-- 2. Admin Panel Button -->
         <div v-if="isAdmin" class="relative group/tool">
           <button
             type="button"
@@ -251,7 +276,7 @@ const handleAvatarFileUpload = (e: Event) => {
           </div>
         </div>
 
-        <!-- 3. Change Password Button (Border-2 Cyan Ring) -->
+        <!-- 3. Change Password Button -->
         <div v-if="isOwnProfile" class="relative group/tool">
           <button
             type="button"
@@ -267,7 +292,7 @@ const handleAvatarFileUpload = (e: Event) => {
           </div>
         </div>
 
-        <!-- 4. Edit Profile Button (Border-2 Emerald Ring) -->
+        <!-- 4. Edit Profile Button -->
         <div v-if="isOwnProfile && !isEditing" class="relative group/tool">
           <button
             type="button"
@@ -341,17 +366,25 @@ const handleAvatarFileUpload = (e: Event) => {
                 {{ profile.bio }}
               </p>
 
-              <!-- Social Links -->
-              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-2">
-                <a v-if="profile.socialVk" :href="profile.socialVk" target="_blank" class="px-3 py-1 bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all">
-                  <span>ВКонтакте</span>
-                </a>
-                <a v-if="profile.socialTg" :href="profile.socialTg" target="_blank" class="px-3 py-1 bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all">
-                  <span>Telegram</span>
-                </a>
-                <span v-if="profile.socialDs" class="px-3 py-1 bg-[#121416] border border-[#26292d] text-purple-300 text-xs font-mono rounded-xl">
-                  Discord: {{ profile.socialDs }}
-                </span>
+              <!-- CUSTOM AUTHOR LINKS DISPLAY -->
+              <div v-if="profile.customLinks && profile.customLinks.length > 0" class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 pt-2">
+                <template v-for="lnk in profile.customLinks" :key="lnk.id">
+                  <a
+                    v-if="lnk.url.startsWith('http://') || lnk.url.startsWith('https://')"
+                    :href="lnk.url"
+                    target="_blank"
+                    class="px-3.5 py-1.5 bg-[#121416] hover:bg-[#181d22] border border-cyan-500/30 hover:border-cyan-400 text-cyan-400 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all shadow-sm group/lnk"
+                  >
+                    <span>{{ lnk.label }}</span>
+                    <IconRenderer name="ExternalLink" size="12" class="group-hover/lnk:translate-x-0.5 transition-transform" />
+                  </a>
+                  <span
+                    v-else
+                    class="px-3.5 py-1.5 bg-[#121416] border border-[#26292d] text-purple-300 text-xs font-mono rounded-xl shadow-sm"
+                  >
+                    {{ lnk.label }}: {{ lnk.url }}
+                  </span>
+                </template>
               </div>
             </div>
           </div>
@@ -549,34 +582,58 @@ const handleAvatarFileUpload = (e: Event) => {
               ></textarea>
             </div>
 
-            <!-- Social Inputs -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label class="block text-[10px] text-dark-muted mb-1">Ссылка VK</label>
-                <input
-                  type="text"
-                  v-model="profile.socialVk"
-                  placeholder="https://vk.com/id..."
-                  class="w-full bg-[#16181a] border border-[#26292d] text-xs rounded-lg px-2.5 py-1.5 text-white"
-                />
+            <!-- CUSTOM AUTHOR LINKS MANAGER -->
+            <div class="space-y-3 pt-2 border-t border-[#26292d]">
+              <label class="block text-[11px] text-cyan-400 font-bold uppercase tracking-wider">Кастомные Ссылки Профиля</label>
+              
+              <!-- Input Add Row -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                <div class="sm:col-span-5">
+                  <input
+                    type="text"
+                    v-model="newLinkLabel"
+                    placeholder="Название (например: Telegram, Boosty, YouTube)..."
+                    class="w-full bg-[#16181a] border border-[#26292d] text-xs rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-400"
+                  />
+                </div>
+                <div class="sm:col-span-5">
+                  <input
+                    type="text"
+                    v-model="newLinkUrl"
+                    placeholder="Ссылка (https://t.me/username или ник)..."
+                    class="w-full bg-[#16181a] border border-[#26292d] text-xs rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-400"
+                  />
+                </div>
+                <div class="sm:col-span-2">
+                  <button
+                    type="button"
+                    @click="addCustomLink"
+                    class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl shadow-md transition-all"
+                  >
+                    + Добавить
+                  </button>
+                </div>
               </div>
-              <div>
-                <label class="block text-[10px] text-dark-muted mb-1">Ссылка Telegram</label>
-                <input
-                  type="text"
-                  v-model="profile.socialTg"
-                  placeholder="https://t.me/..."
-                  class="w-full bg-[#16181a] border border-[#26292d] text-xs rounded-lg px-2.5 py-1.5 text-white"
-                />
-              </div>
-              <div>
-                <label class="block text-[10px] text-dark-muted mb-1">Discord Никнейм</label>
-                <input
-                  type="text"
-                  v-model="profile.socialDs"
-                  placeholder="DarkimuSSS#0001"
-                  class="w-full bg-[#16181a] border border-[#26292d] text-xs rounded-lg px-2.5 py-1.5 text-white"
-                />
+
+              <!-- List of Custom Links -->
+              <div v-if="profile.customLinks && profile.customLinks.length > 0" class="space-y-2 pt-1">
+                <div
+                  v-for="lnk in profile.customLinks"
+                  :key="lnk.id"
+                  class="flex items-center justify-between p-2.5 bg-[#16181a] border border-[#26292d] rounded-xl text-xs"
+                >
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="font-bold text-cyan-400">{{ lnk.label }}:</span>
+                    <span class="text-slate-300 truncate max-w-xs">{{ lnk.url }}</span>
+                  </div>
+                  <button
+                    type="button"
+                    @click="removeCustomLink(lnk.id)"
+                    class="text-rose-400 hover:text-white p-1"
+                  >
+                    <IconRenderer name="Trash2" size="14" />
+                  </button>
+                </div>
               </div>
             </div>
 
