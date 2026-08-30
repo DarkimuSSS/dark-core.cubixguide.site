@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import CalloutBlock from './CalloutBlock.vue';
 import LayerPainter from './LayerPainter.vue';
-import type { Guide, BlockSpan, BlockAlign, BlockVariant } from '../types/guide';
+import type { Guide, BlockSpan, BlockAlign, BlockVariant, AuthorProfile } from '../types/guide';
 
 const props = defineProps<{
   guide: Guide;
@@ -18,6 +18,21 @@ const emit = defineEmits<{
 
 const isMobileNavOpen = ref(false);
 const sidebarSearchQuery = ref('');
+const authorProfile = ref<AuthorProfile | null>(null);
+
+const fetchAuthorProfile = async () => {
+  if (!props.guide.meta.author) return;
+  try {
+    const res = await fetch(`/api/profiles/${encodeURIComponent(props.guide.meta.author)}`);
+    if (res.ok) {
+      authorProfile.value = await res.json();
+    }
+  } catch (e) {}
+};
+
+watch(() => props.guide.meta.author, () => {
+  fetchAuthorProfile();
+}, { immediate: true });
 
 const filteredAllGuides = computed(() => {
   const q = sidebarSearchQuery.value.toLowerCase().trim();
@@ -28,23 +43,6 @@ const filteredAllGuides = computed(() => {
     (g.meta.category && g.meta.category.toLowerCase().includes(q)) ||
     (g.meta.server && g.meta.server.toLowerCase().includes(q))
   );
-});
-
-const tableOfContents = computed(() => {
-  const result: { id: string; text: string; level: string }[] = [];
-  const collectHeadings = (blocks: any[]) => {
-    for (const b of blocks) {
-      if (b.type === 'heading' && b.headingText) {
-        result.push({ id: b.id, text: b.headingText, level: b.headingLevel || 'h2' });
-      } else if (b.type === 'section' && b.columns) {
-        for (const col of b.columns) {
-          collectHeadings(col.blocks);
-        }
-      }
-    }
-  };
-  collectHeadings(props.guide.blocks);
-  return result;
 });
 
 const getGridSpanClass = (span?: BlockSpan) => {
@@ -146,7 +144,7 @@ const getVariantClass = (variant?: BlockVariant) => {
 
       <!-- CONTENT ZONE -->
       <main class="col-span-1 lg:col-span-9 min-w-0 space-y-8">
-        <article class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-4">
+        <article class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-6">
           <div class="flex flex-wrap items-center gap-2">
             <span class="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-semibold border border-cyan-500/30">
               {{ guide.meta.category }}
@@ -164,25 +162,43 @@ const getVariantClass = (variant?: BlockVariant) => {
             {{ guide.meta.title }}
           </h1>
 
-          <!-- Clickable Author Profile Link -->
-          <div class="flex items-center justify-between text-xs text-dark-muted border-t border-[#26292d] pt-3">
+          <!-- AUTHOR CARD COMPONENT MATCHING USER'S MOCKUP -->
+          <div class="pt-2">
             <div 
               @click="emit('open-author', guide.meta.author)" 
-              class="flex items-center gap-2 cursor-pointer hover:text-emerald-400 transition-colors group/author"
+              class="bg-[#121416] hover:bg-[#181a1d] border border-[#26292d] hover:border-cyan-500/50 p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-300 shadow-xl space-y-2 group/author inline-block min-w-72 sm:min-w-80"
               title="Открыть профиль автора"
             >
-              <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs group-hover/author:bg-emerald-500 group-hover/author:text-white transition-all">
-                {{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}
-              </div>
-              <span>Автор статьи: <strong class="text-slate-200 group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</strong></span>
-            </div>
+              <div class="text-xs text-dark-muted font-medium">Автор статьи:</div>
+              
+              <div class="flex items-center gap-3.5">
+                <!-- Avatar with Rounded Square Corners and Blue Verified Checkmark Badge -->
+                <div class="relative flex-shrink-0">
+                  <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md overflow-hidden">
+                    <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center overflow-hidden">
+                      <img v-if="authorProfile?.avatarUrl" :src="authorProfile.avatarUrl" class="w-full h-full object-cover" />
+                      <span v-else class="text-lg font-extrabold text-emerald-400">
+                        {{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}
+                      </span>
+                    </div>
+                  </div>
+                  <!-- Verified Blue Checkmark Badge in bottom-right corner -->
+                  <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-cyan-500 border-2 border-[#121416] flex items-center justify-center text-white shadow-md">
+                    <IconRenderer name="Check" size="12" class="stroke-[3]" />
+                  </div>
+                </div>
 
-            <button 
-              @click="emit('open-author', guide.meta.author)"
-              class="px-3 py-1 bg-[#121416] hover:bg-[#212429] text-cyan-400 border border-[#26292d] rounded-xl text-[11px] font-bold transition-all"
-            >
-              👤 Профиль автора
-            </button>
+                <!-- Author Nickname -->
+                <span class="text-lg sm:text-xl font-bold text-white group-hover/author:text-cyan-400 transition-colors flex-1">
+                  {{ guide.meta.author }}
+                </span>
+
+                <!-- Cyan Square External Link Button [ ↗ ] -->
+                <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 group-hover/author:bg-cyan-500 group-hover/author:text-white flex items-center justify-center transition-all shadow-md flex-shrink-0">
+                  <IconRenderer name="ExternalLink" size="18" />
+                </div>
+              </div>
+            </div>
           </div>
         </article>
 
