@@ -27,8 +27,11 @@ const searchQuery = ref(props.initialSearchQuery || '');
 watch(() => props.initialSearchQuery, (newVal) => {
   if (newVal !== undefined) {
     searchQuery.value = newVal;
+    currentPage.value = 1;
   }
 });
+const PAGE_SIZE = 12;
+const currentPage = ref(1);
 const selectedCategory = ref<string>('Все');
 const selectedServer = ref<string>('Все');
 const isServerDropdownOpen = ref<boolean>(false);
@@ -103,6 +106,18 @@ const filteredGuides = computed(() => {
     
     return matchesCategory && matchesServer && matchesSearch;
   });
+});
+
+const totalPages = computed(() => Math.ceil(filteredGuides.value.length / PAGE_SIZE));
+
+const paginatedGuides = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE;
+  return filteredGuides.value.slice(start, start + PAGE_SIZE);
+});
+
+// Reset to page 1 when filters change
+watch([searchQuery, selectedCategory, selectedServer], () => {
+  currentPage.value = 1;
 });
 
 const getServerIcon = (serverName: string) => {
@@ -338,7 +353,7 @@ const getDifficultyBadge = (diff: string) => {
       <!-- ULTRA COMPACT SLEEK GUIDE CARDS GRID WITH BADGES OVERLAID ON BANNER -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <div
-          v-for="guide in filteredGuides"
+          v-for="guide in paginatedGuides"
           :key="guide.meta.id"
           @click="emit('select-guide', guide.meta.id)"
           class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl hover:shadow-emerald-950/30 hover:-translate-y-1 overflow-hidden"
@@ -420,6 +435,70 @@ const getDifficultyBadge = (diff: string) => {
 
           </div>
         </div>
+      </div>
+
+      <!-- PAGINATION CONTROLS -->
+      <div v-if="totalPages > 1" class="flex items-center justify-center gap-2 pt-6 pb-4">
+        <button
+          type="button"
+          @click="currentPage = 1"
+          :disabled="currentPage === 1"
+          class="w-8 h-8 rounded-xl border border-[#26292d] text-dark-muted hover:text-white hover:border-emerald-500/50 hover:bg-[#16181a] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all text-xs"
+          title="Первая страница"
+        >
+          <IconRenderer name="ChevronsLeft" size="14" />
+        </button>
+        <button
+          type="button"
+          @click="currentPage = Math.max(1, currentPage - 1)"
+          :disabled="currentPage === 1"
+          class="w-8 h-8 rounded-xl border border-[#26292d] text-dark-muted hover:text-white hover:border-emerald-500/50 hover:bg-[#16181a] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+        >
+          <IconRenderer name="ChevronLeft" size="14" />
+        </button>
+
+        <!-- Page number pills -->
+        <div class="flex items-center gap-1">
+          <template v-for="page in totalPages" :key="page">
+            <button
+              v-if="Math.abs(page - currentPage) <= 2 || page === 1 || page === totalPages"
+              type="button"
+              @click="currentPage = page"
+              :class="[
+                'w-8 h-8 rounded-xl text-xs font-bold transition-all border',
+                currentPage === page
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-950/50'
+                  : 'border-[#26292d] text-dark-muted hover:text-white hover:border-emerald-500/50 hover:bg-[#16181a]'
+              ]"
+            >{{ page }}</button>
+            <span
+              v-else-if="Math.abs(page - currentPage) === 3"
+              class="text-dark-muted text-xs px-1"
+            >…</span>
+          </template>
+        </div>
+
+        <button
+          type="button"
+          @click="currentPage = Math.min(totalPages, currentPage + 1)"
+          :disabled="currentPage === totalPages"
+          class="w-8 h-8 rounded-xl border border-[#26292d] text-dark-muted hover:text-white hover:border-emerald-500/50 hover:bg-[#16181a] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+        >
+          <IconRenderer name="ChevronRight" size="14" />
+        </button>
+        <button
+          type="button"
+          @click="currentPage = totalPages"
+          :disabled="currentPage === totalPages"
+          class="w-8 h-8 rounded-xl border border-[#26292d] text-dark-muted hover:text-white hover:border-emerald-500/50 hover:bg-[#16181a] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all text-xs"
+          title="Последняя страница"
+        >
+          <IconRenderer name="ChevronsRight" size="14" />
+        </button>
+
+        <span class="text-xs text-dark-muted font-mono ml-2">
+          Стр. {{ currentPage }} из {{ totalPages }} · {{ filteredGuides.length }} гайдов
+        </span>
       </div>
     </div>
   </div>
