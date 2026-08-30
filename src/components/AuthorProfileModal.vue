@@ -211,84 +211,90 @@ const handleAvatarFileUpload = (e: Event) => {
 </script>
 
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn">
+  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fadeIn">
     
-    <!-- Outer Relative Card Wrapper for Floating Action Dock -->
-    <div class="relative w-full max-w-2xl">
+    <!-- HIGH-END MODAL CONTAINER WITH AMBIENT GLOW AND EMBEDDED DOCK -->
+    <div class="bg-[#121416] border border-[#26292d] w-full max-w-2xl rounded-3xl shadow-2xl shadow-emerald-950/40 max-h-[88vh] overflow-y-auto custom-scrollbar relative flex flex-col overflow-hidden">
       
-      <!-- SLEEK VERTICAL FLOATING ACTION DOCK (Close Button + Profile Action Buttons) -->
-      <div class="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 z-50 flex flex-col gap-2 items-center">
+      <!-- STYLISH COVER BANNER HEADER -->
+      <div class="h-28 sm:h-32 bg-gradient-to-r from-emerald-950/80 via-[#181d22] to-purple-950/80 relative flex-shrink-0 border-b border-[#26292d]">
+        <!-- Decorative subtle pattern overlay -->
+        <div class="absolute inset-0 bg-[radial-gradient(#26292d_1px,transparent_1px)] [background-size:16px_16px] opacity-30"></div>
         
-        <!-- 1. Close Modal Button with Left Floating Tooltip -->
-        <div class="relative group/tool">
-          <button
-            type="button"
-            @click="emit('close')"
-            class="w-10 h-10 rounded-2xl bg-[#0c0d0e] border-2 border-indigo-500 hover:border-purple-400 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition-all cursor-pointer"
-          >
-            <IconRenderer name="X" size="20" class="stroke-[2.5]" />
-          </button>
-          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
-            <div class="bg-[#0c0d0e] border border-indigo-500/40 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
-              Закрыть
+        <!-- TOP RIGHT CONTROLS BAR (MODAL ACTION BUTTONS + CLOSE BUTTON INTEGRATED CLEANLY) -->
+        <div class="absolute top-4 right-4 z-20 flex items-center gap-2">
+          
+          <!-- Action Buttons Pill Dock -->
+          <div class="flex items-center gap-1.5 bg-[#0c0d0e]/80 backdrop-blur-md p-1.5 rounded-2xl border border-[#26292d] shadow-xl">
+            <!-- Admin Panel Button -->
+            <div v-if="isAdmin" class="relative group/tool">
+              <button
+                type="button"
+                @click="isAdminPanelOpen = !isAdminPanelOpen"
+                class="w-9 h-9 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-all shadow-md"
+              >
+                <IconRenderer name="Shield" size="16" />
+              </button>
+              <div class="absolute top-full mt-2 right-0 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+                <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+                  {{ isAdminPanelOpen ? 'Закрыть Админку' : 'Админ Панель' }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Change Password Button -->
+            <div v-if="isOwnProfile" class="relative group/tool">
+              <button
+                type="button"
+                @click="isChangePasswordOpen = !isChangePasswordOpen; pwdMessage = '';"
+                class="w-9 h-9 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 flex items-center justify-center transition-all shadow-md"
+              >
+                <IconRenderer name="Lock" size="16" />
+              </button>
+              <div class="absolute top-full mt-2 right-0 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+                <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+                  Сменить пароль
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Profile Button -->
+            <div v-if="isOwnProfile && !isEditing" class="relative group/tool">
+              <button
+                type="button"
+                @click="isEditing = true"
+                class="w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all shadow-md"
+              >
+                <IconRenderer name="Edit3" size="16" />
+              </button>
+              <div class="absolute top-full mt-2 right-0 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+                <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+                  Редактировать профиль
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 2. Admin Panel Button -->
-        <div v-if="isAdmin" class="relative group/tool">
-          <button
-            type="button"
-            @click="isAdminPanelOpen = !isAdminPanelOpen"
-            class="w-10 h-10 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-all shadow-xl hover:scale-105"
-          >
-            <IconRenderer name="Shield" size="18" />
-          </button>
-          <!-- Left Floating Tooltip -->
-          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
-            <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
-              {{ isAdminPanelOpen ? 'Закрыть Админку' : 'Админ Панель' }}
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. Change Password Button -->
-        <div v-if="isOwnProfile" class="relative group/tool">
-          <button
-            type="button"
-            @click="isChangePasswordOpen = !isChangePasswordOpen; pwdMessage = '';"
-            class="w-10 h-10 rounded-2xl bg-[#0c0d0e] hover:bg-cyan-600/30 text-cyan-300 border-2 border-cyan-500/40 flex items-center justify-center transition-all shadow-xl hover:scale-105"
-          >
-            <IconRenderer name="Lock" size="18" />
-          </button>
-          <!-- Left Floating Tooltip -->
-          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
-            <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
-              Сменить пароль
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. Edit Profile Button -->
-        <div v-if="isOwnProfile && !isEditing" class="relative group/tool">
-          <button
-            type="button"
-            @click="isEditing = true"
-            class="w-10 h-10 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all shadow-xl hover:scale-105"
-          >
-            <IconRenderer name="Edit3" size="18" />
-          </button>
-          <!-- Left Floating Tooltip -->
-          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
-            <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
-              Редактировать профиль
+          <!-- Close Modal Button -->
+          <div class="relative group/tool">
+            <button
+              type="button"
+              @click="emit('close')"
+              class="w-10 h-10 rounded-2xl bg-[#0c0d0e]/90 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-[#26292d] hover:border-rose-500/40 flex items-center justify-center transition-all shadow-xl"
+            >
+              <IconRenderer name="X" size="18" class="stroke-[2.5]" />
+            </button>
+            <div class="absolute top-full mt-2 right-0 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+              <div class="bg-[#0c0d0e] border border-rose-500/40 text-rose-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+                Закрыть
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Main Scrollable Modal Card -->
-      <div class="bg-[#16181a] border border-[#26292d] w-full rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar relative">
+      <!-- MAIN CONTENT BODY -->
+      <div class="p-6 sm:p-8 space-y-6 -mt-12 sm:-mt-14 relative z-10">
 
         <!-- Loading State -->
         <div v-if="isLoading" class="py-12 text-center text-dark-muted space-y-2">
@@ -297,12 +303,12 @@ const handleAvatarFileUpload = (e: Event) => {
         </div>
 
         <template v-else>
-          <!-- PROFILE HEADER BADGE -->
-          <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-[#26292d]">
-            <!-- Avatar with Glow -->
+          <!-- PROFILE HEADER BADGE WITH OVERLAPPING AVATAR -->
+          <div class="flex flex-col sm:flex-row items-center sm:items-end gap-5 pb-6 border-b border-[#26292d]">
+            <!-- Glowing Avatar -->
             <div class="relative flex-shrink-0">
-              <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-2xl shadow-emerald-950/60 overflow-hidden">
-                <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center overflow-hidden">
+              <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-2xl shadow-emerald-950/80 overflow-hidden ring-4 ring-[#121416]">
+                <div class="w-full h-full bg-[#0c0d0e] rounded-[12px] flex items-center justify-center overflow-hidden">
                   <img v-if="profile.avatarUrl" :src="profile.avatarUrl" class="w-full h-full object-cover" />
                   <div v-else class="text-3xl font-black text-emerald-400">
                     {{ profile.username.charAt(0).toUpperCase() }}
@@ -311,48 +317,45 @@ const handleAvatarFileUpload = (e: Event) => {
               </div>
 
               <!-- Online Dot -->
-              <span class="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#16181a] shadow-lg" title="Онлайн"></span>
+              <span class="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#121416] shadow-lg" title="Онлайн"></span>
             </div>
 
             <!-- Profile Details -->
-            <div class="space-y-3 text-center sm:text-left flex-1 min-w-0 pr-8">
-              <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-                    <span>{{ profile.username }}</span>
-                    <span v-if="profile.server" class="text-xs font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2.5 py-0.5 rounded-lg">
-                      🎮 {{ profile.server }}
-                    </span>
-                  </h2>
-                  <p class="text-xs text-dark-muted pt-0.5">Автор {{ authorGuides.length }} опубликованных гайдов</p>
-                </div>
-              </div>
+            <div class="space-y-2 text-center sm:text-left flex-1 min-w-0">
+              <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
+                <span>{{ profile.username }}</span>
+                <span v-if="profile.server" class="text-xs font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2.5 py-0.5 rounded-lg">
+                  🎮 {{ profile.server }}
+                </span>
+              </h2>
+
+              <p class="text-xs text-dark-muted font-medium">Автор {{ authorGuides.length }} опубликованных гайдов</p>
 
               <!-- Badges List -->
               <div v-if="profile.badges && profile.badges.length > 0" class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
                 <span
                   v-for="badge in profile.badges"
                   :key="badge"
-                  class="text-[11px] font-bold bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full shadow-inner"
+                  class="text-[11px] font-bold bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full shadow-inner"
                 >
                   {{ badge }}
                 </span>
               </div>
 
               <!-- Bio Text -->
-              <p v-if="profile.bio" class="text-xs text-slate-300 leading-relaxed max-w-lg whitespace-pre-line">
+              <p v-if="profile.bio" class="text-xs text-slate-300 leading-relaxed max-w-lg whitespace-pre-line pt-1">
                 {{ profile.bio }}
               </p>
 
               <!-- Social Links -->
-              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-2">
-                <a v-if="profile.socialVk" :href="profile.socialVk" target="_blank" class="px-3 py-1 bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all">
+              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 pt-2">
+                <a v-if="profile.socialVk" :href="profile.socialVk" target="_blank" class="px-3 py-1 bg-[#16181a] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all shadow-sm">
                   <span>ВКонтакте</span>
                 </a>
-                <a v-if="profile.socialTg" :href="profile.socialTg" target="_blank" class="px-3 py-1 bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all">
+                <a v-if="profile.socialTg" :href="profile.socialTg" target="_blank" class="px-3 py-1 bg-[#16181a] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all shadow-sm">
                   <span>Telegram</span>
                 </a>
-                <span v-if="profile.socialDs" class="px-3 py-1 bg-[#121416] border border-[#26292d] text-purple-300 text-xs font-mono rounded-xl">
+                <span v-if="profile.socialDs" class="px-3 py-1 bg-[#16181a] border border-[#26292d] text-purple-300 text-xs font-mono rounded-xl shadow-sm">
                   Discord: {{ profile.socialDs }}
                 </span>
               </div>
@@ -360,7 +363,7 @@ const handleAvatarFileUpload = (e: Event) => {
           </div>
 
           <!-- CHANGE PASSWORD FORM (Self Service for Author) -->
-          <div v-if="isChangePasswordOpen && isOwnProfile" class="space-y-4 bg-cyan-950/20 border border-cyan-500/40 p-5 rounded-2xl animate-fadeIn">
+          <div v-if="isChangePasswordOpen && isOwnProfile" class="space-y-4 bg-cyan-950/20 border border-cyan-500/40 p-5 rounded-2xl animate-fadeIn shadow-xl">
             <div class="flex items-center justify-between border-b border-cyan-500/30 pb-2">
               <h3 class="text-xs font-extrabold text-cyan-300 uppercase tracking-wider flex items-center gap-2">
                 <IconRenderer name="Lock" size="16" class="text-cyan-400" />
@@ -425,7 +428,7 @@ const handleAvatarFileUpload = (e: Event) => {
           </div>
 
           <!-- ADMIN PANEL: MANUAL AUTHOR CREATION (Only for Super Admin) -->
-          <div v-if="isAdminPanelOpen && isAdmin" class="space-y-4 bg-purple-950/20 border border-purple-500/40 p-5 rounded-2xl">
+          <div v-if="isAdminPanelOpen && isAdmin" class="space-y-4 bg-purple-950/20 border border-purple-500/40 p-5 rounded-2xl shadow-xl">
             <div class="flex items-center justify-between border-b border-purple-500/30 pb-2">
               <h3 class="text-xs font-extrabold text-purple-300 uppercase tracking-wider flex items-center gap-2">
                 <IconRenderer name="Shield" size="16" class="text-purple-400" />
@@ -493,7 +496,7 @@ const handleAvatarFileUpload = (e: Event) => {
           </div>
 
           <!-- EDITING MODE FORM -->
-          <div v-if="isEditing" class="space-y-4 bg-[#0c0d0e] border border-[#26292d] p-5 rounded-2xl">
+          <div v-if="isEditing" class="space-y-4 bg-[#0c0d0e] border border-[#26292d] p-5 rounded-2xl shadow-xl">
             <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-[#26292d] pb-2">
               <IconRenderer name="Sliders" size="14" class="text-emerald-400" />
               Редактирование профиля автора
@@ -626,7 +629,7 @@ const handleAvatarFileUpload = (e: Event) => {
 
             <div
               @click="emit('select-guide', pinnedGuide.meta.id); emit('close');"
-              class="group bg-gradient-to-r from-amber-500/10 via-[#121416] to-[#121416] border border-amber-500/30 p-5 rounded-2xl cursor-pointer hover:border-amber-400 transition-all flex items-center justify-between shadow-lg"
+              class="group bg-gradient-to-r from-amber-500/10 via-[#16181a] to-[#16181a] border border-amber-500/30 p-5 rounded-2xl cursor-pointer hover:border-amber-400 transition-all flex items-center justify-between shadow-lg"
             >
               <div class="space-y-1">
                 <span class="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md">
@@ -659,13 +662,13 @@ const handleAvatarFileUpload = (e: Event) => {
                 v-for="g in authorGuides"
                 :key="g.meta.id"
                 @click="emit('select-guide', g.meta.id); emit('close');"
-                class="group p-4 bg-[#0c0d0e] hover:bg-[#121416] border border-[#26292d] hover:border-emerald-500/50 rounded-xl cursor-pointer transition-all space-y-2"
+                class="group p-4 bg-[#0c0d0e] hover:bg-[#16181a] border border-[#26292d] hover:border-emerald-500/50 rounded-xl cursor-pointer transition-all space-y-2 shadow-sm"
               >
                 <div class="flex items-center justify-between">
                   <span class="text-[10px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded">
                     {{ g.meta.category }}
                   </span>
-                  <span class="text-[10px] text-dark-muted">{{ g.meta.updatedAt }}</span>
+                  <span class="text-[10px] text-dark-muted font-mono">{{ g.meta.updatedAt }}</span>
                 </div>
                 <h4 class="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
                   {{ g.meta.title }}
