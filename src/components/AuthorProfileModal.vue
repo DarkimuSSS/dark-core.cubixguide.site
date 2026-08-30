@@ -213,18 +213,72 @@ const handleAvatarFileUpload = (e: Event) => {
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn">
     
-    <!-- Outer Relative Card Wrapper for Precise Floating Close Button -->
+    <!-- Outer Relative Card Wrapper for Floating Action Dock -->
     <div class="relative w-full max-w-2xl">
       
-      <!-- DISTINCT FLOATING CLOSE BUTTON MATCHING SCREENSHOT 2 EXACTLY -->
-      <button
-        type="button"
-        @click="emit('close')"
-        class="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 z-50 w-10 h-10 rounded-2xl bg-[#0c0d0e] border-2 border-indigo-500 hover:border-purple-400 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition-all cursor-pointer"
-        title="Закрыть"
-      >
-        <IconRenderer name="X" size="20" class="stroke-[2.5]" />
-      </button>
+      <!-- SLEEK VERTICAL FLOATING ACTION DOCK (Close Button + Profile Action Buttons) -->
+      <div class="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 z-50 flex flex-col gap-2 items-center">
+        <!-- 1. Close Modal Button -->
+        <button
+          type="button"
+          @click="emit('close')"
+          class="w-10 h-10 rounded-2xl bg-[#0c0d0e] border-2 border-indigo-500 hover:border-purple-400 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition-all cursor-pointer"
+          title="Закрыть"
+        >
+          <IconRenderer name="X" size="20" class="stroke-[2.5]" />
+        </button>
+
+        <!-- 2. Admin Panel Button -->
+        <div v-if="isAdmin" class="relative group/tool">
+          <button
+            type="button"
+            @click="isAdminPanelOpen = !isAdminPanelOpen"
+            class="w-10 h-10 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-all shadow-xl hover:scale-105"
+          >
+            <IconRenderer name="Shield" size="18" />
+          </button>
+          <!-- Left Floating Tooltip -->
+          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
+            <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+              {{ isAdminPanelOpen ? 'Закрыть Админку' : 'Админ Панель' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Change Password Button -->
+        <div v-if="isOwnProfile" class="relative group/tool">
+          <button
+            type="button"
+            @click="isChangePasswordOpen = !isChangePasswordOpen; pwdMessage = '';"
+            class="w-10 h-10 rounded-2xl bg-[#0c0d0e] hover:bg-cyan-600/30 text-cyan-300 border-2 border-cyan-500/40 flex items-center justify-center transition-all shadow-xl hover:scale-105"
+          >
+            <IconRenderer name="Lock" size="18" />
+          </button>
+          <!-- Left Floating Tooltip -->
+          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
+            <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+              Сменить пароль
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Edit Profile Button -->
+        <div v-if="isOwnProfile && !isEditing" class="relative group/tool">
+          <button
+            type="button"
+            @click="isEditing = true"
+            class="w-10 h-10 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all shadow-xl hover:scale-105"
+          >
+            <IconRenderer name="Edit3" size="18" />
+          </button>
+          <!-- Left Floating Tooltip -->
+          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
+            <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+              Редактировать профиль
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Main Scrollable Modal Card -->
       <div class="bg-[#16181a] border border-[#26292d] w-full rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar relative">
@@ -254,7 +308,7 @@ const handleAvatarFileUpload = (e: Event) => {
             </div>
 
             <!-- Profile Details -->
-            <div class="space-y-3 text-center sm:text-left flex-1 min-w-0">
+            <div class="space-y-3 text-center sm:text-left flex-1 min-w-0 pr-8">
               <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-3">
                 <div class="min-w-0">
                   <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2 flex-wrap">
@@ -264,60 +318,6 @@ const handleAvatarFileUpload = (e: Event) => {
                     </span>
                   </h2>
                   <p class="text-xs text-dark-muted pt-0.5">Автор {{ authorGuides.length }} опубликованных гайдов</p>
-                </div>
-
-                <!-- Shifted Left Action Buttons: Admin, Password, Edit Profile with Bottom Tooltips -->
-                <div class="flex items-center gap-2 flex-shrink-0 sm:mr-8">
-                  <!-- 1. Admin Panel Button -->
-                  <div v-if="isAdmin" class="relative group/tool">
-                    <button
-                      type="button"
-                      @click="isAdminPanelOpen = !isAdminPanelOpen"
-                      class="w-10 h-10 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-all shadow-md"
-                    >
-                      <IconRenderer name="Shield" size="18" />
-                    </button>
-                    <!-- Bottom Tooltip to avoid colliding with top-right close X button -->
-                    <div class="absolute top-full mt-2 left-1/2 -translate-x-1/2 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
-                      <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
-                        {{ isAdminPanelOpen ? 'Закрыть Админку' : 'Админ Панель' }}
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 2. Change Password Button -->
-                  <div v-if="isOwnProfile" class="relative group/tool">
-                    <button
-                      type="button"
-                      @click="isChangePasswordOpen = !isChangePasswordOpen; pwdMessage = '';"
-                      class="w-10 h-10 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 flex items-center justify-center transition-all shadow-md"
-                    >
-                      <IconRenderer name="Lock" size="18" />
-                    </button>
-                    <!-- Bottom Tooltip -->
-                    <div class="absolute top-full mt-2 left-1/2 -translate-x-1/2 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
-                      <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
-                        Сменить пароль
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 3. Edit Profile Button -->
-                  <div v-if="isOwnProfile && !isEditing" class="relative group/tool">
-                    <button
-                      type="button"
-                      @click="isEditing = true"
-                      class="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all shadow-md"
-                    >
-                      <IconRenderer name="Edit3" size="18" />
-                    </button>
-                    <!-- Bottom Tooltip -->
-                    <div class="absolute top-full mt-2 right-0 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
-                      <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
-                        Редактировать профиль
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
 
