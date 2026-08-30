@@ -490,6 +490,38 @@ const requestDeleteGuide = () => {
   isDeleteGuideConfirmOpen.value = true;
 };
 
+// Delete a guide by ID directly from the catalog (admin quick-delete)
+const pendingDeleteGuideId = ref<string>('');
+const requestDeleteGuideById = (guideId: string) => {
+  if (!currentUserIsAdmin.value) return;
+  pendingDeleteGuideId.value = guideId;
+  isDeleteGuideConfirmOpen.value = true;
+};
+
+const confirmDeleteGuideById = async () => {
+  isDeleteGuideConfirmOpen.value = false;
+  const guideId = pendingDeleteGuideId.value || activeGuide.value?.meta.id;
+  if (!guideId) return;
+  pendingDeleteGuideId.value = '';
+  try {
+    const authorUser = currentUsername.value || '';
+    const res = await fetch(`/api/guides/${guideId}?requestingUsername=${encodeURIComponent(authorUser)}`, {
+      method: 'DELETE',
+      headers: { 'x-author-username': authorUser }
+    });
+    if (res.ok) {
+      clearDraftLocalStorage(guideId);
+      showToast('Гайд успешно удалён');
+      await fetchGuides();
+      if (activeGuide.value?.meta.id === guideId) mode.value = 'home';
+    } else {
+      showToast('Ошибка при удалении гайда');
+    }
+  } catch (e) {
+    showToast('Ошибка сети при удалении');
+  }
+};
+
 const confirmDeleteGuide = async () => {
   isDeleteGuideConfirmOpen.value = false;
   if (!activeGuide.value) return;
@@ -710,9 +742,13 @@ const handleViewAllAuthorGuides = (username: string) => {
           <HomePage
             :guides="guides"
             :initial-search-query="initialCatalogSearchQuery"
+            :is-admin="currentUserIsAdmin"
+            :can-edit-others="canUserEditActiveGuide"
+            :current-username="currentUsername || ''"
             @select-guide="handleHomeSelectGuide"
             @create-guide="createNewGuide"
             @open-author="openAuthorProfile"
+            @delete-guide="requestDeleteGuideById"
           />
           <SiteFooter
             :guides-count="guides.length"
@@ -802,7 +838,7 @@ const handleViewAllAuthorGuides = (username: string) => {
         confirm-text="Да, удалить гайд"
         cancel-text="Отмена"
         type="danger"
-        @confirm="confirmDeleteGuide"
+        @confirm="pendingDeleteGuideId ? confirmDeleteGuideById() : confirmDeleteGuide()"
         @cancel="isDeleteGuideConfirmOpen = false"
       />
     </main>

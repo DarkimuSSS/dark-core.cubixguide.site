@@ -6,12 +6,16 @@ import type { Guide, Category } from '../types/guide';
 const props = defineProps<{
   guides: Guide[];
   initialSearchQuery?: string;
+  isAdmin?: boolean;
+  canEditOthers?: boolean;
+  currentUsername?: string;
 }>();
 
 const emit = defineEmits<{
   (e: 'select-guide', guideId: string): void;
   (e: 'create-guide'): void;
   (e: 'open-author', username: string): void;
+  (e: 'delete-guide', guideId: string): void;
 }>();
 
 const DEFAULT_SERVERS = [
@@ -424,8 +428,19 @@ const getDifficultyBadge = (diff: string) => {
                 </div>
               </div>
 
-              <!-- Date & Hover Arrow Action -->
+              <!-- Date, Trash (admin only) & Hover Arrow Action -->
               <div class="flex items-center gap-2">
+                <!-- Admin trash button -->
+                <button
+                  v-if="isAdmin || canEditOthers"
+                  type="button"
+                  @click.stop="emit('delete-guide', guide.meta.id)"
+                  class="w-6 h-6 rounded-lg bg-[#121416] hover:bg-rose-500/20 text-dark-muted hover:text-rose-400 border border-[#26292d] hover:border-rose-500/40 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                  title="Удалить гайд"
+                >
+                  <IconRenderer name="Trash2" size="12" />
+                </button>
+
                 <span class="font-mono text-[10px] text-slate-400">{{ guide.meta.updatedAt }}</span>
                 <div class="w-6 h-6 rounded-lg bg-[#121416] group-hover:bg-emerald-600 text-slate-400 group-hover:text-white border border-[#26292d] group-hover:border-emerald-500 flex items-center justify-center transition-all">
                   <IconRenderer name="ChevronRight" size="14" class="group-hover:translate-x-0.5 transition-transform" />
