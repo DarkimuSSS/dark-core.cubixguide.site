@@ -77,7 +77,7 @@ const getVariantClass = (variant?: BlockVariant) => {
 </script>
 
 <template>
-  <div class="h-full w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
+  <div class="h-full w-full px-3 sm:px-4 py-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
     
     <!-- LEFT SIDEBAR: INDEPENDENTLY SCROLLABLE COLUMN -->
     <aside :class="[
