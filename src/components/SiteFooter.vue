@@ -44,9 +44,14 @@ const supportLinks = [
             </div>
           </div>
           <div>
-            <div class="text-base font-black text-white tracking-tight flex items-center gap-1.5">
+            <!-- Title row with WIKI badge + guides count badge inline -->
+            <div class="text-base font-black text-white tracking-tight flex items-center gap-1.5 flex-wrap">
               CubixGuide
               <span class="bg-emerald-500/20 text-emerald-400 text-[9px] font-extrabold px-1.5 py-0.5 rounded border border-emerald-500/30">WIKI</span>
+              <span class="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold px-2 py-0.5 rounded-md">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                {{ guidesCount }} гайдов
+              </span>
             </div>
             <div class="text-[10px] text-dark-muted font-semibold tracking-wider">DARK CORE SYSTEM</div>
           </div>
@@ -54,17 +59,6 @@ const supportLinks = [
         <p class="text-xs text-dark-muted leading-relaxed">
           База знаний и гайдов по серверам CubixWorld. Пошаговые статьи, схемы крафтов, прохождения квестов и сборки механизмов.
         </p>
-        <!-- Live stats row -->
-        <div class="flex items-center gap-3 flex-wrap">
-          <div class="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-lg">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            {{ guidesCount }} гайдов
-          </div>
-          <div v-if="serversCount" class="flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-bold px-2.5 py-1 rounded-lg">
-            <IconRenderer name="Box" size="11" />
-            {{ serversCount }} серверов
-          </div>
-        </div>
       </div>
 
       <!-- Column 2: Navigation -->
