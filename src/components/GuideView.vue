@@ -162,17 +162,20 @@ const getVariantClass = (variant?: BlockVariant) => {
             {{ guide.meta.title }}
           </h1>
 
-          <!-- COMPACT & ELEGANT AUTHOR CARD -->
-          <div class="pt-1">
-            <div 
-              @click="emit('open-author', guide.meta.author)" 
-              class="bg-[#121416] hover:bg-[#181a1d] border border-[#26292d] hover:border-cyan-500/50 px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl cursor-pointer transition-all duration-300 shadow-md space-y-1.5 group/author inline-flex flex-col min-w-64"
-              title="Открыть профиль автора"
-            >
-              <div class="text-[11px] text-dark-muted font-medium">Автор статьи:</div>
-              
-              <div class="flex items-center gap-3">
-                <!-- Compact Avatar with Sleek Verified Badge -->
+          <!-- AUTHORS / CO-AUTHORS SECTION -->
+          <div class="pt-1 space-y-2">
+            <div class="text-xs text-dark-muted font-semibold uppercase tracking-wider">
+              {{ (guide.meta.coAuthors || []).length > 0 ? 'Авторы статьи:' : 'Автор статьи:' }}
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+              <!-- MAIN AUTHOR CARD -->
+              <div 
+                @click="emit('open-author', guide.meta.author)" 
+                class="bg-[#121416] hover:bg-[#181a1d] border border-emerald-500/40 hover:border-emerald-400 px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl cursor-pointer transition-all duration-300 shadow-md flex items-center gap-3 group/author"
+                title="Открыть профиль основного автора"
+              >
+                <!-- Avatar with Sleek Verified Badge -->
                 <div class="relative flex-shrink-0">
                   <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-sm overflow-hidden">
                     <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center overflow-hidden">
@@ -188,16 +191,52 @@ const getVariantClass = (variant?: BlockVariant) => {
                   </div>
                 </div>
 
-                <!-- Author Nickname -->
-                <span class="text-sm sm:text-base font-extrabold text-white group-hover/author:text-cyan-400 transition-colors">
-                  {{ guide.meta.author }}
-                </span>
+                <!-- Nickname & Main Author Label -->
+                <div class="flex flex-col">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-sm sm:text-base font-extrabold text-white group-hover/author:text-emerald-400 transition-colors">
+                      {{ guide.meta.author }}
+                    </span>
+                    <span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded-md font-bold">
+                      Основной автор
+                    </span>
+                  </div>
+                </div>
 
                 <!-- Compact Cyan Square Link Icon Button -->
-                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 group-hover/author:bg-cyan-500 group-hover/author:text-white flex items-center justify-center transition-all shadow-sm ml-auto">
+                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 group-hover/author:bg-cyan-500 group-hover/author:text-white flex items-center justify-center transition-all shadow-sm ml-2">
                   <IconRenderer name="ExternalLink" size="14" />
                 </div>
               </div>
+
+              <!-- CO-AUTHORS / HELPERS CARDS -->
+              <template v-for="coAuthor in (guide.meta.coAuthors || [])" :key="coAuthor">
+                <div 
+                  @click="emit('open-author', coAuthor)" 
+                  class="bg-[#121416] hover:bg-[#181a1d] border border-[#26292d] hover:border-cyan-500/50 px-4 py-3 rounded-2xl cursor-pointer transition-all duration-300 shadow-md flex items-center gap-3 group/coauthor"
+                  title="Открыть профиль соавтора"
+                >
+                  <!-- Avatar -->
+                  <div class="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-400/40 text-purple-200 flex items-center justify-center font-bold text-xs">
+                    {{ coAuthor.charAt(0).toUpperCase() }}
+                  </div>
+
+                  <div class="flex flex-col">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-xs sm:text-sm font-bold text-slate-200 group-hover/coauthor:text-cyan-400 transition-colors">
+                        {{ coAuthor }}
+                      </span>
+                      <span class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.2 rounded-md font-semibold">
+                        Помощник / Соавтор
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="w-6 h-6 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 group-hover/coauthor:bg-cyan-500 group-hover/coauthor:text-white flex items-center justify-center transition-all shadow-sm ml-1">
+                    <IconRenderer name="ExternalLink" size="12" />
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
         </article>

@@ -19,12 +19,24 @@ const DEFAULT_CUBIX_SERVERS = [
 
 // Helper to format DB row to Guide object
 function formatGuideRow(row: any): Guide {
+  let coAuthors: string[] = [];
+  try {
+    if (row.co_authors) {
+      coAuthors = JSON.parse(row.co_authors);
+    }
+  } catch (e) {
+    if (typeof row.co_authors === 'string') {
+      coAuthors = row.co_authors.split(',').map((s: string) => s.trim()).filter(Boolean);
+    }
+  }
+
   return {
     meta: {
       id: row.id,
       title: row.title,
       category: row.category,
       author: row.author,
+      coAuthors: coAuthors,
       difficulty: row.difficulty,
       summary: row.summary || '',
       updatedAt: row.updated_at,
@@ -182,8 +194,8 @@ app.post('/api/guides', (req, res) => {
     }
 
     const stmt = db.prepare(`
-      INSERT INTO guides (id, title, category, author, difficulty, summary, updated_at, published, server, blocks)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, server, blocks)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -191,6 +203,7 @@ app.post('/api/guides', (req, res) => {
       guide.meta.title,
       guide.meta.category,
       guide.meta.author,
+      JSON.stringify(guide.meta.coAuthors || []),
       guide.meta.difficulty,
       guide.meta.summary || '',
       guide.meta.updatedAt || new Date().toISOString().split('T')[0],
@@ -213,7 +226,7 @@ app.put('/api/guides/:id', (req, res) => {
 
     const stmt = db.prepare(`
       UPDATE guides
-      SET title = ?, category = ?, author = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, server = ?, blocks = ?
+      SET title = ?, category = ?, author = ?, co_authors = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, server = ?, blocks = ?
       WHERE id = ?
     `);
 
@@ -221,6 +234,7 @@ app.put('/api/guides/:id', (req, res) => {
       guide.meta.title,
       guide.meta.category,
       guide.meta.author,
+      JSON.stringify(guide.meta.coAuthors || []),
       guide.meta.difficulty,
       guide.meta.summary || '',
       guide.meta.updatedAt || new Date().toISOString().split('T')[0],

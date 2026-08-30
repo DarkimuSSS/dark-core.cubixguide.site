@@ -1,7 +1,3 @@
-export type Category = 'ХайТек' | 'Магия RPG' | 'СкайБлок' | 'Автоматизация' | 'Общий';
-
-export type Difficulty = 'Новичок' | 'Опытный' | 'Мастер';
-
 export type BlockType = 
   | 'heading' 
   | 'text' 
@@ -13,28 +9,31 @@ export type BlockType =
   | 'divider'
   | 'section';
 
-// Legacy grid span widths
+export type Category = 'ХайТек' | 'Магия RPG' | 'СкайБлок' | 'Автоматизация' | 'Общий';
+export type Difficulty = 'Новичок' | 'Опытный' | 'Мастер';
+export type CalloutType = 'info' | 'warning' | 'tip' | 'danger';
 export type BlockSpan = 'span-1' | 'span-2' | 'span-3' | 'span-4' | 'span-6';
-
-// Block Alignment
 export type BlockAlign = 'left' | 'center' | 'right';
-
-// Card Styling Variant
 export type BlockVariant = 'default' | 'subtle' | 'accent' | 'bordered';
 
-export interface CraftingItem {
+export interface PresetItem {
   id: string;
   name: string;
   mod: string;
-  icon: string; // Lucide icon name
-  color?: string; // Icon tint color
+  icon: string;
+  color: string;
 }
 
 export interface CraftingSlot {
   index: number;
-  item: CraftingItem | null;
+  item: PresetItem | null;
   count: number;
   tooltip?: string;
+}
+
+export interface MultiblockLayer {
+  layerNumber: number;
+  grid: (string | null)[][]; // Matrix storing block IDs from palette
 }
 
 export interface MultiblockPaletteItem {
@@ -42,11 +41,6 @@ export interface MultiblockPaletteItem {
   name: string;
   icon: string;
   color: string;
-}
-
-export interface MultiblockLayer {
-  layerNumber: number;
-  grid: (string | null)[][]; // Matrix of palette IDs
 }
 
 export interface ChecklistItem {
@@ -58,52 +52,52 @@ export interface ChecklistItem {
 export interface SectionColumn {
   id: string;
   span?: BlockSpan;
-  customWidth?: number; // Custom % width (e.g. 70%, 30%, 33%)
+  customWidth?: number;
   blocks: GuideBlock[];
 }
 
 export interface GuideBlock {
   id: string;
   type: BlockType;
-  span?: BlockSpan; // 1 to 6 columns out of 6
-  customWidth?: number; // Freeform percentage width (15% to 100%)
-  customHeight?: number; // Freeform pixel minHeight (e.g. 200px)
+  span?: BlockSpan; // Grid column span
+  customWidth?: number; // Custom percentage width (15% - 100%)
+  customHeight?: number; // Custom height in pixels (90px - 1000px)
   align?: BlockAlign;
   variant?: BlockVariant;
   
-  // Type: heading
+  // Heading Block
   headingText?: string;
   headingLevel?: 'h1' | 'h2';
   
-  // Type: text
+  // Text Block
   textContent?: string;
   
-  // Type: callout
-  calloutType?: 'info' | 'warning' | 'danger' | 'tip';
+  // Image Block
+  imageUrl?: string;
+  imageCaption?: string;
+  
+  // Callout Box Block
+  calloutType?: CalloutType;
   calloutTitle?: string;
   calloutText?: string;
   
-  // Type: crafting
-  craftingGrid?: CraftingSlot[]; // Array of 9 slots
-  craftingOutput?: CraftingSlot; // 1 output slot
-  
-  // Type: multiblock
-  gridSize?: number; // e.g., 3 for 3x3, 5 for 5x5
+  // Crafting Grid 3x3 Block
+  craftingGrid?: (CraftingSlot | null)[];
+  craftingOutput?: CraftingSlot;
+
+  // Multiblock 3D Layer Painter
+  gridSize?: number;
   palette?: MultiblockPaletteItem[];
   layers?: MultiblockLayer[];
-  
-  // Type: checklist
+
+  // Interactive Checklist Block
   checklistTitle?: string;
   checklistItems?: ChecklistItem[];
 
-  // Type: image
-  imageUrl?: string;
-  imageCaption?: string;
+  // Divider Line Block (<hr>)
+  dividerStyle?: 'line' | 'dashed' | 'dots';
 
-  // Type: divider (<hr>)
-  dividerStyle?: 'line' | 'dots' | 'dashed';
-
-  // Type: section (stacked columns card)
+  // Unified Multi-block Columns Container
   columns?: SectionColumn[];
 }
 
@@ -112,8 +106,9 @@ export interface GuideMeta {
   title: string;
   category: Category;
   author: string;
+  coAuthors?: string[]; // Collaborators and helpers
   difficulty: Difficulty;
-  summary?: string;
+  summary: string;
   updatedAt: string;
   published: boolean;
   server?: string;

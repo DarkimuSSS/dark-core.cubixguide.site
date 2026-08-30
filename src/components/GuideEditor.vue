@@ -130,6 +130,13 @@ const updateAuthor = (val: string) => {
   pushHistoryState(updated);
 };
 
+const updateCoAuthors = (val: string) => {
+  const list = val.split(',').map(s => s.trim()).filter(Boolean);
+  const updated = { ...props.guide, meta: { ...props.guide.meta, coAuthors: list } };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
+};
+
 const updateCategory = (val: Category) => {
   const updated = { ...props.guide, meta: { ...props.guide.meta, category: val } };
   emit('update:guide', updated);
@@ -992,7 +999,7 @@ const scrollToBlockInEditor = (id: string) => {
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-3 border-t border-[#26292d]">
+      <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 pt-3 border-t border-[#26292d]">
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Категория</label>
           <select
@@ -1017,13 +1024,24 @@ const scrollToBlockInEditor = (id: string) => {
         </div>
 
         <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Автор гайда</label>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Основной Автор</label>
           <input
             type="text"
             :value="guide.meta.author"
             @input="updateAuthor(($event.target as HTMLInputElement).value)"
             placeholder="Ваш никнейм..."
             class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-medium rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-accent"
+          />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5">Соавторы / Помощники</label>
+          <input
+            type="text"
+            :value="(guide.meta.coAuthors || []).join(', ')"
+            @input="updateCoAuthors(($event.target as HTMLInputElement).value)"
+            placeholder="через запятую (AlexCraft, CubixFan)..."
+            class="w-full bg-[#0c0d0e] border border-[#26292d] text-cyan-300 text-xs font-medium rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500"
           />
         </div>
 
