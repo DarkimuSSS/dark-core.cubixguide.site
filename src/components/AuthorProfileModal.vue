@@ -104,6 +104,20 @@ const fetchAdminAuthorsList = async () => {
   } catch (e) {}
 };
 
+// Fetch author list whenever modal opens or admin panel is toggled
+watch(() => props.isOpen, (newVal) => {
+  if (newVal) {
+    fetchProfile();
+    if (props.isAdmin) fetchAdminAuthorsList();
+  }
+}, { immediate: true });
+
+watch(isAdminPanelOpen, (isOpen) => {
+  if (isOpen && props.isAdmin) {
+    fetchAdminAuthorsList();
+  }
+});
+
 watch(() => props.username, (newVal) => {
   if (newVal) {
     fetchProfile();
