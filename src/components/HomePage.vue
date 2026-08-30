@@ -330,7 +330,7 @@ const getDifficultyBadge = (diff: string) => {
         <p class="text-xs text-dark-muted">Попробуйте изменить поисковый запрос, категорию или выбранный сервер</p>
       </div>
 
-      <!-- ULTRA COMPACT SLEEK GUIDE CARDS GRID -->
+      <!-- SLEEK GUIDE CARDS GRID WITH EXTENDED COVER BANNER HEIGHT DOWNWARDS -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <div
           v-for="guide in filteredGuides"
@@ -338,12 +338,12 @@ const getDifficultyBadge = (diff: string) => {
           @click="emit('select-guide', guide.meta.id)"
           class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl hover:shadow-emerald-950/30 hover:-translate-y-1 overflow-hidden"
         >
-          <!-- COMPACT COVER BANNER WITH PERFECT LOWER POSITIONING (object-[center_35%]) -->
-          <div v-if="guide.meta.coverUrl" class="h-28 sm:h-32 w-full relative overflow-hidden flex-shrink-0">
-            <img :src="guide.meta.coverUrl" class="w-full h-full object-cover object-[center_35%] group-hover:scale-105 transition-transform duration-500" />
-            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/30 to-transparent"></div>
+          <!-- EXTENDED HEIGHT COVER BANNER DOWNWARDS (h-40 sm:h-44) -->
+          <div v-if="guide.meta.coverUrl" class="h-40 sm:h-44 w-full relative overflow-hidden flex-shrink-0">
+            <img :src="guide.meta.coverUrl" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/20 to-transparent"></div>
           </div>
-          <div v-else-if="guide.meta.coverGradient" :class="['h-20 sm:h-24 w-full relative overflow-hidden flex-shrink-0 bg-gradient-to-tr', guide.meta.coverGradient]">
+          <div v-else-if="guide.meta.coverGradient" :class="['h-28 sm:h-32 w-full relative overflow-hidden flex-shrink-0 bg-gradient-to-tr', guide.meta.coverGradient]">
             <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-transparent to-black/30"></div>
           </div>
 
