@@ -511,6 +511,15 @@ const confirmDeleteGuide = async () => {
     showToast('Ошибка при удалении гайда');
   }
 };
+
+const initialCatalogSearchQuery = ref('');
+
+const handleViewAllAuthorGuides = (username: string) => {
+  initialCatalogSearchQuery.value = username;
+  mode.value = 'home';
+  isProfileModalOpen.value = false;
+  showToast(`Показаны все гайды автора ${username}`);
+};
 </script>
 
 <template>
@@ -695,6 +704,7 @@ const confirmDeleteGuide = async () => {
         <HomePage
           v-if="mode === 'home'"
           :guides="guides"
+          :initial-search-query="initialCatalogSearchQuery"
           @select-guide="handleHomeSelectGuide"
           @create-guide="createNewGuide"
           @open-author="openAuthorProfile"
@@ -793,6 +803,7 @@ const confirmDeleteGuide = async () => {
       :all-guides="guides"
       @close="isProfileModalOpen = false; fetchCurrentAuthorProfile();"
       @select-guide="selectGuide"
+      @view-all-guides="handleViewAllAuthorGuides"
     />
 
     <!-- Password Protected Author Auth Modal -->

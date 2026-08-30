@@ -1028,7 +1028,7 @@ const handleBannerFileUpload = (e: Event) => {
 
               <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div
-                  v-for="g in authorGuides"
+                  v-for="g in displayedAuthorGuides"
                   :key="g.meta.id"
                   @click="emit('select-guide', g.meta.id); emit('close');"
                   class="group p-4 bg-[#0c0d0e]/85 hover:bg-[#121416] border border-[#26292d] hover:border-emerald-500/50 rounded-xl cursor-pointer transition-all space-y-2 backdrop-blur-md shadow-md"
@@ -1042,6 +1042,21 @@ const handleBannerFileUpload = (e: Event) => {
                   <h4 class="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
                     {{ g.meta.title }}
                   </h4>
+                </div>
+
+                <!-- SPECIAL 4TH ITEM: VIEW ALL AUTHOR GUIDES CARD IF TOTAL > 4 -->
+                <div
+                  v-if="authorGuides.length > 4"
+                  @click="emit('view-all-guides', username); emit('close');"
+                  class="group p-4 bg-gradient-to-br from-emerald-950/80 via-[#0c0d0e]/95 to-cyan-950/80 hover:from-emerald-900/90 hover:to-cyan-900/90 border border-emerald-500/50 hover:border-emerald-400 rounded-xl cursor-pointer transition-all flex flex-col items-center justify-center text-center space-y-1.5 backdrop-blur-md shadow-lg"
+                >
+                  <div class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <IconRenderer name="ExternalLink" size="14" />
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold text-emerald-300 group-hover:underline">Все гайды автора ({{ authorGuides.length }})</div>
+                    <div class="text-[10px] text-slate-400 font-medium">Перейти к полному списку →</div>
+                  </div>
                 </div>
               </div>
             </div>

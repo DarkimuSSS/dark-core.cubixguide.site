@@ -5,6 +5,7 @@ import type { Guide, Category } from '../types/guide';
 
 const props = defineProps<{
   guides: Guide[];
+  initialSearchQuery?: string;
 }>();
 
 const emit = defineEmits<{
@@ -21,7 +22,13 @@ const DEFAULT_SERVERS = [
   "SkyTech", "MagicalTech"
 ];
 
-const searchQuery = ref('');
+const searchQuery = ref(props.initialSearchQuery || '');
+
+watch(() => props.initialSearchQuery, (newVal) => {
+  if (newVal !== undefined) {
+    searchQuery.value = newVal;
+  }
+});
 const selectedCategory = ref<string>('Все');
 const selectedServer = ref<string>('Все');
 const isServerDropdownOpen = ref<boolean>(false);
