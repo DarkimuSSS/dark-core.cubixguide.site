@@ -69,33 +69,16 @@ const supportLinks = [
       <!-- Column 2: Navigation -->
       <div class="space-y-4">
         <h4 class="text-[10px] font-extrabold uppercase tracking-widest text-dark-muted">Навигация</h4>
-        <ul class="space-y-2">
-          <li v-for="link in navLinks" :key="link.mode">
-            <button
-              type="button"
-              @click="emit('navigate', link.mode)"
-              class="flex items-center gap-2 text-xs text-slate-400 hover:text-emerald-400 transition-colors group"
-            >
-              <IconRenderer :name="link.icon" size="13" class="text-dark-muted group-hover:text-emerald-400 transition-colors" />
-              {{ link.label }}
-            </button>
-          </li>
-        </ul>
-
-        <!-- Admin credit -->
-        <div class="pt-2 border-t border-[#26292d]">
-          <p class="text-[10px] text-dark-muted mb-2 uppercase tracking-widest font-bold">Авторы</p>
+        <div class="space-y-2">
           <button
+            v-for="link in navLinks"
+            :key="link.mode"
             type="button"
-            @click="emit('open-author', 'DarkimuSSS')"
-            class="flex items-center gap-2 text-xs text-slate-400 hover:text-emerald-400 transition-colors group"
+            @click="emit('navigate', link.mode)"
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border border-[#26292d] text-slate-400 text-xs font-semibold transition-all bg-[#16181a] hover:bg-[#1c1f22] hover:text-emerald-400 hover:border-emerald-500/50"
           >
-            <div class="w-5 h-5 rounded-md bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shrink-0">
-              <div class="w-full h-full bg-[#0c0d0e] rounded-[4px] flex items-center justify-center">
-                <span class="text-[8px] font-black text-emerald-400">D</span>
-              </div>
-            </div>
-            DarkimuSSS
+            <IconRenderer :name="link.icon" size="14" />
+            {{ link.label }}
           </button>
         </div>
       </div>
