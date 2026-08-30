@@ -701,7 +701,7 @@ const handleViewAllAuthorGuides = (username: string) => {
 
       <template v-else>
         <!-- 1. HOMEPAGE CATALOG VIEW (DEFAULT LANDING) -->
-        <div v-if="mode === 'home'" class="h-full overflow-y-auto custom-scrollbar max-w-7xl mx-auto px-4 sm:px-8 pt-6">
+        <div v-if="mode === 'home'" class="h-full overflow-y-auto custom-scrollbar px-3 sm:px-4 pt-4">
           <HomePage
             :guides="guides"
             :initial-search-query="initialCatalogSearchQuery"
@@ -712,7 +712,7 @@ const handleViewAllAuthorGuides = (username: string) => {
         </div>
 
         <!-- 2. BOOKMARKS / FAVORITES VIEW -->
-        <div v-else-if="mode === 'favorites'" class="h-full overflow-y-auto custom-scrollbar max-w-7xl mx-auto px-4 sm:px-8 pt-6 space-y-6 pb-24">
+        <div v-else-if="mode === 'favorites'" class="h-full overflow-y-auto custom-scrollbar px-3 sm:px-4 pt-4 space-y-6 pb-24">
           <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
             <div>
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
@@ -762,7 +762,7 @@ const handleViewAllAuthorGuides = (username: string) => {
         </div>
 
         <!-- 3. EDITOR VIEW (Only for authenticated author) -->
-        <div v-else-if="mode === 'editor' && isAuthenticated && activeGuide" class="h-full overflow-y-auto custom-scrollbar max-w-7xl mx-auto px-4 sm:px-8 pt-6">
+        <div v-else-if="mode === 'editor' && isAuthenticated && activeGuide" class="h-full overflow-y-auto custom-scrollbar px-3 sm:px-4 pt-4">
           <GuideEditor
             :guide="activeGuide"
             @update:guide="updateActiveGuide"

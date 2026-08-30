@@ -148,12 +148,12 @@ const getDifficultyBadge = (diff: string) => {
 <template>
   <div class="space-y-10 pb-24">
     <!-- HERO BANNER SECTION -->
-    <section class="relative rounded-3xl overflow-hidden bg-gradient-to-b from-[#16181a] via-[#121416] to-[#0c0d0e] border border-[#26292d] p-8 sm:p-14 shadow-2xl">
+    <section class="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#16181a] via-[#121416] to-[#0c0d0e] border border-[#26292d] p-6 sm:p-10 shadow-2xl">
       <!-- Glow Decor Circles -->
       <div class="absolute -top-24 -left-24 w-96 h-96 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none"></div>
       <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div class="max-w-3xl mx-auto text-center space-y-6 relative z-10">
+      <div class="text-center space-y-6 relative z-10">
         <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold shadow-inner">
           <IconRenderer name="Sparkles" size="14" class="animate-pulse" />
           <span>Официальный Портал Руководств CubixWorld</span>
