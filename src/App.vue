@@ -523,9 +523,9 @@ const handleViewAllAuthorGuides = (username: string) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] font-sans antialiased">
+  <div class="h-screen w-screen overflow-hidden bg-[#0c0d0e] text-[#e2e8f0] font-sans antialiased flex flex-col">
     <!-- SINGLE UNIFIED TOP HEADER BAR -->
-    <header class="bg-[#16181a] border-b border-[#26292d] h-16 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40 shadow-xl">
+    <header class="bg-[#16181a] border-b border-[#26292d] h-16 shrink-0 px-4 sm:px-8 flex items-center justify-between z-40 shadow-xl">
       <div class="flex items-center gap-4">
         <!-- Logo -->
         <button 
@@ -693,25 +693,26 @@ const handleViewAllAuthorGuides = (username: string) => {
     </header>
 
     <!-- Main Content Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-8 pt-8">
-      <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 text-dark-muted space-y-3">
+    <main class="flex-1 overflow-hidden relative">
+      <div v-if="isLoading" class="flex flex-col items-center justify-center h-full text-dark-muted space-y-3">
         <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
         <div class="text-xs">Загрузка гайдов...</div>
       </div>
 
       <template v-else>
         <!-- 1. HOMEPAGE CATALOG VIEW (DEFAULT LANDING) -->
-        <HomePage
-          v-if="mode === 'home'"
-          :guides="guides"
-          :initial-search-query="initialCatalogSearchQuery"
-          @select-guide="handleHomeSelectGuide"
-          @create-guide="createNewGuide"
-          @open-author="openAuthorProfile"
-        />
+        <div v-if="mode === 'home'" class="h-full overflow-y-auto custom-scrollbar max-w-7xl mx-auto px-4 sm:px-8 pt-6">
+          <HomePage
+            :guides="guides"
+            :initial-search-query="initialCatalogSearchQuery"
+            @select-guide="handleHomeSelectGuide"
+            @create-guide="createNewGuide"
+            @open-author="openAuthorProfile"
+          />
+        </div>
 
         <!-- 2. BOOKMARKS / FAVORITES VIEW -->
-        <div v-else-if="mode === 'favorites'" class="space-y-6 pb-24">
+        <div v-else-if="mode === 'favorites'" class="h-full overflow-y-auto custom-scrollbar max-w-7xl mx-auto px-4 sm:px-8 pt-6 space-y-6 pb-24">
           <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
             <div>
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
@@ -761,14 +762,15 @@ const handleViewAllAuthorGuides = (username: string) => {
         </div>
 
         <!-- 3. EDITOR VIEW (Only for authenticated author) -->
-        <GuideEditor
-          v-else-if="mode === 'editor' && isAuthenticated && activeGuide"
-          :guide="activeGuide"
-          @update:guide="updateActiveGuide"
-          @toggle-preview="mode = 'reader'"
-          @publish="handlePublish"
-          @delete="requestDeleteGuide"
-        />
+        <div v-else-if="mode === 'editor' && isAuthenticated && activeGuide" class="h-full overflow-y-auto custom-scrollbar max-w-7xl mx-auto px-4 sm:px-8 pt-6">
+          <GuideEditor
+            :guide="activeGuide"
+            @update:guide="updateActiveGuide"
+            @toggle-preview="mode = 'reader'"
+            @publish="handlePublish"
+            @delete="requestDeleteGuide"
+          />
+        </div>
 
         <!-- 4. SINGLE GUIDE WIKI READER VIEW -->
         <GuideView

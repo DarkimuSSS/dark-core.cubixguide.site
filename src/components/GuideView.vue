@@ -77,73 +77,71 @@ const getVariantClass = (variant?: BlockVariant) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] flex flex-col">
-    <!-- Main Layout Container with Expanded 12-Column Grid -->
-    <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
-      
-      <!-- WIDER EXPANDED SIDEBAR WITH INDEPENDENT SCROLLING -->
-      <aside :class="[
-        'col-span-1 lg:col-span-3 lg:sticky lg:top-20 z-40 lg:z-0 bg-[#16181a] border border-[#26292d] rounded-2xl p-4 sm:p-5 transition-all duration-300 lg:h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar shadow-xl',
-        isMobileNavOpen ? 'fixed top-20 left-4 shadow-2xl w-80 max-h-[calc(100vh-6rem)]' : 'hidden lg:block w-full'
-      ]">
-        <div class="space-y-5">
-          <div class="flex items-center justify-between pb-3 border-b border-[#26292d]">
-            <div class="text-xs font-extrabold uppercase tracking-wider text-dark-muted flex items-center gap-2">
-              <IconRenderer name="BookOpen" size="16" class="text-emerald-400" />
-              Каталог гайдов
-            </div>
-            <button @click="isMobileNavOpen = false" class="lg:hidden text-dark-muted hover:text-white">
-              <IconRenderer name="X" size="16" />
-            </button>
+  <div class="h-full w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
+    
+    <!-- LEFT SIDEBAR: INDEPENDENTLY SCROLLABLE COLUMN -->
+    <aside :class="[
+      'col-span-1 lg:col-span-3 h-full overflow-y-auto custom-scrollbar bg-[#16181a] border border-[#26292d] rounded-2xl p-4 sm:p-5 shadow-xl transition-all duration-300 pr-2.5',
+      isMobileNavOpen ? 'fixed top-20 left-4 z-40 shadow-2xl w-80 max-h-[calc(100vh-6rem)]' : 'hidden lg:block w-full'
+    ]">
+      <div class="space-y-5">
+        <div class="flex items-center justify-between pb-3 border-b border-[#26292d]">
+          <div class="text-xs font-extrabold uppercase tracking-wider text-dark-muted flex items-center gap-2">
+            <IconRenderer name="BookOpen" size="16" class="text-emerald-400" />
+            Каталог гайдов
+          </div>
+          <button @click="isMobileNavOpen = false" class="lg:hidden text-dark-muted hover:text-white">
+            <IconRenderer name="X" size="16" />
+          </button>
+        </div>
+
+        <!-- SIDEBAR LIVE SEARCH INPUT -->
+        <div class="relative">
+          <input
+            type="text"
+            v-model="sidebarSearchQuery"
+            placeholder="Поиск по гайдам..."
+            class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-8 pr-7 py-2.5 focus:outline-none focus:border-emerald-500/70 transition-all placeholder:text-dark-muted"
+          />
+          <IconRenderer name="Search" size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-muted" />
+          <button
+            v-if="sidebarSearchQuery"
+            @click="sidebarSearchQuery = ''"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white"
+          >
+            <IconRenderer name="X" size="13" />
+          </button>
+        </div>
+
+        <!-- GUIDES LIST -->
+        <div class="space-y-3">
+          <div v-if="filteredAllGuides.length === 0" class="text-center py-6 text-xs text-dark-muted bg-[#0c0d0e] p-3 rounded-xl border border-[#26292d]">
+            Гайды не найдены
           </div>
 
-          <!-- SIDEBAR LIVE SEARCH INPUT -->
-          <div class="relative">
-            <input
-              type="text"
-              v-model="sidebarSearchQuery"
-              placeholder="Поиск по гайдам..."
-              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-8 pr-7 py-2.5 focus:outline-none focus:border-emerald-500/70 transition-all placeholder:text-dark-muted"
-            />
-            <IconRenderer name="Search" size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-muted" />
-            <button
-              v-if="sidebarSearchQuery"
-              @click="sidebarSearchQuery = ''"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white"
-            >
-              <IconRenderer name="X" size="13" />
-            </button>
-          </div>
-
-          <!-- GUIDES LIST -->
-          <div class="space-y-3">
-            <div v-if="filteredAllGuides.length === 0" class="text-center py-6 text-xs text-dark-muted bg-[#0c0d0e] p-3 rounded-xl border border-[#26292d]">
-              Гайды не найдены
-            </div>
-
-            <div 
-              v-for="item in filteredAllGuides" 
-              :key="item.meta.id"
-              @click="emit('select-guide', item.meta.id); isMobileNavOpen = false;"
-              :class="[
-                'p-4 rounded-xl border text-left cursor-pointer transition-all space-y-2 shadow-sm',
-                guide.meta.id === item.meta.id 
-                  ? 'bg-emerald-500/15 border-emerald-500/50 text-white shadow-emerald-950/40 shadow-lg' 
-                  : 'bg-[#121416] border-[#26292d] hover:border-emerald-500/40 text-slate-200'
-              ]"
-            >
-              <div class="text-sm font-bold leading-snug line-clamp-2">{{ item.meta.title }}</div>
-              <div class="flex items-center justify-between text-[11px] text-dark-muted pt-1 border-t border-[#26292d]/60">
-                <span class="font-medium">автор: <strong class="text-slate-300">{{ item.meta.author }}</strong></span>
-                <span class="text-cyan-400 font-bold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">{{ item.meta.category }}</span>
-              </div>
+          <div 
+            v-for="item in filteredAllGuides" 
+            :key="item.meta.id"
+            @click="emit('select-guide', item.meta.id); isMobileNavOpen = false;"
+            :class="[
+              'p-4 rounded-xl border text-left cursor-pointer transition-all space-y-2 shadow-sm',
+              guide.meta.id === item.meta.id 
+                ? 'bg-emerald-500/15 border-emerald-500/50 text-white shadow-emerald-950/40 shadow-lg' 
+                : 'bg-[#121416] border-[#26292d] hover:border-emerald-500/40 text-slate-200'
+            ]"
+          >
+            <div class="text-sm font-bold leading-snug line-clamp-2">{{ item.meta.title }}</div>
+            <div class="flex items-center justify-between text-[11px] text-dark-muted pt-1 border-t border-[#26292d]/60">
+              <span class="font-medium">автор: <strong class="text-slate-300">{{ item.meta.author }}</strong></span>
+              <span class="text-cyan-400 font-bold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">{{ item.meta.category }}</span>
             </div>
           </div>
         </div>
-      </aside>
+      </div>
+    </aside>
 
-      <!-- CONTENT ZONE -->
-      <main class="col-span-1 lg:col-span-9 min-w-0 space-y-8">
+    <!-- RIGHT CONTENT: INDEPENDENTLY SCROLLABLE ARTICLE COLUMN -->
+    <main class="col-span-1 lg:col-span-9 h-full overflow-y-auto custom-scrollbar pr-2 space-y-8 min-w-0 pb-16">
         <article class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-5">
           <div class="flex flex-wrap items-center gap-2">
             <span class="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-semibold border border-cyan-500/30">
@@ -449,7 +447,5 @@ const getVariantClass = (variant?: BlockVariant) => {
           </div>
         </div>
       </main>
-
     </div>
-  </div>
 </template>
