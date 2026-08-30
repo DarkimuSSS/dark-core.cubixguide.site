@@ -36,6 +36,7 @@ const newAuthorPassword = ref('');
 const showNewAuthorPassword = ref(false);
 const adminMessage = ref('');
 const registeredAuthorsList = ref<any[]>([]);
+const authorAvatarsMap = ref<Record<string, string>>({});
 
 // Admin Password Reset Modal State
 const resetTargetUsername = ref<string | null>(null);
@@ -81,7 +82,21 @@ const fetchAdminAuthorsList = async () => {
   try {
     const res = await fetch('/api/admin/authors');
     if (res.ok) {
-      registeredAuthorsList.value = await res.json();
+      const list = await res.json();
+      registeredAuthorsList.value = list;
+
+      // Fetch profile avatar for each author
+      for (const a of list) {
+        try {
+          const pres = await fetch(`/api/profiles/${encodeURIComponent(a.username)}`);
+          if (pres.ok) {
+            const p = await pres.json();
+            if (p.avatarUrl) {
+              authorAvatarsMap.value[a.username.toLowerCase()] = p.avatarUrl;
+            }
+          }
+        } catch (e) {}
+      }
     }
   } catch (e) {}
 };
@@ -628,7 +643,15 @@ const handleBannerFileUpload = (e: Event) => {
                     class="p-3.5 rounded-xl bg-[#16181a]/90 border border-[#26292d] space-y-2.5 text-xs"
                   >
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div class="flex items-center gap-2">
+                      <!-- Author Profile Row Info with Square Gradient Avatar -->
+                      <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md flex-shrink-0">
+                          <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center overflow-hidden">
+                            <img v-if="authorAvatarsMap[a.username.toLowerCase()]" :src="authorAvatarsMap[a.username.toLowerCase()]" class="w-full h-full object-cover" />
+                            <span v-else class="text-xs font-black text-emerald-400">{{ a.username.charAt(0).toUpperCase() }}</span>
+                          </div>
+                        </div>
+
                         <span class="font-bold text-white text-sm">{{ a.username }}</span>
                         <span v-if="a.isAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded font-bold">Главный Админ</span>
                         <span v-else class="text-[9px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-1.5 py-0.5 rounded">Автор</span>
