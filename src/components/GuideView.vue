@@ -144,7 +144,7 @@ const getVariantClass = (variant?: BlockVariant) => {
 
       <!-- CONTENT ZONE -->
       <main class="col-span-1 lg:col-span-9 min-w-0 space-y-8">
-        <article class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-6">
+        <article class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-5">
           <div class="flex flex-wrap items-center gap-2">
             <span class="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-semibold border border-cyan-500/30">
               {{ guide.meta.category }}
@@ -162,40 +162,40 @@ const getVariantClass = (variant?: BlockVariant) => {
             {{ guide.meta.title }}
           </h1>
 
-          <!-- AUTHOR CARD COMPONENT MATCHING USER'S MOCKUP -->
-          <div class="pt-2">
+          <!-- COMPACT & ELEGANT AUTHOR CARD -->
+          <div class="pt-1">
             <div 
               @click="emit('open-author', guide.meta.author)" 
-              class="bg-[#121416] hover:bg-[#181a1d] border border-[#26292d] hover:border-cyan-500/50 p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-300 shadow-xl space-y-2 group/author inline-block min-w-72 sm:min-w-80"
+              class="bg-[#121416] hover:bg-[#181a1d] border border-[#26292d] hover:border-cyan-500/50 px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl cursor-pointer transition-all duration-300 shadow-md space-y-1.5 group/author inline-flex flex-col min-w-64"
               title="Открыть профиль автора"
             >
-              <div class="text-xs text-dark-muted font-medium">Автор статьи:</div>
+              <div class="text-[11px] text-dark-muted font-medium">Автор статьи:</div>
               
-              <div class="flex items-center gap-3.5">
-                <!-- Avatar with Rounded Square Corners and Blue Verified Checkmark Badge -->
+              <div class="flex items-center gap-3">
+                <!-- Compact Avatar with Sleek Verified Badge -->
                 <div class="relative flex-shrink-0">
-                  <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md overflow-hidden">
-                    <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center overflow-hidden">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-sm overflow-hidden">
+                    <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center overflow-hidden">
                       <img v-if="authorProfile?.avatarUrl" :src="authorProfile.avatarUrl" class="w-full h-full object-cover" />
-                      <span v-else class="text-lg font-extrabold text-emerald-400">
+                      <span v-else class="text-sm font-black text-emerald-400">
                         {{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}
                       </span>
                     </div>
                   </div>
-                  <!-- Verified Blue Checkmark Badge in bottom-right corner -->
-                  <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-cyan-500 border-2 border-[#121416] flex items-center justify-center text-white shadow-md">
-                    <IconRenderer name="Check" size="12" class="stroke-[3]" />
+                  <!-- Minimalist Verified Badge -->
+                  <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-cyan-500 border-2 border-[#121416] flex items-center justify-center text-white shadow-sm">
+                    <IconRenderer name="Check" size="10" class="stroke-[3]" />
                   </div>
                 </div>
 
                 <!-- Author Nickname -->
-                <span class="text-lg sm:text-xl font-bold text-white group-hover/author:text-cyan-400 transition-colors flex-1">
+                <span class="text-sm sm:text-base font-extrabold text-white group-hover/author:text-cyan-400 transition-colors">
                   {{ guide.meta.author }}
                 </span>
 
-                <!-- Cyan Square External Link Button [ ↗ ] -->
-                <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 group-hover/author:bg-cyan-500 group-hover/author:text-white flex items-center justify-center transition-all shadow-md flex-shrink-0">
-                  <IconRenderer name="ExternalLink" size="18" />
+                <!-- Compact Cyan Square Link Icon Button -->
+                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 group-hover/author:bg-cyan-500 group-hover/author:text-white flex items-center justify-center transition-all shadow-sm ml-auto">
+                  <IconRenderer name="ExternalLink" size="14" />
                 </div>
               </div>
             </div>
