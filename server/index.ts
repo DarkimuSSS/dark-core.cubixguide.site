@@ -122,14 +122,14 @@ app.post('/api/admin/register-author', (req, res) => {
   }
 });
 
-// Update Author Permissions (Admin)
+// Update Author Permissions & Verification (Admin)
 app.post('/api/admin/permissions', (req, res) => {
   try {
-    const { targetUsername, canEditOthers, canCreateGuides, adminUsername } = req.body;
+    const { targetUsername, canEditOthers, canCreateGuides, isVerified, adminUsername } = req.body;
     if (!targetUsername || !adminUsername) {
       return res.status(400).json({ error: 'Укажите никнейм автора' });
     }
-    const result = updateAuthorPermissionsByAdmin(targetUsername, Boolean(canEditOthers), Boolean(canCreateGuides), adminUsername);
+    const result = updateAuthorPermissionsByAdmin(targetUsername, Boolean(canEditOthers), Boolean(canCreateGuides), Boolean(isVerified), adminUsername);
     res.json(result);
   } catch (err: any) {
     res.status(403).json({ error: err.message });
@@ -176,11 +176,13 @@ app.get('/api/admin/authors', (req, res) => {
 
 // AUTHOR PROFILES API
 
-// Get Author Profile
+// Get Author Profile (including verification flag)
 app.get('/api/profiles/:username', (req, res) => {
   try {
+    const userRow = db.prepare('SELECT is_verified FROM users WHERE LOWER(username) = LOWER(?)').get(req.params.username) as any;
+    const isVerified = userRow ? Boolean(userRow.is_verified) : (req.params.username.toLowerCase() === 'darkimusss');
     const profile = getAuthorProfile(req.params.username);
-    res.json(profile);
+    res.json({ ...profile, isVerified });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -197,7 +199,9 @@ app.post('/api/profiles/:username', (req, res) => {
       ...profileData,
       username: req.params.username
     });
-    res.json(saved);
+    const userRow = db.prepare('SELECT is_verified FROM users WHERE LOWER(username) = LOWER(?)').get(req.params.username) as any;
+    const isVerified = userRow ? Boolean(userRow.is_verified) : (req.params.username.toLowerCase() === 'darkimusss');
+    res.json({ ...saved, isVerified });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

@@ -17,6 +17,7 @@ db.exec(`
     is_admin INTEGER NOT NULL DEFAULT 0,
     can_edit_others INTEGER NOT NULL DEFAULT 0,
     can_create_guides INTEGER NOT NULL DEFAULT 1,
+    is_verified INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL
   );
 
@@ -53,6 +54,7 @@ db.exec(`
 // Migration helpers for columns
 try { db.exec(`ALTER TABLE users ADD COLUMN can_edit_others INTEGER NOT NULL DEFAULT 0;`); } catch (e) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN can_create_guides INTEGER NOT NULL DEFAULT 1;`); } catch (e) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN is_verified INTEGER NOT NULL DEFAULT 0;`); } catch (e) {}
 try { db.exec(`ALTER TABLE profiles ADD COLUMN custom_links TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE profiles ADD COLUMN banner_url TEXT;`); } catch (e) {}
 
@@ -85,7 +87,7 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
   const pwdHash = hashPassword(password);
   const createdAt = new Date().toISOString().split('T')[0];
 
-  const stmt = db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, created_at) VALUES (?, ?, 0, 0, 1, ?)');
+  const stmt = db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, is_verified, created_at) VALUES (?, ?, 0, 0, 1, 0, ?)');
   stmt.run(cleanUsername, pwdHash, createdAt);
 
   // Initialize default profile for new author
@@ -102,18 +104,18 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
 }
 
 // Update Author Permissions (Admin)
-export function updateAuthorPermissionsByAdmin(targetUsername: string, canEditOthers: boolean, canCreateGuides: boolean, adminUsername: string) {
+export function updateAuthorPermissionsByAdmin(targetUsername: string, canEditOthers: boolean, canCreateGuides: boolean, isVerified: boolean, adminUsername: string) {
   const cleanTarget = targetUsername.trim();
 
   const adminRow = db.prepare('SELECT is_admin FROM users WHERE LOWER(username) = LOWER(?)').get(adminUsername) as any;
   if (!adminRow || !adminRow.is_admin) {
-    throw new Error('Только Главный Администратор может изменять права авторов');
+    throw new Error('Только Главный Администратор может изменять права и верификацию авторов');
   }
 
-  const stmt = db.prepare('UPDATE users SET can_edit_others = ?, can_create_guides = ? WHERE LOWER(username) = LOWER(?)');
-  stmt.run(canEditOthers ? 1 : 0, canCreateGuides ? 1 : 0, cleanTarget);
+  const stmt = db.prepare('UPDATE users SET can_edit_others = ?, can_create_guides = ?, is_verified = ? WHERE LOWER(username) = LOWER(?)');
+  stmt.run(canEditOthers ? 1 : 0, canCreateGuides ? 1 : 0, isVerified ? 1 : 0, cleanTarget);
 
-  return { success: true, message: `Права автора ${cleanTarget} успешно обновлены!` };
+  return { success: true, message: `Права и верификация автора ${cleanTarget} успешно обновлены!` };
 }
 
 // Admin-only Reset Author Password Helper
@@ -200,36 +202,41 @@ export function loginUser(username: string, password: string) {
     isAdmin: Boolean(user.is_admin),
     canEditOthers: Boolean(user.can_edit_others),
     canCreateGuides: Boolean(user.can_create_guides),
+    isVerified: Boolean(user.is_verified),
     createdAt: user.created_at
   };
 }
 
 export function listAllAuthors() {
-  const rows = db.prepare('SELECT username, is_admin, can_edit_others, can_create_guides, created_at FROM users ORDER BY created_at DESC').all();
+  const rows = db.prepare('SELECT username, is_admin, can_edit_others, can_create_guides, is_verified, created_at FROM users ORDER BY created_at DESC').all();
   return rows.map((r: any) => ({
     username: r.username,
     isAdmin: Boolean(r.is_admin),
     canEditOthers: Boolean(r.can_edit_others),
     canCreateGuides: Boolean(r.can_create_guides),
+    isVerified: Boolean(r.is_verified),
     createdAt: r.created_at
   }));
 }
 
-// Seed Super Admin DarkimuSSS with password cubix2026
+// Seed Super Admin DarkimuSSS with password cubix2026 and verification
 const adminCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE LOWER(username) = ?').get('darkimusss') as { count: number };
 if (adminCount.count === 0) {
   try {
     const pwdHash = hashPassword('cubix2026');
     const createdAt = new Date().toISOString().split('T')[0];
-    db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, created_at) VALUES (?, ?, 1, 1, 1, ?)').run('DarkimuSSS', pwdHash, createdAt);
+    db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, is_verified, created_at) VALUES (?, ?, 1, 1, 1, 1, ?)').run('DarkimuSSS', pwdHash, createdAt);
   } catch (e) {}
 } else {
-  // Ensure Super Admin has all permissions
-  db.prepare('UPDATE users SET is_admin = 1, can_edit_others = 1, can_create_guides = 1 WHERE LOWER(username) = ?').run('darkimusss');
+  // Ensure Super Admin has all permissions and verification
+  db.prepare('UPDATE users SET is_admin = 1, can_edit_others = 1, can_create_guides = 1, is_verified = 1 WHERE LOWER(username) = ?').run('darkimusss');
 }
 
 // Helper to get or create profile
 export function getAuthorProfile(username: string): AuthorProfile {
+  const userRow = db.prepare('SELECT is_verified FROM users WHERE LOWER(username) = LOWER(?)').get(username) as any;
+  const isVerified = userRow ? Boolean(userRow.is_verified) : (username.toLowerCase() === 'darkimusss');
+
   const row = db.prepare('SELECT * FROM profiles WHERE LOWER(username) = LOWER(?)').get(username) as any;
   if (row) {
     let customLinks = [];

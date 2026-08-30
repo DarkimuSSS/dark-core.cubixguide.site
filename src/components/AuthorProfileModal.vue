@@ -18,6 +18,7 @@ const emit = defineEmits<{
 
 const isEditing = ref(false);
 const isLoading = ref(false);
+const isAuthorVerified = ref(false);
 
 // Change Password State
 const isChangePasswordOpen = ref(false);
@@ -67,7 +68,9 @@ const fetchProfile = async () => {
     isLoading.value = true;
     const res = await fetch(`/api/profiles/${encodeURIComponent(props.username)}`);
     if (res.ok) {
-      profile.value = await res.json();
+      const data = await res.json();
+      profile.value = data;
+      isAuthorVerified.value = Boolean(data.isVerified);
       if (!profile.value.customLinks) profile.value.customLinks = [];
     }
   } catch (err) {
@@ -126,7 +129,9 @@ const saveProfile = async () => {
       body: JSON.stringify(profile.value)
     });
     if (res.ok) {
-      profile.value = await res.json();
+      const data = await res.json();
+      profile.value = data;
+      isAuthorVerified.value = Boolean(data.isVerified);
       isEditing.value = false;
     }
   } catch (err) {
@@ -209,10 +214,11 @@ const handleAdminRegisterAuthor = async () => {
   }
 };
 
-const handleToggleAuthorPermission = async (author: any, permType: 'editOthers' | 'createGuides') => {
+const handleToggleAuthorPermission = async (author: any, permType: 'editOthers' | 'createGuides' | 'verification') => {
   adminMessage.value = '';
   const newEditOthers = permType === 'editOthers' ? !author.canEditOthers : author.canEditOthers;
   const newCreateGuides = permType === 'createGuides' ? !author.canCreateGuides : author.canCreateGuides;
+  const newIsVerified = permType === 'verification' ? !author.isVerified : author.isVerified;
 
   try {
     const res = await fetch('/api/admin/permissions', {
@@ -222,13 +228,17 @@ const handleToggleAuthorPermission = async (author: any, permType: 'editOthers' 
         targetUsername: author.username,
         canEditOthers: newEditOthers,
         canCreateGuides: newCreateGuides,
+        isVerified: newIsVerified,
         adminUsername: props.username
       })
     });
     const data = await res.json();
     if (res.ok) {
-      adminMessage.value = data.message || 'Права автора обновлены!';
+      adminMessage.value = data.message || 'Права и верификация автора обновлены!';
       fetchAdminAuthorsList();
+      if (author.username.toLowerCase() === props.username.toLowerCase()) {
+        fetchProfile();
+      }
     } else {
       adminMessage.value = data.error || 'Ошибка обновления прав';
     }
@@ -465,6 +475,22 @@ const handleBannerFileUpload = (e: Event) => {
                   <div class="min-w-0">
                     <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2 flex-wrap drop-shadow-md">
                       <span>{{ profile.username }}</span>
+
+                      <!-- VERIFIED AUTHOR BADGE WITH HOVER TOOLTIP "Проверенный Автор" -->
+                      <div v-if="isAuthorVerified" class="relative group/vtool inline-flex items-center">
+                        <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 flex items-center justify-center shadow-lg cursor-help transition-transform hover:scale-110">
+                          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+                            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                          </svg>
+                        </span>
+                        <!-- Tooltip Popup -->
+                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/vtool:flex items-center pointer-events-none z-30">
+                          <div class="bg-[#0c0d0e] border border-emerald-500/50 text-emerald-300 text-[11px] font-bold px-2.5 py-1 rounded-xl whitespace-nowrap shadow-2xl backdrop-blur-md">
+                            ✔ Проверенный Автор
+                          </div>
+                        </div>
+                      </div>
+
                       <span v-if="profile.server" class="text-xs font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-2.5 py-0.5 rounded-lg shadow-md backdrop-blur-md">
                         🎮 {{ profile.server }}
                       </span>
@@ -652,7 +678,10 @@ const handleBannerFileUpload = (e: Event) => {
                           </div>
                         </div>
 
-                        <span class="font-bold text-white text-sm">{{ a.username }}</span>
+                        <span class="font-bold text-white text-sm flex items-center gap-1">
+                          <span>{{ a.username }}</span>
+                          <span v-if="a.isVerified" class="text-emerald-400" title="Проверенный Автор">✔</span>
+                        </span>
                         <span v-if="a.isAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded font-bold">Главный Админ</span>
                         <span v-else class="text-[9px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-1.5 py-0.5 rounded">Автор</span>
                         <span class="text-[10px] text-dark-muted font-mono">c {{ a.createdAt }}</span>
@@ -684,26 +713,37 @@ const handleBannerFileUpload = (e: Event) => {
                       </div>
                     </div>
 
-                    <!-- GRANULAR PERMISSION TOGGLES -->
-                    <div v-if="!a.isAdmin" class="flex flex-wrap items-center gap-3 pt-2 border-t border-[#26292d]">
-                      <label class="flex items-center gap-2 cursor-pointer bg-[#0c0d0e] px-3 py-1.5 rounded-xl border border-[#26292d] hover:border-purple-500/40 transition-all">
+                    <!-- GRANULAR PERMISSION & VERIFICATION TOGGLES -->
+                    <div class="flex flex-wrap items-center gap-2.5 pt-2 border-t border-[#26292d]">
+                      <!-- Verification Toggle -->
+                      <label class="flex items-center gap-1.5 cursor-pointer bg-[#0c0d0e] px-2.5 py-1.5 rounded-xl border border-emerald-500/40 hover:border-emerald-400 transition-all">
+                        <input
+                          type="checkbox"
+                          :checked="a.isVerified"
+                          @change="handleToggleAuthorPermission(a, 'verification')"
+                          class="accent-emerald-500 rounded"
+                        />
+                        <span class="text-[11px] text-emerald-300 font-bold">✔ Выдать Верификацию (Галочку)</span>
+                      </label>
+
+                      <label v-if="!a.isAdmin" class="flex items-center gap-1.5 cursor-pointer bg-[#0c0d0e] px-2.5 py-1.5 rounded-xl border border-[#26292d] hover:border-purple-500/40 transition-all">
                         <input
                           type="checkbox"
                           :checked="a.canEditOthers"
                           @change="handleToggleAuthorPermission(a, 'editOthers')"
                           class="accent-purple-500 rounded"
                         />
-                        <span class="text-[11px] text-purple-200 font-semibold">✏️ Разрешить редактировать ЧУЖИЕ гайды</span>
+                        <span class="text-[11px] text-purple-200 font-semibold">✏️ Редактировать ЧУЖИЕ гайды</span>
                       </label>
 
-                      <label class="flex items-center gap-2 cursor-pointer bg-[#0c0d0e] px-3 py-1.5 rounded-xl border border-[#26292d] hover:border-emerald-500/40 transition-all">
+                      <label v-if="!a.isAdmin" class="flex items-center gap-1.5 cursor-pointer bg-[#0c0d0e] px-2.5 py-1.5 rounded-xl border border-[#26292d] hover:border-emerald-500/40 transition-all">
                         <input
                           type="checkbox"
                           :checked="a.canCreateGuides"
                           @change="handleToggleAuthorPermission(a, 'createGuides')"
                           class="accent-emerald-500 rounded"
                         />
-                        <span class="text-[11px] text-emerald-200 font-semibold">➕ Разрешить создавать СВОИ гайды</span>
+                        <span class="text-[11px] text-emerald-200 font-semibold">➕ Создавать СВОИ гайды</span>
                       </label>
                     </div>
 
