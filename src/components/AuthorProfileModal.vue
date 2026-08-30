@@ -213,8 +213,76 @@ const handleAvatarFileUpload = (e: Event) => {
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn">
     
-    <!-- BELOVED COMPACT MODAL CONTAINER -->
+    <!-- COMPACT MODAL CONTAINER WITH INTEGRATED VERTICAL ACTION DOCK -->
     <div class="bg-[#16181a] border border-[#26292d] w-full max-w-2xl rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar relative">
+
+      <!-- INTEGRATED VERTICAL ACTION DOCK IN TOP-RIGHT CORNER -->
+      <div class="absolute top-5 right-5 z-20 flex flex-col items-center gap-2">
+        
+        <!-- 1. Close Modal Button -->
+        <div class="relative group/tool">
+          <button
+            type="button"
+            @click="emit('close')"
+            class="w-9 h-9 rounded-xl bg-[#0c0d0e] hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-[#26292d] hover:border-rose-500/40 flex items-center justify-center transition-all shadow-md cursor-pointer"
+          >
+            <IconRenderer name="X" size="16" class="stroke-[2.5]" />
+          </button>
+          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2.5 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+            <div class="bg-[#0c0d0e] border border-rose-500/40 text-rose-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+              Закрыть
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Admin Panel Button -->
+        <div v-if="isAdmin" class="relative group/tool">
+          <button
+            type="button"
+            @click="isAdminPanelOpen = !isAdminPanelOpen"
+            class="w-9 h-9 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-all shadow-md"
+          >
+            <IconRenderer name="Shield" size="16" />
+          </button>
+          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2.5 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+            <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+              {{ isAdminPanelOpen ? 'Закрыть Админку' : 'Админ Панель' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Change Password Button -->
+        <div v-if="isOwnProfile" class="relative group/tool">
+          <button
+            type="button"
+            @click="isChangePasswordOpen = !isChangePasswordOpen; pwdMessage = '';"
+            class="w-9 h-9 rounded-xl bg-[#0c0d0e] hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 flex items-center justify-center transition-all shadow-md"
+          >
+            <IconRenderer name="Lock" size="16" />
+          </button>
+          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2.5 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+            <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+              Сменить пароль
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Edit Profile Button -->
+        <div v-if="isOwnProfile && !isEditing" class="relative group/tool">
+          <button
+            type="button"
+            @click="isEditing = true"
+            class="w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all shadow-md"
+          >
+            <IconRenderer name="Edit3" size="16" />
+          </button>
+          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-2.5 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
+            <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+              Редактировать профиль
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Loading State -->
       <div v-if="isLoading" class="py-12 text-center text-dark-muted space-y-2">
@@ -241,84 +309,15 @@ const handleAvatarFileUpload = (e: Event) => {
           </div>
 
           <!-- Profile Details -->
-          <div class="space-y-3 text-center sm:text-left flex-1 min-w-0">
-            <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-3">
-              <div class="min-w-0">
-                <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-                  <span>{{ profile.username }}</span>
-                  <span v-if="profile.server" class="text-xs font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2.5 py-0.5 rounded-lg">
-                    🎮 {{ profile.server }}
-                  </span>
-                </h2>
-                <p class="text-xs text-dark-muted pt-0.5">Автор {{ authorGuides.length }} опубликованных гайдов</p>
-              </div>
-
-              <!-- CLEAN INTEGRATED TOP-RIGHT ACTIONS BAR (Action Buttons + Close Button X) -->
-              <div class="flex items-center gap-1.5 flex-shrink-0">
-                <!-- Admin Panel Button -->
-                <div v-if="isAdmin" class="relative group/tool">
-                  <button
-                    type="button"
-                    @click="isAdminPanelOpen = !isAdminPanelOpen"
-                    class="w-9 h-9 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-all shadow-md"
-                  >
-                    <IconRenderer name="Shield" size="16" />
-                  </button>
-                  <div class="absolute top-full mt-2 right-0 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
-                    <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
-                      {{ isAdminPanelOpen ? 'Закрыть Админку' : 'Админ Панель' }}
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Change Password Button -->
-                <div v-if="isOwnProfile" class="relative group/tool">
-                  <button
-                    type="button"
-                    @click="isChangePasswordOpen = !isChangePasswordOpen; pwdMessage = '';"
-                    class="w-9 h-9 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 flex items-center justify-center transition-all shadow-md"
-                  >
-                    <IconRenderer name="Lock" size="16" />
-                  </button>
-                  <div class="absolute top-full mt-2 right-0 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
-                    <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
-                      Сменить пароль
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Edit Profile Button -->
-                <div v-if="isOwnProfile && !isEditing" class="relative group/tool">
-                  <button
-                    type="button"
-                    @click="isEditing = true"
-                    class="w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all shadow-md"
-                  >
-                    <IconRenderer name="Edit3" size="16" />
-                  </button>
-                  <div class="absolute top-full mt-2 right-0 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
-                    <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
-                      Редактировать профиль
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Clean Integrated Close Button X -->
-                <div class="relative group/tool">
-                  <button
-                    type="button"
-                    @click="emit('close')"
-                    class="w-9 h-9 rounded-xl bg-[#0c0d0e] hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-[#26292d] hover:border-rose-500/40 flex items-center justify-center transition-all shadow-md cursor-pointer ml-1"
-                  >
-                    <IconRenderer name="X" size="16" class="stroke-[2.5]" />
-                  </button>
-                  <div class="absolute top-full mt-2 right-0 hidden group-hover/tool:flex items-center z-30 pointer-events-none">
-                    <div class="bg-[#0c0d0e] border border-rose-500/40 text-rose-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
-                      Закрыть
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div class="space-y-3 text-center sm:text-left flex-1 min-w-0 pr-12">
+            <div class="min-w-0">
+              <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                <span>{{ profile.username }}</span>
+                <span v-if="profile.server" class="text-xs font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2.5 py-0.5 rounded-lg">
+                  🎮 {{ profile.server }}
+                </span>
+              </h2>
+              <p class="text-xs text-dark-muted pt-0.5">Автор {{ authorGuides.length }} опубликованных гайдов</p>
             </div>
 
             <!-- Badges List -->
