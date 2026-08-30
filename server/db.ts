@@ -15,6 +15,8 @@ db.exec(`
     username TEXT PRIMARY KEY,
     password_hash TEXT NOT NULL,
     is_admin INTEGER NOT NULL DEFAULT 0,
+    can_edit_others INTEGER NOT NULL DEFAULT 0,
+    can_create_guides INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL
   );
 
@@ -47,10 +49,10 @@ db.exec(`
   );
 `);
 
-// Migration helper to add custom_links column if missing
-try {
-  db.exec(`ALTER TABLE profiles ADD COLUMN custom_links TEXT;`);
-} catch (e) {}
+// Migration helpers for permissions columns
+try { db.exec(`ALTER TABLE users ADD COLUMN can_edit_others INTEGER NOT NULL DEFAULT 0;`); } catch (e) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN can_create_guides INTEGER NOT NULL DEFAULT 1;`); } catch (e) {}
+try { db.exec(`ALTER TABLE profiles ADD COLUMN custom_links TEXT;`); } catch (e) {}
 
 // Password hashing helper (SHA-256 with salt)
 export function hashPassword(password: string): string {
@@ -81,8 +83,8 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
   const pwdHash = hashPassword(password);
   const createdAt = new Date().toISOString().split('T')[0];
 
-  const stmt = db.prepare('INSERT INTO users (username, password_hash, is_admin, created_at) VALUES (?, ?, ?, ?)');
-  stmt.run(cleanUsername, pwdHash, 0, createdAt);
+  const stmt = db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, created_at) VALUES (?, ?, 0, 0, 1, ?)');
+  stmt.run(cleanUsername, pwdHash, createdAt);
 
   // Initialize default profile for new author
   saveAuthorProfile({
@@ -95,6 +97,21 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
   });
 
   return { username: cleanUsername, createdAt };
+}
+
+// Update Author Permissions (Admin)
+export function updateAuthorPermissionsByAdmin(targetUsername: string, canEditOthers: boolean, canCreateGuides: boolean, adminUsername: string) {
+  const cleanTarget = targetUsername.trim();
+
+  const adminRow = db.prepare('SELECT is_admin FROM users WHERE LOWER(username) = LOWER(?)').get(adminUsername) as any;
+  if (!adminRow || !adminRow.is_admin) {
+    throw new Error('Только Главный Администратор может изменять права авторов');
+  }
+
+  const stmt = db.prepare('UPDATE users SET can_edit_others = ?, can_create_guides = ? WHERE LOWER(username) = LOWER(?)');
+  stmt.run(canEditOthers ? 1 : 0, canCreateGuides ? 1 : 0, cleanTarget);
+
+  return { success: true, message: `Права автора ${cleanTarget} успешно обновлены!` };
 }
 
 // Admin-only Reset Author Password Helper
@@ -176,12 +193,24 @@ export function loginUser(username: string, password: string) {
     throw new Error('Неверный никнейм или пароль');
   }
 
-  return { username: user.username, isAdmin: Boolean(user.is_admin), createdAt: user.created_at };
+  return {
+    username: user.username,
+    isAdmin: Boolean(user.is_admin),
+    canEditOthers: Boolean(user.can_edit_others),
+    canCreateGuides: Boolean(user.can_create_guides),
+    createdAt: user.created_at
+  };
 }
 
 export function listAllAuthors() {
-  const rows = db.prepare('SELECT username, is_admin, created_at FROM users ORDER BY created_at DESC').all();
-  return rows.map((r: any) => ({ username: r.username, isAdmin: Boolean(r.is_admin), createdAt: r.created_at }));
+  const rows = db.prepare('SELECT username, is_admin, can_edit_others, can_create_guides, created_at FROM users ORDER BY created_at DESC').all();
+  return rows.map((r: any) => ({
+    username: r.username,
+    isAdmin: Boolean(r.is_admin),
+    canEditOthers: Boolean(r.can_edit_others),
+    canCreateGuides: Boolean(r.can_create_guides),
+    createdAt: r.created_at
+  }));
 }
 
 // Seed Super Admin DarkimuSSS with password cubix2026
@@ -190,8 +219,11 @@ if (adminCount.count === 0) {
   try {
     const pwdHash = hashPassword('cubix2026');
     const createdAt = new Date().toISOString().split('T')[0];
-    db.prepare('INSERT INTO users (username, password_hash, is_admin, created_at) VALUES (?, ?, 1, ?)').run('DarkimuSSS', pwdHash, createdAt);
+    db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, created_at) VALUES (?, ?, 1, 1, 1, ?)').run('DarkimuSSS', pwdHash, createdAt);
   } catch (e) {}
+} else {
+  // Ensure Super Admin has all permissions
+  db.prepare('UPDATE users SET is_admin = 1, can_edit_others = 1, can_create_guides = 1 WHERE LOWER(username) = ?').run('darkimusss');
 }
 
 // Helper to get or create profile

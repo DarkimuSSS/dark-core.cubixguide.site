@@ -8,7 +8,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'authenticate', payload: { username: string; isAdmin: boolean }): void;
+  (e: 'authenticate', payload: { username: string; isAdmin: boolean; canEditOthers?: boolean; canCreateGuides?: boolean }): void;
 }>();
 
 const username = ref('');
@@ -37,7 +37,12 @@ const handleLogin = async () => {
 
     const data = await res.json();
     if (res.ok && data.username) {
-      emit('authenticate', { username: data.username, isAdmin: Boolean(data.isAdmin) });
+      emit('authenticate', {
+        username: data.username,
+        isAdmin: Boolean(data.isAdmin),
+        canEditOthers: Boolean(data.canEditOthers),
+        canCreateGuides: Boolean(data.canCreateGuides)
+      });
       username.value = '';
       password.value = '';
     } else {
@@ -58,65 +63,56 @@ const handleLogin = async () => {
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
         <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 flex items-center justify-center text-white font-bold shadow-md">
-            <IconRenderer name="Lock" size="18" />
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-white font-extrabold shadow-lg shadow-emerald-950/50">
+            <IconRenderer name="Lock" size="20" />
           </div>
           <div>
-            <h3 class="text-base font-extrabold text-white">Вход для Авторов</h3>
-            <p class="text-[11px] text-dark-muted">Авторизация по логину и паролю</p>
+            <h2 class="text-lg font-extrabold text-white">Вход для Авторов</h2>
+            <p class="text-xs text-dark-muted">Авторизуйтесь для создания и правки гайдов</p>
           </div>
         </div>
-
-        <button @click="emit('close')" class="text-dark-muted hover:text-white p-1.5 rounded-lg bg-[#0c0d0e] border border-[#26292d]">
-          <IconRenderer name="X" size="16" />
+        <button
+          type="button"
+          @click="emit('close')"
+          class="text-dark-muted hover:text-white p-1 rounded-xl hover:bg-[#212429] transition-all"
+        >
+          <IconRenderer name="X" size="20" />
         </button>
       </div>
 
-      <!-- Info Banner -->
-      <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs leading-relaxed flex items-start gap-2.5">
-        <IconRenderer name="Shield" size="16" class="text-amber-400 flex-shrink-0 mt-0.5" />
-        <div>
-          <strong class="text-amber-200">Закрытый доступ для авторов.</strong>
-          Регистрацию новых аккаунтов производит только Главный Администратор (DarkimuSSS).
-        </div>
-      </div>
-
       <!-- Error Message -->
-      <div v-if="errorMessage" class="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs font-semibold flex items-center gap-2">
+      <div v-if="errorMessage" class="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs font-bold flex items-center gap-2">
         <IconRenderer name="AlertTriangle" size="16" class="text-rose-400 flex-shrink-0" />
         <span>{{ errorMessage }}</span>
       </div>
 
-      <!-- LOGIN FORM -->
+      <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="space-y-4">
-        <div class="space-y-1.5">
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted">Никнейм автора</label>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Никнейм автора</label>
           <input
             type="text"
             v-model="username"
-            placeholder="Введите ваш никнейм..."
-            required
-            class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-accent text-white text-sm rounded-xl px-4 py-3 focus:outline-none transition-all"
+            placeholder="Ваш никнейм..."
+            class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-emerald-accent"
           />
         </div>
 
-        <div class="space-y-1.5">
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted">Пароль</label>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Пароль</label>
           <div class="relative">
             <input
               :type="showPassword ? 'text' : 'password'"
               v-model="password"
-              placeholder="Ваш пароль..."
-              required
-              class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-accent text-white text-sm rounded-xl pl-4 pr-11 py-3 focus:outline-none transition-all"
+              placeholder="Введите пароль..."
+              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3.5 pr-10 py-2.5 focus:outline-none focus:border-emerald-accent"
             />
             <button
               type="button"
               @click="showPassword = !showPassword"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1 rounded-lg transition-colors"
-              :title="showPassword ? 'Скрыть пароль' : 'Показать пароль'"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1"
             >
-              <IconRenderer :name="showPassword ? 'EyeOff' : 'Eye'" size="18" class="text-cyan-400" />
+              <IconRenderer :name="showPassword ? 'EyeOff' : 'Eye'" size="16" class="text-cyan-400" />
             </button>
           </div>
         </div>
@@ -124,12 +120,17 @@ const handleLogin = async () => {
         <button
           type="submit"
           :disabled="isLoading"
-          class="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white py-3 rounded-xl font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2"
+          class="w-full py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-950/50 transition-all flex items-center justify-center gap-2"
         >
           <span v-if="isLoading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-          <span>Войти в аккаунт автора</span>
+          <span>Войти в Аккаунт</span>
         </button>
       </form>
+
+      <!-- Closed Registration Note -->
+      <div class="text-center text-[11px] text-dark-muted pt-2 border-t border-[#26292d]">
+        🔒 Регистрация авторов осуществляется только по запросу через Главного Администратора (<span class="text-emerald-400 font-bold">DarkimuSSS</span>).
+      </div>
     </div>
   </div>
 </template>

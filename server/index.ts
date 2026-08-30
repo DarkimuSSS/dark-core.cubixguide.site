@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin } from './db';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
 const app = express();
@@ -106,7 +106,7 @@ app.post('/api/auth/change-password', (req, res) => {
   }
 });
 
-// ADMIN-ONLY AUTHOR MANAGEMENT ENDPOINTS
+// ADMIN-ONLY AUTHOR & PERMISSIONS MANAGEMENT ENDPOINTS
 
 // Register New Author (Only Admin can do this manually)
 app.post('/api/admin/register-author', (req, res) => {
@@ -117,6 +117,20 @@ app.post('/api/admin/register-author', (req, res) => {
     }
     const result = registerAuthorByAdmin(username, password, adminUsername);
     res.status(201).json(result);
+  } catch (err: any) {
+    res.status(403).json({ error: err.message });
+  }
+});
+
+// Update Author Permissions (Admin)
+app.post('/api/admin/permissions', (req, res) => {
+  try {
+    const { targetUsername, canEditOthers, canCreateGuides, adminUsername } = req.body;
+    if (!targetUsername || !adminUsername) {
+      return res.status(400).json({ error: 'Укажите никнейм автора' });
+    }
+    const result = updateAuthorPermissionsByAdmin(targetUsername, Boolean(canEditOthers), Boolean(canCreateGuides), adminUsername);
+    res.json(result);
   } catch (err: any) {
     res.status(403).json({ error: err.message });
   }

@@ -193,6 +193,34 @@ const handleAdminRegisterAuthor = async () => {
   }
 };
 
+const handleToggleAuthorPermission = async (author: any, permType: 'editOthers' | 'createGuides') => {
+  adminMessage.value = '';
+  const newEditOthers = permType === 'editOthers' ? !author.canEditOthers : author.canEditOthers;
+  const newCreateGuides = permType === 'createGuides' ? !author.canCreateGuides : author.canCreateGuides;
+
+  try {
+    const res = await fetch('/api/admin/permissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetUsername: author.username,
+        canEditOthers: newEditOthers,
+        canCreateGuides: newCreateGuides,
+        adminUsername: props.username
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      adminMessage.value = data.message || 'Права автора обновлены!';
+      fetchAdminAuthorsList();
+    } else {
+      adminMessage.value = data.error || 'Ошибка обновления прав';
+    }
+  } catch (err) {
+    adminMessage.value = 'Ошибка соединения с сервером';
+  }
+};
+
 const handleAdminResetAuthorPassword = async (targetUser: string) => {
   adminMessage.value = '';
   if (!resetNewPassword.value.trim()) {
@@ -511,12 +539,12 @@ const handleAvatarFileUpload = (e: Event) => {
             </div>
           </div>
 
-          <!-- ADMIN PANEL: AUTHOR MANAGEMENT (Super Admin Only) -->
+          <!-- ADMIN PANEL: AUTHOR & PERMISSIONS MANAGEMENT (Super Admin Only) -->
           <div v-if="isAdminPanelOpen && isAdmin" class="space-y-4 bg-purple-950/20 border border-purple-500/40 p-5 rounded-2xl">
             <div class="flex items-center justify-between border-b border-purple-500/30 pb-2">
               <h3 class="text-xs font-extrabold text-purple-300 uppercase tracking-wider flex items-center gap-2">
                 <IconRenderer name="Shield" size="16" class="text-purple-400" />
-                Панель Управления Авторами (Главный Администратор)
+                Панель Управления Правами и Авторами (Главный Администратор)
               </h3>
             </div>
 
@@ -567,49 +595,74 @@ const handleAvatarFileUpload = (e: Event) => {
               </button>
             </div>
 
-            <!-- List and Full Management of Registered Authors -->
+            <!-- List and Full Management of Registered Authors & Permissions -->
             <div class="space-y-3 pt-2">
-              <div class="text-[11px] font-bold text-purple-300 uppercase">Список и управление всеми авторами ({{ registeredAuthorsList.length }}):</div>
-              <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+              <div class="text-[11px] font-bold text-purple-300 uppercase">Настройка прав и доступов к гайдам ({{ registeredAuthorsList.length }}):</div>
+              <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
                 <div
                   v-for="a in registeredAuthorsList"
                   :key="a.username"
-                  class="p-3 rounded-xl bg-[#0c0d0e] border border-[#26292d] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                  class="p-3.5 rounded-xl bg-[#0c0d0e] border border-[#26292d] space-y-2.5 text-xs"
                 >
-                  <div class="flex items-center gap-2">
-                    <span class="font-bold text-white text-sm">{{ a.username }}</span>
-                    <span v-if="a.isAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded font-bold">Главный Админ</span>
-                    <span v-else class="text-[9px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-1.5 py-0.5 rounded">Автор</span>
-                    <span class="text-[10px] text-dark-muted font-mono">c {{ a.createdAt }}</span>
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-white text-sm">{{ a.username }}</span>
+                      <span v-if="a.isAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded font-bold">Главный Админ</span>
+                      <span v-else class="text-[9px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-1.5 py-0.5 rounded">Автор</span>
+                      <span class="text-[10px] text-dark-muted font-mono">c {{ a.createdAt }}</span>
+                    </div>
+
+                    <!-- Actions: Reset Pwd & Delete -->
+                    <div class="flex items-center gap-2">
+                      <!-- Inline Reset Password Form trigger -->
+                      <button
+                        type="button"
+                        @click="resetTargetUsername = resetTargetUsername === a.username ? null : a.username; resetNewPassword = '';"
+                        class="px-2.5 py-1 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1"
+                      >
+                        <IconRenderer name="Key" size="12" />
+                        <span>{{ resetTargetUsername === a.username ? 'Отмена' : 'Пароль' }}</span>
+                      </button>
+
+                      <!-- Delete Button (Only for non-admin authors) -->
+                      <button
+                        v-if="!a.isAdmin && a.username.toLowerCase() !== 'darkimusss'"
+                        type="button"
+                        @click="handleAdminDeleteAuthor(a.username)"
+                        class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1"
+                        title="Удалить автора из базы"
+                      >
+                        <IconRenderer name="Trash2" size="12" />
+                        <span>Удалить</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <!-- Actions: Reset Pwd & Delete -->
-                  <div class="flex items-center gap-2">
-                    <!-- Inline Reset Password Form trigger -->
-                    <button
-                      type="button"
-                      @click="resetTargetUsername = resetTargetUsername === a.username ? null : a.username; resetNewPassword = '';"
-                      class="px-2.5 py-1 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1"
-                    >
-                      <IconRenderer name="Key" size="12" />
-                      <span>{{ resetTargetUsername === a.username ? 'Отмена' : 'Сбросить пароль' }}</span>
-                    </button>
+                  <!-- GRANULAR PERMISSION TOGGLES -->
+                  <div v-if="!a.isAdmin" class="flex flex-wrap items-center gap-3 pt-2 border-t border-[#26292d]">
+                    <label class="flex items-center gap-2 cursor-pointer bg-[#16181a] px-3 py-1.5 rounded-xl border border-[#26292d] hover:border-purple-500/40 transition-all">
+                      <input
+                        type="checkbox"
+                        :checked="a.canEditOthers"
+                        @change="handleToggleAuthorPermission(a, 'editOthers')"
+                        class="accent-purple-500 rounded"
+                      />
+                      <span class="text-[11px] text-purple-200 font-semibold">✏️ Разрешить редактировать ЧУЖИЕ гайды</span>
+                    </label>
 
-                    <!-- Delete Button (Only for non-admin authors) -->
-                    <button
-                      v-if="!a.isAdmin && a.username.toLowerCase() !== 'darkimusss'"
-                      type="button"
-                      @click="handleAdminDeleteAuthor(a.username)"
-                      class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1"
-                      title="Удалить автора из базы"
-                    >
-                      <IconRenderer name="Trash2" size="12" />
-                      <span>Удалить</span>
-                    </button>
+                    <label class="flex items-center gap-2 cursor-pointer bg-[#16181a] px-3 py-1.5 rounded-xl border border-[#26292d] hover:border-emerald-500/40 transition-all">
+                      <input
+                        type="checkbox"
+                        :checked="a.canCreateGuides"
+                        @change="handleToggleAuthorPermission(a, 'createGuides')"
+                        class="accent-emerald-500 rounded"
+                      />
+                      <span class="text-[11px] text-emerald-200 font-semibold">➕ Разрешить создавать СВОИ гайды</span>
+                    </label>
                   </div>
 
                   <!-- Inline Reset Password Form -->
-                  <div v-if="resetTargetUsername === a.username" class="w-full sm:col-span-2 pt-2 border-t border-[#26292d] flex items-center gap-2">
+                  <div v-if="resetTargetUsername === a.username" class="w-full pt-2 border-t border-[#26292d] flex items-center gap-2">
                     <div class="relative flex-1">
                       <input
                         :type="showResetPasswordToggle ? 'text' : 'password'"
