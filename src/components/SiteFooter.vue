@@ -9,6 +9,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'navigate', mode: string): void;
   (e: 'open-author', username: string): void;
+  (e: 'open-terms'): void;
 }>();
 
 const currentYear = new Date().getFullYear();
@@ -125,9 +126,17 @@ const supportLinks = [
       <p class="text-[10px] text-dark-muted font-mono">
         © {{ currentYear }} CubixGuide Wiki · Dark Core System
       </p>
-      <a href="https://cubixworld.net" target="_blank" rel="noopener noreferrer" class="text-[10px] text-dark-muted hover:text-emerald-400 transition-colors font-mono">
-        cubixworld.net
-      </a>
+      <div class="flex items-center gap-4">
+        <button
+          type="button"
+          @click="emit('open-terms')"
+          class="text-[10px] text-dark-muted hover:text-emerald-400 transition-colors font-mono"
+        >Пользовательское соглашение</button>
+        <span class="text-[#26292d]">|</span>
+        <a href="https://cubixworld.net" target="_blank" rel="noopener noreferrer" class="text-[10px] text-dark-muted hover:text-emerald-400 transition-colors font-mono">
+          cubixworld.net
+        </a>
+      </div>
     </div>
   </footer>
 </template>

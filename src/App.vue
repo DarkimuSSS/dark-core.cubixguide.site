@@ -8,8 +8,12 @@ import ConfirmModal from './components/ConfirmModal.vue';
 import IconRenderer from './components/IconRenderer.vue';
 import AuthModal from './components/AuthModal.vue';
 import SiteFooter from './components/SiteFooter.vue';
+import TermsModal from './components/TermsModal.vue';
+import CookieBanner from './components/CookieBanner.vue';
 import { PRESET_ITEMS } from './data/presetItems';
 import type { Guide, AuthorProfile } from './types/guide';
+
+const isTermsOpen = ref(false);
 
 const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
@@ -714,6 +718,7 @@ const handleViewAllAuthorGuides = (username: string) => {
             :guides-count="guides.length"
             @navigate="(m) => { mode = m; initialCatalogSearchQuery = ''; }"
             @open-author="openAuthorProfile"
+            @open-terms="isTermsOpen = true"
           />
         </div>
 
@@ -830,5 +835,11 @@ const handleViewAllAuthorGuides = (username: string) => {
         <span>{{ toastMessage }}</span>
       </div>
     </div>
+
+    <!-- Terms Modal -->
+    <TermsModal :is-open="isTermsOpen" @close="isTermsOpen = false" />
+
+    <!-- Cookie Banner -->
+    <CookieBanner @open-terms="isTermsOpen = true" />
   </div>
 </template>
