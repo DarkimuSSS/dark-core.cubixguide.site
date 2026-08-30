@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import IconRenderer from './IconRenderer.vue';
-import type { AuthorProfile, Guide, CustomAuthorLink } from '../types/guide';
+import type { AuthorProfile, Guide } from '../types/guide';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -29,13 +29,18 @@ const showNewPassword = ref(false);
 const pwdMessage = ref('');
 const pwdIsSuccess = ref(false);
 
-// Admin Author Creation State
+// Admin Author Creation & Management State
 const isAdminPanelOpen = ref(false);
 const newAuthorUsername = ref('');
 const newAuthorPassword = ref('');
 const showNewAuthorPassword = ref(false);
 const adminMessage = ref('');
 const registeredAuthorsList = ref<any[]>([]);
+
+// Admin Password Reset Modal State
+const resetTargetUsername = ref<string | null>(null);
+const resetNewPassword = ref('');
+const showResetPasswordToggle = ref(false);
 
 const profile = ref<AuthorProfile>({
   username: props.username,
@@ -185,6 +190,58 @@ const handleAdminRegisterAuthor = async () => {
     }
   } catch (err) {
     adminMessage.value = 'Ошибка обращения к серверу';
+  }
+};
+
+const handleAdminResetAuthorPassword = async (targetUser: string) => {
+  adminMessage.value = '';
+  if (!resetNewPassword.value.trim()) {
+    adminMessage.value = 'Укажите новый пароль';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetUsername: targetUser,
+        newPassword: resetNewPassword.value.trim(),
+        adminUsername: props.username
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      adminMessage.value = data.message || `Пароль для ${targetUser} сброшен!`;
+      resetTargetUsername.value = null;
+      resetNewPassword.value = '';
+    } else {
+      adminMessage.value = data.error || 'Ошибка сброса пароля';
+    }
+  } catch (err) {
+    adminMessage.value = 'Ошибка обращения к серверу';
+  }
+};
+
+const handleAdminDeleteAuthor = async (targetUser: string) => {
+  if (!confirm(`Вы действительно хотите удалить автора "${targetUser}"? Данное действие нельзя отменить!`)) {
+    return;
+  }
+  adminMessage.value = '';
+
+  try {
+    const res = await fetch(`/api/admin/authors/${encodeURIComponent(targetUser)}?adminUsername=${encodeURIComponent(props.username)}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (res.ok) {
+      adminMessage.value = data.message || `Автор ${targetUser} удален!`;
+      fetchAdminAuthorsList();
+    } else {
+      adminMessage.value = data.error || 'Ошибка удаления автора';
+    }
+  } catch (err) {
+    adminMessage.value = 'Ошибка соединения с сервером';
   }
 };
 
@@ -454,12 +511,12 @@ const handleAvatarFileUpload = (e: Event) => {
             </div>
           </div>
 
-          <!-- ADMIN PANEL: MANUAL AUTHOR CREATION (Only for Super Admin) -->
+          <!-- ADMIN PANEL: AUTHOR MANAGEMENT (Super Admin Only) -->
           <div v-if="isAdminPanelOpen && isAdmin" class="space-y-4 bg-purple-950/20 border border-purple-500/40 p-5 rounded-2xl">
             <div class="flex items-center justify-between border-b border-purple-500/30 pb-2">
               <h3 class="text-xs font-extrabold text-purple-300 uppercase tracking-wider flex items-center gap-2">
                 <IconRenderer name="Shield" size="16" class="text-purple-400" />
-                Панель Главного Администратора — Ручное Создание Авторов
+                Панель Управления Авторами (Главный Администратор)
               </h3>
             </div>
 
@@ -467,57 +524,112 @@ const handleAvatarFileUpload = (e: Event) => {
               {{ adminMessage }}
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[11px] text-purple-200 font-bold mb-1">Никнейм нового автора</label>
-                <input
-                  type="text"
-                  v-model="newAuthorUsername"
-                  placeholder="например: AlexCraft..."
-                  class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500"
-                />
-              </div>
-
-              <div>
-                <label class="block text-[11px] text-purple-200 font-bold mb-1">Пароль автора</label>
-                <div class="relative">
+            <!-- Registration Sub-Form -->
+            <div class="space-y-3 bg-[#0c0d0e] p-4 rounded-xl border border-[#26292d]">
+              <div class="text-[11px] font-bold text-purple-300 uppercase">Ручное создание нового автора</div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] text-purple-200 font-bold mb-1">Никнейм нового автора</label>
                   <input
-                    :type="showNewAuthorPassword ? 'text' : 'password'"
-                    v-model="newAuthorPassword"
-                    placeholder="Задайте пароль..."
-                    class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-9 py-2 focus:outline-none focus:border-purple-500"
+                    type="text"
+                    v-model="newAuthorUsername"
+                    placeholder="например: AlexCraft..."
+                    class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500"
                   />
-                  <button
-                    type="button"
-                    @click="showNewAuthorPassword = !showNewAuthorPassword"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1"
-                  >
-                    <IconRenderer :name="showNewAuthorPassword ? 'EyeOff' : 'Eye'" size="14" class="text-cyan-400" />
-                  </button>
+                </div>
+
+                <div>
+                  <label class="block text-[11px] text-purple-200 font-bold mb-1">Пароль автора</label>
+                  <div class="relative">
+                    <input
+                      :type="showNewAuthorPassword ? 'text' : 'password'"
+                      v-model="newAuthorPassword"
+                      placeholder="Задайте пароль..."
+                      class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-9 py-2 focus:outline-none focus:border-purple-500"
+                    />
+                    <button
+                      type="button"
+                      @click="showNewAuthorPassword = !showNewAuthorPassword"
+                      class="absolute right-2 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1"
+                    >
+                      <IconRenderer :name="showNewAuthorPassword ? 'EyeOff' : 'Eye'" size="14" class="text-cyan-400" />
+                    </button>
+                  </div>
                 </div>
               </div>
+
+              <button
+                type="button"
+                @click="handleAdminRegisterAuthor"
+                class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all"
+              >
+                + Зарегистрировать Автора
+              </button>
             </div>
 
-            <button
-              type="button"
-              @click="handleAdminRegisterAuthor"
-              class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all"
-            >
-              + Зарегистрировать Автора Вручную
-            </button>
-
-            <!-- List of Registered Authors -->
-            <div class="space-y-2 pt-2 border-t border-purple-500/30">
-              <div class="text-[11px] font-bold text-purple-300 uppercase">Список всех авторов с доступом:</div>
-              <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto">
-                <span
+            <!-- List and Full Management of Registered Authors -->
+            <div class="space-y-3 pt-2">
+              <div class="text-[11px] font-bold text-purple-300 uppercase">Список и управление всеми авторами ({{ registeredAuthorsList.length }}):</div>
+              <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                <div
                   v-for="a in registeredAuthorsList"
                   :key="a.username"
-                  class="px-2.5 py-1 rounded-lg bg-[#0c0d0e] border border-[#26292d] text-xs font-semibold text-white flex items-center gap-1.5"
+                  class="p-3 rounded-xl bg-[#0c0d0e] border border-[#26292d] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                 >
-                  <span>{{ a.username }}</span>
-                  <span v-if="a.isAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1 rounded">Админ</span>
-                </span>
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-white text-sm">{{ a.username }}</span>
+                    <span v-if="a.isAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded font-bold">Главный Админ</span>
+                    <span v-else class="text-[9px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-1.5 py-0.5 rounded">Автор</span>
+                    <span class="text-[10px] text-dark-muted font-mono">c {{ a.createdAt }}</span>
+                  </div>
+
+                  <!-- Actions: Reset Pwd & Delete -->
+                  <div class="flex items-center gap-2">
+                    <!-- Inline Reset Password Form trigger -->
+                    <button
+                      type="button"
+                      @click="resetTargetUsername = resetTargetUsername === a.username ? null : a.username; resetNewPassword = '';"
+                      class="px-2.5 py-1 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1"
+                    >
+                      <IconRenderer name="Key" size="12" />
+                      <span>{{ resetTargetUsername === a.username ? 'Отмена' : 'Сбросить пароль' }}</span>
+                    </button>
+
+                    <!-- Delete Button (Only for non-admin authors) -->
+                    <button
+                      v-if="!a.isAdmin && a.username.toLowerCase() !== 'darkimusss'"
+                      type="button"
+                      @click="handleAdminDeleteAuthor(a.username)"
+                      class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1"
+                      title="Удалить автора из базы"
+                    >
+                      <IconRenderer name="Trash2" size="12" />
+                      <span>Удалить</span>
+                    </button>
+                  </div>
+
+                  <!-- Inline Reset Password Form -->
+                  <div v-if="resetTargetUsername === a.username" class="w-full sm:col-span-2 pt-2 border-t border-[#26292d] flex items-center gap-2">
+                    <div class="relative flex-1">
+                      <input
+                        :type="showResetPasswordToggle ? 'text' : 'password'"
+                        v-model="resetNewPassword"
+                        placeholder="Задайте новый пароль..."
+                        class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-lg pl-2.5 pr-7 py-1.5 focus:outline-none focus:border-cyan-400"
+                      />
+                      <button type="button" @click="showResetPasswordToggle = !showResetPasswordToggle" class="absolute right-1.5 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-0.5">
+                        <IconRenderer :name="showResetPasswordToggle ? 'EyeOff' : 'Eye'" size="12" />
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      @click="handleAdminResetAuthorPassword(a.username)"
+                      class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg"
+                    >
+                      Сохранить пароль
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

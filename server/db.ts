@@ -97,6 +97,49 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
   return { username: cleanUsername, createdAt };
 }
 
+// Admin-only Reset Author Password Helper
+export function resetAuthorPasswordByAdmin(targetUsername: string, newPassword: string, adminUsername: string) {
+  const cleanTarget = targetUsername.trim();
+  if (!newPassword || newPassword.length < 4) {
+    throw new Error('Новый пароль должен содержать минимум 4 символа');
+  }
+
+  const adminRow = db.prepare('SELECT is_admin FROM users WHERE LOWER(username) = LOWER(?)').get(adminUsername) as any;
+  if (!adminRow || !adminRow.is_admin) {
+    throw new Error('Только Главный Администратор может сбрасывать пароли авторов');
+  }
+
+  const pwdHash = hashPassword(newPassword);
+  const stmt = db.prepare('UPDATE users SET password_hash = ? WHERE LOWER(username) = LOWER(?)');
+  const res = stmt.run(pwdHash, cleanTarget);
+
+  if (res.changes === 0) {
+    throw new Error('Автор не найден');
+  }
+
+  return { success: true, message: `Пароль автора ${cleanTarget} успешно изменен!` };
+}
+
+// Admin-only Delete Author Helper
+export function deleteAuthorByAdmin(targetUsername: string, adminUsername: string) {
+  const cleanTarget = targetUsername.trim();
+
+  // Prevent deleting Super Admin
+  if (cleanTarget.toLowerCase() === 'darkimusss') {
+    throw new Error('Нельзя удалить Главного Администратора DarkimuSSS');
+  }
+
+  const adminRow = db.prepare('SELECT is_admin FROM users WHERE LOWER(username) = LOWER(?)').get(adminUsername) as any;
+  if (!adminRow || !adminRow.is_admin) {
+    throw new Error('Только Главный Администратор может удалять авторов');
+  }
+
+  db.prepare('DELETE FROM users WHERE LOWER(username) = LOWER(?)').run(cleanTarget);
+  db.prepare('DELETE FROM profiles WHERE LOWER(username) = LOWER(?)').run(cleanTarget);
+
+  return { success: true, message: `Автор ${cleanTarget} успешно удален!` };
+}
+
 // Change User Password Helper (Author self-service)
 export function changeUserPassword(username: string, oldPassword: string, newPassword: string) {
   const cleanUsername = username.trim();

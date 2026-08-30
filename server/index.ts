@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin } from './db';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
 const app = express();
@@ -117,6 +117,34 @@ app.post('/api/admin/register-author', (req, res) => {
     }
     const result = registerAuthorByAdmin(username, password, adminUsername);
     res.status(201).json(result);
+  } catch (err: any) {
+    res.status(403).json({ error: err.message });
+  }
+});
+
+// Reset Author Password (Admin)
+app.post('/api/admin/reset-password', (req, res) => {
+  try {
+    const { targetUsername, newPassword, adminUsername } = req.body;
+    if (!targetUsername || !newPassword || !adminUsername) {
+      return res.status(400).json({ error: 'Укажите никнейм автора и новый пароль' });
+    }
+    const result = resetAuthorPasswordByAdmin(targetUsername, newPassword, adminUsername);
+    res.json(result);
+  } catch (err: any) {
+    res.status(403).json({ error: err.message });
+  }
+});
+
+// Delete Author Account (Admin)
+app.delete('/api/admin/authors/:username', (req, res) => {
+  try {
+    const { adminUsername } = req.query;
+    if (!adminUsername) {
+      return res.status(400).json({ error: 'Не указан админ' });
+    }
+    const result = deleteAuthorByAdmin(req.params.username, String(adminUsername));
+    res.json(result);
   } catch (err: any) {
     res.status(403).json({ error: err.message });
   }
