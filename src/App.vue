@@ -16,6 +16,14 @@ import type { Guide, AuthorProfile } from './types/guide';
 const isTermsOpen = ref(false);
 const isSettingsOpen = ref(false);
 
+const guides = ref<Guide[]>([]);
+const activeGuideId = ref<string>('');
+const activeGuide = ref<Guide | null>(null);
+
+// MODE: 'home' (Главная) | 'reader' (Вики Гайда) | 'editor' (Конструктор) | 'favorites' (Избранное)
+const mode = ref<'home' | 'reader' | 'editor' | 'favorites'>('home');
+const isLoading = ref<boolean>(true);
+
 const handleExportData = () => {
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(guides.value, null, 2));
   const downloadAnchor = document.createElement('a');
@@ -63,12 +71,6 @@ const handleClearDrafts = () => {
   showToast('Локальные черновики очищены');
 };
 
-const guides = ref<Guide[]>([]);
-const activeGuideId = ref<string>('');
-const activeGuide = ref<Guide | null>(null);
-
-// MODE: 'home' (Главная) | 'reader' (Вики Гайда) | 'editor' (Конструктор) | 'favorites' (Избранное)
-const mode = ref<'home' | 'reader' | 'editor' | 'favorites'>('home');
 // Bookmarked / Favorited guide IDs in LocalStorage
 const favoriteGuideIds = ref<string[]>([]);
 
