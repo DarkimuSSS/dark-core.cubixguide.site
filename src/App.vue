@@ -1050,7 +1050,7 @@ const handleViewAllAuthorGuides = (username: string) => {
           <GuideEditor
             :guide="activeGuide"
             @update:guide="updateActiveGuide"
-            @toggle-preview="mode = 'reader'"
+            @toggle-preview="handleTogglePreview"
             @publish="handlePublish"
             @delete="requestDeleteGuide"
           />
@@ -1062,10 +1062,12 @@ const handleViewAllAuthorGuides = (username: string) => {
             :guide="activeGuide"
             :all-guides="guides"
             :is-favorited="favoriteGuideIds.includes(activeGuide.meta.id)"
+            :is-preview-mode="isPreviewActive"
             @select-guide="selectGuide"
             @toggle-bookmark="toggleBookmarkGuide"
             @edit-mode="openEditorProtection"
             @open-author="openAuthorProfile"
+            @exit-preview="handleExitPreview"
           />
         </div>
       </template>
