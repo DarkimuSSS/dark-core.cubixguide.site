@@ -1203,14 +1203,17 @@ const scrollToBlockInEditor = (id: string) => {
       <button 
         type="button" 
         @click="isToolbarExpanded = !isToolbarExpanded" 
-        class="w-full h-8 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-slate-400 hover:text-white flex items-center justify-between px-2 text-[11px] font-bold transition-all group shrink-0"
+        :class="[
+          'rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-slate-400 hover:text-white flex items-center transition-all group shrink-0',
+          isToolbarExpanded ? 'w-full h-9 px-3 justify-between text-[11px] font-bold' : 'w-10 h-10 justify-center'
+        ]"
         :title="isToolbarExpanded ? 'Свернуть панель' : 'Развернуть панель'"
       >
         <span v-if="isToolbarExpanded" class="text-slate-300 uppercase text-[10px] tracking-wider font-extrabold">Инструменты</span>
         <IconRenderer 
           :name="isToolbarExpanded ? 'ChevronLeft' : 'Maximize2'" 
-          size="14" 
-          class="text-cyan-400 group-hover:scale-110 transition-transform mx-auto sm:mx-0" 
+          size="16" 
+          class="text-cyan-400 group-hover:scale-110 transition-transform shrink-0" 
         />
       </button>
 
