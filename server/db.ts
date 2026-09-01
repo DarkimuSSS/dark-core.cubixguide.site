@@ -573,47 +573,33 @@ if (rulesCount.count === 0) {
   }
 }
 
-try {
-  const { CREATE_1211_RULES_DATA } = require('../src/data/createRulesData');
-  saveServerRules(CREATE_1211_RULES_DATA);
-  saveServerRules({ ...CREATE_1211_RULES_DATA, server_id: "Create" });
+const rulesModules = [
+  { name: 'CREATE_1211_RULES_DATA', path: '../src/data/createRulesData', extraId: 'Create' },
+  { name: 'GALAXY_RULES_DATA', path: '../src/data/galaxyRulesData' },
+  { name: 'GREGTECH_RULES_DATA', path: '../src/data/gregtechRulesData' },
+  { name: 'HITECH_RULES_DATA', path: '../src/data/hitechRulesData' },
+  { name: 'ICEANDFIRE_RULES_DATA', path: '../src/data/iceandfireRulesData', extraId: 'IceAndFire' },
+  { name: 'INDUSTRIAL_RULES_DATA', path: '../src/data/industrialRulesData' },
+  { name: 'MAGICRPG_RULES_DATA', path: '../src/data/magicrpgRulesData' },
+  { name: 'SKYTECH_RULES_DATA', path: '../src/data/skytechRulesData' },
+  { name: 'TECHNOMAGIC_RULES_DATA', path: '../src/data/technomagicRulesData' },
+  { name: 'PIXELMON_1211_RULES_DATA', path: '../src/data/pixelmon1211RulesData' },
+  { name: 'PIXELMON_1165_RULES_DATA', path: '../src/data/pixelmon1165RulesData' },
+  { name: 'OCEANBLOCK_1165_RULES_DATA', path: '../src/data/oceanblock1165RulesData' },
+  { name: 'COBBLEMON_1211_RULES_DATA', path: '../src/data/cobblemon1211RulesData' }
+];
 
-  const { GALAXY_RULES_DATA } = require('../src/data/galaxyRulesData');
-  saveServerRules(GALAXY_RULES_DATA);
-
-  const { GREGTECH_RULES_DATA } = require('../src/data/gregtechRulesData');
-  saveServerRules(GREGTECH_RULES_DATA);
-
-  const { HITECH_RULES_DATA } = require('../src/data/hitechRulesData');
-  saveServerRules(HITECH_RULES_DATA);
-
-  const { ICEANDFIRE_RULES_DATA } = require('../src/data/iceandfireRulesData');
-  saveServerRules(ICEANDFIRE_RULES_DATA);
-  saveServerRules({ ...ICEANDFIRE_RULES_DATA, server_id: "IceAndFire" });
-
-  const { INDUSTRIAL_RULES_DATA } = require('../src/data/industrialRulesData');
-  saveServerRules(INDUSTRIAL_RULES_DATA);
-
-  const { MAGICRPG_RULES_DATA } = require('../src/data/magicrpgRulesData');
-  saveServerRules(MAGICRPG_RULES_DATA);
-
-  const { SKYTECH_RULES_DATA } = require('../src/data/skytechRulesData');
-  saveServerRules(SKYTECH_RULES_DATA);
-
-  const { TECHNOMAGIC_RULES_DATA } = require('../src/data/technomagicRulesData');
-  saveServerRules(TECHNOMAGIC_RULES_DATA);
-
-  const { PIXELMON_1211_RULES_DATA } = require('../src/data/pixelmon1211RulesData');
-  saveServerRules(PIXELMON_1211_RULES_DATA);
-
-  const { PIXELMON_1165_RULES_DATA } = require('../src/data/pixelmon1165RulesData');
-  saveServerRules(PIXELMON_1165_RULES_DATA);
-
-  const { OCEANBLOCK_1165_RULES_DATA } = require('../src/data/oceanblock1165RulesData');
-  saveServerRules(OCEANBLOCK_1165_RULES_DATA);
-
-  const { COBBLEMON_1211_RULES_DATA } = require('../src/data/cobblemon1211RulesData');
-  saveServerRules(COBBLEMON_1211_RULES_DATA);
-} catch (e) {
-  console.error('Error seeding server rules:', e);
+for (const mod of rulesModules) {
+  try {
+    const loaded = require(mod.path);
+    const data = loaded[mod.name];
+    if (data) {
+      saveServerRules(data);
+      if (mod.extraId) {
+        saveServerRules({ ...data, server_id: mod.extraId });
+      }
+    }
+  } catch (e) {
+    console.error(`Failed to load/seed server rules module [${mod.name}]:`, e);
+  }
 }
