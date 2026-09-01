@@ -8,7 +8,9 @@ export type BlockType =
   | 'divider'
   | 'section'
   | 'spoiler'
-  | 'before_after';
+  | 'before_after'
+  | 'youtube'
+  | 'embed';
 
 export type Category = 
   | 'ХайТек' 
@@ -94,6 +96,13 @@ export interface GuideBlock {
   afterImageUrl?: string;
   beforeLabel?: string;
   afterLabel?: string;
+
+  // YouTube Video Block
+  youtubeUrl?: string;
+
+  // Generic iFrame / Web Embed Block
+  embedUrl?: string;
+  embedTitle?: string;
   
   anchorId?: string; // Custom anchor ID or manual link key
   showInOutline?: boolean; // Explicit toggle: force include or exclude from Table of Contents

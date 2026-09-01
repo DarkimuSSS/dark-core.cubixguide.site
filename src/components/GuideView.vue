@@ -173,6 +173,22 @@ const headingOutlineTree = computed(() => {
   return groups;
 });
 
+const getYouTubeEmbedUrl = (url?: string): string => {
+  if (!url) return '';
+  let videoId = '';
+  if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0] || '';
+  } else if (url.includes('youtube.com/watch')) {
+    const searchParams = new URLSearchParams(url.split('?')[1] || '');
+    videoId = searchParams.get('v') || '';
+  } else if (url.includes('youtube.com/shorts/')) {
+    videoId = url.split('youtube.com/shorts/')[1]?.split('?')[0]?.split('&')[0] || '';
+  } else if (url.includes('youtube.com/embed/')) {
+    videoId = url.split('youtube.com/embed/')[1]?.split('?')[0]?.split('&')[0] || '';
+  }
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+};
+
 const scrollToHeadingBlock = (id: string) => {
   const el = document.getElementById(`block-${id}`);
   if (el) {
@@ -755,6 +771,40 @@ const getVariantClass = (variant?: BlockVariant) => {
             <!-- Before After Slider Block -->
             <div v-else-if="block.type === 'before_after'">
               <BeforeAfterSlider :block="block" :is-editing="false" />
+            </div>
+
+            <!-- YouTube Video Block -->
+            <div v-else-if="block.type === 'youtube'" :class="['p-4 rounded-2xl h-full flex flex-col justify-between shadow-xl space-y-3', getVariantClass(block.variant)]">
+              <div v-if="block.youtubeUrl" class="aspect-video w-full rounded-xl overflow-hidden border border-[#26292d] bg-black shadow-2xl">
+                <iframe
+                  :src="getYouTubeEmbedUrl(block.youtubeUrl)"
+                  class="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <div v-else class="p-8 text-center text-xs text-dark-muted border border-dashed border-[#26292d] rounded-xl">
+                YouTube видео не настроено
+              </div>
+            </div>
+
+            <!-- Generic iFrame Embed Block -->
+            <div v-else-if="block.type === 'embed'" :class="['p-4 rounded-2xl h-full flex flex-col justify-between shadow-xl space-y-3', getVariantClass(block.variant)]">
+              <div v-if="block.embedTitle" class="text-xs font-bold text-white flex items-center gap-2 border-b border-[#26292d] pb-2">
+                <IconRenderer name="Code" size="14" class="text-indigo-400" />
+                <span>{{ block.embedTitle }}</span>
+              </div>
+              <div v-if="block.embedUrl" class="w-full h-96 rounded-xl overflow-hidden border border-[#26292d] bg-[#0c0d0e] shadow-2xl">
+                <iframe
+                  :src="block.embedUrl"
+                  :title="block.embedTitle || 'Embed Widget'"
+                  class="w-full h-full border-0"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                ></iframe>
+              </div>
+              <div v-else class="p-8 text-center text-xs text-dark-muted border border-dashed border-[#26292d] rounded-xl">
+                Embed виджет не настроен
+              </div>
             </div>
           </div>
         </div>

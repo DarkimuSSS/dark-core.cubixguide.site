@@ -197,6 +197,22 @@ const onChecklistDragEnd = () => {
   dragOverChecklistIdx.value = null;
 };
 
+const getYouTubeEmbedUrl = (url?: string): string => {
+  if (!url) return '';
+  let videoId = '';
+  if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0] || '';
+  } else if (url.includes('youtube.com/watch')) {
+    const searchParams = new URLSearchParams(url.split('?')[1] || '');
+    videoId = searchParams.get('v') || '';
+  } else if (url.includes('youtube.com/shorts/')) {
+    videoId = url.split('youtube.com/shorts/')[1]?.split('?')[0]?.split('&')[0] || '';
+  } else if (url.includes('youtube.com/embed/')) {
+    videoId = url.split('youtube.com/embed/')[1]?.split('?')[0]?.split('&')[0] || '';
+  }
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+};
+
 // DRAG AND DROP FOR SECTION SUB-BLOCKS
 const draggedSubBlock = ref<{ blockId: string; colId: string; subIdx: number } | null>(null);
 const dragOverSubBlock = ref<{ blockId: string; colId: string; subIdx: number } | null>(null);
@@ -994,6 +1010,23 @@ const addBlockAt = (index: number, type: BlockType) => {
         afterLabel: 'После'
       };
       break;
+    case 'youtube':
+      newBlock = {
+        id: `b_${Date.now()}`,
+        type: 'youtube',
+        customWidth: 100,
+        youtubeUrl: ''
+      };
+      break;
+    case 'embed':
+      newBlock = {
+        id: `b_${Date.now()}`,
+        type: 'embed',
+        customWidth: 100,
+        embedUrl: '',
+        embedTitle: ''
+      };
+      break;
     case 'divider':
       newBlock = {
         id: `b_${Date.now()}`,
@@ -1363,6 +1396,8 @@ const stopOutlineDrag = () => {
             <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'checklist')" @click="addBlockAt(props.guide.blocks.length - 1, 'checklist'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="CheckCircle2" size="14" class="text-emerald-400 shrink-0" />Чек-лист</button>
             <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'spoiler')" @click="addBlockAt(props.guide.blocks.length - 1, 'spoiler'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="HelpCircle" size="14" class="text-cyan-400 shrink-0" />Спойлер / Аккордеон</button>
             <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'before_after')" @click="addBlockAt(props.guide.blocks.length - 1, 'before_after'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="Maximize2" size="14" class="text-emerald-400 shrink-0" />Слайдер До / После</button>
+            <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'youtube')" @click="addBlockAt(props.guide.blocks.length - 1, 'youtube'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="Video" size="14" class="text-rose-400 shrink-0" />YouTube Видео</button>
+            <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'embed')" @click="addBlockAt(props.guide.blocks.length - 1, 'embed'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="Code" size="14" class="text-indigo-400 shrink-0" />Embed / iFrame</button>
             <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'section')" @click="addBlockAt(props.guide.blocks.length - 1, 'section'); toolbarAddBlockOpen = false" class="text-left text-xs text-cyan-300 font-semibold hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="Layout" size="14" class="text-cyan-400 shrink-0" />Секция с колонками</button>
             <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'multiblock')" @click="addBlockAt(props.guide.blocks.length - 1, 'multiblock'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="Layers" size="14" class="text-cyan-400 shrink-0" />Мультиструктура</button>
             <div class="border-t border-[#26292d] mt-0.5 pt-0.5">
@@ -2181,6 +2216,90 @@ const stopOutlineDrag = () => {
             <!-- SPOILER -->
             <div v-else-if="block.type === 'spoiler'">
               <SpoilerBlock :block="block" :is-editing="true" @update="updateBlock" />
+            </div>
+
+            <!-- YOUTUBE VIDEO BLOCK -->
+            <div v-else-if="block.type === 'youtube'" class="space-y-3">
+              <div class="flex items-center justify-between border-b border-[#26292d] pb-2">
+                <div class="text-xs font-bold text-rose-400 flex items-center gap-2">
+                  <IconRenderer name="Video" size="16" />
+                  YouTube Плеер
+                </div>
+                <span class="text-[10px] text-dark-muted">Вставьте ссылку на видео или Shorts</span>
+              </div>
+
+              <!-- Preview Player -->
+              <div v-if="block.youtubeUrl" class="aspect-video w-full rounded-xl overflow-hidden border border-[#26292d] bg-black shadow-lg">
+                <iframe
+                  :src="getYouTubeEmbedUrl(block.youtubeUrl)"
+                  class="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <div v-else class="border-2 border-dashed border-[#26292d] rounded-xl p-6 flex flex-col items-center justify-center gap-2 text-dark-muted">
+                <IconRenderer name="Video" size="32" class="text-rose-500/50" />
+                <span class="text-xs font-medium">Введите ссылку на видео YouTube (youtube.com/watch?v=... или youtu.be/...)</span>
+              </div>
+
+              <div>
+                <label class="block text-[11px] text-dark-muted mb-1 font-semibold">Ссылка на YouTube видео</label>
+                <input
+                  type="text"
+                  :value="block.youtubeUrl"
+                  @input="updateBlock({ ...block, youtubeUrl: ($event.target as HTMLInputElement).value })"
+                  placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ..."
+                  class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-rose-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <!-- EMBED IFRAME BLOCK -->
+            <div v-else-if="block.type === 'embed'" class="space-y-3">
+              <div class="flex items-center justify-between border-b border-[#26292d] pb-2">
+                <div class="text-xs font-bold text-indigo-400 flex items-center gap-2">
+                  <IconRenderer name="Code" size="16" />
+                  Embed Виджет / iFrame Ссылка
+                </div>
+                <span class="text-[10px] text-dark-muted">Интерактивный веб-виджет</span>
+              </div>
+
+              <!-- Preview Frame -->
+              <div v-if="block.embedUrl" class="w-full h-80 rounded-xl overflow-hidden border border-[#26292d] bg-[#0c0d0e] shadow-lg">
+                <iframe
+                  :src="block.embedUrl"
+                  :title="block.embedTitle || 'Embed Widget'"
+                  class="w-full h-full border-0"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                ></iframe>
+              </div>
+              <div v-else class="border-2 border-dashed border-[#26292d] rounded-xl p-6 flex flex-col items-center justify-center gap-2 text-dark-muted">
+                <IconRenderer name="Code" size="32" class="text-indigo-500/50" />
+                <span class="text-xs font-medium">Введите HTTPS URL страницы для встраивания iFrame виджета</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] text-dark-muted mb-1 font-semibold">URL виджета (HTTPS)</label>
+                  <input
+                    type="text"
+                    :value="block.embedUrl"
+                    @input="updateBlock({ ...block, embedUrl: ($event.target as HTMLInputElement).value })"
+                    placeholder="https://example.com/embed..."
+                    class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label class="block text-[11px] text-dark-muted mb-1 font-semibold">Подпись / Название виджета</label>
+                  <input
+                    type="text"
+                    :value="block.embedTitle"
+                    @input="updateBlock({ ...block, embedTitle: ($event.target as HTMLInputElement).value })"
+                    placeholder="Интерактивная карта, Калькулятор..."
+                    class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500 transition-all"
+                  />
+                </div>
+              </div>
             </div>
 
             <!-- BEFORE AFTER SLIDER -->
