@@ -51,6 +51,23 @@ const showToast = (msg: string) => {
 
 const authorProfilesMap = ref<Record<string, { avatarUrl?: string; isVerified?: boolean }>>({});
 
+const fetchCurrentAuthorProfile = async (usernameToFetch?: string) => {
+  const targetUser = usernameToFetch || currentUsername.value || 'DarkimuSSS';
+  try {
+    const res = await fetch(`/api/profiles/${encodeURIComponent(targetUser)}`);
+    if (res.ok) {
+      const data = await res.json();
+      currentAuthorProfile.value = data;
+      authorProfilesMap.value[targetUser.toLowerCase()] = {
+        avatarUrl: data.avatarUrl,
+        isVerified: Boolean(data.isVerified)
+      };
+    }
+  } catch (err) {
+    console.error('Error fetching header author profile:', err);
+  }
+};
+
 const fetchAuthorProfiles = async () => {
   const authors = Array.from(new Set(guides.value.map(g => g.meta.author).filter(Boolean)));
   for (const author of authors) {
