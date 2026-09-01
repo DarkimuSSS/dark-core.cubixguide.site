@@ -488,21 +488,41 @@ const serverRulesMap: Record<string, Array<{ num: string; title: string; text: s
   ]
 };
 
-const activeRulesList = computed(() => {
-  if (activeTab.value === 'general') {
-    return generalRules.filter(r => {
-      const matchesCat = activeCategory.value === 'all' || r.cat === activeCategory.value;
-      const q = searchQuery.value.toLowerCase().trim();
-      const matchesSearch = !q || r.num.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.text.toLowerCase().includes(q) || (r.penalty || '').toLowerCase().includes(q);
-      return matchesCat && matchesSearch;
+import { ONEBLOCK_RULES_DATA } from '../data/serverRulesData';
+
+const activeSectionId = ref<number | 'all'>('all');
+
+const currentServerData = computed(() => {
+  if (selectedServer.value === 'OneBlock') return ONEBLOCK_RULES_DATA;
+  return null;
+});
+
+const filteredGeneralRules = computed(() => {
+  return generalRules.filter(r => {
+    const matchesCat = activeCategory.value === 'all' || r.cat === activeCategory.value;
+    const q = searchQuery.value.toLowerCase().trim();
+    const matchesSearch = !q || r.num.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.text.toLowerCase().includes(q) || (r.penalty || '').toLowerCase().includes(q);
+    return matchesCat && matchesSearch;
+  });
+});
+
+const filteredServerSections = computed(() => {
+  if (!currentServerData.value) return [];
+  const q = searchQuery.value.toLowerCase().trim();
+
+  return currentServerData.value.sections.map(sec => {
+    if (activeSectionId.value !== 'all' && sec.section_id !== activeSectionId.value) {
+      return { ...sec, rules: [] };
+    }
+    const matchingRules = sec.rules.filter(r => {
+      if (!q) return true;
+      return r.rule_id.toLowerCase().includes(q) ||
+        r.description.toLowerCase().includes(q) ||
+        (r.note || '').toLowerCase().includes(q) ||
+        (r.punishment || '').toLowerCase().includes(q);
     });
-  } else {
-    const list = serverRulesMap[selectedServer.value] || [];
-    return list.filter(r => {
-      const q = searchQuery.value.toLowerCase().trim();
-      return !q || r.num.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.text.toLowerCase().includes(q) || (r.penalty || '').toLowerCase().includes(q) || (r.note || '').toLowerCase().includes(q);
-    });
-  }
+    return { ...sec, rules: matchingRules };
+  }).filter(sec => sec.rules.length > 0);
 });
 </script>
 
@@ -642,49 +662,103 @@ const activeRulesList = computed(() => {
           </div>
 
           <!-- Scrollable Rules list -->
-          <div class="overflow-y-auto custom-scrollbar px-6 py-5 space-y-3 flex-1 bg-[#121416]">
-            <div v-if="activeRulesList.length === 0" class="text-center py-12 space-y-2">
-              <IconRenderer name="Search" size="32" class="mx-auto text-dark-muted/40" />
-              <p class="text-sm font-bold text-slate-400">Правила по запросу не найдены</p>
-              <p class="text-xs text-dark-muted">Попробуйте изменить поисковый запрос или выбрать другой сервер</p>
-            </div>
+          <div class="overflow-y-auto custom-scrollbar px-6 py-5 space-y-6 flex-1 bg-[#121416]">
+            
+            <!-- GENERAL RULES LIST -->
+            <template v-if="activeTab === 'general'">
+              <div v-if="filteredGeneralRules.length === 0" class="text-center py-12 space-y-2">
+                <IconRenderer name="Search" size="32" class="mx-auto text-dark-muted/40" />
+                <p class="text-sm font-bold text-slate-400">Правила по запросу не найдены</p>
+                <p class="text-xs text-dark-muted">Попробуйте изменить поисковый запрос</p>
+              </div>
 
-            <div
-              v-for="r in activeRulesList"
-              :key="r.num"
-              class="p-4 rounded-2xl bg-[#16181a] border border-[#26292d] hover:border-[#383d44] transition-all space-y-2 group"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-2.5">
-                  <span class="w-7 h-7 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-extrabold flex items-center justify-center shrink-0">
-                    {{ r.num }}
-                  </span>
-                  <h3 class="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">{{ r.title }}</h3>
+              <div
+                v-for="r in filteredGeneralRules"
+                :key="r.num"
+                class="p-4 rounded-2xl bg-[#16181a] border border-[#26292d] hover:border-[#383d44] transition-all space-y-2 group"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-7 h-7 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-extrabold flex items-center justify-center shrink-0">
+                      {{ r.num }}
+                    </span>
+                    <h3 class="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">{{ r.title }}</h3>
+                  </div>
+                </div>
+
+                <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-9">
+                  {{ r.text }}
+                </p>
+
+                <!-- Penalty Box -->
+                <div v-if="r.penalty" class="ml-9 mt-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-2">
+                  <IconRenderer name="AlertTriangle" size="14" class="text-rose-400 shrink-0" />
+                  <span><strong>Наказание:</strong> {{ r.penalty }}</span>
                 </div>
               </div>
+            </template>
 
-              <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-9">
-                {{ r.text }}
-              </p>
-
-              <!-- Note Box if exists -->
-              <div v-if="r.note" class="ml-9 mt-2 p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-200 text-xs font-medium space-y-1">
-                <div class="font-extrabold text-[10px] text-cyan-400 uppercase tracking-wider">Примечание:</div>
-                <div class="leading-relaxed">{{ r.note }}</div>
+            <!-- SERVER RULES SECTIONED LIST (OneBlock / HiTech) -->
+            <template v-else-if="activeTab === 'server'">
+              <div v-if="filteredServerSections.length === 0" class="text-center py-12 space-y-2">
+                <IconRenderer name="Search" size="32" class="mx-auto text-dark-muted/40" />
+                <p class="text-sm font-bold text-slate-400">Правила сервера не найдены</p>
+                <p class="text-xs text-dark-muted">Попробуйте изменить поисковый запрос или выбрать другой сервер</p>
               </div>
 
-              <!-- Penalty Box -->
-              <div v-if="r.penalty" class="ml-9 mt-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-2">
-                <IconRenderer name="AlertTriangle" size="14" class="text-rose-400 shrink-0" />
-                <span><strong>Наказание:</strong> {{ r.penalty }}</span>
+              <div
+                v-for="sec in filteredServerSections"
+                :key="sec.section_id"
+                class="space-y-3"
+              >
+                <!-- Section Header Badge -->
+                <div class="flex items-center gap-2.5 pt-2 pb-1 border-b border-[#26292d]">
+                  <div class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-black text-xs flex items-center justify-center">
+                    {{ sec.section_id }}
+                  </div>
+                  <h3 class="text-sm font-black text-white tracking-wide uppercase">{{ sec.title }}</h3>
+                  <span class="text-[10px] text-dark-muted font-bold">({{ sec.rules.length }} правил)</span>
+                </div>
+
+                <!-- Rules in Section -->
+                <div
+                  v-for="r in sec.rules"
+                  :key="r.rule_id"
+                  class="p-4 rounded-2xl bg-[#16181a] border border-[#26292d] hover:border-cyan-500/40 transition-all space-y-2 group"
+                >
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-7 h-7 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono text-xs font-extrabold flex items-center justify-center shrink-0">
+                        {{ r.rule_id }}
+                      </span>
+                      <h4 class="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">Пункт {{ r.rule_id }}</h4>
+                    </div>
+                  </div>
+
+                  <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-9 font-normal">
+                    {{ r.description }}
+                  </p>
+
+                  <!-- Note Box if exists -->
+                  <div v-if="r.note" class="ml-9 mt-2 p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-200 text-xs font-medium space-y-1">
+                    <div class="font-extrabold text-[10px] text-cyan-400 uppercase tracking-wider">Примечание:</div>
+                    <div class="leading-relaxed">{{ r.note }}</div>
+                  </div>
+
+                  <!-- Penalty Box -->
+                  <div v-if="r.punishment" class="ml-9 mt-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-2">
+                    <IconRenderer name="AlertTriangle" size="14" class="text-rose-400 shrink-0" />
+                    <span><strong>Наказание:</strong> {{ r.punishment }}</span>
+                  </div>
+                </div>
               </div>
-            </div>
+            </template>
           </div>
 
           <!-- Footer -->
           <div class="px-6 py-3.5 border-t border-[#26292d] bg-[#16181a] shrink-0 flex items-center justify-between">
             <span class="text-xs text-dark-muted">
-              Показано правил: <strong class="text-emerald-400">{{ activeRulesList.length }}</strong>
+              Показано записей: <strong class="text-emerald-400">{{ activeTab === 'general' ? filteredGeneralRules.length : filteredServerSections.reduce((acc, s) => acc + s.rules.length, 0) }}</strong>
             </span>
             <button
               type="button"
