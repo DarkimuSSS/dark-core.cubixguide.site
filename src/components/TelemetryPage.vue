@@ -190,52 +190,50 @@ const getEventTypeBadgeClass = (type: string) => {
       </div>
 
       <!-- Main Layout: Top Popular Guides & Live Activity Log -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
         <!-- Left: Top Popular Guides Card -->
-        <div class="lg:col-span-1 p-6 rounded-3xl bg-[#16181a] border border-[#26292d] shadow-xl space-y-4 flex flex-col justify-between">
-          <div class="space-y-4">
-            <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
-              <div class="flex items-center gap-2.5">
-                <IconRenderer name="Award" size="20" class="text-amber-400" />
-                <h3 class="text-sm font-extrabold text-white">Топ Популярных Гайдов</h3>
+        <div class="lg:col-span-1 p-6 rounded-3xl bg-[#16181a] border border-[#26292d] shadow-xl space-y-4">
+          <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
+            <div class="flex items-center gap-2.5">
+              <IconRenderer name="Award" size="20" class="text-amber-400" />
+              <h3 class="text-sm font-extrabold text-white">Топ Популярных Гайдов</h3>
+            </div>
+            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">ПО ПРОСМОТРАМ</span>
+          </div>
+
+          <div v-if="stats.topGuides.length === 0" class="text-xs text-dark-muted py-8 text-center">
+            Данные о просмотрах пока не записаны
+          </div>
+
+          <div v-else class="space-y-2.5">
+            <div
+              v-for="(g, idx) in stats.topGuides"
+              :key="g.guide_id"
+              @click="emit('select-guide', g.guide_id)"
+              class="p-3 rounded-2xl bg-[#0c0d0e] hover:bg-[#121417] border border-[#26292d] hover:border-amber-500/40 transition-all flex items-center justify-between gap-3 cursor-pointer group shadow-sm"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <div :class="[
+                  'w-7 h-7 rounded-xl font-black text-xs flex items-center justify-center shrink-0 border shadow-md',
+                  idx === 0 ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' :
+                  idx === 1 ? 'bg-slate-300/20 text-slate-200 border-slate-300/50' :
+                  idx === 2 ? 'bg-amber-700/20 text-amber-500 border-amber-700/50' :
+                  'bg-slate-800/40 text-slate-400 border-slate-700/40'
+                ]">
+                  #{{ idx + 1 }}
+                </div>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-white group-hover:text-amber-300 transition-colors truncate">
+                    {{ g.guide_title || g.guide_id }}
+                  </div>
+                  <div class="text-[10px] text-dark-muted truncate">ID: {{ g.guide_id }}</div>
+                </div>
               </div>
-              <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">ПО ПРОСМОТРАМ</span>
-            </div>
 
-            <div v-if="stats.topGuides.length === 0" class="text-xs text-dark-muted py-8 text-center">
-              Данные о просмотрах пока не записаны
-            </div>
-
-            <div v-else class="space-y-2.5">
-              <div
-                v-for="(g, idx) in stats.topGuides"
-                :key="g.guide_id"
-                @click="emit('select-guide', g.guide_id)"
-                class="p-3 rounded-2xl bg-[#0c0d0e] hover:bg-[#121417] border border-[#26292d] hover:border-amber-500/40 transition-all flex items-center justify-between gap-3 cursor-pointer group shadow-sm"
-              >
-                <div class="flex items-center gap-3 min-w-0">
-                  <div :class="[
-                    'w-7 h-7 rounded-xl font-black text-xs flex items-center justify-center shrink-0 border shadow-md',
-                    idx === 0 ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' :
-                    idx === 1 ? 'bg-slate-300/20 text-slate-200 border-slate-300/50' :
-                    idx === 2 ? 'bg-amber-700/20 text-amber-500 border-amber-700/50' :
-                    'bg-slate-800/40 text-slate-400 border-slate-700/40'
-                  ]">
-                    #{{ idx + 1 }}
-                  </div>
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold text-white group-hover:text-amber-300 transition-colors truncate">
-                      {{ g.guide_title || g.guide_id }}
-                    </div>
-                    <div class="text-[10px] text-dark-muted truncate">ID: {{ g.guide_id }}</div>
-                  </div>
-                </div>
-
-                <div class="text-right shrink-0">
-                  <div class="text-xs font-black text-emerald-400">{{ g.views }}</div>
-                  <div class="text-[9px] text-dark-muted">просмотров</div>
-                </div>
+              <div class="text-right shrink-0">
+                <div class="text-xs font-black text-emerald-400">{{ g.views }}</div>
+                <div class="text-[9px] text-dark-muted">просмотров</div>
               </div>
             </div>
           </div>
@@ -275,8 +273,8 @@ const getEventTypeBadgeClass = (type: string) => {
             </div>
           </div>
 
-          <!-- Logs Table -->
-          <div class="overflow-x-auto custom-scrollbar">
+          <!-- Logs Table (Fixed max height with clean scrollbar) -->
+          <div class="max-h-[480px] overflow-y-auto custom-scrollbar">
             <table class="w-full text-left text-[11px]">
               <thead>
                 <tr class="text-dark-muted uppercase border-b border-[#26292d] text-[9.5px]">
