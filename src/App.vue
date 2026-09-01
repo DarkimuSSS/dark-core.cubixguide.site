@@ -736,7 +736,7 @@ const handleViewAllAuthorGuides = (username: string) => {
           <div
             v-if="isHeaderNavMenuOpen"
             @click.stop
-            class="absolute top-full left-0 mt-3 w-[460px] sm:w-[560px] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 z-50 space-y-4 animate-in fade-in zoom-in-95 duration-200"
+            class="absolute top-full left-0 mt-3 w-[520px] sm:w-[680px] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 sm:p-5 z-50 space-y-4 animate-in fade-in zoom-in-95 duration-200"
           >
             <!-- Navigation Modes -->
             <div>
@@ -801,44 +801,44 @@ const handleViewAllAuthorGuides = (username: string) => {
               </div>
             </div>
 
-            <!-- Rich Interactive Categories Hub -->
+            <!-- Rich Interactive Categories Hub (3 COLUMNS GRID) -->
             <div class="border-t border-[#262a30] pt-3.5 space-y-2.5">
               <div class="flex items-center justify-between px-1">
                 <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Тематические категории:</div>
                 <span class="text-[10px] text-emerald-400 font-bold">10 направлений</span>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1">
                 <button
                   v-for="cat in [
-                    { name: 'ХайТек', icon: 'Cpu', color: 'from-cyan-500/20 to-blue-500/10 border-cyan-500/40 text-cyan-300', desc: 'Автоматизация, механизмы и энергия' },
-                    { name: 'Магия RPG', icon: 'Sparkles', color: 'from-purple-500/20 to-pink-500/10 border-purple-500/40 text-purple-300', desc: 'Заклинания, алхимия и ритуалы' },
-                    { name: 'СкайБлок', icon: 'Layers', color: 'from-amber-500/20 to-orange-500/10 border-amber-500/40 text-amber-300', desc: 'Развитие острова и квесты' },
-                    { name: 'Автоматизация', icon: 'Zap', color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/40 text-emerald-300', desc: 'Схемы, трубы и логистика' },
-                    { name: 'Крафты & Рецепты', icon: 'Sliders', color: 'from-indigo-500/20 to-blue-500/10 border-indigo-500/40 text-indigo-300', desc: 'Гайды по сложным крафтам' },
-                    { name: 'Фермы & Заводы', icon: 'CheckSquare', color: 'from-teal-500/20 to-emerald-500/10 border-teal-500/40 text-teal-300', desc: 'Авто-фермы ресурсов и монет' },
-                    { name: 'Покемоны', icon: 'Smile', color: 'from-rose-500/20 to-red-500/10 border-rose-500/40 text-rose-300', desc: 'Pixelmon / Cobblemon поимка и бои' },
-                    { name: 'Строительство', icon: 'Home', color: 'from-amber-400/20 to-yellow-500/10 border-amber-400/40 text-amber-200', desc: 'Архитектура, декор и постройки' },
-                    { name: 'ПВП & Боссы', icon: 'Shield', color: 'from-red-500/20 to-rose-600/10 border-red-500/40 text-red-300', desc: 'Броня, оружие и битва с боссами' },
-                    { name: 'Общий', icon: 'BookOpen', color: 'from-slate-700/30 to-slate-800/20 border-slate-600/40 text-slate-300', desc: 'Базовые руководства и советы' }
+                    { name: 'ХайТек', icon: 'Cpu', color: 'from-cyan-500/20 to-blue-500/10 border-cyan-500/40 text-cyan-300', desc: 'Автоматизация & Энергия' },
+                    { name: 'Магия RPG', icon: 'Sparkles', color: 'from-purple-500/20 to-pink-500/10 border-purple-500/40 text-purple-300', desc: 'Заклинания & Алхимия' },
+                    { name: 'СкайБлок', icon: 'Layers', color: 'from-amber-500/20 to-orange-500/10 border-amber-500/40 text-amber-300', desc: 'Развитие острова' },
+                    { name: 'Автоматизация', icon: 'Zap', color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/40 text-emerald-300', desc: 'Схемы & Логистика' },
+                    { name: 'Крафты & Рецепты', icon: 'Sliders', color: 'from-indigo-500/20 to-blue-500/10 border-indigo-500/40 text-indigo-300', desc: 'Сложные рецепты' },
+                    { name: 'Фермы & Заводы', icon: 'CheckSquare', color: 'from-teal-500/20 to-emerald-500/10 border-teal-500/40 text-teal-300', desc: 'Фермы ресурсов' },
+                    { name: 'Покемоны', icon: 'Smile', color: 'from-rose-500/20 to-red-500/10 border-rose-500/40 text-rose-300', desc: 'Pixelmon & Cobblemon' },
+                    { name: 'Строительство', icon: 'Home', color: 'from-amber-400/20 to-yellow-500/10 border-amber-400/40 text-amber-200', desc: 'Декор & Постройки' },
+                    { name: 'ПВП & Боссы', icon: 'Shield', color: 'from-red-500/20 to-rose-600/10 border-red-500/40 text-red-300', desc: 'Броня & Боссы' },
+                    { name: 'Общий', icon: 'BookOpen', color: 'from-slate-700/30 to-slate-800/20 border-slate-600/40 text-slate-300', desc: 'Базовые советы' }
                   ]"
                   :key="cat.name"
                   @click="handleHeaderCategorySelect(cat.name)"
                   :class="[
-                    'p-2.5 rounded-2xl border text-left transition-all duration-300 flex items-center justify-between group cursor-pointer bg-gradient-to-r hover:scale-[1.02] shadow-sm',
+                    'p-2 sm:p-2.5 rounded-2xl border text-left transition-all duration-300 flex items-center justify-between group cursor-pointer bg-gradient-to-r hover:scale-[1.02] shadow-sm',
                     cat.color
                   ]"
                 >
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="p-1.5 rounded-xl bg-black/40 border border-white/10 group-hover:scale-110 transition-transform">
-                      <IconRenderer :name="cat.icon" size="16" />
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="p-1.5 rounded-xl bg-black/40 border border-white/10 group-hover:scale-110 transition-transform shrink-0">
+                      <IconRenderer :name="cat.icon" size="15" />
                     </div>
                     <div class="min-w-0">
-                      <div class="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors truncate">{{ cat.name }}</div>
-                      <div class="text-[9.5px] text-slate-400 truncate">{{ cat.desc }}</div>
+                      <div class="text-[11px] font-bold text-white group-hover:text-emerald-300 transition-colors truncate">{{ cat.name }}</div>
+                      <div class="text-[9px] text-slate-400 truncate">{{ cat.desc }}</div>
                     </div>
                   </div>
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/40 border border-white/10 text-slate-300 shrink-0 ml-1">
+                  <span class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-black/40 border border-white/10 text-slate-300 shrink-0 ml-1">
                     {{ guides.filter(g => g.meta.category === cat.name).length }}
                   </span>
                 </button>
