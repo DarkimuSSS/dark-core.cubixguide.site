@@ -8,6 +8,7 @@ const props = defineProps<{
   isOpen: boolean;
   currentTheme: ThemeMode;
   isAdmin?: boolean;
+  isAuthenticated?: boolean;
   guidesCount: number;
 }>();
 
@@ -17,6 +18,7 @@ const emit = defineEmits<{
   (e: 'clear-drafts'): void;
   (e: 'export-data'): void;
   (e: 'import-data', dataJson: string): void;
+  (e: 'logout'): void;
 }>();
 
 const selectedTab = ref<'appearance' | 'data' | 'system'>('appearance');
@@ -213,6 +215,25 @@ const handleFileUpload = (e: Event) => {
             class="w-full py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs transition-all flex items-center justify-center gap-2"
           >
             <span>Очистить черновики браузера</span>
+          </button>
+        </div>
+
+        <div v-if="isAuthenticated" class="p-4 rounded-2xl bg-[#121416] border border-rose-500/30 space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 shadow-md">
+              <IconRenderer name="LogOut" size="18" />
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white">Аккаунт автора</div>
+              <div class="text-[11px] text-dark-muted">Завершить текущую сессию и выйти из аккаунта</div>
+            </div>
+          </div>
+          <button
+            @click="emit('logout')"
+            class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2"
+          >
+            <IconRenderer name="LogOut" size="14" />
+            <span>Выйти из аккаунта</span>
           </button>
         </div>
       </div>

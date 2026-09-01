@@ -15,6 +15,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'select-guide', guideId: string): void;
+  (e: 'view-all-guides', authorName: string): void;
+  (e: 'logout'): void;
 }>();
 
 const isEditing = ref(false);
@@ -484,6 +486,22 @@ const handleBannerFileUpload = (e: Event) => {
           <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
             <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
               Редактировать профиль
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Logout Button (Own Profile) -->
+        <div v-if="isOwnProfile" class="relative group/tool">
+          <button
+            type="button"
+            @click="emit('logout')"
+            class="w-10 h-10 rounded-2xl bg-[#0c0d0e] hover:bg-rose-950/60 text-rose-400 border-2 border-rose-500/80 hover:border-rose-400 flex items-center justify-center shadow-2xl hover:scale-110 transition-all cursor-pointer"
+          >
+            <IconRenderer name="LogOut" size="18" class="stroke-[2]" />
+          </button>
+          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
+            <div class="bg-[#0c0d0e] border border-rose-500/40 text-rose-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+              Выйти из аккаунта
             </div>
           </div>
         </div>

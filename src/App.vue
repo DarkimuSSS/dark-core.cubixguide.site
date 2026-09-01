@@ -314,7 +314,14 @@ const handleAuthentication = (payload: { username: string; isAdmin: boolean; can
   showToast(`Добро пожаловать, ${payload.username}!`);
 };
 
+const isLogoutConfirmOpen = ref(false);
+
+const requestLogout = () => {
+  isLogoutConfirmOpen.value = true;
+};
+
 const logoutAuthor = () => {
+  isLogoutConfirmOpen.value = false;
   isAuthenticated.value = false;
   currentUsername.value = null;
   currentUserIsAdmin.value = false;
@@ -789,7 +796,7 @@ const handleViewAllAuthorGuides = (username: string) => {
           <IconRenderer name="Settings" size="14" class="text-slate-400" />
         </button>
 
-        <!-- Auth Buttons -->
+        <!-- Auth Login Button -->
         <div v-if="!isAuthenticated">
           <button
             type="button"
@@ -800,16 +807,6 @@ const handleViewAllAuthorGuides = (username: string) => {
             <span>Войти</span>
           </button>
         </div>
-
-        <button
-          v-else
-          type="button"
-          @click="logoutAuthor"
-          class="p-1.5 rounded-md bg-[#16181c] hover:bg-rose-500/20 border border-[#2a2e35] text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
-          title="Выйти"
-        >
-          <IconRenderer name="X" size="14" />
-        </button>
 
       </div>
     </header>
@@ -998,6 +995,7 @@ const handleViewAllAuthorGuides = (username: string) => {
       @close="isProfileModalOpen = false; fetchCurrentAuthorProfile();"
       @select-guide="selectGuide"
       @view-all-guides="handleViewAllAuthorGuides"
+      @logout="isProfileModalOpen = false; requestLogout();"
     />
 
     <!-- Password Protected Author Auth Modal -->
@@ -1022,12 +1020,26 @@ const handleViewAllAuthorGuides = (username: string) => {
       :is-open="isSettingsOpen"
       :current-theme="currentTheme"
       :is-admin="currentUserIsAdmin"
+      :is-authenticated="isAuthenticated"
       :guides-count="guides.length"
       @close="isSettingsOpen = false"
       @select-theme="applyTheme"
       @export-data="handleExportData"
       @import-data="handleImportData"
       @clear-drafts="handleClearDrafts"
+      @logout="isSettingsOpen = false; requestLogout();"
+    />
+
+    <!-- LOGOUT CONFIRMATION MODAL -->
+    <ConfirmModal
+      :is-open="isLogoutConfirmOpen"
+      title="Выход из аккаунта"
+      message="Вы действительно хотите выйти из аккаунта автора? Для повторного редактирования потребуется ввести пароль."
+      confirm-text="Да, выйти из аккаунта"
+      cancel-text="Отмена"
+      type="danger"
+      @confirm="logoutAuthor"
+      @cancel="isLogoutConfirmOpen = false"
     />
 
     <!-- Terms Modal -->
