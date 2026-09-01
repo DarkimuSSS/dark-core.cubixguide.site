@@ -96,37 +96,35 @@ export async function authenticateViaCubixTcp(username: string, password: string
           encryptedPayload = rawPayload;
         }
 
-        // Build TCP Packet Structure:
-        // [4 Bytes Big-Endian: ProtocolMagic]
-        // [4 Bytes Big-Endian: Payload Length]
-        // [N Bytes: Encrypted / Raw Payload]
-        const packetHeader = Buffer.alloc(8);
-        packetHeader.writeUInt32BE(magic, 0);
-        packetHeader.writeUInt32BE(encryptedPayload.length, 4);
+        // Build Native TCP Packet Structure:
+        // [4 Bytes Big-Endian: ProtocolMagic (0x72472417)]
+        // [256 Bytes: RSA Encrypted Payload (username\npassword)]
+        const magicHeader = Buffer.alloc(4);
+        magicHeader.writeUInt32BE(magic, 0);
 
-        const finalPacket = Buffer.concat([packetHeader, encryptedPayload]);
+        const finalPacket = Buffer.concat([magicHeader, encryptedPayload]);
         socket.write(finalPacket);
       } catch (prepErr: any) {
         finish({ success: false, error: `Ошибка формирования пакета авторизации: ${prepErr.message}` });
       }
     });
 
+    socket.connect(port, host);
+
     let receivedBuffer = Buffer.alloc(0);
 
     socket.on('data', (chunk) => {
       receivedBuffer = Buffer.concat([receivedBuffer, chunk]);
 
-      // Response parsing:
-      // Expecting at least status code byte or response length + payload
       if (receivedBuffer.length >= 1) {
-        // If response starts with 0x01 or ASCII '1' or 'OK' / 'SUCCESS'
         const statusByte = receivedBuffer[0];
         const responseText = receivedBuffer.toString('utf-8').trim();
 
-        if (statusByte === 0x01 || statusByte === 0x00 || responseText.toUpperCase().includes('OK') || responseText.toUpperCase().includes('SUCCESS')) {
+        // 0x01 or 0x00 status byte response
+        if (statusByte === 0x01 || statusByte === 0x31 || responseText.toUpperCase().includes('OK') || responseText.toUpperCase().includes('SUCCESS')) {
           finish({ success: true, username: username.trim() });
         } else {
-          finish({ success: false, error: responseText || 'Неверный логин или пароль CubixWorld' });
+          finish({ success: false, error: 'Неверный логин или пароль от аккаунта CubixWorld' });
         }
       }
     });
