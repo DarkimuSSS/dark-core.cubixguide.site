@@ -919,6 +919,14 @@ const handleViewAllAuthorGuides = (username: string) => {
         </div>
       </template>
 
+      <!-- SINGLE UNIFIED SITE FOOTER -->
+      <SiteFooter
+        :guides-count="guides.length"
+        :servers-count="21"
+        @navigate="mode = 'home'"
+        @open-terms="isTermsOpen = true"
+      />
+
       <!-- DELETE GUIDE CONFIRMATION MODAL -->
       <ConfirmModal
         :is-open="isDeleteGuideConfirmOpen"

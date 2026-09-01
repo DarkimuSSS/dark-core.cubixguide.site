@@ -512,18 +512,7 @@ const getDifficultyBadge = (diff: string) => {
           <IconRenderer name="ChevronsRight" size="14" />
         </button>
 
-        <span class="text-xs text-dark-muted font-mono ml-2">
-          Стр. {{ currentPage }} из {{ totalPages }} · {{ filteredGuides.length }} гайдов
-        </span>
       </div>
     </div>
-
-    <!-- SITE FOOTER AT THE VERY BOTTOM OF HOMEPAGE SCROLL -->
-    <SiteFooter
-      :guides-count="guides.length"
-      :servers-count="21"
-      @navigate="$emit('create-guide')"
-      @open-terms="false"
-    />
   </div>
 </template>
