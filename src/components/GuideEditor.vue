@@ -1222,9 +1222,9 @@ const scrollToBlockInEditor = (id: string) => {
         <!-- Undo / Redo Row -->
         <div :class="['flex items-center gap-1.5', isToolbarExpanded ? 'w-full' : 'flex-col']">
           <div class="relative group/tool flex-1 w-full">
-            <button type="button" @click="undoState" :disabled="historyIndex <= 0" :class="['h-9 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center transition-all w-full', isToolbarExpanded ? 'px-2.5 gap-2 justify-start' : 'justify-center w-10']">
-              <IconRenderer name="RotateCcw" size="15" class="shrink-0" />
-              <span v-if="isToolbarExpanded" class="text-[11px] font-semibold text-slate-200">Отменить</span>
+            <button type="button" @click="undoState" :disabled="historyIndex <= 0" :class="['rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+              <IconRenderer name="RotateCcw" size="18" class="shrink-0" />
+              <span v-if="isToolbarExpanded" class="text-xs font-semibold text-slate-200">Отменить</span>
             </button>
             <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
               <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Отменить (Ctrl+Z)</div>
@@ -1232,9 +1232,9 @@ const scrollToBlockInEditor = (id: string) => {
           </div>
 
           <div class="relative group/tool flex-1 w-full">
-            <button type="button" @click="redoState" :disabled="historyIndex >= historyStack.length - 1" :class="['h-9 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center transition-all w-full', isToolbarExpanded ? 'px-2.5 gap-2 justify-start' : 'justify-center w-10']">
-              <IconRenderer name="RotateCw" size="15" class="shrink-0" />
-              <span v-if="isToolbarExpanded" class="text-[11px] font-semibold text-slate-200">Повторить</span>
+            <button type="button" @click="redoState" :disabled="historyIndex >= historyStack.length - 1" :class="['rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+              <IconRenderer name="RotateCw" size="18" class="shrink-0" />
+              <span v-if="isToolbarExpanded" class="text-xs font-semibold text-slate-200">Повторить</span>
             </button>
             <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
               <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Повторить (Ctrl+Y)</div>
@@ -1249,9 +1249,9 @@ const scrollToBlockInEditor = (id: string) => {
           <button
             type="button"
             @click.stop="addBlockMenuAfterIndex = (addBlockMenuAfterIndex === -1 ? null : -1); activeBlockMenuId = null"
-            :class="['h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center transition-all shadow-lg shadow-emerald-950/50 cursor-pointer w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start font-bold' : 'justify-center w-10']"
+            :class="['rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center transition-all shadow-lg shadow-emerald-950/50 cursor-pointer', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']"
           >
-            <IconRenderer name="Plus" size="18" class="shrink-0" />
+            <IconRenderer name="Plus" size="20" class="shrink-0" />
             <span v-if="isToolbarExpanded" class="text-xs font-bold">Новый блок</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
@@ -1279,8 +1279,8 @@ const scrollToBlockInEditor = (id: string) => {
 
         <!-- Templates Button -->
         <div class="relative group/tool">
-          <button type="button" @click.stop="isTemplateModalOpen = true" :class="['h-9 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
-            <IconRenderer name="Layout" size="16" class="shrink-0" />
+          <button type="button" @click.stop="isTemplateModalOpen = true" :class="['rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+            <IconRenderer name="Layout" size="18" class="shrink-0" />
             <span v-if="isToolbarExpanded" class="text-xs font-semibold text-cyan-300">Шаблоны</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
@@ -1290,8 +1290,8 @@ const scrollToBlockInEditor = (id: string) => {
 
         <!-- Structure Tree Button -->
         <div class="relative group/tool">
-          <button type="button" @click.stop="isTreeModalOpen = true" :class="['h-9 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
-            <IconRenderer name="Layers" size="16" class="shrink-0" />
+          <button type="button" @click.stop="isTreeModalOpen = true" :class="['rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+            <IconRenderer name="Layers" size="18" class="shrink-0" />
             <span v-if="isToolbarExpanded" class="text-xs font-semibold text-purple-300">Структура</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
@@ -1301,8 +1301,8 @@ const scrollToBlockInEditor = (id: string) => {
 
         <!-- Outline Navigation Button -->
         <div class="relative group/tool">
-          <button type="button" @click.stop="isOutlineOpen = !isOutlineOpen" :class="['h-9 rounded-xl border flex items-center transition-all w-full', isOutlineOpen ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white border-[#26292d]', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
-            <IconRenderer name="List" size="16" class="shrink-0" />
+          <button type="button" @click.stop="isOutlineOpen = !isOutlineOpen" :class="['rounded-xl border flex items-center transition-all', isOutlineOpen ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white border-[#26292d]', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+            <IconRenderer name="List" size="18" class="shrink-0" />
             <span v-if="isToolbarExpanded" class="text-xs font-semibold">Содержание</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
@@ -1312,8 +1312,8 @@ const scrollToBlockInEditor = (id: string) => {
 
         <!-- Clean Empty Blocks -->
         <div class="relative group/tool">
-          <button type="button" @click="cleanEmptyBlocks" :class="['h-9 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
-            <IconRenderer name="Sparkles" size="16" class="shrink-0" />
+          <button type="button" @click="cleanEmptyBlocks" :class="['rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+            <IconRenderer name="Sparkles" size="18" class="shrink-0" />
             <span v-if="isToolbarExpanded" class="text-xs font-semibold text-amber-300">Очистить</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
@@ -1323,8 +1323,8 @@ const scrollToBlockInEditor = (id: string) => {
 
         <!-- Import / Export JSON -->
         <div class="relative group/tool">
-          <button type="button" @click.stop="isImportExportOpen = true" :class="['h-9 rounded-xl bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white border border-[#26292d] flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
-            <IconRenderer name="FileText" size="16" class="shrink-0" />
+          <button type="button" @click.stop="isImportExportOpen = true" :class="['rounded-xl bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white border border-[#26292d] flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+            <IconRenderer name="FileText" size="18" class="shrink-0" />
             <span v-if="isToolbarExpanded" class="text-xs font-semibold">Импорт/Экспорт</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
@@ -1334,8 +1334,8 @@ const scrollToBlockInEditor = (id: string) => {
 
         <!-- Hotkeys Help -->
         <div class="relative group/tool">
-          <button type="button" @click.stop="isHelpModalOpen = true" :class="['h-9 rounded-xl bg-[#121416] hover:bg-[#212429] text-cyan-400 border border-[#26292d] flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
-            <IconRenderer name="HelpCircle" size="16" class="shrink-0" />
+          <button type="button" @click.stop="isHelpModalOpen = true" :class="['rounded-xl bg-[#121416] hover:bg-[#212429] text-cyan-400 border border-[#26292d] flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+            <IconRenderer name="HelpCircle" size="18" class="shrink-0" />
             <span v-if="isToolbarExpanded" class="text-xs font-semibold text-cyan-400">Горячие клавиши</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
@@ -1347,8 +1347,8 @@ const scrollToBlockInEditor = (id: string) => {
 
         <!-- Preview Toggle -->
         <div class="relative group/tool">
-          <button type="button" @click="emit('toggle-preview')" :class="['h-9 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 flex items-center transition-all shadow-md w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
-            <IconRenderer name="Eye" size="16" class="shrink-0" />
+          <button type="button" @click="emit('toggle-preview')" :class="['rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 flex items-center transition-all shadow-md', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+            <IconRenderer name="Eye" size="18" class="shrink-0" />
             <span v-if="isToolbarExpanded" class="text-xs font-semibold text-cyan-300">Предпросмотр</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
@@ -1358,8 +1358,8 @@ const scrollToBlockInEditor = (id: string) => {
 
         <!-- Save Button -->
         <div class="relative group/tool">
-          <button type="button" @click="emit('publish')" :class="['h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center transition-all shadow-lg shadow-emerald-950/50 w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start font-bold' : 'justify-center w-10']">
-            <IconRenderer name="Check" size="16" class="shrink-0" />
+          <button type="button" @click="emit('publish')" :class="['rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center transition-all shadow-lg shadow-emerald-950/50', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']">
+            <IconRenderer name="Check" size="18" class="shrink-0" />
             <span v-if="isToolbarExpanded" class="text-xs font-bold">Сохранить</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
@@ -1369,8 +1369,8 @@ const scrollToBlockInEditor = (id: string) => {
 
         <!-- Delete Button -->
         <div class="relative group/tool">
-          <button type="button" @click="emit('delete')" :class="['h-9 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
-            <IconRenderer name="Trash2" size="16" class="shrink-0" />
+          <button type="button" @click="emit('delete')" :class="['rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+            <IconRenderer name="Trash2" size="18" class="shrink-0" />
             <span v-if="isToolbarExpanded" class="text-xs font-semibold text-rose-400">Удалить</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
