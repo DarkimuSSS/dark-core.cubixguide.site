@@ -99,7 +99,8 @@ const filteredServers = computed(() => {
 });
 
 const filteredGuides = computed(() => {
-  return props.guides.filter(guide => {
+  const safeGuides = props.guides || [];
+  return safeGuides.filter(guide => {
     const matchesCategory = selectedCategory.value === 'Все' || guide.meta.category === selectedCategory.value;
     const matchesServer = selectedServer.value === 'Все' || guide.meta.server === selectedServer.value;
     const q = searchQuery.value.toLowerCase().trim();
@@ -217,7 +218,7 @@ const getDifficultyBadge = (diff: string) => {
         <div class="pt-2 flex flex-wrap items-center justify-center gap-6 text-xs text-dark-muted font-semibold">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <strong class="text-white">{{ guides.length }}</strong> Гайдов в базе
+            <strong class="text-white">{{ (guides || []).length }}</strong> Гайдов в базе
           </div>
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-cyan-400"></span>

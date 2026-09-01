@@ -37,7 +37,9 @@ const applyTheme = (theme: ThemeMode) => {
 
 const toggleTheme = () => {
   const themes: ThemeMode[] = ['dark', 'light', 'emerald', 'cyberpunk'];
-  const nextIdx = (themes.indexOf(currentTheme.value) + 1) % themes.length;
+  const cur = currentTheme.value || 'dark';
+  const idx = themes.indexOf(cur);
+  const nextIdx = (idx >= 0 ? idx + 1 : 0) % themes.length;
   applyTheme(themes[nextIdx]);
 };
 
