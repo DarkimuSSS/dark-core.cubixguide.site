@@ -499,7 +499,13 @@ const fetchServerRulesFromApi = async (serverId: string) => {
     const res = await fetch(`/api/server-rules/${serverId}`);
     if (res.ok) {
       const data = await res.json();
-      loadedServerRules.value[serverId] = data;
+      if (data && data.server_id) {
+        loadedServerRules.value[serverId] = data;
+        const cleanId = getBaseServerId(serverId);
+        loadedServerRules.value[cleanId] = data;
+        const shortId = cleanId.split('_')[0];
+        loadedServerRules.value[shortId] = data;
+      }
     }
   } catch (e) {
     console.warn(`Не удалось загрузить правила для ${serverId} с API, используем локальный фоллбек`);
@@ -529,28 +535,32 @@ const fetchServerListFromApi = async () => {
   }
 };
 
-// Хелпер получения оригинального сервер ID (убирает -Mobile при вызове правил)
+// Хелпер получения оригинального сервер ID (убирает -Mobile / _Mobile при вызове правил)
 const getBaseServerId = (serverId: string) => {
-  return serverId.replace(/-mobile$/i, '').replace(/_mobile$/i, '');
+  return serverId.replace(/[-_]mobile$/i, '');
 };
 
 watch(selectedServer, (newServer) => {
   if (newServer) {
-    fetchServerRulesFromApi(getBaseServerId(newServer));
+    fetchServerRulesFromApi(newServer);
   }
 }, { immediate: true });
 
 onMounted(() => {
   fetchServerListFromApi();
-  fetchServerRulesFromApi(getBaseServerId(selectedServer.value));
+  fetchServerRulesFromApi(selectedServer.value);
 });
 
 const currentServerData = computed(() => {
-  const baseId = getBaseServerId(selectedServer.value);
-  if (loadedServerRules.value[baseId]) {
-    return loadedServerRules.value[baseId];
-  }
-  if (baseId === 'OneBlock') return ONEBLOCK_RULES_DATA;
+  const currentId = selectedServer.value;
+  const cleanId = getBaseServerId(currentId);
+  const shortId = cleanId.split('_')[0];
+
+  if (loadedServerRules.value[currentId]) return loadedServerRules.value[currentId];
+  if (loadedServerRules.value[cleanId]) return loadedServerRules.value[cleanId];
+  if (loadedServerRules.value[shortId]) return loadedServerRules.value[shortId];
+
+  if (cleanId === 'OneBlock') return ONEBLOCK_RULES_DATA;
   return null;
 });
 

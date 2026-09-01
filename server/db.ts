@@ -589,6 +589,7 @@ try {
 
   const { ICEANDFIRE_RULES_DATA } = require('../src/data/iceandfireRulesData');
   saveServerRules(ICEANDFIRE_RULES_DATA);
+  saveServerRules({ ...ICEANDFIRE_RULES_DATA, server_id: "IceAndFire" });
 
   const { INDUSTRIAL_RULES_DATA } = require('../src/data/industrialRulesData');
   saveServerRules(INDUSTRIAL_RULES_DATA);
