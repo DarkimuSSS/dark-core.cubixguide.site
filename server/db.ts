@@ -592,6 +592,12 @@ try {
 
   const { INDUSTRIAL_RULES_DATA } = require('../src/data/industrialRulesData');
   saveServerRules(INDUSTRIAL_RULES_DATA);
+
+  const { MAGICRPG_RULES_DATA } = require('../src/data/magicrpgRulesData');
+  saveServerRules(MAGICRPG_RULES_DATA);
+
+  const { SKYTECH_RULES_DATA } = require('../src/data/skytechRulesData');
+  saveServerRules(SKYTECH_RULES_DATA);
 } catch (e) {
   console.error('Error seeding server rules:', e);
 }
