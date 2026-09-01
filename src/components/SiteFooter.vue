@@ -31,7 +31,7 @@ const supportLinks = [
 </script>
 
 <template>
-  <footer class="mt-12 mb-8 border border-[#26292d] bg-gradient-to-b from-[#16181a] via-[#121416] to-[#0c0d0e] rounded-3xl shadow-2xl overflow-hidden">
+  <footer class="mt-12 border-t sm:border border-[#26292d] bg-gradient-to-b from-[#16181a] via-[#121416] to-[#0c0d0e] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
     <!-- Top grid section -->
     <div class="px-6 sm:px-8 py-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
