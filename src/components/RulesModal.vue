@@ -1,16 +1,42 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 
-defineProps<{ 
+const props = withDefaults(defineProps<{ 
   isOpen: boolean;
   embedded?: boolean;
+  initialTab?: 'general' | 'server';
+  initialServer?: string;
+}>(), {
+  initialTab: 'general',
+  initialServer: 'OneBlock'
+});
+
+const emit = defineEmits<{ 
+  (e: 'close'): void;
+  (e: 'update-tab', tab: 'general' | 'server'): void;
+  (e: 'update-server', server: string): void;
 }>();
-const emit = defineEmits<{ (e: 'close'): void }>();
 
 // Tab selection: 'general' (Общие правила проекта) | 'server' (Внутриигровые правила серверов)
-const activeTab = ref<'general' | 'server'>('general');
-const selectedServer = ref<string>('OneBlock');
+const activeTab = ref<'general' | 'server'>(props.initialTab);
+const selectedServer = ref<string>(props.initialServer);
+
+watch(() => props.initialTab, (newTab) => {
+  if (newTab) activeTab.value = newTab;
+});
+
+watch(() => props.initialServer, (newServer) => {
+  if (newServer) selectedServer.value = newServer;
+});
+
+watch(activeTab, (newTab) => {
+  emit('update-tab', newTab);
+});
+
+watch(selectedServer, (newServer) => {
+  emit('update-server', newServer);
+});
 
 const searchQuery = ref('');
 const activeCategory = ref<string>('all');

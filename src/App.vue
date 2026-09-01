@@ -165,6 +165,9 @@ const openAuthorProfile = (username?: string) => {
 };
 
 // URL Query Parameters Sync (tab=...&guide=...)
+const initialRulesTab = ref<'general' | 'server'>('general');
+const initialRulesServer = ref<string>('OneBlock');
+
 const updateUrlRoute = () => {
   const params = new URLSearchParams();
 
@@ -184,7 +187,12 @@ const updateUrlRoute = () => {
   } else if (mode.value === 'drafts') {
     params.set('tab', 'Черновики');
   } else if (mode.value === 'rules') {
-    params.set('tab', 'Правила');
+    if (initialRulesTab.value === 'server') {
+      params.set('tab', 'Внутриигровые');
+      if (initialRulesServer.value) params.set('server', initialRulesServer.value);
+    } else {
+      params.set('tab', 'Правила');
+    }
   }
 
   const queryString = params.toString() ? `?${params.toString()}` : '/';
@@ -198,10 +206,15 @@ const syncFromUrlPath = () => {
   const tab = params.get('tab');
   const guideParam = params.get('guide');
   const authorParam = params.get('author');
+  const serverParam = params.get('server');
 
   if (authorParam && tab === 'Профиль') {
     profileUsername.value = authorParam;
     isProfileModalOpen.value = true;
+  }
+
+  if (serverParam) {
+    initialRulesServer.value = serverParam;
   }
 
   if (guideParam) {
@@ -210,7 +223,11 @@ const syncFromUrlPath = () => {
     if (found) activeGuide.value = JSON.parse(JSON.stringify(found));
   }
 
-  if (tab === 'Правила' || tab === 'rules') {
+  if (tab === 'Правила' || tab === 'rules' || tab === 'Общие') {
+    initialRulesTab.value = 'general';
+    mode.value = 'rules';
+  } else if (tab === 'Внутриигровые' || tab === 'server_rules' || tab === 'Серверные') {
+    initialRulesTab.value = 'server';
     mode.value = 'rules';
   } else if (tab === 'Вики' || tab === 'reader') {
     mode.value = 'reader';
@@ -1305,7 +1322,14 @@ const handleViewAllAuthorGuides = (username: string) => {
     <TermsModal :is-open="isTermsOpen" @close="isTermsOpen = false" />
 
     <!-- Rules Modal -->
-    <RulesModal :is-open="isRulesOpen" @close="isRulesOpen = false" />
+    <RulesModal
+      :is-open="isRulesOpen"
+      :initial-tab="initialRulesTab"
+      :initial-server="initialRulesServer"
+      @update-tab="(t) => { initialRulesTab = t; updateUrlRoute(); }"
+      @update-server="(s) => { initialRulesServer = s; updateUrlRoute(); }"
+      @close="isRulesOpen = false"
+    />
 
     <!-- Cookie Banner -->
     <CookieBanner @open-terms="isTermsOpen = true" />
