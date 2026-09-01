@@ -1587,6 +1587,16 @@ const scrollToBlockInEditor = (id: string) => {
                   />
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
+                  <!-- Section Collapsing Permission Toggle -->
+                  <button
+                    type="button"
+                    @click="updateBlock({ ...block, allowCollapsing: block.allowCollapsing === false ? true : false })"
+                    :class="['text-[10px] px-2 py-1 rounded-lg border font-semibold flex items-center gap-1 transition-all', block.allowCollapsing !== false ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300']"
+                    :title="block.allowCollapsing !== false ? 'Сворачивание РАЗРЕШЕНО в просмотре' : 'Сворачивание ЗАПРЕЩЕНО в просмотре'"
+                  >
+                    <IconRenderer :name="block.allowCollapsing !== false ? 'ChevronUp' : 'Lock'" size="11" />
+                    <span>{{ block.allowCollapsing !== false ? 'Сворачивание вкл' : 'Запрет сворачивания' }}</span>
+                  </button>
                   <!-- Section Outer Style Toggle -->
                   <div class="flex items-center gap-1 bg-[#0c0d0e] border border-[#26292d] p-0.5 rounded-lg">
                     <button
@@ -1836,14 +1846,27 @@ const scrollToBlockInEditor = (id: string) => {
 
             <!-- HEADING -->
             <div v-else-if="block.type === 'heading'" class="space-y-2">
-              <div class="flex items-center gap-2 mb-2">
-                <button @click="updateBlockHeadingLevel(block, 'h1')" :class="['text-[10px] font-bold px-2 py-0.5 rounded transition-all', block.headingLevel === 'h1' ? 'bg-emerald-500/20 text-emerald-400' : 'text-dark-muted hover:text-white']">H1</button>
-                <button @click="updateBlockHeadingLevel(block, 'h2')" :class="['text-[10px] font-bold px-2 py-0.5 rounded transition-all', (block.headingLevel === 'h2' || !block.headingLevel) ? 'bg-emerald-500/20 text-emerald-400' : 'text-dark-muted hover:text-white']">H2</button>
-                <div class="flex items-center gap-1 ml-2">
-                  <button v-for="a in ['left','center','right']" :key="a" @click="updateBlockAlign(block, a as 'left'|'center'|'right')" :class="['text-[10px] px-1.5 py-0.5 rounded transition-all', block.align === a ? 'bg-[#26292d] text-white' : 'text-dark-muted hover:text-white']">
-                    <IconRenderer :name="a === 'left' ? 'AlignLeft' : a === 'center' ? 'AlignCenter' : 'AlignRight'" size="12" />
-                  </button>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                  <button @click="updateBlockHeadingLevel(block, 'h1')" :class="['text-[10px] font-bold px-2 py-0.5 rounded transition-all', block.headingLevel === 'h1' ? 'bg-emerald-500/20 text-emerald-400' : 'text-dark-muted hover:text-white']">H1</button>
+                  <button @click="updateBlockHeadingLevel(block, 'h2')" :class="['text-[10px] font-bold px-2 py-0.5 rounded transition-all', (block.headingLevel === 'h2' || !block.headingLevel) ? 'bg-emerald-500/20 text-emerald-400' : 'text-dark-muted hover:text-white']">H2</button>
+                  <div class="flex items-center gap-1 ml-2">
+                    <button v-for="a in ['left','center','right']" :key="a" @click="updateBlockAlign(block, a as 'left'|'center'|'right')" :class="['text-[10px] px-1.5 py-0.5 rounded transition-all', block.align === a ? 'bg-[#26292d] text-white' : 'text-dark-muted hover:text-white']">
+                      <IconRenderer :name="a === 'left' ? 'AlignLeft' : a === 'center' ? 'AlignCenter' : 'AlignRight'" size="12" />
+                    </button>
+                  </div>
                 </div>
+
+                <!-- Allow / Disallow Collapsing in Reader Mode -->
+                <button
+                  type="button"
+                  @click="updateBlock({ ...block, allowCollapsing: block.allowCollapsing === false ? true : false })"
+                  :class="['text-[10px] px-2 py-0.5 rounded-lg border font-semibold flex items-center gap-1 transition-all', block.allowCollapsing !== false ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300']"
+                  :title="block.allowCollapsing !== false ? 'Сворачивание РАЗРЕШЕНО в просмотре' : 'Сворачивание ЗАПРЕЩЕНО в просмотре'"
+                >
+                  <IconRenderer :name="block.allowCollapsing !== false ? 'ChevronUp' : 'Lock'" size="11" />
+                  <span>{{ block.allowCollapsing !== false ? 'Сворачивание вкл' : 'Запрет сворачивания' }}</span>
+                </button>
               </div>
               <input
                 type="text"

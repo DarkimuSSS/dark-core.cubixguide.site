@@ -484,7 +484,13 @@ const getVariantClass = (variant?: BlockVariant) => {
               ]"
             >
               <!-- Optional Section Title / Header Collapse Bar if H1/Heading sub-block or explicit section header present -->
-              <div class="flex items-center justify-between pb-3 mb-4 border-b border-[#26292d]/80 cursor-pointer group/sec" @click="toggleBlockCollapse(block.id)">
+              <div 
+                :class="[
+                  'flex items-center justify-between pb-3 mb-4 border-b border-[#26292d]/80 group/sec',
+                  block.allowCollapsing !== false ? 'cursor-pointer' : ''
+                ]" 
+                @click="block.allowCollapsing !== false ? toggleBlockCollapse(block.id) : null"
+              >
                 <div class="flex items-center gap-2">
                   <div class="w-2 h-2 rounded-full bg-emerald-400 group-hover/sec:scale-125 transition-transform"></div>
                   <span class="text-xs font-bold uppercase tracking-wider text-slate-300 group-hover/sec:text-emerald-300 transition-colors">
@@ -492,6 +498,7 @@ const getVariantClass = (variant?: BlockVariant) => {
                   </span>
                 </div>
                 <button
+                  v-if="block.allowCollapsing !== false"
                   type="button"
                   class="p-1 rounded-lg bg-[#121416] group-hover/sec:bg-[#212429] border border-[#26292d] text-dark-muted group-hover/sec:text-white transition-colors"
                   :title="collapsedBlocks[block.id] ? 'Развернуть секцию' : 'Свернуть секцию'"
@@ -582,7 +589,15 @@ const getVariantClass = (variant?: BlockVariant) => {
             </div>
 
             <!-- Standalone Heading Block -->
-            <div v-else-if="block.type === 'heading'" :class="['p-5 rounded-2xl h-full flex items-center justify-between border border-[#26292d] cursor-pointer group/hhead', getVariantClass(block.variant)]" @click="toggleBlockCollapse(block.id)">
+            <div 
+              v-else-if="block.type === 'heading'" 
+              :class="[
+                'p-5 rounded-2xl h-full flex items-center justify-between border border-[#26292d] group/hhead', 
+                block.allowCollapsing !== false ? 'cursor-pointer' : '',
+                getVariantClass(block.variant)
+              ]" 
+              @click="block.allowCollapsing !== false ? toggleBlockCollapse(block.id) : null"
+            >
               <h2 
                 v-if="block.headingLevel === 'h1'" 
                 :class="['text-xl sm:text-2xl font-bold text-white tracking-tight', block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left']"
@@ -597,6 +612,7 @@ const getVariantClass = (variant?: BlockVariant) => {
               </h3>
 
               <button
+                v-if="block.allowCollapsing !== false"
                 type="button"
                 class="p-1 rounded-lg bg-[#121416] group-hover/hhead:bg-[#212429] border border-[#26292d] text-dark-muted group-hover/hhead:text-white transition-colors shrink-0 ml-3"
                 :title="collapsedBlocks[block.id] ? 'Развернуть' : 'Свернуть'"

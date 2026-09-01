@@ -87,6 +87,7 @@ export interface GuideBlock {
   
   anchorId?: string; // Custom anchor ID or manual link key
   showInOutline?: boolean; // Explicit toggle: force include or exclude from Table of Contents
+  allowCollapsing?: boolean; // If false/true: explicitly allow or disallow collapsing in reader mode
   
   // Heading Block
   headingText?: string;
