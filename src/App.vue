@@ -420,7 +420,10 @@ const fetchGuides = async (silent: boolean = false) => {
   try {
     if (!silent) isLoading.value = true;
     const res = await fetch('/api/guides');
-    if (!res.ok) throw new Error('Ошибка загрузки данных');
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Ошибка загрузки данных (${res.status}): ${errText.substring(0, 100)}`);
+    }
     const data: Guide[] = await res.json();
     guides.value = data;
 
