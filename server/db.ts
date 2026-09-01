@@ -177,7 +177,7 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
   saveAuthorProfile({
     username: cleanUsername,
     avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${cleanUsername}`,
-    bio: `Автор руководств на серверах CubixWorld.`,
+    bio: '',
     server: 'MagicRPG',
     badges: ['Автор Гайдов'],
     updatedAt: createdAt
@@ -311,7 +311,7 @@ export function upsertCubixAuthor(cleanUsername: string, accountInfo?: any) {
     saveAuthorProfile({
       username: cleanUsername,
       avatarUrl: officialAvatarUrl,
-      bio: `Игрок и автор руководств проекта CubixWorld.`,
+      bio: '',
       server: accountInfo?.groups?.[0]?.server_main_name || 'HiTech',
       badges: badges,
       updatedAt: createdAt
@@ -322,9 +322,11 @@ export function upsertCubixAuthor(cleanUsername: string, accountInfo?: any) {
     // Update avatar URL for existing CubixWorld user
     const existingProfile = getAuthorProfile(cleanUsername);
     if (existingProfile) {
+      const isDefaultBio = existingProfile.bio === 'Игрок и автор руководств проекта CubixWorld.' || existingProfile.bio === 'Автор руководств на серверах CubixWorld.';
       saveAuthorProfile({
         ...existingProfile,
         avatarUrl: officialAvatarUrl,
+        bio: isDefaultBio ? '' : existingProfile.bio,
         badges: Array.from(new Set([...badges, ...(existingProfile.badges || [])]))
       });
     }
