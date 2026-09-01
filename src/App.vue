@@ -982,208 +982,128 @@ const handleViewAllAuthorGuides = (username: string) => {
       </div>
 
       <template v-else>
-        <!-- 1. HOMEPAGE CATALOG VIEW (DEFAULT LANDING) -->
-        <div v-if="mode === 'home'" class="px-3 sm:px-4 pt-4">
-          <HomePage
-            :guides="guides"
-            :initial-search-query="initialCatalogSearchQuery"
-            :is-admin="currentUserIsAdmin"
-            :can-edit-others="canUserEditActiveGuide"
-            :current-username="currentUsername || ''"
-            @select-guide="handleHomeSelectGuide"
-            @create-guide="createNewGuide"
-            @open-author="openAuthorProfile"
-            @delete-guide="requestDeleteGuideById"
-          />
-        </div>
-
-        <!-- 2. BOOKMARKS / FAVORITES VIEW -->
-        <div v-else-if="mode === 'favorites'" class="px-3 sm:px-4 pt-4 space-y-6 pb-24">
-          <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
-            <div>
-              <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                <IconRenderer name="Star" size="22" class="text-amber-400" />
-                Закладки статей ({{ favoritedGuidesList.length }})
-              </h2>
-              <p class="text-xs text-dark-muted">Сохранённые руководства для быстрого доступа</p>
-            </div>
-            <button @click="mode = 'home'" class="text-xs text-cyan-400 hover:underline">Вернуться на Главную</button>
+        <div class="max-w-[1600px] mx-auto w-full">
+          <!-- 1. HOMEPAGE CATALOG VIEW (DEFAULT LANDING) -->
+          <div v-if="mode === 'home'" class="px-3 sm:px-6 pt-4">
+            <HomePage
+              :guides="guides"
+              :initial-search-query="initialCatalogSearchQuery"
+              :is-admin="currentUserIsAdmin"
+              :can-edit-others="canUserEditActiveGuide"
+              :current-username="currentUsername || ''"
+              @select-guide="handleHomeSelectGuide"
+              @create-guide="createNewGuide"
+              @open-author="openAuthorProfile"
+              @delete-guide="requestDeleteGuideById"
+            />
           </div>
 
-          <div v-if="favoritedGuidesList.length === 0" class="text-center py-20 bg-[#16181a] border border-[#26292d] rounded-2xl space-y-3">
-            <IconRenderer name="Star" size="36" class="mx-auto text-amber-400/40" />
-            <h3 class="text-base font-bold text-white">В закладках пока пусто</h3>
-            <p class="text-xs text-dark-muted">Нажмите на звёздочку при чтении гайда, чтобы сохранить его сюда</p>
-          </div>
-
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <div
-              v-for="guide in favoritedGuidesList"
-              :key="guide.meta.id"
-              @click="selectGuide(guide.meta.id)"
-              class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl hover:shadow-emerald-950/30 hover:-translate-y-1 overflow-hidden"
-            >
-              <!-- COVER BANNER WITH BADGES & BOOKMARK REMOVE BUTTON -->
-              <div class="h-28 sm:h-32 w-full relative overflow-hidden flex-shrink-0">
-                <img v-if="guide.meta.coverUrl" :src="guide.meta.coverUrl" class="w-full h-full object-cover object-[center_30%] group-hover:scale-105 transition-transform duration-500" />
-                <div v-else-if="guide.meta.coverGradient" :class="['w-full h-full bg-gradient-to-tr', guide.meta.coverGradient]"></div>
-                <div v-else class="w-full h-full bg-gradient-to-r from-slate-900 via-slate-800 to-[#121416]"></div>
-
-                <!-- Gradient Overlay -->
-                <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/20 to-black/30 pointer-events-none"></div>
-
-                <!-- Top Right Bookmark Star Button -->
-                <button 
-                  @click.stop="toggleBookmarkGuide(guide.meta.id)" 
-                  class="absolute top-2.5 right-2.5 z-20 w-8 h-8 rounded-xl bg-black/60 hover:bg-rose-500/30 border border-amber-500/40 hover:border-rose-400 text-amber-400 hover:text-rose-400 flex items-center justify-center backdrop-blur-md transition-all shadow-lg"
-                  title="Удалить из закладок"
-                >
-                  <IconRenderer name="Star" size="16" class="fill-amber-400 text-amber-400" />
-                </button>
-
-                <!-- Badges Overlaid on Banner -->
-                <div class="absolute inset-x-0 bottom-2.5 px-4 sm:px-5 z-10 flex items-center justify-between flex-wrap gap-1.5">
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border shadow-md backdrop-blur-md bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
-                    {{ guide.meta.category }}
-                  </span>
-
-                  <div class="flex items-center gap-1">
-                    <span v-if="guide.meta.server" class="text-[9px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-1.5 py-0.5 rounded shadow-md backdrop-blur-md">
-                      🎮 {{ guide.meta.server }}
-                    </span>
-                    <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded-full border shadow-md backdrop-blur-md bg-purple-500/20 text-purple-300 border-purple-500/30">
-                      {{ guide.meta.difficulty }}
-                    </span>
-                  </div>
-                </div>
+          <!-- 2. BOOKMARKS / FAVORITES VIEW -->
+          <div v-else-if="mode === 'favorites'" class="px-3 sm:px-6 pt-4 space-y-6 pb-24">
+            <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
+              <div>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                  <IconRenderer name="Star" size="22" class="text-amber-400" />
+                  Закладки статей ({{ favoritedGuidesList.length }})
+                </h2>
+                <p class="text-xs text-dark-muted">Сохранённые руководства для быстрого доступа</p>
               </div>
+              <button @click="mode = 'home'" class="text-xs text-cyan-400 hover:underline">Вернуться на Главную</button>
+            </div>
 
-              <!-- CARD BODY -->
-              <div class="p-4 sm:p-5 space-y-3 flex-1 flex flex-col justify-between">
-                <div class="space-y-1.5">
-                  <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
-                    {{ guide.meta.title }}
-                  </h3>
-                  <p class="text-xs text-dark-muted line-clamp-2 leading-relaxed">
-                    {{ guide.meta.summary || 'Интерактивное руководство по сборке...' }}
-                  </p>
-                </div>
+            <div v-if="favoritedGuidesList.length === 0" class="text-center py-20 bg-[#16181a] border border-[#26292d] rounded-2xl space-y-3">
+              <IconRenderer name="Star" size="36" class="mx-auto text-amber-400/40" />
+              <h3 class="text-base font-bold text-white">В закладках пока пусто</h3>
+              <p class="text-xs text-dark-muted">Нажмите на звёздочку при чтении гайда, чтобы сохранить его сюда</p>
+            </div>
 
-                <!-- Bottom Row Metadata with Avatar and Author Profile -->
-                <div class="flex items-center justify-between pt-2.5 border-t border-[#26292d]/80 text-[11px]">
-                  <div 
-                    @click.stop="openAuthorProfile(guide.meta.author)"
-                    class="flex items-center gap-2 hover:text-emerald-400 transition-colors cursor-pointer group/author"
-                    title="Просмотреть профиль автора"
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div
+                v-for="guide in favoritedGuidesList"
+                :key="guide.meta.id"
+                @click="selectGuide(guide.meta.id)"
+                class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl hover:shadow-emerald-950/30 hover:-translate-y-1 overflow-hidden"
+              >
+                <!-- COVER BANNER WITH BADGES & BOOKMARK REMOVE BUTTON -->
+                <div class="h-28 sm:h-32 w-full relative overflow-hidden flex-shrink-0">
+                  <img v-if="guide.meta.coverUrl" :src="guide.meta.coverUrl" class="w-full h-full object-cover object-[center_30%] group-hover:scale-105 transition-transform duration-500" />
+                  <div v-else-if="guide.meta.coverGradient" :class="['w-full h-full bg-gradient-to-tr', guide.meta.coverGradient]"></div>
+                  <div v-else class="w-full h-full bg-gradient-to-r from-slate-900 via-slate-800 to-[#121416]"></div>
+
+                  <!-- Gradient Overlay -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/20 to-black/30 pointer-events-none"></div>
+
+                  <!-- Top Right Bookmark Star Button -->
+                  <button 
+                    @click.stop="toggleBookmarkGuide(guide.meta.id)" 
+                    class="absolute top-2.5 right-2.5 z-20 w-8 h-8 rounded-xl bg-black/60 hover:bg-rose-500/30 border border-amber-500/40 hover:border-rose-400 text-amber-400 hover:text-rose-400 flex items-center justify-center backdrop-blur-md transition-all shadow-lg"
+                    title="Удалить из закладок"
                   >
-                    <!-- Avatar with Glow Ring -->
-                    <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md flex-shrink-0">
-                      <div class="w-full h-full bg-[#0c0d0e] rounded-[6px] flex items-center justify-center overflow-hidden">
-                        <img v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" :src="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" class="w-full h-full object-cover" />
-                        <span v-else class="text-[10px] font-black text-emerald-400">{{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}</span>
-                      </div>
-                    </div>
+                    <IconRenderer name="Star" size="16" class="fill-amber-400 text-amber-400" />
+                  </button>
+
+                  <!-- Badges Overlaid on Banner -->
+                  <div class="absolute inset-x-0 bottom-2.5 px-4 sm:px-5 z-10 flex items-center justify-between flex-wrap gap-1.5">
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border shadow-md backdrop-blur-md bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                      {{ guide.meta.category }}
+                    </span>
+
                     <div class="flex items-center gap-1">
-                      <span class="font-bold text-slate-200 text-xs group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</span>
-                      <span v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.isVerified" class="w-3.5 h-3.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 flex items-center justify-center shadow-sm" title="Проверенный Автор">
-                        <svg class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
+                      <span v-if="guide.meta.server" class="text-[9px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-1.5 py-0.5 rounded shadow-md backdrop-blur-md">
+                        🎮 {{ guide.meta.server }}
+                      </span>
+                      <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded-full border shadow-md backdrop-blur-md bg-purple-500/20 text-purple-300 border-purple-500/30">
+                        {{ guide.meta.difficulty }}
                       </span>
                     </div>
                   </div>
-
-                  <button class="bg-[#121416] group-hover:bg-emerald-600 text-slate-300 group-hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all">
-                    Читать →
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. MY UNPUBLISHED DRAFTS VIEW -->
-        <div v-else-if="mode === 'drafts' && isAuthenticated" class="px-3 sm:px-4 pt-4 space-y-6 pb-24">
-          <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
-            <div>
-              <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                <IconRenderer name="FileText" size="22" class="text-purple-400" />
-                Мои черновики ({{ myDraftsList.length }})
-              </h2>
-              <p class="text-xs text-dark-muted">Неопубликованные руководства, находящиеся в процессе написания</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <button @click="createNewGuide" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all shadow-md flex items-center gap-1.5">
-                <IconRenderer name="Plus" size="14" />
-                <span>Создать черновик</span>
-              </button>
-              <button @click="mode = 'home'" class="text-xs text-cyan-400 hover:underline">На Главную</button>
-            </div>
-          </div>
-
-          <div v-if="myDraftsList.length === 0" class="text-center py-20 bg-[#16181a] border border-[#26292d] rounded-2xl space-y-3">
-            <IconRenderer name="FileText" size="36" class="mx-auto text-purple-400/40" />
-            <h3 class="text-base font-bold text-white">Черновиков пока нет</h3>
-            <p class="text-xs text-dark-muted">Создайте новый гайд, и не опубликованные статьи будут сохранены здесь</p>
-            <button @click="createNewGuide" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-lg">
-              + Создать первый черновик
-            </button>
-          </div>
-
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <div
-              v-for="guide in myDraftsList"
-              :key="guide.meta.id"
-              @click="selectGuide(guide.meta.id); mode = 'editor';"
-              class="group bg-[#16181a] hover:bg-[#1c1f22] border border-purple-500/30 hover:border-purple-400 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl hover:shadow-purple-950/30 hover:-translate-y-1 overflow-hidden relative"
-            >
-              <!-- DRAFT BADGE TOP LEFT -->
-              <div class="absolute top-2.5 left-2.5 z-20 bg-purple-500/20 text-purple-300 border border-purple-500/40 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold backdrop-blur-md shadow-md flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
-                <span>Черновик</span>
-              </div>
-
-              <!-- COVER BANNER -->
-              <div class="h-28 sm:h-32 w-full relative overflow-hidden flex-shrink-0">
-                <img v-if="guide.meta.coverUrl" :src="guide.meta.coverUrl" class="w-full h-full object-cover object-[center_30%] group-hover:scale-105 transition-transform duration-500" />
-                <div v-else-if="guide.meta.coverGradient" :class="['w-full h-full bg-gradient-to-tr', guide.meta.coverGradient]"></div>
-                <div v-else class="w-full h-full bg-gradient-to-r from-purple-950 via-slate-900 to-[#121416]"></div>
-                <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/20 to-black/30 pointer-events-none"></div>
-              </div>
-
-              <!-- BODY -->
-              <div class="p-4 sm:p-5 space-y-3 flex-1 flex flex-col justify-between">
-                <div class="space-y-1.5">
-                  <h3 class="text-base font-bold text-white group-hover:text-purple-300 transition-colors line-clamp-2 leading-snug">
-                    {{ guide.meta.title || '(Без названия)' }}
-                  </h3>
-                  <p class="text-xs text-dark-muted line-clamp-2 leading-relaxed">
-                    {{ guide.meta.summary || 'Черновик статьи в процессе наполнения...' }}
-                  </p>
                 </div>
 
-                <div class="flex items-center justify-between pt-2.5 border-t border-[#26292d]/80 text-[11px]">
-                  <span class="text-[10px] text-dark-muted">Блоков: {{ (guide.blocks || []).length }}</span>
-                  <div class="flex items-center gap-1.5">
-                    <button 
-                      @click.stop="requestDeleteGuideById(guide.meta.id)" 
-                      class="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-bold transition-all"
-                      title="Удалить черновик"
+                <!-- CARD BODY -->
+                <div class="p-4 sm:p-5 space-y-3 flex-1 flex flex-col justify-between">
+                  <div class="space-y-1.5">
+                    <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+                      {{ guide.meta.title }}
+                    </h3>
+                    <p class="text-xs text-dark-muted line-clamp-2 leading-relaxed">
+                      {{ guide.meta.summary || 'Интерактивное руководство по сборке...' }}
+                    </p>
+                  </div>
+
+                  <!-- Bottom Row Metadata with Avatar and Author Profile -->
+                  <div class="flex items-center justify-between pt-2.5 border-t border-[#26292d]/80 text-[11px]">
+                    <div 
+                      @click.stop="openAuthorProfile(guide.meta.author)"
+                      class="flex items-center gap-2 hover:text-emerald-400 transition-colors cursor-pointer group/author"
+                      title="Просмотреть профиль автора"
                     >
-                      Удалить
-                    </button>
-                    <button class="bg-purple-600 group-hover:bg-purple-500 text-white px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
-                      <IconRenderer name="Edit3" size="12" />
-                      <span>Редактировать</span>
+                      <!-- Avatar with Glow Ring -->
+                      <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md flex-shrink-0">
+                        <div class="w-full h-full bg-[#0c0d0e] rounded-[6px] flex items-center justify-center overflow-hidden">
+                          <img v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" :src="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" class="w-full h-full object-cover" />
+                          <span v-else class="text-[10px] font-black text-emerald-400">{{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <span class="font-bold text-slate-200 text-xs group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</span>
+                        <span v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.isVerified" class="w-3.5 h-3.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 flex items-center justify-center shadow-sm" title="Проверенный Автор">
+                          <svg class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                      </div>
+                    </div>
+
+                    <button class="bg-[#121416] group-hover:bg-emerald-600 text-slate-300 group-hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all">
+                      Читать →
                     </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 3. EDITOR VIEW (Only for authenticated author) -->
+          <!-- 3. EDITOR VIEW (Only for authenticated author) -->
         <div v-else-if="mode === 'editor' && isAuthenticated && activeGuide" class="px-3 sm:px-4 pt-4">
           <GuideEditor
             :guide="activeGuide"
@@ -1208,7 +1128,8 @@ const handleViewAllAuthorGuides = (username: string) => {
             @exit-preview="handleExitPreview"
           />
         </div>
-      </template>
+      </div>
+    </template>
 
       <!-- SINGLE UNIFIED SITE FOOTER -->
       <SiteFooter
