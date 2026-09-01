@@ -8,6 +8,10 @@ defineProps<{
 }>();
 const emit = defineEmits<{ (e: 'close'): void }>();
 
+// Tab selection: 'general' (Общие правила проекта) | 'server' (Внутриигровые правила серверов)
+const activeTab = ref<'general' | 'server'>('general');
+const selectedServer = ref<string>('OneBlock');
+
 const searchQuery = ref('');
 const activeCategory = ref<string>('all');
 
@@ -21,7 +25,15 @@ const categories = [
   { id: 'donators', title: '6. Донат привилегии', icon: 'Crown' }
 ];
 
-const rules = [
+const availableServers = [
+  { id: 'OneBlock', name: 'OneBlock', forumUrl: 'https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera' },
+  { id: 'HiTech', name: 'HiTech 1.12.2 / 1.7.10', forumUrl: 'https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera' },
+  { id: 'MagicRPG', name: 'MagicRPG', forumUrl: 'https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera' },
+  { id: 'SkyBlock', name: 'SkyBlock EVO / Ultra', forumUrl: 'https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera' },
+  { id: 'TechnoMagic', name: 'TechnoMagic', forumUrl: 'https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera' }
+];
+
+const generalRules = [
   // 1. Основные правила
   {
     cat: 'general',
@@ -379,13 +391,118 @@ const rules = [
   }
 ];
 
-const filteredRules = computed(() => {
-  return rules.filter(r => {
-    const matchesCat = activeCategory.value === 'all' || r.cat === activeCategory.value;
-    const q = searchQuery.value.toLowerCase().trim();
-    const matchesSearch = !q || r.num.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.text.toLowerCase().includes(q) || (r.penalty || '').toLowerCase().includes(q);
-    return matchesCat && matchesSearch;
-  });
+// Внутриигровые правила серверов (OneBlock, HiTech и др.)
+const serverRulesMap: Record<string, Array<{ num: string; title: string; text: string; note?: string; penalty?: string }>> = {
+  OneBlock: [
+    {
+      num: '4.1',
+      title: 'Положение относительно магазинов и варпов',
+      text: 'Запрещено создавать собственные магазины / зарядки / качалки / варпы без разрешения, а также изменять их без ведома модерации сервера.',
+      note: 'Заявки подаются на форуме в разделе «Магазины». Разрешением является соответствующая табличка проверки модератора с его ником и датой.',
+      penalty: 'Закрытие прохода и удаление варпа / Бан до 5 дней / Запрет на создание публичных варпов до конца вайпа'
+    },
+    {
+      num: '4.2',
+      title: 'Оформление варпов',
+      text: 'Варп должен иметь красивое оформление и быть конструктивно продуманным.',
+      penalty: 'Устное предупреждение / Бан от 2 часов до 5 дней / При рецидиве бан до 14 дней'
+    },
+    {
+      num: '1.9',
+      title: 'Рыбалка и магнит (/warp fishing)',
+      text: 'Запрещено использовать магнит на /warp fishing, пытаться украсть рыбу у других игроков любыми способами.',
+      penalty: 'Бан от 12 часов до 7 дней'
+    },
+    {
+      num: '1.10',
+      title: 'Проживание на нескольких островах и тиммейты',
+      text: 'Запрещено проживать на нескольких островах, быть тиммейтом в нескольких командах игроков. Игрок, состоящий в команде, не может участвовать в развитии других команд (строить или безвозмездно передавать ресурсы).\nЗапрещено иметь более 1 блока генератора OneBlock на команду для фарма ресурсов.',
+      note: 'Относится также к общим регионам и передаче ресурсов между островами. Мультиаккаунты также учитываются.',
+      penalty: 'Устное предупреждение / Удаление одного из островов / Перманентный бан'
+    },
+    {
+      num: '1.11',
+      title: 'Добавление игроков без согласия',
+      text: 'Запрещено добавлять игроков в ваш реалм (регион/команду) без их явного согласия.',
+      note: 'Предотвращает автоматические нарушения правила 1.10 со стороны других игроков. При нарушении подайте заявку на форум.',
+      penalty: 'Устное предупреждение / Бан до 30 дней / Очистка всех участников реалма'
+    },
+    {
+      num: '1.12',
+      title: 'Срыв стримов',
+      text: 'Запрещено мешать, срывать проведение стримов на проекте.',
+      penalty: 'Устное предупреждение / Бан до 3 дней / При рецидиве бан до 14 дней'
+    },
+    {
+      num: '1.13 / 2.1',
+      title: 'Лимиты механизмов на острове (OneBlock)',
+      text: 'Запрещено превышать лимиты механизмов на острове (не более 16 на чанк / 64 каждого типа на весь остров, если на них не указаны другие индивидуальные ограничения в описании предмета).',
+      note: 'Запрещено прятать лишние механизмы в тайных комнатах или распределять их по нескольким островам.',
+      penalty: 'Устное предупреждение / Снос до лимита / Изъятие / При рецидиве бан до 14 дней'
+    },
+    {
+      num: '1.14',
+      title: 'Правила торговли и обмена',
+      text: 'Запрещено нарушать минимальные цены и правила торговли / обмена / передачи предметов на сервере.',
+      penalty: 'Изъятие предметов / Бан до 7 дней / Перманентная блокировка'
+    }
+  ],
+  HiTech: [
+    {
+      num: '3.7.1',
+      title: 'Лимит генераторов материи и спавнеров (HiTech)',
+      text: 'На сервере HiTech действует строгое ограничение на количество генераторов материи, реакторов и спавнеров душ на один приват.',
+      note: 'Точные значения указаны в описании предметов в JEI/NEI.',
+      penalty: 'Снос лишних механизмов без компенсации / Бан до 7 дней'
+    },
+    {
+      num: '3.7.2',
+      title: 'Ограничение нагрузки на чанк (МЭ сети и кабели)',
+      text: 'Запрещено закольцовывать МЭ-шины и вызывать цикличные перезагрузки чанков через жидкостные механизмы.',
+      penalty: 'Очистка чанка / Бан до 5 дней'
+    }
+  ],
+  MagicRPG: [
+    {
+      num: '2.1',
+      title: 'Ограничение ритуалов и суммонов (MagicRPG)',
+      text: 'Запрещено проводить суммоны боссов и масштабные ритуалы в близости от спавна или чужих приватов.',
+      penalty: 'Удаление привата / Бан до 3 дней'
+    }
+  ],
+  SkyBlock: [
+    {
+      num: '1.5',
+      title: 'Правила генераторов руды (SkyBlock)',
+      text: 'Запрещено использовать автоматизированные схемы с лагообразующими поршнями на авто-генераторах руды.',
+      penalty: 'Устное предупреждение / Снос схемы / Бан до 5 дней'
+    }
+  ],
+  TechnoMagic: [
+    {
+      num: '3.1',
+      title: 'Правила узлов ауры и тауматургии (TechnoMagic)',
+      text: 'Запрещено передавать или перемещать узлы ауры на чужие приваты без согласования с владельцами.',
+      penalty: 'Изъятие узла / Бан до 3 дней'
+    }
+  ]
+};
+
+const activeRulesList = computed(() => {
+  if (activeTab.value === 'general') {
+    return generalRules.filter(r => {
+      const matchesCat = activeCategory.value === 'all' || r.cat === activeCategory.value;
+      const q = searchQuery.value.toLowerCase().trim();
+      const matchesSearch = !q || r.num.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.text.toLowerCase().includes(q) || (r.penalty || '').toLowerCase().includes(q);
+      return matchesCat && matchesSearch;
+    });
+  } else {
+    const list = serverRulesMap[selectedServer.value] || [];
+    return list.filter(r => {
+      const q = searchQuery.value.toLowerCase().trim();
+      return !q || r.num.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.text.toLowerCase().includes(q) || (r.penalty || '').toLowerCase().includes(q) || (r.note || '').toLowerCase().includes(q);
+    });
+  }
 });
 </script>
 
@@ -411,10 +528,10 @@ const filteredRules = computed(() => {
               </div>
               <div>
                 <h2 class="text-base font-black text-white flex items-center gap-2">
-                  Официальные правила проекта CubixWorld
+                  Правила CubixWorld
                   <span class="text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold px-2 py-0.5 rounded border border-emerald-500/30">Свод правил</span>
                 </h2>
-                <p class="text-xs text-dark-muted">Единый свод правил для всех серверов и участников проекта</p>
+                <p class="text-xs text-dark-muted">Официальные правила проекта и внутриигровые ограничение серверов</p>
               </div>
             </div>
             <button
@@ -426,6 +543,54 @@ const filteredRules = computed(() => {
             </button>
           </div>
 
+          <!-- MAIN TAB SWITCHER BAR: General Rules vs Server In-game Rules -->
+          <div class="px-6 py-3 border-b border-[#26292d] bg-[#16181a] shrink-0 flex items-center justify-between gap-4 flex-wrap">
+            <div class="flex items-center gap-2 bg-[#0c0d0e] p-1 rounded-2xl border border-[#26292d]">
+              <button
+                type="button"
+                @click="activeTab = 'general'"
+                :class="[
+                  'px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer',
+                  activeTab === 'general'
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/50'
+                    : 'text-dark-muted hover:text-slate-200'
+                ]"
+              >
+                <IconRenderer name="BookOpen" size="15" />
+                <span>Общие правила проекта</span>
+              </button>
+
+              <button
+                type="button"
+                @click="activeTab = 'server'"
+                :class="[
+                  'px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer',
+                  activeTab === 'server'
+                    ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-950/50'
+                    : 'text-dark-muted hover:text-slate-200'
+                ]"
+              >
+                <IconRenderer name="Gamepad2" size="15" />
+                <span>Правила серверов (Внутриигровые)</span>
+              </button>
+            </div>
+
+            <!-- Server selector dropdown when Server tab active -->
+            <div v-if="activeTab === 'server'" class="flex items-center gap-2">
+              <span class="text-xs font-bold text-dark-muted">Сервер:</span>
+              <div class="relative">
+                <select
+                  v-model="selectedServer"
+                  class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 font-extrabold text-xs rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+                >
+                  <option v-for="srv in availableServers" :key="srv.id" :value="srv.id">
+                    {{ srv.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <!-- Controls Bar: Categories & Search -->
           <div class="px-6 py-3 border-b border-[#26292d] bg-[#0c0d0e] shrink-0 space-y-3">
             <!-- Search input -->
@@ -433,14 +598,14 @@ const filteredRules = computed(() => {
               <input
                 type="text"
                 v-model="searchQuery"
-                placeholder="Поиск по номеру правила, тексту или наказанию (например: 1.11, читы, раздача)..."
+                :placeholder="activeTab === 'general' ? 'Поиск по номеру правила, тексту или наказанию (например: 1.11, читы, раздача)...' : `Поиск по внутриигровым правилам ${selectedServer} (варпы, макросы, лимиты)...`"
                 class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-emerald-accent"
               />
               <IconRenderer name="Search" size="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" />
             </div>
 
-            <!-- Category Pills -->
-            <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
+            <!-- Category Pills (Only for General Rules tab) -->
+            <div v-if="activeTab === 'general'" class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
               <button
                 v-for="cat in categories"
                 :key="cat.id"
@@ -457,18 +622,35 @@ const filteredRules = computed(() => {
                 <span>{{ cat.title }}</span>
               </button>
             </div>
+
+            <!-- Server Info Note (For Server tab) -->
+            <div v-else class="flex items-center justify-between bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-2.5 text-xs text-cyan-200">
+              <div class="flex items-center gap-2">
+                <IconRenderer name="Info" size="15" class="text-cyan-400 shrink-0" />
+                <span>Показаны внутриигровые правила и ограничения для сервера <strong>{{ selectedServer }}</strong>.</span>
+              </div>
+              <a
+                href="https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-[11px] font-bold text-cyan-400 hover:underline flex items-center gap-1 shrink-0"
+              >
+                <span>Тема на форуме</span>
+                <IconRenderer name="ExternalLink" size="12" />
+              </a>
+            </div>
           </div>
 
           <!-- Scrollable Rules list -->
           <div class="overflow-y-auto custom-scrollbar px-6 py-5 space-y-3 flex-1 bg-[#121416]">
-            <div v-if="filteredRules.length === 0" class="text-center py-12 space-y-2">
+            <div v-if="activeRulesList.length === 0" class="text-center py-12 space-y-2">
               <IconRenderer name="Search" size="32" class="mx-auto text-dark-muted/40" />
               <p class="text-sm font-bold text-slate-400">Правила по запросу не найдены</p>
-              <p class="text-xs text-dark-muted">Попробуйте изменить поисковый запрос или выбрать другую категорию</p>
+              <p class="text-xs text-dark-muted">Попробуйте изменить поисковый запрос или выбрать другой сервер</p>
             </div>
 
             <div
-              v-for="r in filteredRules"
+              v-for="r in activeRulesList"
               :key="r.num"
               class="p-4 rounded-2xl bg-[#16181a] border border-[#26292d] hover:border-[#383d44] transition-all space-y-2 group"
             >
@@ -485,6 +667,12 @@ const filteredRules = computed(() => {
                 {{ r.text }}
               </p>
 
+              <!-- Note Box if exists -->
+              <div v-if="r.note" class="ml-9 mt-2 p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-200 text-xs font-medium space-y-1">
+                <div class="font-extrabold text-[10px] text-cyan-400 uppercase tracking-wider">Примечание:</div>
+                <div class="leading-relaxed">{{ r.note }}</div>
+              </div>
+
               <!-- Penalty Box -->
               <div v-if="r.penalty" class="ml-9 mt-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-2">
                 <IconRenderer name="AlertTriangle" size="14" class="text-rose-400 shrink-0" />
@@ -496,7 +684,7 @@ const filteredRules = computed(() => {
           <!-- Footer -->
           <div class="px-6 py-3.5 border-t border-[#26292d] bg-[#16181a] shrink-0 flex items-center justify-between">
             <span class="text-xs text-dark-muted">
-              Показано правил: <strong class="text-emerald-400">{{ filteredRules.length }}</strong> из {{ rules.length }}
+              Показано правил: <strong class="text-emerald-400">{{ activeRulesList.length }}</strong>
             </span>
             <button
               type="button"
