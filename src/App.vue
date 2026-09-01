@@ -721,7 +721,7 @@ const handleViewAllAuthorGuides = (username: string) => {
             type="button"
             @click="isHeaderNavMenuOpen = !isHeaderNavMenuOpen"
             :class="[
-              'px-3.5 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 shadow-md cursor-pointer border',
+              'px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 shadow-md cursor-pointer border',
               isHeaderNavMenuOpen
                 ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-950/60 ring-2 ring-emerald-500/40'
                 : 'bg-[#090a0c] text-slate-200 border-[#262a30] hover:border-emerald-500/40 hover:text-white'
