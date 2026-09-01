@@ -503,8 +503,6 @@ const fetchServerRulesFromApi = async (serverId: string) => {
         loadedServerRules.value[serverId] = data;
         const cleanId = getBaseServerId(serverId);
         loadedServerRules.value[cleanId] = data;
-        const shortId = cleanId.split('_')[0];
-        loadedServerRules.value[shortId] = data;
       }
     }
   } catch (e) {
@@ -554,11 +552,10 @@ onMounted(() => {
 const currentServerData = computed(() => {
   const currentId = selectedServer.value;
   const cleanId = getBaseServerId(currentId);
-  const shortId = cleanId.split('_')[0];
 
+  // Сначала проверяем точное полное имя (например: Pixelmon_1211, IceAndFire_1165, Create_1211)
   if (loadedServerRules.value[currentId]) return loadedServerRules.value[currentId];
   if (loadedServerRules.value[cleanId]) return loadedServerRules.value[cleanId];
-  if (loadedServerRules.value[shortId]) return loadedServerRules.value[shortId];
 
   if (cleanId === 'OneBlock') return ONEBLOCK_RULES_DATA;
   return null;
