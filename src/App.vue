@@ -674,22 +674,16 @@ const handleViewAllAuthorGuides = (username: string) => {
         <!-- Logo Brand Button -->
         <button 
           @click="mode = 'home'"
-          class="flex items-center gap-3 group text-left transition-all hover:opacity-95 cursor-pointer shrink-0"
+          class="flex items-center gap-2.5 group text-left transition-all hover:opacity-90 cursor-pointer shrink-0"
         >
-          <div class="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/50 group-hover:shadow-emerald-500/20 group-hover:scale-105 transition-all duration-300 overflow-hidden">
-            <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center text-emerald-400 overflow-hidden">
+          <div class="relative w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 p-0.5 shadow-md shadow-emerald-950/40 group-hover:scale-105 transition-all duration-300 overflow-hidden">
+            <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center text-emerald-400 overflow-hidden">
               <img src="/logo.jpg" alt="CubixGuide Logo" class="w-full h-full object-cover" />
             </div>
           </div>
-          <div class="space-y-0.5 hidden sm:block">
-            <div class="flex items-center gap-2">
-              <span class="text-base font-black text-white tracking-tight group-hover:text-emerald-400 transition-colors">CubixGuide</span>
-              <span class="text-[9px] uppercase font-bold tracking-wider bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full shadow-sm">
-                База Знаний
-              </span>
-            </div>
-            <p class="text-[10px] text-dark-muted hidden xl:block font-medium">Интерактивные гайды для игроков CubixWorld</p>
-          </div>
+          <span class="text-base font-black text-white tracking-tight group-hover:text-emerald-400 transition-colors">
+            CubixGuide
+          </span>
         </button>
 
         <div class="h-6 w-px bg-[#262a30] hidden lg:block"></div>
