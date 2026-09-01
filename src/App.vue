@@ -325,6 +325,9 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
 const fetchGuides = async () => {
   try {
     isLoading.value = true;
+    const mainEl = document.querySelector('main');
+    const prevScrollTop = mainEl ? mainEl.scrollTop : 0;
+
     const res = await fetch('/api/guides');
     if (!res.ok) throw new Error('Ошибка загрузки данных');
     const data: Guide[] = await res.json();
@@ -344,6 +347,12 @@ const fetchGuides = async () => {
       }
     } else {
       activeGuide.value = null;
+    }
+
+    if (mainEl && prevScrollTop > 0) {
+      setTimeout(() => {
+        mainEl.scrollTop = prevScrollTop;
+      }, 50);
     }
   } catch (err: any) {
     console.error(err);
