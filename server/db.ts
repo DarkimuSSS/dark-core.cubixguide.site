@@ -605,6 +605,9 @@ try {
 
   const { PIXELMON_1211_RULES_DATA } = require('../src/data/pixelmon1211RulesData');
   saveServerRules(PIXELMON_1211_RULES_DATA);
+
+  const { PIXELMON_1165_RULES_DATA } = require('../src/data/pixelmon1165RulesData');
+  saveServerRules(PIXELMON_1165_RULES_DATA);
 } catch (e) {
   console.error('Error seeding server rules:', e);
 }
