@@ -1080,12 +1080,11 @@ const addBlockAt = (index: number, type: BlockType) => {
         id: `b_${Date.now()}`,
         type: 'spreadsheet',
         customWidth: 100,
-        spreadsheetTitle: 'Таблица предметов и характеристик',
-        tableHeaders: ['Предмет / Модуль', 'Редкость', 'Энергия (EU/t)', 'Статус'],
+        spreadsheetTitle: '',
+        tableHeaders: ['', '', ''],
         tableRows: [
-          ['Квантовый Генератор', 'Легендарный', '32,768', 'Активен'],
-          ['Энергетический Кристалл', 'Редкий', '2,048', 'Заряжается'],
-          ['Улучшенный МФЭУ', 'Обычный', '512', 'Готов']
+          ['', '', ''],
+          ['', '', '']
         ]
       };
       break;
@@ -2415,8 +2414,8 @@ const stopOutlineDrag = () => {
                             type="text"
                             :value="header"
                             @input="updateSpreadsheetHeader(block, colIdx, ($event.target as HTMLInputElement).value)"
-                            placeholder="Имя колонки..."
-                            class="w-full bg-transparent font-extrabold text-emerald-400 text-xs focus:outline-none focus:bg-[#121416] px-1 py-0.5 rounded transition-all"
+                            :placeholder="`Колонка ${colIdx + 1}...`"
+                            class="w-full bg-transparent font-extrabold text-emerald-400 text-xs focus:outline-none focus:bg-[#121416] px-1 py-0.5 rounded transition-all placeholder:text-emerald-500/40"
                           />
                           <button
                             v-if="(block.tableHeaders || []).length > 1"
@@ -2461,8 +2460,8 @@ const stopOutlineDrag = () => {
                           type="text"
                           :value="cell"
                           @input="updateSpreadsheetCell(block, rowIdx, colIdx, ($event.target as HTMLInputElement).value)"
-                          placeholder="..."
-                          class="w-full bg-transparent text-slate-200 text-xs px-2 py-1 focus:bg-[#16181a] focus:text-white rounded focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                          placeholder="Значение..."
+                          class="w-full bg-transparent text-slate-200 text-xs px-2 py-1 focus:bg-[#16181a] focus:text-white rounded focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-all placeholder:text-dark-muted/40"
                         />
                       </td>
                     </tr>
