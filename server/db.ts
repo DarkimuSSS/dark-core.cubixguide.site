@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs';
 import crypto from 'crypto';
 import type { Guide, AuthorProfile } from '../src/types/guide';
 
@@ -342,4 +343,40 @@ if (profileCount.count === 0) {
     pinnedGuideId: 'guide_dragon_100',
     updatedAt: new Date().toISOString().split('T')[0]
   });
+}
+
+// Seed default guides from guides_export.json if guides table is empty
+const guideCount = db.prepare('SELECT COUNT(*) as count FROM guides').get() as { count: number };
+if (guideCount.count === 0) {
+  try {
+    const exportPath = path.resolve(process.cwd(), 'guides_export.json');
+    if (fs.existsSync(exportPath)) {
+      const raw = fs.readFileSync(exportPath, 'utf-8');
+      const items = JSON.parse(raw);
+      const stmt = db.prepare(`
+        INSERT INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, server, cover_url, cover_gradient, blocks)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      for (const g of items) {
+        stmt.run(
+          g.id,
+          g.title,
+          g.category,
+          g.author,
+          g.co_authors || '[]',
+          g.difficulty,
+          g.summary || '',
+          g.updated_at || new Date().toISOString().split('T')[0],
+          g.published !== undefined ? g.published : 1,
+          g.server || '',
+          g.cover_url || '',
+          g.cover_gradient || '',
+          g.blocks || '[]'
+        );
+      }
+    }
+  } catch (e) {
+    console.error('Error seeding initial guides from guides_export.json:', e);
+  }
 }
