@@ -576,8 +576,10 @@ if (rulesCount.count === 0) {
 try {
   const { CREATE_1211_RULES_DATA } = require('../src/data/createRulesData');
   saveServerRules(CREATE_1211_RULES_DATA);
-  // Также дублируем для вариантов имени ключа "Create" и "Create_1211"
   saveServerRules({ ...CREATE_1211_RULES_DATA, server_id: "Create" });
+
+  const { GALAXY_RULES_DATA } = require('../src/data/galaxyRulesData');
+  saveServerRules(GALAXY_RULES_DATA);
 } catch (e) {
-  console.error('Error seeding Create server rules:', e);
+  console.error('Error seeding server rules:', e);
 }
