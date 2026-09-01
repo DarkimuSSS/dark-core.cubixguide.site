@@ -11,6 +11,7 @@ const props = defineProps<{
   guide: Guide;
   allGuides: Guide[];
   isFavorited?: boolean;
+  isPreviewMode?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -18,6 +19,7 @@ const emit = defineEmits<{
   (e: 'toggle-bookmark', guideId: string): void;
   (e: 'edit-mode'): void;
   (e: 'open-author', username: string): void;
+  (e: 'exit-preview'): void;
 }>();
 
 const isMobileNavOpen = ref(false);
@@ -213,6 +215,29 @@ const getVariantClass = (variant?: BlockVariant) => {
 
 <template>
   <div class="w-full flex items-start gap-5 relative">
+    
+    <!-- FLOATING PREVIEW CONTROL BAR OVERLAY -->
+    <div 
+      v-if="isPreviewMode" 
+      class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#121417]/95 backdrop-blur-2xl border-2 border-cyan-500/60 rounded-full px-6 py-3 shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-6 duration-300 ring-4 ring-cyan-950/50"
+    >
+      <div class="flex items-center gap-2.5">
+        <div class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></div>
+        <IconRenderer name="Eye" size="18" class="text-cyan-400" />
+        <div class="flex flex-col">
+          <span class="text-xs font-black text-white uppercase tracking-wider">Режим Предпросмотра</span>
+          <span class="text-[10px] text-cyan-300/80">Статья отображается так, как её увидят читатели</span>
+        </div>
+      </div>
+      <div class="h-6 w-px bg-cyan-500/30"></div>
+      <button 
+        @click="emit('exit-preview')" 
+        class="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-extrabold text-xs px-4 py-2 rounded-full shadow-lg transition-all hover:scale-105 flex items-center gap-2 cursor-pointer"
+      >
+        <IconRenderer name="Edit3" size="14" />
+        <span>Вернуться в конструктор</span>
+      </button>
+    </div>
     
     <!-- LEFT SIDEBAR: FIXED POSITION CATALOG -->
     <aside :class="[

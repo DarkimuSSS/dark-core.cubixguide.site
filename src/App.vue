@@ -636,6 +636,17 @@ const initialCatalogSearchQuery = ref('');
 const headerSearchQuery = ref('');
 const isHeaderSearchFocused = ref(false);
 const isHeaderNavMenuOpen = ref(false);
+const isPreviewActive = ref(false);
+
+const handleTogglePreview = () => {
+  isPreviewActive.value = true;
+  mode.value = 'reader';
+};
+
+const handleExitPreview = () => {
+  isPreviewActive.value = false;
+  mode.value = 'editor';
+};
 
 const handleHeaderSearchInput = (val: string) => {
   headerSearchQuery.value = val;
