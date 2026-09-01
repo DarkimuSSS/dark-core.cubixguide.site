@@ -515,7 +515,39 @@ const serverRulesMap: Record<string, Array<{ num: string; title: string; text: s
 };
 
 import { ONEBLOCK_RULES_DATA } from '../data/serverRulesData';
+import { CREATE_1211_RULES_DATA } from '../data/createRulesData';
+import { GALAXY_RULES_DATA } from '../data/galaxyRulesData';
+import { GREGTECH_RULES_DATA } from '../data/gregtechRulesData';
+import { HITECH_RULES_DATA } from '../data/hitechRulesData';
+import { ICEANDFIRE_RULES_DATA } from '../data/iceandfireRulesData';
+import { INDUSTRIAL_RULES_DATA } from '../data/industrialRulesData';
+import { MAGICRPG_RULES_DATA } from '../data/magicrpgRulesData';
+import { SKYTECH_RULES_DATA } from '../data/skytechRulesData';
+import { TECHNOMAGIC_RULES_DATA } from '../data/technomagicRulesData';
+import { PIXELMON_1211_RULES_DATA } from '../data/pixelmon1211RulesData';
+import { PIXELMON_1165_RULES_DATA } from '../data/pixelmon1165RulesData';
+import { OCEANBLOCK_1165_RULES_DATA } from '../data/oceanblock1165RulesData';
+import { COBBLEMON_1211_RULES_DATA } from '../data/cobblemon1211RulesData';
 import { watch, onMounted } from 'vue';
+
+const LOCAL_RULES_MAP: Record<string, any> = {
+  'OneBlock': ONEBLOCK_RULES_DATA,
+  'Create_1211': CREATE_1211_RULES_DATA,
+  'Create': CREATE_1211_RULES_DATA,
+  'Galaxy': GALAXY_RULES_DATA,
+  'GregTech': GREGTECH_RULES_DATA,
+  'HiTech': HITECH_RULES_DATA,
+  'IceAndFire_1165': ICEANDFIRE_RULES_DATA,
+  'IceAndFire': ICEANDFIRE_RULES_DATA,
+  'Industrial': INDUSTRIAL_RULES_DATA,
+  'MagicRPG': MAGICRPG_RULES_DATA,
+  'SkyTech': SKYTECH_RULES_DATA,
+  'TechnoMagic': TECHNOMAGIC_RULES_DATA,
+  'Pixelmon_1211': PIXELMON_1211_RULES_DATA,
+  'Pixelmon_1165': PIXELMON_1165_RULES_DATA,
+  'OceanBlock_1165': OCEANBLOCK_1165_RULES_DATA,
+  'Cobblemon_1211': COBBLEMON_1211_RULES_DATA
+};
 
 const activeSectionId = ref<number | 'all'>('all');
 const loadedServerRules = ref<Record<string, any>>({});
@@ -579,12 +611,15 @@ const currentServerData = computed(() => {
   const currentId = selectedServer.value;
   const cleanId = getBaseServerId(currentId);
 
-  // Сначала проверяем точное полное имя (например: Pixelmon_1211, IceAndFire_1165, Create_1211)
+  // 1. Сначала проверяем динамически загруженные с API правила
   if (loadedServerRules.value[currentId]) return loadedServerRules.value[currentId];
   if (loadedServerRules.value[cleanId]) return loadedServerRules.value[cleanId];
 
-  if (cleanId === 'OneBlock') return ONEBLOCK_RULES_DATA;
-  return null;
+  // 2. Мгновенный локальный фоллбек (гарантирует показ всех правил 100% серверов!)
+  if (LOCAL_RULES_MAP[currentId]) return LOCAL_RULES_MAP[currentId];
+  if (LOCAL_RULES_MAP[cleanId]) return LOCAL_RULES_MAP[cleanId];
+
+  return ONEBLOCK_RULES_DATA;
 });
 
 const filteredGeneralRules = computed(() => {
