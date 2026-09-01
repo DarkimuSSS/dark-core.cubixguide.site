@@ -562,7 +562,7 @@ if (guideCount.count === 0) {
   }
 }
 
-// Seed default OneBlock rules into server_rules table if empty
+// Seed default OneBlock & Create rules into server_rules table if empty
 const rulesCount = db.prepare('SELECT COUNT(*) as count FROM server_rules WHERE server_id = ?').get('OneBlock') as { count: number };
 if (rulesCount.count === 0) {
   try {
@@ -571,4 +571,13 @@ if (rulesCount.count === 0) {
   } catch (e) {
     console.error('Error seeding initial server rules:', e);
   }
+}
+
+try {
+  const { CREATE_1211_RULES_DATA } = require('../src/data/createRulesData');
+  saveServerRules(CREATE_1211_RULES_DATA);
+  // Также дублируем для вариантов имени ключа "Create" и "Create_1211"
+  saveServerRules({ ...CREATE_1211_RULES_DATA, server_id: "Create" });
+} catch (e) {
+  console.error('Error seeding Create server rules:', e);
 }
