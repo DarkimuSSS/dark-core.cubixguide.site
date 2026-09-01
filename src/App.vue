@@ -803,11 +803,11 @@ const handleViewAllAuthorGuides = (username: string) => {
         <div v-if="!isAuthenticated">
           <button
             type="button"
-            @click="openEditorProtection"
-            class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-950/50"
+            @click="isAuthModalOpen = true"
+            class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white text-xs font-extrabold flex items-center gap-2 transition-all shadow-lg shadow-emerald-950/50 cursor-pointer"
           >
-            <IconRenderer name="Lock" size="14" />
-            <span>Вход для Авторов</span>
+            <IconRenderer name="UserCheck" size="16" />
+            <span>Войти в аккаунт</span>
           </button>
         </div>
 
