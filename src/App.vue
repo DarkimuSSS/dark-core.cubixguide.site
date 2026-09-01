@@ -638,38 +638,38 @@ const handleViewAllAuthorGuides = (username: string) => {
 <template>
   <div class="h-screen w-screen overflow-hidden bg-[#0c0d0e] text-[#e2e8f0] font-sans antialiased flex flex-col">
     <!-- SINGLE UNIFIED TOP HEADER BAR -->
-    <header class="bg-[#16181a] border-b border-[#26292d] h-16 shrink-0 px-4 sm:px-8 flex items-center justify-between z-40 shadow-xl">
-      <div class="flex items-center gap-4">
+    <header class="bg-[#121416]/90 backdrop-blur-xl border-b border-[#26292d]/80 h-16 shrink-0 px-4 sm:px-6 flex items-center justify-between z-40 shadow-2xl transition-all">
+      <div class="flex items-center gap-6">
         <!-- Logo -->
         <button 
           @click="mode = 'home'"
-          class="flex items-center gap-3 group text-left transition-opacity hover:opacity-90"
+          class="flex items-center gap-3 group text-left transition-all hover:opacity-90"
         >
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/50 overflow-hidden">
-            <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform overflow-hidden">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/60 overflow-hidden group-hover:scale-105 transition-transform">
+            <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center text-emerald-400 overflow-hidden">
               <img src="/logo.jpg" alt="CubixGuide Logo" class="w-full h-full object-cover" />
             </div>
           </div>
-          <div>
+          <div class="space-y-0.5">
             <div class="flex items-center gap-2">
-              <span class="text-base font-extrabold text-white tracking-tight">CubixGuide</span>
-              <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">База Знаний</span>
+              <span class="text-base font-black text-white tracking-tight group-hover:text-emerald-400 transition-colors">CubixGuide</span>
+              <span class="text-[9px] uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-md font-bold">База Знаний</span>
             </div>
-            <p class="text-[11px] text-dark-muted hidden sm:block">Интерактивные руководства для игроков</p>
+            <p class="text-[10px] text-dark-muted hidden lg:block">База знаний и интерактивные руководства</p>
           </div>
         </button>
 
-        <!-- Expanded Top Navigation Tabs Bar -->
-        <nav class="hidden md:flex items-center bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d] ml-2">
+        <!-- Glass Navigation Tabs Pill Bar -->
+        <nav class="hidden md:flex items-center bg-[#08090a]/80 p-1 rounded-2xl border border-[#26292d]/80 shadow-inner">
           <!-- 1. Главная -->
           <button
             type="button"
             @click="mode = 'home'"
             :class="[
-              'px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
+              'px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all duration-300',
               mode === 'home'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'text-dark-muted hover:text-white'
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/60'
+                : 'text-slate-400 hover:text-white hover:bg-[#1a1d21]'
             ]"
           >
             <IconRenderer name="Home" size="14" />
@@ -682,10 +682,10 @@ const handleViewAllAuthorGuides = (username: string) => {
             type="button"
             @click="mode = 'reader'"
             :class="[
-              'px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
+              'px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all duration-300',
               mode === 'reader'
-                ? 'bg-cyan-600 text-white shadow-md'
-                : 'text-dark-muted hover:text-white'
+                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-950/60'
+                : 'text-slate-400 hover:text-white hover:bg-[#1a1d21]'
             ]"
           >
             <IconRenderer name="BookOpen" size="14" />
@@ -697,15 +697,15 @@ const handleViewAllAuthorGuides = (username: string) => {
             type="button"
             @click="mode = 'favorites'"
             :class="[
-              'px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
+              'px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all duration-300',
               mode === 'favorites'
-                ? 'bg-amber-600 text-white shadow-md'
-                : 'text-dark-muted hover:text-white'
+                ? 'bg-amber-600 text-white shadow-lg shadow-amber-950/60'
+                : 'text-slate-400 hover:text-white hover:bg-[#1a1d21]'
             ]"
           >
-            <IconRenderer name="Star" size="14" class="text-amber-400" />
+            <IconRenderer name="Star" size="14" :class="mode === 'favorites' ? 'text-white' : 'text-amber-400'" />
             <span>Закладки</span>
-            <span v-if="favoriteGuideIds.length > 0" class="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded-full font-bold">
+            <span v-if="favoriteGuideIds.length > 0" :class="['text-[10px] px-1.5 py-0.2 rounded-full font-black', mode === 'favorites' ? 'bg-white/20 text-white' : 'bg-amber-500/20 text-amber-300']">
               {{ favoriteGuideIds.length }}
             </span>
           </button>
@@ -714,32 +714,23 @@ const handleViewAllAuthorGuides = (username: string) => {
           <button
             type="button"
             @click="openRandomGuide"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold text-purple-400 hover:text-purple-300 hover:bg-[#16181a] flex items-center gap-1.5 transition-all"
-            title="Открыть случайную полезную статью из базы"
+            class="px-3 py-1.5 rounded-xl text-xs font-bold text-purple-400 hover:text-purple-300 hover:bg-[#1a1d21] flex items-center gap-1.5 transition-all duration-300"
+            title="Открыть случайную статью из базы"
           >
-            <IconRenderer name="Sparkles" size="14" />
+            <IconRenderer name="Sparkles" size="14" class="text-purple-400 animate-pulse" />
             <span>Случайный</span>
           </button>
         </nav>
       </div>
 
-      <!-- Center & Right Navigation Actions -->
-      <div class="flex items-center gap-2 sm:gap-3">
-        <!-- Settings Modal Button -->
-        <button
-          type="button"
-          @click="isSettingsOpen = true"
-          class="p-2 rounded-xl bg-[#0c0d0e] hover:bg-[#1f2328] border border-[#26292d] text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-md"
-          title="Открыть Настройки сайта и бэкапы"
-        >
-          <IconRenderer name="Settings" size="16" class="text-cyan-400 hover:rotate-90 transition-transform duration-300" />
-        </button>
-
-        <!-- Draft restoration banner -->
-        <div v-if="hasUnsavedDraft && isAuthenticated" class="hidden lg:flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl">
-          <IconRenderer name="Sliders" size="14" class="text-amber-400 animate-pulse" />
+      <!-- Right Side Actions & User Widget -->
+      <div class="flex items-center gap-2.5">
+        
+        <!-- Unsaved Draft Indicator Badge -->
+        <div v-if="hasUnsavedDraft && isAuthenticated" class="hidden xl:flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl shadow-md">
+          <IconRenderer name="Sliders" size="13" class="text-amber-400 animate-pulse" />
           <span class="text-[11px] text-amber-300 font-semibold">Черновик ({{ draftSavedTime }})</span>
-          <button @click="restoreDraft" class="text-[10px] bg-amber-600 text-white font-bold px-2 py-0.5 rounded hover:bg-amber-500 transition-colors">
+          <button @click="restoreDraft" class="text-[10px] bg-amber-600 text-white font-bold px-2 py-0.5 rounded-lg hover:bg-amber-500 transition-colors">
             Восстановить
           </button>
           <button @click="discardDraft" class="text-[10px] text-amber-400 hover:text-white px-1">
@@ -747,35 +738,65 @@ const handleViewAllAuthorGuides = (username: string) => {
           </button>
         </div>
 
-        <!-- Author Profile Quick Trigger Button with Live Avatar & Nickname -->
-        <button
-          v-if="isAuthenticated && currentUsername"
-          type="button"
-          @click="openAuthorProfile(currentUsername)"
-          class="px-3.5 py-1.5 rounded-xl bg-purple-600/10 hover:bg-purple-600/20 text-purple-300 border border-purple-500/30 text-xs font-bold flex items-center gap-2 transition-all shadow-md group"
-          title="Открыть ваш профиль"
-        >
-          <div class="w-6 h-6 rounded-full bg-purple-500/30 border border-purple-400/40 text-purple-200 flex items-center justify-center font-bold text-[11px] overflow-hidden flex-shrink-0">
-            <img v-if="currentAuthorProfile?.avatarUrl" :src="currentAuthorProfile.avatarUrl" class="w-full h-full object-cover" />
-            <span v-else>{{ currentUsername.charAt(0).toUpperCase() }}</span>
-          </div>
-          <span class="font-extrabold text-white group-hover:text-purple-300 transition-colors flex items-center gap-1">
-            <span>{{ currentUsername }}</span>
-            <span v-if="currentUserIsAdmin" class="text-[9px] bg-purple-500/30 text-purple-300 border border-purple-400/40 px-1 rounded font-mono">Админ</span>
-          </span>
-        </button>
-
+        <!-- Quick Create Guide Button -->
         <button
           v-if="isAuthenticated"
           type="button"
           @click="createNewGuide"
-          class="px-3.5 py-2 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-cyan-400 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
+          class="px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md group"
+          title="Создать новый гайд"
         >
-          <IconRenderer name="Plus" size="15" />
+          <IconRenderer name="Plus" size="15" class="group-hover:rotate-90 transition-transform duration-300" />
           <span class="hidden sm:inline">Новый гайд</span>
         </button>
 
-        <!-- Viewer Mode & Manual Author Login Button -->
+        <!-- Editor Mode Switcher Button -->
+        <button
+          v-if="isAuthenticated"
+          type="button"
+          @click="mode = 'editor'"
+          :class="[
+            'px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 shadow-md cursor-pointer',
+            mode === 'editor' 
+              ? 'bg-emerald-600 text-white shadow-emerald-950/60 ring-2 ring-emerald-500/50' 
+              : 'bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/40'
+          ]"
+        >
+          <IconRenderer name="Edit3" size="15" />
+          <span>Конструктор</span>
+        </button>
+
+        <!-- Author User Profile Card Badge -->
+        <button
+          v-if="isAuthenticated && currentUsername"
+          type="button"
+          @click="openAuthorProfile(currentUsername)"
+          class="px-3 py-1.5 rounded-xl bg-[#08090a]/80 hover:bg-[#1a1d21] text-purple-300 border border-[#26292d] hover:border-purple-500/40 text-xs font-bold flex items-center gap-2.5 transition-all duration-300 shadow-md group"
+          title="Открыть профиль пользователя"
+        >
+          <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 p-0.5 flex-shrink-0 shadow-sm overflow-hidden">
+            <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center font-black text-[11px] text-white overflow-hidden">
+              <img v-if="currentAuthorProfile?.avatarUrl" :src="currentAuthorProfile.avatarUrl" class="w-full h-full object-cover" />
+              <span v-else>{{ currentUsername.charAt(0).toUpperCase() }}</span>
+            </div>
+          </div>
+          <span class="font-extrabold text-slate-200 group-hover:text-purple-300 transition-colors flex items-center gap-1.5">
+            <span>{{ currentUsername }}</span>
+            <span v-if="currentUserIsAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-400/30 px-1.5 py-0.2 rounded-md font-mono">Админ</span>
+          </span>
+        </button>
+
+        <!-- Global Settings Button -->
+        <button
+          type="button"
+          @click="isSettingsOpen = true"
+          class="p-2.5 rounded-xl bg-[#08090a]/80 hover:bg-[#1a1d21] border border-[#26292d] hover:border-cyan-500/40 text-slate-400 hover:text-white flex items-center justify-center transition-all shadow-md group"
+          title="Настройки сайта"
+        >
+          <IconRenderer name="Settings" size="16" class="text-cyan-400 group-hover:rotate-90 transition-transform duration-300" />
+        </button>
+
+        <!-- Logged In / Logged Out Controls -->
         <div v-if="!isAuthenticated">
           <button
             type="button"
@@ -787,31 +808,16 @@ const handleViewAllAuthorGuides = (username: string) => {
           </button>
         </div>
 
-        <!-- Authenticated Author Toggles -->
-        <div v-else class="flex items-center gap-2">
-          <button
-            type="button"
-            @click="mode = 'editor'"
-            :class="[
-              'px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all',
-              mode === 'editor' 
-                ? 'bg-emerald-600 text-white shadow-md' 
-                : 'bg-[#121416] text-emerald-400 border border-emerald-500/30 hover:bg-[#212429]'
-            ]"
-          >
-            <IconRenderer name="Edit3" size="14" />
-            <span>Конструктор</span>
-          </button>
+        <button
+          v-else
+          type="button"
+          @click="logoutAuthor"
+          class="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs transition-all"
+          title="Выйти из аккаунта"
+        >
+          <IconRenderer name="X" size="15" />
+        </button>
 
-          <button
-            type="button"
-            @click="logoutAuthor"
-            class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs transition-all"
-            title="Выйти из аккаунта"
-          >
-            <IconRenderer name="X" size="14" />
-          </button>
-        </div>
       </div>
     </header>
 
