@@ -49,17 +49,28 @@ const showToast = (msg: string) => {
   }, 3000);
 };
 
-const fetchCurrentAuthorProfile = async (usernameToFetch?: string) => {
-  const targetUser = usernameToFetch || currentUsername.value || 'DarkimuSSS';
-  try {
-    const res = await fetch(`/api/profiles/${encodeURIComponent(targetUser)}`);
-    if (res.ok) {
-      currentAuthorProfile.value = await res.json();
-    }
-  } catch (err) {
-    console.error('Error fetching header author profile:', err);
+const authorProfilesMap = ref<Record<string, { avatarUrl?: string; isVerified?: boolean }>>({});
+
+const fetchAuthorProfiles = async () => {
+  const authors = Array.from(new Set(guides.value.map(g => g.meta.author).filter(Boolean)));
+  for (const author of authors) {
+    if (authorProfilesMap.value[author.toLowerCase()]) continue;
+    try {
+      const res = await fetch(`/api/profiles/${encodeURIComponent(author)}`);
+      if (res.ok) {
+        const data = await res.json();
+        authorProfilesMap.value[author.toLowerCase()] = {
+          avatarUrl: data.avatarUrl,
+          isVerified: Boolean(data.isVerified)
+        };
+      }
+    } catch (e) {}
   }
 };
+
+watch(guides, () => {
+  fetchAuthorProfiles();
+}, { deep: true });
 
 const openAuthorProfile = (username?: string) => {
   profileUsername.value = username || currentUsername.value || activeGuide.value?.meta.author || 'DarkimuSSS';
@@ -842,10 +853,18 @@ const handleViewAllAuthorGuides = (username: string) => {
                     <!-- Avatar with Glow Ring -->
                     <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md flex-shrink-0">
                       <div class="w-full h-full bg-[#0c0d0e] rounded-[6px] flex items-center justify-center overflow-hidden">
-                        <span class="text-[10px] font-black text-emerald-400">{{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}</span>
+                        <img v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" :src="authorProfilesMap[guide.meta.author.toLowerCase()]?.avatarUrl" class="w-full h-full object-cover" />
+                        <span v-else class="text-[10px] font-black text-emerald-400">{{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}</span>
                       </div>
                     </div>
-                    <span class="font-bold text-slate-200 text-xs group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</span>
+                    <div class="flex items-center gap-1">
+                      <span class="font-bold text-slate-200 text-xs group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</span>
+                      <span v-if="authorProfilesMap[guide.meta.author.toLowerCase()]?.isVerified" class="w-3.5 h-3.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 flex items-center justify-center shadow-sm" title="Проверенный Автор">
+                        <svg class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </span>
+                    </div>
                   </div>
 
                   <button class="bg-[#121416] group-hover:bg-emerald-600 text-slate-300 group-hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all">
