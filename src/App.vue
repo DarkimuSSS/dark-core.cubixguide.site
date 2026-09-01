@@ -736,66 +736,66 @@ const handleViewAllAuthorGuides = (username: string) => {
           <div
             v-if="isHeaderNavMenuOpen"
             @click.stop
-            class="absolute top-full left-0 mt-3 w-80 sm:w-96 bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 z-50 space-y-4 animate-in fade-in zoom-in-95 duration-200"
+            class="absolute top-full left-0 mt-3 w-[460px] sm:w-[560px] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 z-50 space-y-4 animate-in fade-in zoom-in-95 duration-200"
           >
             <!-- Navigation Modes -->
             <div>
               <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1">Основные разделы:</div>
-              <div class="grid grid-cols-2 gap-2">
+              <div class="grid grid-cols-3 gap-2">
                 <button
                   @click="mode = 'home'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2.5 cursor-pointer', mode === 'home' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
+                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'home' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
                 >
-                  <IconRenderer name="Home" size="18" class="text-emerald-400" />
-                  <div>
-                    <div class="text-xs font-bold">Каталог</div>
-                    <div class="text-[10px] text-dark-muted">Все гайды статьи</div>
+                  <IconRenderer name="Home" size="18" class="text-emerald-400 shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold truncate">Каталог</div>
+                    <div class="text-[10px] text-dark-muted truncate">Все гайды</div>
                   </div>
                 </button>
 
                 <button
                   v-if="activeGuide"
                   @click="mode = 'reader'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2.5 cursor-pointer', mode === 'reader' ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-cyan-500/40']"
+                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'reader' ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-cyan-500/40']"
                 >
-                  <IconRenderer name="BookOpen" size="18" class="text-cyan-400" />
-                  <div>
-                    <div class="text-xs font-bold">Вики Статья</div>
-                    <div class="text-[10px] text-dark-muted">Текущая статья</div>
+                  <IconRenderer name="BookOpen" size="18" class="text-cyan-400 shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold truncate">Вики Статья</div>
+                    <div class="text-[10px] text-dark-muted truncate">Текущая статья</div>
                   </div>
                 </button>
 
                 <button
                   @click="mode = 'favorites'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2.5 cursor-pointer', mode === 'favorites' ? 'bg-amber-500/15 border-amber-500/50 text-amber-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-amber-500/40']"
+                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'favorites' ? 'bg-amber-500/15 border-amber-500/50 text-amber-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-amber-500/40']"
                 >
-                  <IconRenderer name="Star" size="18" class="text-amber-400" />
-                  <div>
-                    <div class="text-xs font-bold">Закладки</div>
-                    <div class="text-[10px] text-dark-muted">{{ favoriteGuideIds.length }} сохранено</div>
+                  <IconRenderer name="Star" size="18" class="text-amber-400 shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold truncate">Закладки</div>
+                    <div class="text-[10px] text-dark-muted truncate">{{ favoriteGuideIds.length }} сохранено</div>
                   </div>
                 </button>
 
                 <button
                   v-if="isAuthenticated"
                   @click="mode = 'drafts'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2.5 cursor-pointer', mode === 'drafts' ? 'bg-purple-500/15 border-purple-500/50 text-purple-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-purple-500/40']"
+                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'drafts' ? 'bg-purple-500/15 border-purple-500/50 text-purple-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-purple-500/40']"
                 >
-                  <IconRenderer name="FileText" size="18" class="text-purple-400" />
-                  <div>
-                    <div class="text-xs font-bold">Черновики</div>
-                    <div class="text-[10px] text-dark-muted">{{ myDraftsList.length }} неопубликовано</div>
+                  <IconRenderer name="FileText" size="18" class="text-purple-400 shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold truncate">Черновики</div>
+                    <div class="text-[10px] text-dark-muted truncate">{{ myDraftsList.length }} неопубликовано</div>
                   </div>
                 </button>
 
                 <button
                   @click="openRandomGuide(); isHeaderNavMenuOpen = false"
-                  class="p-3 rounded-2xl bg-[#090a0c] border border-[#262a30] hover:border-purple-500/40 text-left transition-all flex items-center gap-2.5 cursor-pointer group"
+                  class="p-3 rounded-2xl bg-[#090a0c] border border-[#262a30] hover:border-purple-500/40 text-left transition-all flex items-center gap-2 cursor-pointer group"
                 >
-                  <IconRenderer name="Sparkles" size="18" class="text-purple-400 group-hover:scale-110 transition-transform" />
-                  <div>
-                    <div class="text-xs font-bold text-purple-300">Случайный</div>
-                    <div class="text-[10px] text-dark-muted">Случайный гайд</div>
+                  <IconRenderer name="Sparkles" size="18" class="text-purple-400 group-hover:scale-110 transition-transform shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-purple-300 truncate">Случайный</div>
+                    <div class="text-[10px] text-dark-muted truncate">Случайный гайд</div>
                   </div>
                 </button>
               </div>
