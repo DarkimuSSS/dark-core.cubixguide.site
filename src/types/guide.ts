@@ -10,7 +10,17 @@ export type BlockType =
   | 'spoiler'
   | 'before_after';
 
-export type Category = 'ХайТек' | 'Магия RPG' | 'СкайБлок' | 'Автоматизация' | 'Общий';
+export type Category = 
+  | 'ХайТек' 
+  | 'Магия RPG' 
+  | 'СкайБлок' 
+  | 'Автоматизация' 
+  | 'Крафты & Рецепты' 
+  | 'Фермы & Заводы' 
+  | 'Покемоны' 
+  | 'Строительство' 
+  | 'ПВП & Боссы' 
+  | 'Общий';
 export type Difficulty = 'Новичок' | 'Опытный' | 'Мастер';
 export type CalloutType = 'info' | 'warning' | 'tip' | 'danger' | 'recipe' | 'note';
 export type BlockSpan = 'span-1' | 'span-2' | 'span-3' | 'span-4' | 'span-6';

@@ -414,7 +414,18 @@ const handleGlobalHotkeys = (e: KeyboardEvent) => {
   }
 };
 
-const categories: Category[] = ['ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий'];
+const categories: Category[] = [
+  'ХайТек',
+  'Магия RPG',
+  'СкайБлок',
+  'Автоматизация',
+  'Крафты & Рецепты',
+  'Фермы & Заводы',
+  'Покемоны',
+  'Строительство',
+  'ПВП & Боссы',
+  'Общий'
+];
 const difficulties: Difficulty[] = ['Новичок', 'Опытный', 'Мастер'];
 
 // Meta Updates

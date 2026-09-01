@@ -48,10 +48,15 @@ const authorProfilesMap = ref<Record<string, { avatarUrl?: string; isVerified?: 
 
 const categoriesList = [
   { name: 'Все', icon: 'Grid', color: 'text-emerald-400' },
-  { name: 'ХайТек', icon: 'Zap', color: 'text-cyan-400' },
+  { name: 'ХайТек', icon: 'Cpu', color: 'text-cyan-400' },
   { name: 'Магия RPG', icon: 'Sparkles', color: 'text-purple-400' },
-  { name: 'СкайБлок', icon: 'Box', color: 'text-amber-400' },
-  { name: 'Автоматизация', icon: 'Layers', color: 'text-emerald-400' },
+  { name: 'СкайБлок', icon: 'Layers', color: 'text-amber-400' },
+  { name: 'Автоматизация', icon: 'Zap', color: 'text-emerald-400' },
+  { name: 'Крафты & Рецепты', icon: 'Sliders', color: 'text-indigo-400' },
+  { name: 'Фермы & Заводы', icon: 'CheckSquare', color: 'text-teal-400' },
+  { name: 'Покемоны', icon: 'Smile', color: 'text-rose-400' },
+  { name: 'Строительство', icon: 'Home', color: 'text-amber-300' },
+  { name: 'ПВП & Боссы', icon: 'Shield', color: 'text-red-400' },
   { name: 'Общий', icon: 'BookOpen', color: 'text-slate-400' }
 ];
 
@@ -156,6 +161,16 @@ const getCategoryColor = (cat: Category) => {
       return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
     case 'Автоматизация':
       return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+    case 'Крафты & Рецепты':
+      return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40';
+    case 'Фермы & Заводы':
+      return 'bg-teal-500/20 text-teal-300 border-teal-500/40';
+    case 'Покемоны':
+      return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+    case 'Строительство':
+      return 'bg-amber-400/20 text-amber-200 border-amber-400/40';
+    case 'ПВП & Боссы':
+      return 'bg-red-500/20 text-red-300 border-red-500/40';
     case 'Общий':
     default:
       return 'bg-slate-500/20 text-slate-300 border-slate-500/40';

@@ -805,16 +805,21 @@ const handleViewAllAuthorGuides = (username: string) => {
             <div class="border-t border-[#262a30] pt-3.5 space-y-2.5">
               <div class="flex items-center justify-between px-1">
                 <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Тематические категории:</div>
-                <span class="text-[10px] text-emerald-400 font-bold">5 направлений</span>
+                <span class="text-[10px] text-emerald-400 font-bold">10 направлений</span>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
                 <button
                   v-for="cat in [
                     { name: 'ХайТек', icon: 'Cpu', color: 'from-cyan-500/20 to-blue-500/10 border-cyan-500/40 text-cyan-300', desc: 'Автоматизация, механизмы и энергия' },
                     { name: 'Магия RPG', icon: 'Sparkles', color: 'from-purple-500/20 to-pink-500/10 border-purple-500/40 text-purple-300', desc: 'Заклинания, алхимия и ритуалы' },
                     { name: 'СкайБлок', icon: 'Layers', color: 'from-amber-500/20 to-orange-500/10 border-amber-500/40 text-amber-300', desc: 'Развитие острова и квесты' },
                     { name: 'Автоматизация', icon: 'Zap', color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/40 text-emerald-300', desc: 'Схемы, трубы и логистика' },
+                    { name: 'Крафты & Рецепты', icon: 'Sliders', color: 'from-indigo-500/20 to-blue-500/10 border-indigo-500/40 text-indigo-300', desc: 'Гайды по сложным крафтам' },
+                    { name: 'Фермы & Заводы', icon: 'CheckSquare', color: 'from-teal-500/20 to-emerald-500/10 border-teal-500/40 text-teal-300', desc: 'Авто-фермы ресурсов и монет' },
+                    { name: 'Покемоны', icon: 'Smile', color: 'from-rose-500/20 to-red-500/10 border-rose-500/40 text-rose-300', desc: 'Pixelmon / Cobblemon поимка и бои' },
+                    { name: 'Строительство', icon: 'Home', color: 'from-amber-400/20 to-yellow-500/10 border-amber-400/40 text-amber-200', desc: 'Архитектура, декор и постройки' },
+                    { name: 'ПВП & Боссы', icon: 'Shield', color: 'from-red-500/20 to-rose-600/10 border-red-500/40 text-red-300', desc: 'Броня, оружие и битва с боссами' },
                     { name: 'Общий', icon: 'BookOpen', color: 'from-slate-700/30 to-slate-800/20 border-slate-600/40 text-slate-300', desc: 'Базовые руководства и советы' }
                   ]"
                   :key="cat.name"
