@@ -489,8 +489,8 @@ const handleBannerFileUpload = (e: Event) => {
 
         <!-- VIBRANT HIGH-VISIBILITY BODY BANNER BACKGROUND LAYER -->
         <div v-if="profile.bannerUrl" class="absolute inset-0 pointer-events-none z-0">
-          <img :src="profile.bannerUrl" class="w-full h-full object-cover opacity-85" />
-          <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-[#16181a]/95"></div>
+          <img :src="profile.bannerUrl" class="w-full h-full object-cover opacity-85 profile-modal-banner-img" />
+          <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-[#16181a]/95 profile-modal-banner-overlay"></div>
         </div>
 
         <!-- MODAL CONTENT LAYER (FLOATING OVER THE BODY BANNER BACKGROUND) -->
