@@ -177,7 +177,7 @@ const handleFileUpload = (e: Event) => {
           </button>
         </div>
 
-        <div class="p-4 rounded-2xl bg-[#121416] border border-[#26292d] space-y-3">
+        <div v-if="isAdmin" class="p-4 rounded-2xl bg-[#121416] border border-[#26292d] space-y-3">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
               <IconRenderer name="Upload" size="18" />

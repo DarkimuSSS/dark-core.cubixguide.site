@@ -234,15 +234,16 @@ export function listAllAuthors() {
   }));
 }
 
-// Seed Super Admin DarkimuSSS with password strictly from environment
-const adminCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE LOWER(username) = ?').get('darkimusss') as { count: number };
+// Seed Super Admin with username and password strictly from environment
+const superAdminUsername = (process.env.ADMIN_USERNAME || 'DarkimuSSS').trim();
+const adminCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE LOWER(username) = LOWER(?)').get(superAdminUsername) as { count: number };
 if (adminCount.count === 0) {
   const adminPassword = process.env.ADMIN_SEED_PASSWORD;
   if (adminPassword) {
     try {
       const pwdHash = hashPassword(adminPassword);
       const createdAt = new Date().toISOString().split('T')[0];
-      db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, is_verified, created_at) VALUES (?, ?, 1, 1, 1, 1, ?)').run('DarkimuSSS', pwdHash, createdAt);
+      db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, is_verified, created_at) VALUES (?, ?, 1, 1, 1, 1, ?)').run(superAdminUsername, pwdHash, createdAt);
     } catch (e) {
       console.error('Ошибка создания аккаунта суперадмина:', e);
     }
@@ -251,7 +252,7 @@ if (adminCount.count === 0) {
   }
 } else {
   // Ensure Super Admin has all permissions and verification
-  db.prepare('UPDATE users SET is_admin = 1, can_edit_others = 1, can_create_guides = 1, is_verified = 1 WHERE LOWER(username) = ?').run('darkimusss');
+  db.prepare('UPDATE users SET is_admin = 1, can_edit_others = 1, can_create_guides = 1, is_verified = 1 WHERE LOWER(username) = LOWER(?)').run(superAdminUsername);
 }
 
 // Helper to get or create profile
