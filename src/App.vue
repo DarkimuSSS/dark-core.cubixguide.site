@@ -322,12 +322,9 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
 };
 
 // Fetch guides from backend API
-const fetchGuides = async () => {
+const fetchGuides = async (silent: boolean = false) => {
   try {
-    isLoading.value = true;
-    const mainEl = document.querySelector('main');
-    const prevScrollTop = mainEl ? mainEl.scrollTop : 0;
-
+    if (!silent) isLoading.value = true;
     const res = await fetch('/api/guides');
     if (!res.ok) throw new Error('Ошибка загрузки данных');
     const data: Guide[] = await res.json();
@@ -348,17 +345,11 @@ const fetchGuides = async () => {
     } else {
       activeGuide.value = null;
     }
-
-    if (mainEl && prevScrollTop > 0) {
-      setTimeout(() => {
-        mainEl.scrollTop = prevScrollTop;
-      }, 50);
-    }
   } catch (err: any) {
     console.error(err);
     showToast('Ошибка загрузки гайдов');
   } finally {
-    isLoading.value = false;
+    if (!silent) isLoading.value = false;
   }
 };
 
@@ -550,8 +541,9 @@ const confirmDeleteGuideById = async () => {
     });
     if (res.ok) {
       clearDraftLocalStorage(guideId);
+      guides.value = guides.value.filter(g => g.meta.id !== guideId);
       showToast('Гайд успешно удалён');
-      await fetchGuides();
+      await fetchGuides(true);
       if (activeGuide.value?.meta.id === guideId) mode.value = 'home';
     } else {
       showToast('Ошибка при удалении гайда');
