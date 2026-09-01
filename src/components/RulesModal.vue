@@ -506,13 +506,22 @@ const fetchServerRulesFromApi = async (serverId: string) => {
   }
 };
 
+const isServerPickerOpen = ref(false);
+
 const fetchServerListFromApi = async () => {
   try {
     const res = await fetch('/api/servers');
     if (res.ok) {
       const list = await res.json();
       if (Array.isArray(list) && list.length > 0) {
-        availableServers.value = list.map((s: string) => ({ id: s, name: s }));
+        // Исключаем мобильные сервера (Mobile), так как их правила совпадают со старшими братьями
+        const desktopServers = list
+          .filter((s: string) => !s.toLowerCase().includes('mobile'))
+          .map((s: string) => ({ id: s, name: s }));
+        
+        if (desktopServers.length > 0) {
+          availableServers.value = desktopServers;
+        }
       }
     }
   } catch (e) {
@@ -520,22 +529,28 @@ const fetchServerListFromApi = async () => {
   }
 };
 
+// Хелпер получения оригинального сервер ID (убирает -Mobile при вызове правил)
+const getBaseServerId = (serverId: string) => {
+  return serverId.replace(/-mobile$/i, '').replace(/_mobile$/i, '');
+};
+
 watch(selectedServer, (newServer) => {
   if (newServer) {
-    fetchServerRulesFromApi(newServer);
+    fetchServerRulesFromApi(getBaseServerId(newServer));
   }
 }, { immediate: true });
 
 onMounted(() => {
   fetchServerListFromApi();
-  fetchServerRulesFromApi(selectedServer.value);
+  fetchServerRulesFromApi(getBaseServerId(selectedServer.value));
 });
 
 const currentServerData = computed(() => {
-  if (loadedServerRules.value[selectedServer.value]) {
-    return loadedServerRules.value[selectedServer.value];
+  const baseId = getBaseServerId(selectedServer.value);
+  if (loadedServerRules.value[baseId]) {
+    return loadedServerRules.value[baseId];
   }
-  if (selectedServer.value === 'OneBlock') return ONEBLOCK_RULES_DATA;
+  if (baseId === 'OneBlock') return ONEBLOCK_RULES_DATA;
   return null;
 });
 
@@ -678,17 +693,42 @@ const handleAutoParseRules = async () => {
             </div>
 
             <!-- Server selector dropdown when Server tab active -->
-            <div v-if="activeTab === 'server'" class="flex items-center gap-2">
+            <div v-if="activeTab === 'server'" class="flex items-center gap-2 relative">
               <span class="text-xs font-bold text-dark-muted">Сервер:</span>
               <div class="relative">
-                <select
-                  v-model="selectedServer"
-                  class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 font-extrabold text-xs rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+                <button
+                  type="button"
+                  @click="isServerPickerOpen = !isServerPickerOpen"
+                  class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 font-extrabold text-xs rounded-xl px-3 py-2 focus:outline-none cursor-pointer flex items-center gap-2 hover:border-cyan-400"
                 >
-                  <option v-for="srv in availableServers" :key="srv.id" :value="srv.id">
-                    {{ srv.name }}
-                  </option>
-                </select>
+                  <span>{{ availableServers.find(s => s.id === selectedServer)?.name || selectedServer }}</span>
+                  <IconRenderer name="ChevronDown" size="14" :class="['transition-transform', isServerPickerOpen ? 'rotate-180' : '']" />
+                </button>
+
+                <!-- 3-Column Dropdown Menu -->
+                <div
+                  v-if="isServerPickerOpen"
+                  class="absolute top-full right-0 mt-2 w-[480px] max-w-[90vw] bg-[#121416] border border-[#26292d] rounded-2xl shadow-2xl p-3 z-50 space-y-2 backdrop-blur-xl"
+                >
+                  <div class="text-[10px] font-black text-cyan-400 uppercase tracking-wider px-1">Выберите сервер:</div>
+                  <div class="grid grid-cols-3 gap-1.5 max-h-[300px] overflow-y-auto custom-scrollbar">
+                    <button
+                      v-for="srv in availableServers"
+                      :key="srv.id"
+                      type="button"
+                      @click="selectedServer = srv.id; isServerPickerOpen = false"
+                      :class="[
+                        'px-2.5 py-2 rounded-xl text-xs font-bold text-left transition-all truncate border flex items-center gap-1.5',
+                        selectedServer === srv.id
+                          ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-black'
+                          : 'bg-[#16181a] border-[#26292d] text-slate-300 hover:text-white hover:border-[#383d44] hover:bg-[#1c1f23]'
+                      ]"
+                    >
+                      <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="selectedServer === srv.id ? 'bg-cyan-400' : 'bg-slate-600'"></span>
+                      <span class="truncate">{{ srv.name }}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <!-- Auto-parse button -->
