@@ -30,6 +30,39 @@ const activeZoomImage = ref<string | null>(null);
 // Collapsible Sections state (map of blockId -> boolean)
 const collapsedBlocks = ref<Record<string, boolean>>({});
 
+// Reader checklist progress stored in localStorage (itemId -> boolean)
+const userChecklistState = ref<Record<string, boolean>>({});
+
+const loadChecklistState = () => {
+  try {
+    const saved = localStorage.getItem(`cubix_chk_progress_${props.guide.meta.id}`);
+    if (saved) {
+      userChecklistState.value = JSON.parse(saved);
+    } else {
+      userChecklistState.value = {};
+    }
+  } catch (err) {}
+};
+
+const toggleChecklistItemProgress = (itemId: string, defaultCompleted?: boolean) => {
+  const current = userChecklistState.value[itemId] ?? defaultCompleted ?? false;
+  userChecklistState.value[itemId] = !current;
+  try {
+    localStorage.setItem(`cubix_chk_progress_${props.guide.meta.id}`, JSON.stringify(userChecklistState.value));
+  } catch (err) {}
+};
+
+const isChecklistItemCompleted = (itemId: string, defaultCompleted?: boolean) => {
+  if (userChecklistState.value[itemId] !== undefined) {
+    return userChecklistState.value[itemId];
+  }
+  return !!defaultCompleted;
+};
+
+watch(() => props.guide.meta.id, () => {
+  loadChecklistState();
+}, { immediate: true });
+
 const toggleBlockCollapse = (blockId: string) => {
   collapsedBlocks.value[blockId] = !collapsedBlocks.value[blockId];
 };
@@ -582,9 +615,9 @@ const getVariantClass = (variant?: BlockVariant) => {
                       <IconRenderer name="CheckCircle2" size="14" class="text-emerald-400" />
                       <span>{{ sub.checklistTitle }}</span>
                     </div>
-                    <label v-for="item in (sub.checklistItems || [])" :key="item.id" class="flex items-center gap-2.5 p-2 rounded-lg bg-[#16181a] border border-[#26292d] cursor-pointer hover:border-emerald-500/40 text-xs transition-all group/subchk select-none">
-                      <input type="checkbox" :checked="item.completed" @change="item.completed = !item.completed" class="w-3.5 h-3.5 accent-emerald-500 rounded cursor-pointer shrink-0" />
-                      <span :class="['transition-all flex-1', item.completed ? 'line-through text-dark-muted/70' : 'text-slate-200 group-hover/subchk:text-white']">{{ item.text }}</span>
+                    <label v-for="item in (sub.checklistItems || [])" :key="item.id" @click.prevent="toggleChecklistItemProgress(item.id, item.completed)" class="flex items-center gap-2.5 p-2 rounded-lg bg-[#16181a] border border-[#26292d] cursor-pointer hover:border-emerald-500/40 text-xs transition-all group/subchk select-none">
+                      <input type="checkbox" :checked="isChecklistItemCompleted(item.id, item.completed)" class="w-3.5 h-3.5 accent-emerald-500 rounded cursor-pointer shrink-0 pointer-events-none" />
+                      <span :class="['transition-all flex-1', isChecklistItemCompleted(item.id, item.completed) ? 'line-through text-dark-muted/70' : 'text-slate-200 group-hover/subchk:text-white']">{{ item.text }}</span>
                     </label>
                   </div>
                 </div>
@@ -671,18 +704,18 @@ const getVariantClass = (variant?: BlockVariant) => {
                 <label 
                   v-for="item in (block.checklistItems || [])" 
                   :key="item.id"
+                  @click.prevent="toggleChecklistItemProgress(item.id, item.completed)"
                   class="flex items-center gap-3 p-3.5 rounded-xl bg-[#0c0d0e] border border-[#26292d] cursor-pointer hover:border-emerald-500/40 transition-all group/chk select-none"
                 >
                   <input
                     type="checkbox"
-                    :checked="item.completed"
-                    @change="item.completed = !item.completed"
-                    class="w-4 h-4 rounded border-[#26292d] bg-[#16181a] text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-emerald-500 shrink-0"
+                    :checked="isChecklistItemCompleted(item.id, item.completed)"
+                    class="w-4 h-4 rounded border-[#26292d] bg-[#16181a] text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-emerald-500 shrink-0 pointer-events-none"
                   />
-                  <span :class="['text-xs sm:text-sm font-medium transition-all flex-1', item.completed ? 'line-through text-dark-muted/70' : 'text-slate-200 group-hover/chk:text-white']">
+                  <span :class="['text-xs sm:text-sm font-medium transition-all flex-1', isChecklistItemCompleted(item.id, item.completed) ? 'line-through text-dark-muted/70' : 'text-slate-200 group-hover/chk:text-white']">
                     {{ item.text }}
                   </span>
-                  <div v-if="item.completed" class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] shrink-0">
+                  <div v-if="isChecklistItemCompleted(item.id, item.completed)" class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] shrink-0 font-bold">
                     ✓
                   </div>
                 </label>
