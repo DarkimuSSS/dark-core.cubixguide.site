@@ -479,8 +479,8 @@ const getVariantClass = (variant?: BlockVariant) => {
             <div
               v-else-if="block.type === 'section'"
               :class="[
-                'w-full rounded-2xl transition-all',
-                block.sectionStyle === 'transparent' ? '' : 'bg-[#16181a] border border-[#26292d] p-6 shadow-xl'
+                'w-full rounded-2xl transition-all p-6 shadow-xl',
+                block.sectionStyle === 'transparent' ? '' : getVariantClass(block.variant)
               ]"
             >
               <!-- Optional Section Title / Header Collapse Bar if H1/Heading sub-block or explicit section header present -->

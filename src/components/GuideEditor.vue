@@ -1773,7 +1773,7 @@ const stopOutlineDrag = () => {
             :class="[
               'relative transition-all flex-1 min-w-0',
               block.type === 'divider' ? 'py-2' :
-              block.type === 'section' ? 'p-4 rounded-xl bg-[#121416] border border-[#26292d]' :
+              block.type === 'section' ? 'p-5 rounded-xl ' + getVariantClass(block.variant) :
               'p-5 rounded-xl ' + getVariantClass(block.variant)
             ]"
           >
