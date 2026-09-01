@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, recordTelemetryEvent, getTelemetryStats } from './db';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
 const app = express();
@@ -246,9 +246,51 @@ app.get('/api/guides/:id', (req, res) => {
     if (!row) {
       return res.status(404).json({ error: 'Гайд не найден' });
     }
-    res.json(formatGuideRow(row));
+    const formatted = formatGuideRow(row);
+    recordTelemetryEvent('guide_view', {
+      guideId: formatted.meta.id,
+      guideTitle: formatted.meta.title,
+      ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
+      userAgent: req.headers['user-agent']
+    });
+    res.json(formatted);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Telemetry API Endpoints (For Admin Stats & Client Track)
+app.post('/api/telemetry/track', (req, res) => {
+  try {
+    const { eventType, guideId, guideTitle, username } = req.body;
+    if (eventType) {
+      recordTelemetryEvent(eventType, {
+        guideId,
+        guideTitle,
+        username,
+        ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
+        userAgent: req.headers['user-agent']
+      });
+    }
+    res.json({ ok: true });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/telemetry/stats', (req, res) => {
+  try {
+    const requestingUser = (req.headers['x-author-username'] as string) || (req.query.requestingUsername as string);
+    if (requestingUser) {
+      const userRow = db.prepare('SELECT is_admin FROM users WHERE LOWER(username) = LOWER(?)').get(requestingUser) as any;
+      if (!userRow || !userRow.is_admin) {
+        return res.status(403).json({ error: 'Доступ разрешен только Администрации' });
+      }
+    }
+    const stats = getTelemetryStats();
+    res.json(stats);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
   }
 });
 
@@ -259,6 +301,15 @@ app.post('/api/guides', (req, res) => {
     if (!guide || !guide.meta || !guide.meta.id) {
       return res.status(400).json({ error: 'Неверные данные гайда' });
     }
+
+    const requestingUser = (req.headers['x-author-username'] as string) || guide.meta.author;
+    recordTelemetryEvent(guide.meta.published ? 'guide_publish' : 'guide_create', {
+      guideId: guide.meta.id,
+      guideTitle: guide.meta.title,
+      username: requestingUser,
+      ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
+      userAgent: req.headers['user-agent']
+    });
 
     const isPublished = Boolean(guide.meta.published);
     // Если не опубликован, автоматически НЕ виден
@@ -271,13 +322,13 @@ app.post('/api/guides', (req, res) => {
 
     stmt.run(
       guide.meta.id,
-      guide.meta.title,
+      guide.meta.title || '',
       guide.meta.category,
       guide.meta.author,
       JSON.stringify(guide.meta.coAuthors || []),
       guide.meta.difficulty,
       guide.meta.summary || '',
-      guide.meta.updatedAt || new Date().toISOString().split('T')[0],
+      guide.meta.updatedAt,
       isPublished ? 1 : 0,
       isVisible ? 1 : 0,
       guide.meta.server || null,
@@ -286,14 +337,7 @@ app.post('/api/guides', (req, res) => {
       JSON.stringify(guide.blocks || [])
     );
 
-    res.status(201).json({
-      ...guide,
-      meta: {
-        ...guide.meta,
-        published: isPublished,
-        isVisible: isVisible
-      }
-    });
+    res.json(guide);
   } catch (err: any) {
     console.error('API /api/guides POST Error:', err);
     res.status(500).json({ error: err.message });
@@ -326,61 +370,69 @@ function canUserModifyGuide(requestingUsername: string | undefined, guideId: str
 // 4. Update existing guide
 app.put('/api/guides/:id', (req, res) => {
   try {
-    const guide: Guide = req.body;
     const guideId = req.params.id;
+    const guide: Guide = req.body;
     const requestingUser = (req.headers['x-author-username'] as string) || (req.query.requestingUsername as string);
 
     if (requestingUser && !canUserModifyGuide(requestingUser, guideId)) {
       return res.status(403).json({ error: 'У вас нет прав для редактирования чужого гайда' });
     }
 
+    recordTelemetryEvent('guide_edit', {
+      guideId: guideId,
+      guideTitle: guide?.meta?.title,
+      username: requestingUser,
+      ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
+      userAgent: req.headers['user-agent']
+    });
+
+    const existingRow = db.prepare('SELECT * FROM guides WHERE id = ?').get(guideId);
+    
     const isPublished = Boolean(guide.meta.published);
     const isVisible = isPublished ? Boolean(guide.meta.isVisible) : false;
 
-    const stmt = db.prepare(`
-      UPDATE guides
-      SET title = ?, category = ?, author = ?, co_authors = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, is_visible = ?, server = ?, cover_url = ?, cover_gradient = ?, blocks = ?
-      WHERE id = ?
-    `);
-
-    const result = stmt.run(
-      guide.meta.title,
-      guide.meta.category,
-      guide.meta.author,
-      JSON.stringify(guide.meta.coAuthors || []),
-      guide.meta.difficulty,
-      guide.meta.summary || '',
-      guide.meta.updatedAt || new Date().toISOString().split('T')[0],
-      isPublished ? 1 : 0,
-      isVisible ? 1 : 0,
-      guide.meta.server || null,
-      guide.meta.coverUrl || null,
-      guide.meta.coverGradient || null,
-      JSON.stringify(guide.blocks || []),
-      guideId
-    );
-
-    if (result.changes === 0) {
-      // Fallback: If guide ID doesn't exist in DB yet (e.g. built-in sample guide edited for the first time), insert it
-      const insertStmt = db.prepare(`
+    if (!existingRow) {
+      const stmt = db.prepare(`
         INSERT INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, is_visible, server, cover_url, cover_gradient, blocks)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      insertStmt.run(
+      stmt.run(
         guideId,
-        guide.meta.title,
+        guide.meta.title || '',
         guide.meta.category,
         guide.meta.author,
         JSON.stringify(guide.meta.coAuthors || []),
         guide.meta.difficulty,
         guide.meta.summary || '',
-        guide.meta.updatedAt || new Date().toISOString().split('T')[0],
+        guide.meta.updatedAt,
         isPublished ? 1 : 0,
         isVisible ? 1 : 0,
         guide.meta.server || null,
         guide.meta.coverUrl || null,
         guide.meta.coverGradient || null,
         JSON.stringify(guide.blocks || [])
+      );
+    } else {
+      const stmt = db.prepare(`
+        UPDATE guides
+        SET title = ?, category = ?, author = ?, co_authors = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, is_visible = ?, server = ?, cover_url = ?, cover_gradient = ?, blocks = ?
+        WHERE id = ?
+      `);
+      stmt.run(
+        guide.meta.title || '',
+        guide.meta.category,
+        guide.meta.author,
+        JSON.stringify(guide.meta.coAuthors || []),
+        guide.meta.difficulty,
+        guide.meta.summary || '',
+        guide.meta.updatedAt,
+        isPublished ? 1 : 0,
+        isVisible ? 1 : 0,
+        guide.meta.server || null,
+        guide.meta.coverUrl || null,
+        guide.meta.coverGradient || null,
+        JSON.stringify(guide.blocks || []),
+        guideId
       );
     }
 
@@ -400,6 +452,13 @@ app.delete('/api/guides/:id', (req, res) => {
     if (requestingUser && !canUserModifyGuide(requestingUser, guideId)) {
       return res.status(403).json({ error: 'У вас нет прав для удаления чужого гайда' });
     }
+
+    recordTelemetryEvent('guide_delete', {
+      guideId: guideId,
+      username: requestingUser,
+      ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
+      userAgent: req.headers['user-agent']
+    });
 
     const stmt = db.prepare('DELETE FROM guides WHERE id = ?');
     const result = stmt.run(guideId);

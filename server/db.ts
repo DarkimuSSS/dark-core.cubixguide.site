@@ -57,7 +57,73 @@ db.exec(`
     pinned_guide_id TEXT,
     updated_at TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS telemetry_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_type TEXT NOT NULL,
+    guide_id TEXT,
+    guide_title TEXT,
+    username TEXT,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at TEXT NOT NULL
+  );
 `);
+
+export function recordTelemetryEvent(
+  eventType: 'page_view' | 'guide_view' | 'guide_create' | 'guide_edit' | 'guide_publish' | 'guide_delete' | 'user_login',
+  details: {
+    guideId?: string;
+    guideTitle?: string;
+    username?: string;
+    ipAddress?: string;
+    userAgent?: string;
+  }
+) {
+  try {
+    const stmt = db.prepare(`
+      INSERT INTO telemetry_logs (event_type, guide_id, guide_title, username, ip_address, user_agent, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(
+      eventType,
+      details.guideId || null,
+      details.guideTitle || null,
+      details.username || null,
+      details.ipAddress || null,
+      details.userAgent || null,
+      new Date().toISOString()
+    );
+  } catch (err) {
+    console.error('Ошибка записи телеметрии:', err);
+  }
+}
+
+export function getTelemetryStats() {
+  const totalViews = (db.prepare(`SELECT COUNT(*) as count FROM telemetry_logs WHERE event_type IN ('guide_view', 'page_view')`).get() as any)?.count || 0;
+  const totalEdits = (db.prepare(`SELECT COUNT(*) as count FROM telemetry_logs WHERE event_type IN ('guide_edit', 'guide_create', 'guide_publish')`).get() as any)?.count || 0;
+  const totalLogins = (db.prepare(`SELECT COUNT(*) as count FROM telemetry_logs WHERE event_type = 'user_login'`).get() as any)?.count || 0;
+  
+  const recentLogs = db.prepare(`
+    SELECT * FROM telemetry_logs ORDER BY id DESC LIMIT 50
+  `).all();
+
+  const topGuides = db.prepare(`
+    SELECT guide_id, guide_title, COUNT(*) as views 
+    FROM telemetry_logs 
+    WHERE event_type = 'guide_view' AND guide_id IS NOT NULL 
+    GROUP BY guide_id 
+    ORDER BY views DESC LIMIT 5
+  `).all();
+
+  return {
+    totalViews,
+    totalEdits,
+    totalLogins,
+    topGuides,
+    recentLogs
+  };
+}
 
 // Migration helpers for missing columns on pre-existing database tables
 try { db.exec(`ALTER TABLE users ADD COLUMN can_edit_others INTEGER NOT NULL DEFAULT 0;`); } catch (e) {}

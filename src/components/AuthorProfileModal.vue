@@ -87,6 +87,32 @@ const fetchProfile = async () => {
   }
 };
 
+const telemetryStats = ref<{
+  totalViews: number;
+  totalEdits: number;
+  totalLogins: number;
+  topGuides: { guide_id: string; guide_title: string; views: number }[];
+  recentLogs: { id: number; event_type: string; guide_id?: string; guide_title?: string; username?: string; ip_address?: string; user_agent?: string; created_at: string }[];
+} | null>(null);
+
+const activeAdminTab = ref<'users' | 'telemetry'>('users');
+
+const fetchTelemetryStats = async () => {
+  if (!props.isAdmin) return;
+  try {
+    const res = await fetch('/api/telemetry/stats', {
+      headers: {
+        'x-author-username': props.currentLoggedInUsername || ''
+      }
+    });
+    if (res.ok) {
+      telemetryStats.value = await res.json();
+    }
+  } catch (err) {
+    console.error('Ошибка загрузки телеметрии:', err);
+  }
+};
+
 const fetchAdminAuthorsList = async () => {
   if (!props.isAdmin) return;
   try {
@@ -95,7 +121,6 @@ const fetchAdminAuthorsList = async () => {
       const list = await res.json();
       registeredAuthorsList.value = list;
 
-      // Fetch profile avatar for each author
       for (const a of list) {
         try {
           const pres = await fetch(`/api/profiles/${encodeURIComponent(a.username)}`);
@@ -109,19 +134,24 @@ const fetchAdminAuthorsList = async () => {
       }
     }
   } catch (e) {}
+  fetchTelemetryStats();
 };
 
 // Fetch author list whenever modal opens or admin panel is toggled
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     fetchProfile();
-    if (props.isAdmin) fetchAdminAuthorsList();
+    if (props.isAdmin) {
+      fetchAdminAuthorsList();
+      fetchTelemetryStats();
+    }
   }
 }, { immediate: true });
 
 watch(isAdminPanelOpen, (isOpen) => {
   if (isOpen && props.isAdmin) {
     fetchAdminAuthorsList();
+    fetchTelemetryStats();
   }
 });
 
@@ -682,18 +712,42 @@ const handleBannerFileUpload = (e: Event) => {
               </div>
             </div>
 
-            <!-- ADMIN PANEL: AUTHOR & PERMISSIONS MANAGEMENT (Super Admin Only) -->
+            <!-- ADMIN PANEL: AUTHOR & PERMISSIONS MANAGEMENT + TELEMETRY ANALYTICS -->
             <div v-if="isAdminPanelOpen && isAdmin" class="space-y-4 bg-[#0c0d0e]/90 border border-purple-500/40 p-5 rounded-2xl backdrop-blur-md shadow-2xl">
-              <div class="flex items-center justify-between border-b border-purple-500/30 pb-2">
+              <div class="flex items-center justify-between border-b border-purple-500/30 pb-3 flex-wrap gap-2">
                 <h3 class="text-xs font-extrabold text-purple-300 uppercase tracking-wider flex items-center gap-2">
                   <IconRenderer name="Shield" size="16" class="text-purple-400" />
-                  Панель Управления Правами и Авторами (Главный Администратор)
+                  Панель Администратора & Телеметрии
                 </h3>
+
+                <!-- TAB SWITCHER: USERS VS TELEMETRY -->
+                <div class="flex items-center gap-1.5 bg-[#16181a] p-1 rounded-xl border border-[#26292d]">
+                  <button
+                    type="button"
+                    @click="activeAdminTab = 'users'"
+                    :class="['px-3 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5', activeAdminTab === 'users' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white']"
+                  >
+                    <IconRenderer name="Users" size="13" />
+                    <span>Пользователи</span>
+                  </button>
+                  <button
+                    type="button"
+                    @click="activeAdminTab = 'telemetry'; fetchTelemetryStats();"
+                    :class="['px-3 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5', activeAdminTab === 'telemetry' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white']"
+                  >
+                    <IconRenderer name="Activity" size="13" />
+                    <span>Аналитика & Логи</span>
+                  </button>
+                </div>
               </div>
 
               <div v-if="adminMessage" class="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-300 text-xs font-bold">
                 {{ adminMessage }}
               </div>
+
+              <!-- TAB 1: USERS MANAGEMENT -->
+              <div v-if="activeAdminTab === 'users'" class="space-y-4">
+                <!-- Registration Sub-Form -->
 
               <!-- Registration Sub-Form -->
               <div class="space-y-3 bg-[#16181a]/90 p-4 rounded-xl border border-[#26292d]">
@@ -850,6 +904,104 @@ const handleBannerFileUpload = (e: Event) => {
                       >
                         Сохранить пароль
                       </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+
+              <!-- TAB 2: TELEMETRY & SYSTEM ANALYTICS DASHBOARD -->
+              <div v-else-if="activeAdminTab === 'telemetry'" class="space-y-5">
+                <!-- TOP METRICS CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div class="bg-[#16181a] border border-[#26292d] p-4 rounded-xl space-y-1 shadow-md">
+                    <div class="flex items-center justify-between text-dark-muted">
+                      <span class="text-[10px] font-bold uppercase tracking-wider">Всего Просмотров</span>
+                      <IconRenderer name="Eye" size="16" class="text-cyan-400" />
+                    </div>
+                    <div class="text-2xl font-black text-white">{{ telemetryStats?.totalViews || 0 }}</div>
+                    <div class="text-[10px] text-cyan-400/80">просмотров статей и страниц</div>
+                  </div>
+
+                  <div class="bg-[#16181a] border border-[#26292d] p-4 rounded-xl space-y-1 shadow-md">
+                    <div class="flex items-center justify-between text-dark-muted">
+                      <span class="text-[10px] font-bold uppercase tracking-wider">Правки & Создания</span>
+                      <IconRenderer name="Edit3" size="16" class="text-purple-400" />
+                    </div>
+                    <div class="text-2xl font-black text-white">{{ telemetryStats?.totalEdits || 0 }}</div>
+                    <div class="text-[10px] text-purple-400/80">операций в конструкторе</div>
+                  </div>
+
+                  <div class="bg-[#16181a] border border-[#26292d] p-4 rounded-xl space-y-1 shadow-md">
+                    <div class="flex items-center justify-between text-dark-muted">
+                      <span class="text-[10px] font-bold uppercase tracking-wider">Авторизаций</span>
+                      <IconRenderer name="UserCheck" size="16" class="text-emerald-400" />
+                    </div>
+                    <div class="text-2xl font-black text-white">{{ telemetryStats?.totalLogins || 0 }}</div>
+                    <div class="text-[10px] text-emerald-400/80">входов авторов в аккаунт</div>
+                  </div>
+                </div>
+
+                <!-- TOP VIEWED GUIDES TABLE -->
+                <div v-if="telemetryStats?.topGuides && telemetryStats.topGuides.length > 0" class="space-y-2">
+                  <div class="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <IconRenderer name="TrendingUp" size="14" class="text-emerald-400" />
+                    Топ Самых Популярных Гайдов по Просмотрам:
+                  </div>
+                  <div class="space-y-1.5">
+                    <div
+                      v-for="(tg, idx) in telemetryStats.topGuides"
+                      :key="tg.guide_id"
+                      class="flex items-center justify-between bg-[#16181a] border border-[#26292d] px-3.5 py-2 rounded-xl text-xs"
+                    >
+                      <div class="flex items-center gap-2.5 overflow-hidden">
+                        <span class="w-5 h-5 rounded-md bg-purple-500/20 text-purple-300 font-extrabold text-[11px] flex items-center justify-center border border-purple-500/30">#{{ idx + 1 }}</span>
+                        <span class="font-bold text-white truncate">{{ tg.guide_title || tg.guide_id }}</span>
+                      </div>
+                      <span class="text-xs font-mono font-extrabold text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-md border border-cyan-500/30">
+                        {{ tg.views }} просмотров
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- RECENT TELEMETRY LOGS TABLE -->
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                    <span class="flex items-center gap-1.5">
+                      <IconRenderer name="Activity" size="14" class="text-purple-400" />
+                      Лог Последних Событий и Телеметрии (50):
+                    </span>
+                    <button type="button" @click="fetchTelemetryStats()" class="text-purple-400 hover:underline text-[10px]">
+                      🔄 Обновить
+                    </button>
+                  </div>
+
+                  <div class="max-h-64 overflow-y-auto space-y-1.5 pr-1">
+                    <div
+                      v-for="log in (telemetryStats?.recentLogs || [])"
+                      :key="log.id"
+                      class="flex items-center justify-between bg-[#16181a]/80 border border-[#26292d] px-3 py-2 rounded-xl text-[11px] font-mono"
+                    >
+                      <div class="flex items-center gap-2 overflow-hidden">
+                        <span
+                          :class="[
+                            'px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase',
+                            log.event_type === 'guide_view' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' :
+                            log.event_type === 'guide_edit' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
+                            log.event_type === 'guide_publish' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                            'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          ]"
+                        >
+                          {{ log.event_type }}
+                        </span>
+                        <span class="text-slate-200 truncate max-w-xs">{{ log.guide_title || log.guide_id || log.username || 'Системное событие' }}</span>
+                      </div>
+                      <div class="flex items-center gap-3 text-dark-muted shrink-0 text-[10px]">
+                        <span v-if="log.username" class="text-purple-300 font-bold">@{{ log.username }}</span>
+                        <span v-if="log.ip_address" class="text-slate-400">{{ log.ip_address }}</span>
+                        <span>{{ new Date(log.created_at).toLocaleTimeString() }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
