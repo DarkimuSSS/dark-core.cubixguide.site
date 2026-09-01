@@ -37,6 +37,7 @@ const isGuideSettingsModalOpen = ref(false);
 const isMetaExpanded = ref(false);
 const activeBlockMenuId = ref<string | null>(null);
 const addBlockMenuAfterIndex = ref<number | null>(null);
+const toolbarAddBlockOpen = ref(false);
 
 const isToolbarExpanded = ref(false);
 
@@ -1284,30 +1285,30 @@ const stopOutlineDrag = () => {
         <div class="relative group/tool w-full flex justify-center">
           <button
             type="button"
-            @click.stop="addBlockMenuAfterIndex = (addBlockMenuAfterIndex === -1 ? null : -1); activeBlockMenuId = null"
+            @click.stop="toolbarAddBlockOpen = !toolbarAddBlockOpen; activeBlockMenuId = null; addBlockMenuAfterIndex = null;"
             :class="['rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center transition-all duration-300 shadow-lg shadow-emerald-950/50 cursor-pointer', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']"
           >
             <IconRenderer name="Plus" size="20" class="shrink-0" />
             <span v-if="isToolbarExpanded" class="text-xs font-bold whitespace-nowrap animate-fadeIn">Новый блок</span>
           </button>
           
-          <div v-if="!isToolbarExpanded && addBlockMenuAfterIndex !== -1" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+          <div v-if="!isToolbarExpanded && !toolbarAddBlockOpen" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
             <div class="bg-emerald-950 border border-emerald-500/50 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Добавить новый блок</div>
           </div>
 
-          <!-- Add block dropdown aligned directly to this button -->
-          <div v-if="addBlockMenuAfterIndex === -1" @click.stop class="absolute left-full top-0 ml-3 z-50 bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-1.5 flex flex-col gap-0.5 w-56 animate-fadeIn">
-            <button @click="addBlockAt(props.guide.blocks.length - 1, 'heading'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="FileText" size="14" class="text-cyan-400 shrink-0" />Заголовок</button>
-            <button @click="addBlockAt(props.guide.blocks.length - 1, 'text'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Edit3" size="14" class="text-emerald-400 shrink-0" />Текст</button>
-            <button @click="addBlockAt(props.guide.blocks.length - 1, 'image'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Image" size="14" class="text-pink-400 shrink-0" />Картинка</button>
-            <button @click="addBlockAt(props.guide.blocks.length - 1, 'callout'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Lightbulb" size="14" class="text-amber-400 shrink-0" />Совет / Уведомление</button>
-            <button @click="addBlockAt(props.guide.blocks.length - 1, 'checklist'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="CheckCircle2" size="14" class="text-emerald-400 shrink-0" />Чек-лист</button>
-            <button @click="addBlockAt(props.guide.blocks.length - 1, 'spoiler'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="HelpCircle" size="14" class="text-cyan-400 shrink-0" />Спойлер / Аккордеон</button>
-            <button @click="addBlockAt(props.guide.blocks.length - 1, 'before_after'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Maximize2" size="14" class="text-emerald-400 shrink-0" />Слайдер До / После</button>
-            <button @click="addBlockAt(props.guide.blocks.length - 1, 'section'); addBlockMenuAfterIndex = null" class="text-left text-xs text-cyan-300 font-semibold hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Layout" size="14" class="text-cyan-400 shrink-0" />Секция с колонками</button>
-            <button @click="addBlockAt(props.guide.blocks.length - 1, 'multiblock'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Layers" size="14" class="text-cyan-400 shrink-0" />Мультиструктура</button>
+          <!-- Add block dropdown aligned directly to this toolbar button -->
+          <div v-if="toolbarAddBlockOpen" @click.stop class="absolute left-full top-0 ml-3 z-50 bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-1.5 flex flex-col gap-0.5 w-56 animate-fadeIn">
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'heading'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="FileText" size="14" class="text-cyan-400 shrink-0" />Заголовок</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'text'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Edit3" size="14" class="text-emerald-400 shrink-0" />Текст</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'image'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Image" size="14" class="text-pink-400 shrink-0" />Картинка</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'callout'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Lightbulb" size="14" class="text-amber-400 shrink-0" />Совет / Уведомление</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'checklist'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="CheckCircle2" size="14" class="text-emerald-400 shrink-0" />Чек-лист</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'spoiler'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="HelpCircle" size="14" class="text-cyan-400 shrink-0" />Спойлер / Аккордеон</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'before_after'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Maximize2" size="14" class="text-emerald-400 shrink-0" />Слайдер До / После</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'section'); toolbarAddBlockOpen = false" class="text-left text-xs text-cyan-300 font-semibold hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Layout" size="14" class="text-cyan-400 shrink-0" />Секция с колонками</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'multiblock'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Layers" size="14" class="text-cyan-400 shrink-0" />Мультиструктура</button>
             <div class="border-t border-[#26292d] mt-0.5 pt-0.5">
-              <button @click="addBlockAt(props.guide.blocks.length - 1, 'divider'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-400 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 w-full"><IconRenderer name="Minus" size="14" class="text-slate-500 shrink-0" />Разделитель</button>
+              <button @click="addBlockAt(props.guide.blocks.length - 1, 'divider'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-400 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 w-full"><IconRenderer name="Minus" size="14" class="text-slate-500 shrink-0" />Разделитель</button>
             </div>
           </div>
         </div>
