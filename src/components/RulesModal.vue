@@ -489,10 +489,37 @@ const serverRulesMap: Record<string, Array<{ num: string; title: string; text: s
 };
 
 import { ONEBLOCK_RULES_DATA } from '../data/serverRulesData';
+import { watch, onMounted } from 'vue';
 
 const activeSectionId = ref<number | 'all'>('all');
+const loadedServerRules = ref<Record<string, any>>({});
+
+const fetchServerRulesFromApi = async (serverId: string) => {
+  try {
+    const res = await fetch(`/api/server-rules/${serverId}`);
+    if (res.ok) {
+      const data = await res.json();
+      loadedServerRules.value[serverId] = data;
+    }
+  } catch (e) {
+    console.warn(`Не удалось загрузить правила для ${serverId} с API, используем локальный фоллбек`);
+  }
+};
+
+watch(selectedServer, (newServer) => {
+  if (newServer) {
+    fetchServerRulesFromApi(newServer);
+  }
+}, { immediate: true });
+
+onMounted(() => {
+  fetchServerRulesFromApi(selectedServer.value);
+});
 
 const currentServerData = computed(() => {
+  if (loadedServerRules.value[selectedServer.value]) {
+    return loadedServerRules.value[selectedServer.value];
+  }
   if (selectedServer.value === 'OneBlock') return ONEBLOCK_RULES_DATA;
   return null;
 });
@@ -510,19 +537,19 @@ const filteredServerSections = computed(() => {
   if (!currentServerData.value) return [];
   const q = searchQuery.value.toLowerCase().trim();
 
-  return currentServerData.value.sections.map(sec => {
+  return currentServerData.value.sections.map((sec: any) => {
     if (activeSectionId.value !== 'all' && sec.section_id !== activeSectionId.value) {
       return { ...sec, rules: [] };
     }
-    const matchingRules = sec.rules.filter(r => {
+    const matchingRules = (sec.rules || []).filter((r: any) => {
       if (!q) return true;
-      return r.rule_id.toLowerCase().includes(q) ||
-        r.description.toLowerCase().includes(q) ||
+      return (r.rule_id || '').toLowerCase().includes(q) ||
+        (r.description || '').toLowerCase().includes(q) ||
         (r.note || '').toLowerCase().includes(q) ||
         (r.punishment || '').toLowerCase().includes(q);
     });
     return { ...sec, rules: matchingRules };
-  }).filter(sec => sec.rules.length > 0);
+  }).filter((sec: any) => sec.rules.length > 0);
 });
 </script>
 

@@ -68,7 +68,50 @@ db.exec(`
     user_agent TEXT,
     created_at TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS server_rules (
+    server_id TEXT PRIMARY KEY,
+    server_name TEXT NOT NULL,
+    description TEXT,
+    sections TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
 `);
+
+export function getServerRules(serverId: string) {
+  const row = db.prepare('SELECT * FROM server_rules WHERE server_id = ?').get(serverId) as any;
+  if (!row) return null;
+  return {
+    server_id: row.server_id,
+    server_name: row.server_name,
+    description: row.description || '',
+    sections: JSON.parse(row.sections || '[]'),
+    updated_at: row.updated_at
+  };
+}
+
+export function saveServerRules(rulesData: { server_id: string; server_name: string; description?: string; sections: any[] }) {
+  const stmt = db.prepare(`
+    INSERT INTO server_rules (server_id, server_name, description, sections, updated_at)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(server_id) DO UPDATE SET
+      server_name = excluded.server_name,
+      description = excluded.description,
+      sections = excluded.sections,
+      updated_at = excluded.updated_at
+  `);
+
+  const updatedAt = new Date().toISOString().split('T')[0];
+  stmt.run(
+    rulesData.server_id,
+    rulesData.server_name,
+    rulesData.description || '',
+    JSON.stringify(rulesData.sections || []),
+    updatedAt
+  );
+
+  return getServerRules(rulesData.server_id);
+}
 
 export function recordTelemetryEvent(
   eventType: 'page_view' | 'guide_view' | 'guide_create' | 'guide_edit' | 'guide_publish' | 'guide_delete' | 'user_login',
@@ -516,5 +559,16 @@ if (guideCount.count === 0) {
     }
   } catch (e) {
     console.error('Error seeding initial guides:', e);
+  }
+}
+
+// Seed default OneBlock rules into server_rules table if empty
+const rulesCount = db.prepare('SELECT COUNT(*) as count FROM server_rules WHERE server_id = ?').get('OneBlock') as { count: number };
+if (rulesCount.count === 0) {
+  try {
+    const { ONEBLOCK_RULES_DATA } = require('../src/data/serverRulesData');
+    saveServerRules(ONEBLOCK_RULES_DATA);
+  } catch (e) {
+    console.error('Error seeding initial server rules:', e);
   }
 }

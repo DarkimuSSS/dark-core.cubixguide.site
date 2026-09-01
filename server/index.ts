@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, getServerRules, saveServerRules } from './db';
 import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
@@ -487,7 +487,28 @@ app.delete('/api/guides/:id', (req, res) => {
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Гайд не найден' });
     }
-    res.json({ success: true, message: 'Гайд успешно удален' });
+// Server rules API Endpoints
+app.get('/api/server-rules/:serverId', (req, res) => {
+  try {
+    const { serverId } = req.params;
+    const rules = getServerRules(serverId);
+    if (!rules) {
+      return res.status(404).json({ error: 'Правила для данного сервера не найдены' });
+    }
+    res.json(rules);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/server-rules', (req, res) => {
+  try {
+    const rulesData = req.body;
+    if (!rulesData || !rulesData.server_id || !rulesData.server_name) {
+      return res.status(400).json({ error: 'Обязательные поля: server_id, server_name' });
+    }
+    const saved = saveServerRules(rulesData);
+    res.json(saved);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
