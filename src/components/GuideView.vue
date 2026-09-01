@@ -372,7 +372,7 @@ const getVariantClass = (variant?: BlockVariant) => {
 
     <!-- RIGHT CONTENT: ARTICLE COLUMN -->
     <main class="flex-1 min-w-0 space-y-8 pb-16">
-        <article class="bg-[#16181a] border border-[#26292d] p-6 sm:p-8 rounded-2xl shadow-xl space-y-5">
+        <article :class="['p-6 sm:p-8 rounded-2xl shadow-xl space-y-5 transition-all', getVariantClass(guide.meta.variant)]">
           <div class="flex flex-wrap items-center gap-2">
             <span class="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-semibold border border-cyan-500/30">
               {{ guide.meta.category }}

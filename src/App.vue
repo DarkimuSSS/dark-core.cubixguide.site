@@ -467,11 +467,11 @@ const createNewGuide = async () => {
   const newGuide: Guide = {
     meta: {
       id: `guide_${Date.now()}`,
-      title: 'Новый майнкрафт гайд',
+      title: '',
       category: 'ХайТек',
       author: authorName,
       difficulty: 'Новичок',
-      summary: 'Новое руководство по сборке.',
+      summary: '',
       updatedAt: new Date().toISOString().split('T')[0],
       published: false,
       isVisible: false

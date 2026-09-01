@@ -142,6 +142,7 @@ export interface GuideMeta {
   server?: string;
   coverUrl?: string;
   coverGradient?: string;
+  variant?: BlockVariant;
 }
 
 export interface Guide {

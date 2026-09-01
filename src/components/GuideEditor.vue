@@ -430,6 +430,12 @@ const updateSummary = (val: string) => {
   pushHistoryState(updated);
 };
 
+const updateMetaVariant = (val: BlockVariant) => {
+  const updated = { ...props.guide, meta: { ...props.guide.meta, variant: val } };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
+};
+
 const updateAuthor = (val: string) => {
   const updated = { ...props.guide, meta: { ...props.guide.meta, author: val } };
   emit('update:guide', updated);
@@ -1529,7 +1535,7 @@ const stopOutlineDrag = () => {
     <!-- ═══════════════════════════════════════════ -->
     <!-- META CARD: Title + Summary always visible  -->
     <!-- ═══════════════════════════════════════════ -->
-    <div class="bg-[#16181a] border border-[#26292d] rounded-2xl shadow-xl overflow-hidden mb-6 mt-4">
+    <div :class="['rounded-2xl shadow-xl overflow-hidden mb-6 mt-4 transition-all', getVariantClass(guide.meta.variant)]">
 
       <!-- Always visible: Title & Summary -->
       <div class="p-6 space-y-4">
@@ -1553,18 +1559,34 @@ const stopOutlineDrag = () => {
       <button
         type="button"
         @click.stop="isMetaExpanded = !isMetaExpanded"
-        class="w-full flex items-center justify-between px-6 py-3 border-t border-[#26292d] text-xs text-dark-muted hover:text-white hover:bg-[#1a1c1f] transition-all"
+        class="w-full flex items-center justify-between px-6 py-3 border-t border-[#26292d]/80 text-xs text-dark-muted hover:text-white hover:bg-[#1a1c1f]/40 transition-all"
       >
         <span class="flex items-center gap-2 font-semibold">
           <IconRenderer name="Settings" size="14" />
-          Настройки гайда (автор, сервер, категория, обложка)
+          Настройки гайда (автор, сервер, категория, обложка, стиль)
         </span>
         <IconRenderer :name="isMetaExpanded ? 'ChevronUp' : 'ChevronDown'" size="14" />
       </button>
 
       <!-- Collapsible meta settings -->
       <transition name="meta-expand">
-        <div v-if="isMetaExpanded" class="p-6 pt-4 border-t border-[#26292d] grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div v-if="isMetaExpanded" class="p-6 pt-4 border-t border-[#26292d]/80 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Card Style Selector -->
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-1.5">Стиль карточки шапки</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button
+                v-for="v in ['default', 'subtle', 'accent', 'bordered']"
+                :key="v"
+                type="button"
+                @click="updateMetaVariant(v as BlockVariant)"
+                :class="['text-xs font-semibold py-2 rounded-xl transition-all border', (guide.meta.variant || 'default') === v ? 'bg-emerald-600 border-emerald-400 text-white shadow-lg' : 'bg-[#0c0d0e] border-[#26292d] text-dark-muted hover:text-white']"
+              >
+                {{ v === 'default' ? 'Обычный' : v === 'subtle' ? 'Тёмный' : v === 'accent' ? 'Акцент' : 'Рамка' }}
+              </button>
+            </div>
+          </div>
+
           <!-- Cover URL -->
           <div>
             <label class="block text-[11px] font-bold uppercase tracking-wider text-purple-300 mb-1.5">Баннер-обложка (URL)</label>
