@@ -476,34 +476,7 @@ const createNewGuide = async () => {
       published: false,
       isVisible: false
     },
-    blocks: [
-      {
-        id: `b_${Date.now()}_1`,
-        type: 'heading',
-        headingText: 'Обзор и требования',
-        headingLevel: 'h1'
-      },
-      {
-        id: `b_${Date.now()}_2`,
-        type: 'text',
-        textContent: 'Опишите шаги постройки или крафта здесь...'
-      },
-      {
-        id: `b_${Date.now()}_3`,
-        type: 'callout',
-        calloutType: 'tip',
-        calloutTitle: 'Совет для игроков',
-        calloutText: 'Проверяйте рецепты в JEI / REI перед крафтом.'
-      },
-      {
-        id: `b_${Date.now()}_4`,
-        type: 'checklist',
-        checklistTitle: 'Этапы выполнения',
-        checklistItems: [
-          { id: 'c1', text: 'Собрать ресурсы', completed: false }
-        ]
-      }
-    ]
+    blocks: []
   };
 
   try {
