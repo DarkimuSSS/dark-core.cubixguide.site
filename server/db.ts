@@ -290,8 +290,13 @@ export function loginUser(username: string, password: string) {
   };
 }
 
-export function upsertCubixAuthor(cleanUsername: string) {
+export function upsertCubixAuthor(cleanUsername: string, accountInfo?: any) {
   let user = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
+
+  const badges = ['CubixWorld Игрок'];
+  if (accountInfo?.rank) {
+    badges.unshift(accountInfo.rank);
+  }
 
   if (!user) {
     // Automatically create author account for valid CubixWorld user
@@ -305,8 +310,8 @@ export function upsertCubixAuthor(cleanUsername: string) {
       username: cleanUsername,
       avatarUrl: `https://mc-heads.net/avatar/${cleanUsername}/100`,
       bio: `Игрок и автор руководств проекта CubixWorld.`,
-      server: 'HiTech',
-      badges: ['CubixWorld Игрок'],
+      server: accountInfo?.groups?.[0]?.server_main_name || 'HiTech',
+      badges: badges,
       updatedAt: createdAt
     });
 
@@ -319,7 +324,8 @@ export function upsertCubixAuthor(cleanUsername: string) {
     canEditOthers: Boolean(user.can_edit_others),
     canCreateGuides: Boolean(user.can_create_guides),
     isVerified: Boolean(user.is_verified),
-    createdAt: user.created_at
+    createdAt: user.created_at,
+    accountInfo
   };
 }
 

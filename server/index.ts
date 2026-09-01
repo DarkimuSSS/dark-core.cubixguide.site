@@ -127,8 +127,8 @@ app.post('/api/auth/cubix-login', async (req, res) => {
       return res.status(401).json({ error: authResult.error || 'Неверный никнейм или пароль CubixWorld' });
     }
 
-    // User authenticated successfully via CubixWorld TCP -> Upsert author profile
-    const authorUser = upsertCubixAuthor(authResult.username || username);
+    // User authenticated successfully via CubixWorld TCP -> Upsert author profile with accountInfo
+    const authorUser = upsertCubixAuthor(authResult.username || username, authResult.accountInfo);
     res.json(authorUser);
   } catch (err: any) {
     res.status(500).json({ error: `Ошибка авторизации CubixWorld: ${err.message}` });
