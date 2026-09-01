@@ -10,6 +10,7 @@ const emit = defineEmits<{
   (e: 'navigate', mode: string): void;
   (e: 'open-author', username: string): void;
   (e: 'open-terms'): void;
+  (e: 'open-rules'): void;
 }>();
 
 const currentYear = new Date().getFullYear();
@@ -120,7 +121,16 @@ const supportLinks = [
       <p class="text-[10px] text-dark-muted font-mono">
         © {{ currentYear }} CubixGuide Wiki · Dark Core System
       </p>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-4 flex-wrap">
+        <button
+          type="button"
+          @click="emit('open-rules')"
+          class="text-[10px] text-emerald-400 hover:text-emerald-300 font-bold transition-colors font-mono flex items-center gap-1"
+        >
+          <IconRenderer name="Shield" size="12" />
+          Правила проекта
+        </button>
+        <span class="text-[#26292d]">|</span>
         <button
           type="button"
           @click="emit('open-terms')"

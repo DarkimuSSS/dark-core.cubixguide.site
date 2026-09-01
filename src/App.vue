@@ -9,11 +9,13 @@ import IconRenderer from './components/IconRenderer.vue';
 import AuthModal from './components/AuthModal.vue';
 import SiteFooter from './components/SiteFooter.vue';
 import TermsModal from './components/TermsModal.vue';
+import RulesModal from './components/RulesModal.vue';
 import SettingsModal from './components/SettingsModal.vue';
 import { PRESET_ITEMS } from './data/presetItems';
 import type { Guide, AuthorProfile } from './types/guide';
 
 const isTermsOpen = ref(false);
+const isRulesOpen = ref(false);
 const isSettingsOpen = ref(false);
 
 const guides = ref<Guide[]>([]);
@@ -1204,6 +1206,7 @@ const handleViewAllAuthorGuides = (username: string) => {
             :servers-count="21"
             @navigate="mode = 'home'"
             @open-terms="isTermsOpen = true"
+            @open-rules="isRulesOpen = true"
           />
         </div>
       </template>
@@ -1280,6 +1283,9 @@ const handleViewAllAuthorGuides = (username: string) => {
 
     <!-- Terms Modal -->
     <TermsModal :is-open="isTermsOpen" @close="isTermsOpen = false" />
+
+    <!-- Rules Modal -->
+    <RulesModal :is-open="isRulesOpen" @close="isRulesOpen = false" />
 
     <!-- Cookie Banner -->
     <CookieBanner @open-terms="isTermsOpen = true" />
