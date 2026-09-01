@@ -598,6 +598,9 @@ try {
 
   const { SKYTECH_RULES_DATA } = require('../src/data/skytechRulesData');
   saveServerRules(SKYTECH_RULES_DATA);
+
+  const { TECHNOMAGIC_RULES_DATA } = require('../src/data/technomagicRulesData');
+  saveServerRules(TECHNOMAGIC_RULES_DATA);
 } catch (e) {
   console.error('Error seeding server rules:', e);
 }
