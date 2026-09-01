@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 
 type ThemeMode = 'dark' | 'light' | 'emerald' | 'cyberpunk' | 'midnight' | 'sapphire' | 'sunset' | 'dracula';
@@ -21,9 +21,34 @@ const emit = defineEmits<{
   (e: 'logout'): void;
 }>();
 
-const selectedTab = ref<'appearance' | 'data' | 'system'>('appearance');
+const selectedTab = ref<'appearance' | 'data' | 'telemetry'>('appearance');
 const autoExpandToc = ref(true);
 const smoothScroll = ref(true);
+
+// Fetch Telemetry Stats for Admin
+const telemetryStats = ref<any>(null);
+const isLoadingTelemetry = ref(false);
+
+const fetchTelemetry = async () => {
+  if (!props.isAdmin) return;
+  isLoadingTelemetry.value = true;
+  try {
+    const res = await fetch('/api/telemetry/stats');
+    if (res.ok) {
+      telemetryStats.value = await res.json();
+    }
+  } catch (e) {
+    console.error('Error fetching telemetry:', e);
+  } finally {
+    isLoadingTelemetry.value = false;
+  }
+};
+
+watch(() => selectedTab.value, (newTab) => {
+  if (newTab === 'telemetry') {
+    fetchTelemetry();
+  }
+});
 
 onMounted(() => {
   const savedToc = localStorage.getItem('cubix_setting_auto_toc');
@@ -115,6 +140,15 @@ const handleFileUpload = (e: Event) => {
         >
           <IconRenderer name="Database" size="14" />
           <span>Данные и Бэкапы</span>
+        </button>
+
+        <button
+          v-if="isAdmin"
+          @click="selectedTab = 'telemetry'"
+          :class="['flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all', selectedTab === 'telemetry' ? 'bg-[#16181a] text-purple-400 shadow-md border border-[#26292d]' : 'text-dark-muted hover:text-white']"
+        >
+          <IconRenderer name="BarChart2" size="14" />
+          <span>Телеметрия</span>
         </button>
       </div>
 
@@ -239,6 +273,89 @@ const handleFileUpload = (e: Event) => {
             <IconRenderer name="LogOut" size="14" />
             <span>Выйти из аккаунта</span>
           </button>
+        </div>
+      </div>
+
+      <!-- TAB 3: TELEMETRY & ANALYTICS -->
+      <div v-else-if="selectedTab === 'telemetry' && isAdmin" class="space-y-4">
+        <div v-if="isLoadingTelemetry" class="py-12 text-center text-dark-muted text-xs flex items-center justify-center gap-2">
+          <div class="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+          <span>Загрузка данных телеметрии...</span>
+        </div>
+
+        <div v-else-if="telemetryStats" class="space-y-4">
+          <!-- Summary Cards -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="p-3.5 rounded-2xl bg-[#121416] border border-[#26292d] space-y-1">
+              <div class="text-[10px] uppercase font-bold text-dark-muted">Просмотры</div>
+              <div class="text-xl font-extrabold text-cyan-400">{{ telemetryStats.totalViews }}</div>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-[#121416] border border-[#26292d] space-y-1">
+              <div class="text-[10px] uppercase font-bold text-dark-muted">Редакции</div>
+              <div class="text-xl font-extrabold text-emerald-400">{{ telemetryStats.totalEdits }}</div>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-[#121416] border border-[#26292d] space-y-1">
+              <div class="text-[10px] uppercase font-bold text-dark-muted">Авторизации</div>
+              <div class="text-xl font-extrabold text-purple-400">{{ telemetryStats.totalLogins }}</div>
+            </div>
+          </div>
+
+          <!-- Top 5 Popular Guides -->
+          <div class="p-4 rounded-2xl bg-[#121416] border border-[#26292d] space-y-3">
+            <div class="text-xs font-bold text-white flex items-center gap-2">
+              <IconRenderer name="Award" size="16" class="text-amber-400" />
+              <span>Топ популярных гайдов</span>
+            </div>
+            
+            <div v-if="telemetryStats.topGuides.length === 0" class="text-xs text-dark-muted">Нет данных о просмотрах</div>
+            
+            <div v-else class="space-y-2">
+              <div
+                v-for="(g, idx) in telemetryStats.topGuides"
+                :key="g.guide_id"
+                class="flex items-center justify-between p-2.5 rounded-xl bg-[#181a1d] border border-[#26292d] text-xs"
+              >
+                <div class="flex items-center gap-2.5 truncate">
+                  <span class="w-5 h-5 rounded-lg bg-amber-500/20 text-amber-300 font-extrabold text-[10px] flex items-center justify-center shrink-0">#{{ idx + 1 }}</span>
+                  <span class="font-bold text-white truncate">{{ g.guide_title || g.guide_id }}</span>
+                </div>
+                <span class="text-emerald-400 font-extrabold shrink-0 ml-2">{{ g.views }} просм.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Logs Activity Stream -->
+          <div class="p-4 rounded-2xl bg-[#121416] border border-[#26292d] space-y-3">
+            <div class="text-xs font-bold text-white flex items-center gap-2">
+              <IconRenderer name="Activity" size="16" class="text-cyan-400" />
+              <span>Лог последних событий (50)</span>
+            </div>
+
+            <div class="max-h-60 overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
+              <div
+                v-for="log in telemetryStats.recentLogs"
+                :key="log.id"
+                class="p-2 rounded-xl bg-[#0c0d0e] border border-[#26292d] text-[11px] flex items-center justify-between gap-2"
+              >
+                <div class="flex items-center gap-2 truncate">
+                  <span
+                    :class="[
+                      'px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase shrink-0',
+                      log.event_type === 'guide_view' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' :
+                      log.event_type === 'user_login' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' :
+                      'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    ]"
+                  >
+                    {{ log.event_type }}
+                  </span>
+                  <span class="text-slate-300 truncate">{{ log.guide_title || log.username || log.ip_address || 'Действие' }}</span>
+                </div>
+                <span class="text-[9.5px] text-dark-muted shrink-0">{{ new Date(log.created_at).toLocaleTimeString() }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
