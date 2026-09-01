@@ -116,12 +116,15 @@ const onBlockDragOver = (e: DragEvent, index: number) => {
   dragOverBlockIndex.value = index;
 };
 
-const onBlockDrop = (e: DragEvent, targetIndex: number) => {
+const onBlockDrop = (e: DragEvent, targetIndex: number, position: 'before' | 'after' = 'after') => {
   e.preventDefault();
   
+  // Calculate insert index based on position
+  let insertIndex = position === 'before' ? targetIndex - 1 : targetIndex;
+
   // Case A: Dropping a brand new block type dragged from toolbar menu
   if (draggedNewBlockType.value) {
-    addBlockAt(targetIndex, draggedNewBlockType.value);
+    addBlockAt(insertIndex, draggedNewBlockType.value);
     draggedNewBlockType.value = null;
     dragOverBlockIndex.value = null;
     toolbarAddBlockOpen.value = false;
@@ -133,12 +136,22 @@ const onBlockDrop = (e: DragEvent, targetIndex: number) => {
   if (fromIndex !== null && fromIndex !== targetIndex) {
     const newBlocks = [...props.guide.blocks];
     const [moved] = newBlocks.splice(fromIndex, 1);
-    newBlocks.splice(targetIndex, 0, moved);
+    
+    let destIndex = targetIndex;
+    if (position === 'before') {
+      destIndex = fromIndex < targetIndex ? targetIndex - 1 : targetIndex;
+    } else {
+      destIndex = fromIndex < targetIndex ? targetIndex : targetIndex + 1;
+    }
+    destIndex = Math.max(0, Math.min(newBlocks.length, destIndex));
+    
+    newBlocks.splice(destIndex, 0, moved);
     const updated = { ...props.guide, blocks: newBlocks };
     emit('update:guide', updated);
     pushHistoryState(updated);
   }
   draggedBlockIndex.value = null;
+  draggedNewBlockType.value = null;
   dragOverBlockIndex.value = null;
 };
 
@@ -1619,7 +1632,12 @@ const stopOutlineDrag = () => {
     <div class="space-y-1">
 
       <!-- First "+ Add block" line (before all blocks) -->
-      <div class="relative group/addfirst h-6 flex items-center">
+      <div 
+        @dragover="onBlockDragOver($event, -1)"
+        @drop="onBlockDrop($event, 0, 'before')"
+        class="relative group/addfirst h-6 flex items-center transition-all rounded-lg"
+        :class="dragOverBlockIndex === -1 ? 'bg-emerald-500/20 ring-2 ring-emerald-500' : ''"
+      >
         <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-transparent group-hover/addfirst:bg-[#26292d] transition-colors"></div>
         <button
           type="button"
@@ -2176,7 +2194,12 @@ const stopOutlineDrag = () => {
         </div>
 
         <!-- "+ Add block" line BETWEEN blocks -->
-        <div class="relative group/add h-6 flex items-center">
+        <div 
+          @dragover="onBlockDragOver($event, index + 1000)"
+          @drop="onBlockDrop($event, index, 'after')"
+          class="relative group/add h-6 flex items-center transition-all rounded-lg"
+          :class="dragOverBlockIndex === index + 1000 ? 'bg-emerald-500/20 ring-2 ring-emerald-500' : ''"
+        >
           <div class="absolute inset-x-8 top-1/2 -translate-y-1/2 h-px bg-transparent group-hover/add:bg-[#26292d] transition-colors"></div>
           <button
             type="button"
