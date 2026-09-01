@@ -1223,23 +1223,21 @@ const scrollToBlockInEditor = (id: string) => {
       <div class="space-y-1.5 overflow-y-auto custom-scrollbar max-h-[calc(100vh-12rem)] pr-0.5">
         
         <!-- Undo / Redo Row -->
-        <div :class="['flex items-center gap-1.5', isToolbarExpanded ? 'w-full' : 'flex-col']">
-          <div class="relative group/tool flex-1 w-full">
-            <button type="button" @click="undoState" :disabled="historyIndex <= 0" :class="['rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+        <div class="flex items-center justify-between gap-1.5 w-full">
+          <div class="relative group/tool flex-1">
+            <button type="button" @click="undoState" :disabled="historyIndex <= 0" class="h-10 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all w-full">
               <IconRenderer name="RotateCcw" size="18" class="shrink-0" />
-              <span v-if="isToolbarExpanded" class="text-xs font-semibold text-slate-200">Отменить</span>
             </button>
-            <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
               <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Отменить (Ctrl+Z)</div>
             </div>
           </div>
 
-          <div class="relative group/tool flex-1 w-full">
-            <button type="button" @click="redoState" :disabled="historyIndex >= historyStack.length - 1" :class="['rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+          <div class="relative group/tool flex-1">
+            <button type="button" @click="redoState" :disabled="historyIndex >= historyStack.length - 1" class="h-10 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all w-full">
               <IconRenderer name="RotateCw" size="18" class="shrink-0" />
-              <span v-if="isToolbarExpanded" class="text-xs font-semibold text-slate-200">Повторить</span>
             </button>
-            <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
               <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Повторить (Ctrl+Y)</div>
             </div>
           </div>
