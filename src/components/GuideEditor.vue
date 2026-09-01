@@ -1253,7 +1253,7 @@ const stopOutlineDrag = () => {
     <!-- VERTICAL FLOATING TOOLBAR DOCK (left side) -->
     <aside 
       :class="[
-        'fixed top-20 left-4 z-40 bg-[#16181a]/95 backdrop-blur-xl border border-[#26292d] rounded-2xl shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex flex-col overflow-hidden',
+        'fixed top-20 left-4 z-40 bg-[#16181a]/95 backdrop-blur-xl border border-[#26292d] rounded-2xl shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex flex-col',
         isToolbarExpanded ? 'w-52 p-3' : 'w-14 p-2 items-center'
       ]"
     >
