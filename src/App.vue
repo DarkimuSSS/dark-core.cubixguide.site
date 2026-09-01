@@ -11,6 +11,7 @@ import SiteFooter from './components/SiteFooter.vue';
 import TermsModal from './components/TermsModal.vue';
 import RulesModal from './components/RulesModal.vue';
 import SettingsModal from './components/SettingsModal.vue';
+import TelemetryPage from './components/TelemetryPage.vue';
 import { PRESET_ITEMS } from './data/presetItems';
 import type { Guide, AuthorProfile } from './types/guide';
 
@@ -186,6 +187,8 @@ const updateUrlRoute = () => {
     params.set('tab', 'Закладки');
   } else if (mode.value === 'drafts') {
     params.set('tab', 'Черновики');
+  } else if (mode.value === 'telemetry') {
+    params.set('tab', 'Телеметрия');
   } else if (mode.value === 'rules') {
     if (initialRulesTab.value === 'server') {
       params.set('tab', 'Внутриигровые');
@@ -229,6 +232,8 @@ const syncFromUrlPath = () => {
   } else if (tab === 'Внутриигровые' || tab === 'server_rules' || tab === 'Серверные') {
     initialRulesTab.value = 'server';
     mode.value = 'rules';
+  } else if (tab === 'Телеметрия' || tab === 'telemetry' || tab === 'Аналитика') {
+    mode.value = 'telemetry';
   } else if (tab === 'Вики' || tab === 'reader') {
     mode.value = 'reader';
   } else if (tab === 'Конструктор' || tab === 'editor') {
@@ -824,6 +829,18 @@ const handleViewAllAuthorGuides = (username: string) => {
                 </button>
 
                 <button
+                  v-if="currentUserIsAdmin"
+                  @click="mode = 'telemetry'; isHeaderNavMenuOpen = false"
+                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'telemetry' ? 'bg-purple-500/15 border-purple-500/50 text-purple-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-purple-500/40']"
+                >
+                  <IconRenderer name="BarChart2" size="18" class="text-purple-400 shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold truncate">Телеметрия</div>
+                    <div class="text-[10px] text-dark-muted truncate">Аналитика сайта</div>
+                  </div>
+                </button>
+
+                <button
                   @click="mode = 'rules'; isHeaderNavMenuOpen = false"
                   :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'rules' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
                 >
@@ -1218,6 +1235,15 @@ const handleViewAllAuthorGuides = (username: string) => {
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- TELEMETRY & ANALYTICS FULL PAGE VIEW -->
+          <div v-else-if="mode === 'telemetry' && currentUserIsAdmin" class="px-3 sm:px-6 pt-4">
+            <TelemetryPage
+              :is-admin="currentUserIsAdmin"
+              @go-home="mode = 'home'"
+              @select-guide="selectGuide"
+            />
           </div>
 
           <!-- 4. EDITOR VIEW (Only for authenticated author) -->
