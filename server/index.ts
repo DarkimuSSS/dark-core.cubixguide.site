@@ -514,6 +514,26 @@ app.post('/api/server-rules', (req, res) => {
   }
 });
 
+// Auto-Parser Endpoint from Forum Topic URL
+app.post('/api/admin/parse-rules', async (req, res) => {
+  try {
+    const { forumUrl, serverId, serverName } = req.body;
+    if (!forumUrl || !serverId) {
+      return res.status(400).json({ error: 'Укажите forumUrl и serverId' });
+    }
+
+    const { parseForumRulesPage } = await import('./parseRules');
+    const parsedData = await parseForumRulesPage(forumUrl, serverId, serverName);
+    
+    // Автоматически сохраняем распарсенные правила в БД
+    const saved = saveServerRules(parsedData);
+    res.json({ success: true, message: `Правила для ${serverId} успешно спарсены и сохранены в БД!`, data: saved });
+  } catch (err: any) {
+    console.error('Ошибка автопарсинга:', err);
+    res.status(500).json({ error: `Ошибка парсинга: ${err.message}` });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`[SQLite Server] Server running on http://localhost:${PORT}`);
 });
