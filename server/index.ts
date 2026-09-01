@@ -487,6 +487,11 @@ app.delete('/api/guides/:id', (req, res) => {
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Гайд не найден' });
     }
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
 // Server rules API Endpoints
 app.get('/api/server-rules/:serverId', (req, res) => {
   try {
