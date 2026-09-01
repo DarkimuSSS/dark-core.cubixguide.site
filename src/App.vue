@@ -781,12 +781,6 @@ const handleViewAllAuthorGuides = (username: string) => {
             @open-author="openAuthorProfile"
             @delete-guide="requestDeleteGuideById"
           />
-          <SiteFooter
-            :guides-count="guides.length"
-            @navigate="(m) => { mode = m; initialCatalogSearchQuery = ''; }"
-            @open-author="openAuthorProfile"
-            @open-terms="isTermsOpen = true"
-          />
         </div>
 
         <!-- 2. BOOKMARKS / FAVORITES VIEW -->
