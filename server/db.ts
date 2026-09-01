@@ -69,9 +69,12 @@ try { db.exec(`ALTER TABLE guides ADD COLUMN co_authors TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN cover_url TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN cover_gradient TEXT;`); } catch (e) {}
 
-// Password hashing helper (SHA-256 with salt)
+// Password hashing helper (SHA-256 with salt from environment)
 export function hashPassword(password: string): string {
-  const salt = process.env.SECRET_SALT || 'cubix_secret_salt_2026';
+  const salt = process.env.SECRET_SALT;
+  if (!salt) {
+    throw new Error('КРИТИЧЕСКАЯ ОШИБКА БЕЗОПАСНОСТИ: В файле .env не задана переменная SECRET_SALT!');
+  }
   return crypto.createHmac('sha256', salt).update(password).digest('hex');
 }
 
@@ -231,15 +234,21 @@ export function listAllAuthors() {
   }));
 }
 
-// Seed Super Admin DarkimuSSS with password from environment or fallback
+// Seed Super Admin DarkimuSSS with password strictly from environment
 const adminCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE LOWER(username) = ?').get('darkimusss') as { count: number };
 if (adminCount.count === 0) {
-  try {
-    const adminPassword = process.env.ADMIN_SEED_PASSWORD || 'cubix2026';
-    const pwdHash = hashPassword(adminPassword);
-    const createdAt = new Date().toISOString().split('T')[0];
-    db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, is_verified, created_at) VALUES (?, ?, 1, 1, 1, 1, ?)').run('DarkimuSSS', pwdHash, createdAt);
-  } catch (e) {}
+  const adminPassword = process.env.ADMIN_SEED_PASSWORD;
+  if (adminPassword) {
+    try {
+      const pwdHash = hashPassword(adminPassword);
+      const createdAt = new Date().toISOString().split('T')[0];
+      db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, is_verified, created_at) VALUES (?, ?, 1, 1, 1, 1, ?)').run('DarkimuSSS', pwdHash, createdAt);
+    } catch (e) {
+      console.error('Ошибка создания аккаунта суперадмина:', e);
+    }
+  } else {
+    console.warn('Внимание: Переменная ADMIN_SEED_PASSWORD не задана в .env. Первоначальный аккаунт администратора не создан.');
+  }
 } else {
   // Ensure Super Admin has all permissions and verification
   db.prepare('UPDATE users SET is_admin = 1, can_edit_others = 1, can_create_guides = 1, is_verified = 1 WHERE LOWER(username) = ?').run('darkimusss');
