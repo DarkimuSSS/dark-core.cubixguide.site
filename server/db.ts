@@ -298,6 +298,8 @@ export function upsertCubixAuthor(cleanUsername: string, accountInfo?: any) {
     badges.unshift(accountInfo.rank);
   }
 
+  const officialAvatarUrl = `https://cubixworld.net/api/account.load.avatar?login=${encodeURIComponent(cleanUsername)}`;
+
   if (!user) {
     // Automatically create author account for valid CubixWorld user
     const pwdHash = hashPassword(`cubix_tcp_${Date.now()}_${Math.random()}`);
@@ -308,7 +310,7 @@ export function upsertCubixAuthor(cleanUsername: string, accountInfo?: any) {
 
     saveAuthorProfile({
       username: cleanUsername,
-      avatarUrl: `https://mc-heads.net/avatar/${cleanUsername}/100`,
+      avatarUrl: officialAvatarUrl,
       bio: `Игрок и автор руководств проекта CubixWorld.`,
       server: accountInfo?.groups?.[0]?.server_main_name || 'HiTech',
       badges: badges,
@@ -316,6 +318,16 @@ export function upsertCubixAuthor(cleanUsername: string, accountInfo?: any) {
     });
 
     user = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
+  } else {
+    // Update avatar URL for existing CubixWorld user
+    const existingProfile = getAuthorProfile(cleanUsername);
+    if (existingProfile) {
+      saveAuthorProfile({
+        ...existingProfile,
+        avatarUrl: officialAvatarUrl,
+        badges: Array.from(new Set([...badges, ...(existingProfile.badges || [])]))
+      });
+    }
   }
 
   return {
