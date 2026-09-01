@@ -288,6 +288,8 @@ export function loginUser(username: string, password: string) {
     isVerified: Boolean(user.is_verified),
     createdAt: user.created_at
   };
+}
+
 export function upsertCubixAuthor(cleanUsername: string) {
   let user = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
 
