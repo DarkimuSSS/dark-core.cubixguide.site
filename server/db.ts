@@ -66,7 +66,8 @@ try { db.exec(`ALTER TABLE guides ADD COLUMN cover_gradient TEXT;`); } catch (e)
 
 // Password hashing helper (SHA-256 with salt)
 export function hashPassword(password: string): string {
-  return crypto.createHmac('sha256', 'cubix_secret_salt_2026').update(password).digest('hex');
+  const salt = process.env.SECRET_SALT || 'cubix_secret_salt_2026';
+  return crypto.createHmac('sha256', salt).update(password).digest('hex');
 }
 
 // Admin-only Author Registration Helper
@@ -225,11 +226,12 @@ export function listAllAuthors() {
   }));
 }
 
-// Seed Super Admin DarkimuSSS with password cubix2026 and verification
+// Seed Super Admin DarkimuSSS with password from environment or fallback
 const adminCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE LOWER(username) = ?').get('darkimusss') as { count: number };
 if (adminCount.count === 0) {
   try {
-    const pwdHash = hashPassword('cubix2026');
+    const adminPassword = process.env.ADMIN_SEED_PASSWORD || 'cubix2026';
+    const pwdHash = hashPassword(adminPassword);
     const createdAt = new Date().toISOString().split('T')[0];
     db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, is_verified, created_at) VALUES (?, ?, 1, 1, 1, 1, ?)').run('DarkimuSSS', pwdHash, createdAt);
   } catch (e) {}
