@@ -41,7 +41,7 @@ const addBlockMenuAfterIndex = ref<number | null>(null);
 const isToolbarExpanded = ref(false);
 
 // FLOATING OUTLINE / SIDE NAVIGATION STATE
-const isOutlineOpen = ref(true);
+const isOutlineOpen = ref(false);
 const headingOutline = computed(() => {
   const list: { id: string; title: string; level: 'h1' | 'h2' }[] = [];
   const searchHeadings = (blocks: GuideBlock[]) => {
