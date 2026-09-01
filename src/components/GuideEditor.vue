@@ -1187,6 +1187,37 @@ const scrollToBlockInEditor = (id: string) => {
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 };
+
+// Dragging functionality for Floating Outline Widget
+const outlinePosition = ref<{ x: number | null; y: number | null }>({ x: null, y: null });
+const isOutlineDragging = ref(false);
+let outlineDragOffset = { x: 0, y: 0 };
+
+const startOutlineDrag = (e: MouseEvent) => {
+  isOutlineDragging.value = true;
+  const target = (e.currentTarget as HTMLElement).closest('.floating-outline-widget') as HTMLElement;
+  if (!target) return;
+  const rect = target.getBoundingClientRect();
+  outlineDragOffset.x = e.clientX - rect.left;
+  outlineDragOffset.y = e.clientY - rect.top;
+
+  window.addEventListener('mousemove', onOutlineDrag);
+  window.addEventListener('mouseup', stopOutlineDrag);
+};
+
+const onOutlineDrag = (e: MouseEvent) => {
+  if (!isOutlineDragging.value) return;
+  outlinePosition.value = {
+    x: Math.max(10, Math.min(window.innerWidth - 250, e.clientX - outlineDragOffset.x)),
+    y: Math.max(10, Math.min(window.innerHeight - 150, e.clientY - outlineDragOffset.y))
+  };
+};
+
+const stopOutlineDrag = () => {
+  isOutlineDragging.value = false;
+  window.removeEventListener('mousemove', onOutlineDrag);
+  window.removeEventListener('mouseup', stopOutlineDrag);
+};
 </script>
 
 <template>
@@ -1407,16 +1438,23 @@ const scrollToBlockInEditor = (id: string) => {
     <transition name="fade">
       <div
         v-if="isOutlineOpen && headingOutline.length > 0"
-        class="fixed top-20 left-20 z-40 w-60 bg-[#16181a]/95 backdrop-blur-md border border-[#26292d] rounded-2xl p-4 shadow-2xl max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar space-y-3 hidden xl:block"
+        :style="outlinePosition.x !== null ? { left: `${outlinePosition.x}px`, top: `${outlinePosition.y}px` } : {}"
+        class="floating-outline-widget fixed top-20 left-20 z-40 w-64 bg-[#16181a]/95 backdrop-blur-md border border-[#26292d] rounded-2xl p-4 shadow-2xl max-h-[calc(100vh-8rem)] flex flex-col space-y-3 hidden xl:flex select-none"
       >
-        <div class="flex items-center justify-between border-b border-[#26292d] pb-2">
-          <div class="text-xs font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+        <!-- Drag Handle Header -->
+        <div 
+          @mousedown="startOutlineDrag" 
+          class="flex items-center justify-between border-b border-[#26292d] pb-2 cursor-grab active:cursor-grabbing group/header"
+          title="Зажмите, чтобы перетащить окно содержания"
+        >
+          <div class="text-xs font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 pointer-events-none">
+            <IconRenderer name="GripVertical" size="14" class="text-slate-500 group-hover/header:text-emerald-400 transition-colors" />
             <IconRenderer name="List" size="14" />
             Содержание
           </div>
-          <button @click="isOutlineOpen = false" class="text-dark-muted hover:text-white"><IconRenderer name="X" size="14" /></button>
+          <button @click.stop="isOutlineOpen = false" class="text-dark-muted hover:text-white p-0.5 rounded-lg hover:bg-[#26292d] transition-colors"><IconRenderer name="X" size="14" /></button>
         </div>
-        <div class="space-y-1">
+        <div class="space-y-1 overflow-y-auto custom-scrollbar max-h-80 pr-1">
           <div
             v-for="h in headingOutline" :key="h.id"
             @click="scrollToHeadingBlock(h.id)"
