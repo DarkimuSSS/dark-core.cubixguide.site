@@ -1224,23 +1224,13 @@ const scrollToBlockInEditor = (id: string) => {
         
         <!-- Undo / Redo Row -->
         <div class="flex items-center justify-between gap-1.5 w-full">
-          <div class="relative group/tool flex-1">
-            <button type="button" @click="undoState" :disabled="historyIndex <= 0" class="h-10 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all w-full">
-              <IconRenderer name="RotateCcw" size="18" class="shrink-0" />
-            </button>
-            <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
-              <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Отменить (Ctrl+Z)</div>
-            </div>
-          </div>
+          <button type="button" @click="undoState" :disabled="historyIndex <= 0" class="h-10 flex-1 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all">
+            <IconRenderer name="RotateCcw" size="18" class="shrink-0" />
+          </button>
 
-          <div class="relative group/tool flex-1">
-            <button type="button" @click="redoState" :disabled="historyIndex >= historyStack.length - 1" class="h-10 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all w-full">
-              <IconRenderer name="RotateCw" size="18" class="shrink-0" />
-            </button>
-            <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
-              <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Повторить (Ctrl+Y)</div>
-            </div>
-          </div>
+          <button type="button" @click="redoState" :disabled="historyIndex >= historyStack.length - 1" class="h-10 flex-1 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all">
+            <IconRenderer name="RotateCw" size="18" class="shrink-0" />
+          </button>
         </div>
 
         <div class="w-full h-px bg-[#26292d] my-1"></div>
