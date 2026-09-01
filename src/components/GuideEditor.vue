@@ -33,6 +33,7 @@ const isImportExportOpen = ref(false);
 const isTemplateModalOpen = ref(false);
 const isHelpModalOpen = ref(false);
 const isTreeModalOpen = ref(false);
+const isGuideSettingsModalOpen = ref(false);
 const isMetaExpanded = ref(false);
 const activeBlockMenuId = ref<string | null>(null);
 const addBlockMenuAfterIndex = ref<number | null>(null);
@@ -1371,34 +1372,23 @@ const stopOutlineDrag = () => {
 
         <div class="w-full h-px bg-[#26292d] my-1"></div>
 
-        <!-- SECTION 4: UTILITIES -->
-        <!-- Clean Empty Blocks -->
+        <!-- SECTION 4: SETTINGS & UTILITIES -->
+        <!-- Guide Settings Modal Toggle Button -->
         <div class="relative group/tool w-full flex justify-center">
-          <button type="button" @click="cleanEmptyBlocks" :class="['rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
-            <IconRenderer name="Sparkles" size="18" class="shrink-0" />
-            <span v-if="isToolbarExpanded" class="text-xs font-semibold text-amber-300">Очистить</span>
+          <button type="button" @click.stop="isGuideSettingsModalOpen = true" :class="['rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center transition-all duration-300', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+            <IconRenderer name="Settings" size="18" class="shrink-0" />
+            <span v-if="isToolbarExpanded" class="text-xs font-semibold text-cyan-300 whitespace-nowrap animate-fadeIn">Настройки гайда</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
-            <div class="bg-[#0c0d0e] border border-amber-500/40 text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Очистить пустые блоки</div>
-          </div>
-        </div>
-
-        <!-- Import / Export JSON -->
-        <div class="relative group/tool w-full flex justify-center">
-          <button type="button" @click.stop="isImportExportOpen = true" :class="['rounded-xl bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white border border-[#26292d] flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
-            <IconRenderer name="FileText" size="18" class="shrink-0" />
-            <span v-if="isToolbarExpanded" class="text-xs font-semibold">Импорт/Экспорт</span>
-          </button>
-          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
-            <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Импорт / Экспорт JSON</div>
+            <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Настройки гайда</div>
           </div>
         </div>
 
         <!-- Hotkeys Help -->
         <div class="relative group/tool w-full flex justify-center">
-          <button type="button" @click.stop="isHelpModalOpen = true" :class="['rounded-xl bg-[#121416] hover:bg-[#212429] text-cyan-400 border border-[#26292d] flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
+          <button type="button" @click.stop="isHelpModalOpen = true" :class="['rounded-xl bg-[#121416] hover:bg-[#212429] text-slate-300 hover:text-white border border-[#26292d] flex items-center transition-all', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0']">
             <IconRenderer name="HelpCircle" size="18" class="shrink-0" />
-            <span v-if="isToolbarExpanded" class="text-xs font-semibold text-cyan-400">Горячие клавиши</span>
+            <span v-if="isToolbarExpanded" class="text-xs font-semibold whitespace-nowrap animate-fadeIn">Горячие клавиши</span>
           </button>
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
             <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Горячие клавиши</div>
@@ -1514,46 +1504,6 @@ const stopOutlineDrag = () => {
           rows="2"
           class="w-full bg-transparent text-slate-400 text-sm focus:outline-none placeholder:text-dark-muted/40 resize-none"
         ></textarea>
-
-        <!-- ALWAYS VISIBLE STATUS & VISIBILITY SWITCHES -->
-        <div class="pt-2 border-t border-[#26292d]/60 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <!-- Published Switch -->
-          <div class="flex items-center justify-between p-3 rounded-xl bg-[#0c0d0e] border border-[#26292d]">
-            <div class="space-y-0.5">
-              <div class="text-xs font-bold text-white flex items-center gap-1.5">
-                <IconRenderer :name="guide.meta.published ? 'CheckCircle2' : 'FileEdit'" size="14" :class="guide.meta.published ? 'text-emerald-400' : 'text-amber-400'" />
-                <span>Статус: {{ guide.meta.published ? 'Опубликован' : 'Черновик' }}</span>
-              </div>
-              <div class="text-[10px] text-dark-muted">Разрешить выгрузку гайда в базу</div>
-            </div>
-            <button 
-              type="button"
-              @click="updatePublished(!guide.meta.published)"
-              :class="['w-11 h-6 rounded-full transition-colors relative p-0.5 border cursor-pointer', guide.meta.published ? 'bg-emerald-600 border-emerald-400' : 'bg-[#1c1f22] border-[#26292d]']"
-            >
-              <div :class="['w-4 h-4 rounded-full bg-white transition-transform shadow-md', guide.meta.published ? 'translate-x-5' : 'translate-x-0']"></div>
-            </button>
-          </div>
-
-          <!-- Visible Switch -->
-          <div :class="['flex items-center justify-between p-3 rounded-xl bg-[#0c0d0e] border transition-all', guide.meta.published ? 'border-[#26292d]' : 'border-[#26292d]/40 opacity-50']">
-            <div class="space-y-0.5">
-              <div class="text-xs font-bold text-white flex items-center gap-1.5">
-                <IconRenderer :name="guide.meta.isVisible ? 'Eye' : 'EyeOff'" size="14" :class="guide.meta.isVisible ? 'text-cyan-400' : 'text-slate-400'" />
-                <span>Отображение: {{ guide.meta.isVisible ? 'Публичный' : 'Скрытый' }}</span>
-              </div>
-              <div class="text-[10px] text-dark-muted">Виден обычным пользователям</div>
-            </div>
-            <button 
-              type="button"
-              :disabled="!guide.meta.published"
-              @click="updateIsVisible(!guide.meta.isVisible)"
-              :class="['w-11 h-6 rounded-full transition-colors relative p-0.5 border cursor-pointer disabled:cursor-not-allowed', guide.meta.isVisible ? 'bg-cyan-600 border-cyan-400' : 'bg-[#1c1f22] border-[#26292d]']"
-            >
-              <div :class="['w-4 h-4 rounded-full bg-white transition-transform shadow-md', guide.meta.isVisible ? 'translate-x-5' : 'translate-x-0']"></div>
-            </button>
-          </div>
-        </div>
       </div>
 
       <!-- Toggle button -->
@@ -2264,6 +2214,124 @@ const stopOutlineDrag = () => {
             <code :class="`bg-[#16181a] px-2 py-0.5 rounded text-${color}-400 font-mono`">{{ value }}</code>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- GUIDE SETTINGS & UTILITIES MODAL -->
+    <div v-if="isGuideSettingsModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
+      <div class="bg-[#16181a] border border-[#26292d] w-full max-w-xl rounded-2xl p-6 shadow-2xl space-y-5">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
+          <div class="flex items-center gap-2.5 text-white">
+            <div class="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+              <IconRenderer name="Settings" size="18" />
+            </div>
+            <div>
+              <h3 class="text-sm font-bold">Настройки и управление гайдом</h3>
+              <p class="text-[11px] text-dark-muted">Публикация, приватность, импорт и обслуживание</p>
+            </div>
+          </div>
+          <button @click="isGuideSettingsModalOpen = false" class="text-dark-muted hover:text-white p-1 rounded-lg hover:bg-[#26292d] transition-colors"><IconRenderer name="X" size="18" /></button>
+        </div>
+
+        <!-- Content Options -->
+        <div class="space-y-4">
+          
+          <!-- SECTION: PUBLISH & VISIBILITY -->
+          <div class="space-y-2.5">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-cyan-400">Публикация и Доступность</h4>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Published Switch -->
+              <div class="flex items-center justify-between p-3.5 rounded-xl bg-[#0c0d0e] border border-[#26292d]">
+                <div class="space-y-0.5">
+                  <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <IconRenderer :name="guide.meta.published ? 'CheckCircle2' : 'FileEdit'" size="14" :class="guide.meta.published ? 'text-emerald-400' : 'text-amber-400'" />
+                    <span>{{ guide.meta.published ? 'Опубликован' : 'Черновик' }}</span>
+                  </div>
+                  <div class="text-[10px] text-dark-muted">Сохранение в базу</div>
+                </div>
+                <button 
+                  type="button"
+                  @click="updatePublished(!guide.meta.published)"
+                  :class="['w-11 h-6 rounded-full transition-colors relative p-0.5 border cursor-pointer', guide.meta.published ? 'bg-emerald-600 border-emerald-400' : 'bg-[#1c1f22] border-[#26292d]']"
+                >
+                  <div :class="['w-4 h-4 rounded-full bg-white transition-transform shadow-md', guide.meta.published ? 'translate-x-5' : 'translate-x-0']"></div>
+                </button>
+              </div>
+
+              <!-- Visible Switch -->
+              <div :class="['flex items-center justify-between p-3.5 rounded-xl bg-[#0c0d0e] border transition-all', guide.meta.published ? 'border-[#26292d]' : 'border-[#26292d]/40 opacity-50']">
+                <div class="space-y-0.5">
+                  <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <IconRenderer :name="guide.meta.isVisible ? 'Eye' : 'EyeOff'" size="14" :class="guide.meta.isVisible ? 'text-cyan-400' : 'text-slate-400'" />
+                    <span>{{ guide.meta.isVisible ? 'Публичный' : 'Скрытый' }}</span>
+                  </div>
+                  <div class="text-[10px] text-dark-muted">Виден обычным игрокам</div>
+                </div>
+                <button 
+                  type="button"
+                  :disabled="!guide.meta.published"
+                  @click="updateIsVisible(!guide.meta.isVisible)"
+                  :class="['w-11 h-6 rounded-full transition-colors relative p-0.5 border cursor-pointer disabled:cursor-not-allowed', guide.meta.isVisible ? 'bg-cyan-600 border-cyan-400' : 'bg-[#1c1f22] border-[#26292d]']"
+                >
+                  <div :class="['w-4 h-4 rounded-full bg-white transition-transform shadow-md', guide.meta.isVisible ? 'translate-x-5' : 'translate-x-0']"></div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full h-px bg-[#26292d]"></div>
+
+          <!-- SECTION: UTILITIES -->
+          <div class="space-y-2.5">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400">Инструменты и Данные</h4>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Clean Empty Blocks Button -->
+              <button
+                type="button"
+                @click="cleanEmptyBlocks(); isGuideSettingsModalOpen = false;"
+                class="p-3.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-between text-left transition-all group"
+              >
+                <div class="space-y-0.5">
+                  <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                    <IconRenderer name="Sparkles" size="14" />
+                    <span>Очистить блоки</span>
+                  </div>
+                  <div class="text-[10px] text-amber-400/70">Удалить пустые секции без текста</div>
+                </div>
+                <IconRenderer name="ChevronRight" size="16" class="text-amber-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <!-- Import / Export JSON Button -->
+              <button
+                type="button"
+                @click="isGuideSettingsModalOpen = false; isImportExportOpen = true;"
+                class="p-3.5 rounded-xl bg-[#0c0d0e] hover:bg-[#212429] text-slate-200 border border-[#26292d] flex items-center justify-between text-left transition-all group"
+              >
+                <div class="space-y-0.5">
+                  <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <IconRenderer name="FileText" size="14" class="text-cyan-400" />
+                    <span>Импорт / Экспорт</span>
+                  </div>
+                  <div class="text-[10px] text-dark-muted">Резервная копия в JSON</div>
+                </div>
+                <IconRenderer name="ChevronRight" size="16" class="text-slate-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-2 flex justify-end border-t border-[#26292d]">
+          <button @click="isGuideSettingsModalOpen = false" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md">
+            Готово
+          </button>
+        </div>
+
       </div>
     </div>
 
