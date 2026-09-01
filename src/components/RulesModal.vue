@@ -730,37 +730,7 @@ const handleAutoParseRules = async () => {
                   </div>
                 </div>
               </div>
-
-              <!-- Auto-parse button -->
-              <button
-                type="button"
-                @click="showParseInput = !showParseInput"
-                class="px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5"
-                title="Спарсить правила с форума"
-              >
-                <IconRenderer name="RefreshCw" size="13" :class="isParsingLoading ? 'animate-spin' : ''" />
-                <span>Парсинг с форума</span>
-              </button>
             </div>
-          </div>
-
-          <!-- PARSE URL INPUT OVERLAY -->
-          <div v-if="showParseInput && activeTab === 'server'" class="px-6 py-3 bg-purple-950/40 border-b border-purple-500/30 flex items-center gap-3">
-            <input
-              type="text"
-              v-model="customParseUrl"
-              placeholder="Вставьте URL темы форума (по умолчанию: тема OneBlock)..."
-              class="flex-1 bg-[#0c0d0e] border border-purple-500/40 text-white text-xs rounded-xl px-3 py-2 focus:outline-none"
-            />
-            <button
-              type="button"
-              @click="handleAutoParseRules"
-              :disabled="isParsingLoading"
-              class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-1.5"
-            >
-              <span v-if="isParsingLoading" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              <span>Спарсить и обновить БД</span>
-            </button>
           </div>
 
           <!-- Controls Bar: Categories & Search -->
