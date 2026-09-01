@@ -801,17 +801,41 @@ const handleViewAllAuthorGuides = (username: string) => {
               </div>
             </div>
 
-            <!-- Categories Quick Filter -->
-            <div class="border-t border-[#262a30] pt-3 space-y-2">
-              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">Фильтр по категориям:</div>
-              <div class="flex flex-wrap gap-1.5">
+            <!-- Rich Interactive Categories Hub -->
+            <div class="border-t border-[#262a30] pt-3.5 space-y-2.5">
+              <div class="flex items-center justify-between px-1">
+                <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Тематические категории:</div>
+                <span class="text-[10px] text-emerald-400 font-bold">5 направлений</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button
-                  v-for="cat in ['ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий']"
-                  :key="cat"
-                  @click="handleHeaderCategorySelect(cat)"
-                  class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#090a0c] hover:bg-emerald-600 hover:text-white border border-[#262a30] text-slate-300 transition-all cursor-pointer"
+                  v-for="cat in [
+                    { name: 'ХайТек', icon: 'Cpu', color: 'from-cyan-500/20 to-blue-500/10 border-cyan-500/40 text-cyan-300', desc: 'Автоматизация, механизмы и энергия' },
+                    { name: 'Магия RPG', icon: 'Sparkles', color: 'from-purple-500/20 to-pink-500/10 border-purple-500/40 text-purple-300', desc: 'Заклинания, алхимия и ритуалы' },
+                    { name: 'СкайБлок', icon: 'Layers', color: 'from-amber-500/20 to-orange-500/10 border-amber-500/40 text-amber-300', desc: 'Развитие острова и квесты' },
+                    { name: 'Автоматизация', icon: 'Zap', color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/40 text-emerald-300', desc: 'Схемы, трубы и логистика' },
+                    { name: 'Общий', icon: 'BookOpen', color: 'from-slate-700/30 to-slate-800/20 border-slate-600/40 text-slate-300', desc: 'Базовые руководства и советы' }
+                  ]"
+                  :key="cat.name"
+                  @click="handleHeaderCategorySelect(cat.name)"
+                  :class="[
+                    'p-2.5 rounded-2xl border text-left transition-all duration-300 flex items-center justify-between group cursor-pointer bg-gradient-to-r hover:scale-[1.02] shadow-sm',
+                    cat.color
+                  ]"
                 >
-                  {{ cat }}
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="p-1.5 rounded-xl bg-black/40 border border-white/10 group-hover:scale-110 transition-transform">
+                      <IconRenderer :name="cat.icon" size="16" />
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors truncate">{{ cat.name }}</div>
+                      <div class="text-[9.5px] text-slate-400 truncate">{{ cat.desc }}</div>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/40 border border-white/10 text-slate-300 shrink-0 ml-1">
+                    {{ guides.filter(g => g.meta.category === cat.name).length }}
+                  </span>
                 </button>
               </div>
             </div>
