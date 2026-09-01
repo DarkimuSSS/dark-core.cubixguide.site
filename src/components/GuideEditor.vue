@@ -1219,8 +1219,8 @@ const scrollToBlockInEditor = (id: string) => {
 
       <div class="w-full h-px bg-[#26292d] my-1.5 shrink-0"></div>
 
-      <!-- Scrollable Tools List inside dock -->
-      <div class="space-y-1.5 overflow-y-auto custom-scrollbar max-h-[calc(100vh-12rem)] pr-0.5">
+      <!-- Tools List inside dock -->
+      <div class="space-y-1.5 flex flex-col items-center w-full">
         
         <!-- Undo / Redo Row -->
         <div :class="['flex items-center gap-1.5', isToolbarExpanded ? 'w-full flex-row' : 'flex-col items-center']">
