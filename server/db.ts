@@ -580,6 +580,9 @@ try {
 
   const { GALAXY_RULES_DATA } = require('../src/data/galaxyRulesData');
   saveServerRules(GALAXY_RULES_DATA);
+
+  const { GREGTECH_RULES_DATA } = require('../src/data/gregtechRulesData');
+  saveServerRules(GREGTECH_RULES_DATA);
 } catch (e) {
   console.error('Error seeding server rules:', e);
 }
