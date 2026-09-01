@@ -9,11 +9,59 @@ import IconRenderer from './components/IconRenderer.vue';
 import AuthModal from './components/AuthModal.vue';
 import SiteFooter from './components/SiteFooter.vue';
 import TermsModal from './components/TermsModal.vue';
-import CookieBanner from './components/CookieBanner.vue';
+import SettingsModal from './components/SettingsModal.vue';
 import { PRESET_ITEMS } from './data/presetItems';
 import type { Guide, AuthorProfile } from './types/guide';
 
 const isTermsOpen = ref(false);
+const isSettingsOpen = ref(false);
+
+const handleExportData = () => {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(guides.value, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `cubixguide_backup_${new Date().toISOString().split('T')[0]}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  showToast('Экспорт бэкапа базы завершён!');
+};
+
+const handleImportData = async (jsonString: string) => {
+  try {
+    const items = JSON.parse(jsonString);
+    if (!Array.isArray(items)) throw new Error('Формат файла должен быть массивом гайдов');
+    let importedCount = 0;
+    for (const g of items) {
+      if (g.meta && g.meta.id) {
+        const res = await fetch('/api/guides', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(g)
+        });
+        if (res.ok) importedCount++;
+      }
+    }
+    await fetchGuides();
+    isSettingsOpen.value = false;
+    showToast(`Успешно импортировано ${importedCount} гайдов!`);
+  } catch (e: any) {
+    showToast(`Ошибка импорта: ${e.message}`);
+  }
+};
+
+const handleClearDrafts = () => {
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('cubixguide_draft_')) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(k => localStorage.removeItem(k));
+  hasUnsavedDraft.value = false;
+  showToast('Локальные черновики очищены');
+};
 
 const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
@@ -701,19 +749,14 @@ const handleViewAllAuthorGuides = (username: string) => {
 
       <!-- Center & Right Navigation Actions -->
       <div class="flex items-center gap-2 sm:gap-3">
-        <!-- Theme Switcher Toggle Button -->
+        <!-- Settings Modal Button -->
         <button
           type="button"
-          @click="toggleTheme"
-          class="px-2.5 py-1.5 rounded-xl bg-[#0c0d0e] hover:bg-[#1f2328] border border-[#26292d] text-slate-300 hover:text-white flex items-center gap-2 text-xs font-bold transition-all shadow-md group"
-          :title="`Текущая тема: ${currentTheme.toUpperCase()}. Нажмите для смены темы`"
+          @click="isSettingsOpen = true"
+          class="p-2 rounded-xl bg-[#0c0d0e] hover:bg-[#1f2328] border border-[#26292d] text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-md"
+          title="Открыть Настройки сайта и бэкапы"
         >
-          <IconRenderer 
-            :name="currentTheme === 'light' ? 'Sun' : currentTheme === 'emerald' ? 'Sparkles' : currentTheme === 'cyberpunk' ? 'Zap' : 'Moon'" 
-            size="14" 
-            :class="currentTheme === 'light' ? 'text-amber-400' : currentTheme === 'emerald' ? 'text-emerald-400' : currentTheme === 'cyberpunk' ? 'text-pink-400' : 'text-cyan-400'"
-          />
-          <span class="hidden md:inline text-[11px] capitalize">{{ currentTheme }}</span>
+          <IconRenderer name="Settings" size="16" class="text-cyan-400 hover:rotate-90 transition-transform duration-300" />
         </button>
 
         <!-- Draft restoration banner -->
@@ -998,6 +1041,19 @@ const handleViewAllAuthorGuides = (username: string) => {
         <span>{{ toastMessage }}</span>
       </div>
     </div>
+
+    <!-- Settings Modal -->
+    <SettingsModal
+      :is-open="isSettingsOpen"
+      :current-theme="currentTheme"
+      :is-admin="currentUserIsAdmin"
+      :guides-count="guides.length"
+      @close="isSettingsOpen = false"
+      @select-theme="applyTheme"
+      @export-data="handleExportData"
+      @import-data="handleImportData"
+      @clear-drafts="handleClearDrafts"
+    />
 
     <!-- Terms Modal -->
     <TermsModal :is-open="isTermsOpen" @close="isTermsOpen = false" />
