@@ -1193,140 +1193,191 @@ const scrollToBlockInEditor = (id: string) => {
   <div class="max-w-6xl ml-auto mr-4 pl-16 pb-32 relative" @click="activeBlockMenuId = null; addBlockMenuAfterIndex = null">
     
     <!-- VERTICAL FLOATING TOOLBAR DOCK (left side) -->
-    <aside class="fixed top-20 left-4 z-40 bg-[#16181a]/95 backdrop-blur-md border border-[#26292d] p-2 rounded-2xl shadow-2xl flex flex-col gap-2 items-center">
-      <div class="relative group/tool">
-        <button type="button" @click="undoState" :disabled="historyIndex <= 0" class="w-10 h-10 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all">
-          <IconRenderer name="RotateCcw" size="18" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Отменить (Ctrl+Z)</div>
-        </div>
-      </div>
+    <aside 
+      :class="[
+        'fixed top-20 left-4 z-40 bg-[#16181a]/95 backdrop-blur-xl border border-[#26292d] rounded-2xl shadow-2xl transition-all duration-300 flex flex-col',
+        isToolbarExpanded ? 'w-48 p-3' : 'w-14 p-2 items-center'
+      ]"
+    >
+      <!-- Header / Expand Toggle -->
+      <button 
+        type="button" 
+        @click="isToolbarExpanded = !isToolbarExpanded" 
+        class="w-full h-8 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-slate-400 hover:text-white flex items-center justify-between px-2 text-[11px] font-bold transition-all group shrink-0"
+        :title="isToolbarExpanded ? 'Свернуть панель' : 'Развернуть панель'"
+      >
+        <span v-if="isToolbarExpanded" class="text-slate-300 uppercase text-[10px] tracking-wider font-extrabold">Инструменты</span>
+        <IconRenderer 
+          :name="isToolbarExpanded ? 'ChevronLeft' : 'Maximize2'" 
+          size="14" 
+          class="text-cyan-400 group-hover:scale-110 transition-transform mx-auto sm:mx-0" 
+        />
+      </button>
 
-      <div class="relative group/tool">
-        <button type="button" @click="redoState" :disabled="historyIndex >= historyStack.length - 1" class="w-10 h-10 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all">
-          <IconRenderer name="RotateCw" size="18" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Повторить (Ctrl+Y)</div>
-        </div>
-      </div>
+      <div class="w-full h-px bg-[#26292d] my-1.5 shrink-0"></div>
 
-      <div class="w-full h-px bg-[#26292d]"></div>
+      <!-- Scrollable Tools List inside dock -->
+      <div class="space-y-1.5 overflow-y-auto custom-scrollbar max-h-[calc(100vh-12rem)] pr-0.5">
+        
+        <!-- Undo / Redo Row -->
+        <div :class="['flex items-center gap-1.5', isToolbarExpanded ? 'w-full' : 'flex-col']">
+          <div class="relative group/tool flex-1 w-full">
+            <button type="button" @click="undoState" :disabled="historyIndex <= 0" :class="['h-9 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center transition-all w-full', isToolbarExpanded ? 'px-2.5 gap-2 justify-start' : 'justify-center w-10']">
+              <IconRenderer name="RotateCcw" size="15" class="shrink-0" />
+              <span v-if="isToolbarExpanded" class="text-[11px] font-semibold text-slate-200">Отменить</span>
+            </button>
+            <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+              <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Отменить (Ctrl+Z)</div>
+            </div>
+          </div>
 
-      <!-- Add New Block Plus Button -->
-      <div class="relative group/tool">
-        <button
-          type="button"
-          @click.stop="addBlockMenuAfterIndex = (addBlockMenuAfterIndex === -1 ? null : -1); activeBlockMenuId = null"
-          class="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all shadow-lg shadow-emerald-950/50 cursor-pointer"
-        >
-          <IconRenderer name="Plus" size="20" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-emerald-950 border border-emerald-500/50 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Добавить новый блок</div>
-        </div>
-
-        <!-- Add block dropdown from sidebar -->
-        <div v-if="addBlockMenuAfterIndex === -1" @click.stop class="absolute left-full top-0 ml-3 z-50 bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-1.5 flex flex-col gap-0.5 w-56">
-          <button @click="addBlockAt(props.guide.blocks.length - 1, 'heading'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="FileText" size="14" class="text-cyan-400 shrink-0" />Заголовок</button>
-          <button @click="addBlockAt(props.guide.blocks.length - 1, 'text'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Edit3" size="14" class="text-emerald-400 shrink-0" />Текст</button>
-          <button @click="addBlockAt(props.guide.blocks.length - 1, 'image'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Image" size="14" class="text-pink-400 shrink-0" />Картинка</button>
-          <button @click="addBlockAt(props.guide.blocks.length - 1, 'callout'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Lightbulb" size="14" class="text-amber-400 shrink-0" />Совет / Уведомление</button>
-          <button @click="addBlockAt(props.guide.blocks.length - 1, 'checklist'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="CheckCircle2" size="14" class="text-emerald-400 shrink-0" />Чек-лист</button>
-          <button @click="addBlockAt(props.guide.blocks.length - 1, 'spoiler'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="HelpCircle" size="14" class="text-cyan-400 shrink-0" />Спойлер / Аккордеон</button>
-          <button @click="addBlockAt(props.guide.blocks.length - 1, 'before_after'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Maximize2" size="14" class="text-emerald-400 shrink-0" />Слайдер До / После</button>
-          <button @click="addBlockAt(props.guide.blocks.length - 1, 'section'); addBlockMenuAfterIndex = null" class="text-left text-xs text-cyan-300 font-semibold hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Layout" size="14" class="text-cyan-400 shrink-0" />Секция с колонками</button>
-          <button @click="addBlockAt(props.guide.blocks.length - 1, 'multiblock'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Layers" size="14" class="text-cyan-400 shrink-0" />Мультиструктура</button>
-          <div class="border-t border-[#26292d] mt-0.5 pt-0.5">
-            <button @click="addBlockAt(props.guide.blocks.length - 1, 'divider'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-400 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 w-full"><IconRenderer name="Minus" size="14" class="text-slate-500 shrink-0" />Разделитель</button>
+          <div class="relative group/tool flex-1 w-full">
+            <button type="button" @click="redoState" :disabled="historyIndex >= historyStack.length - 1" :class="['h-9 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center transition-all w-full', isToolbarExpanded ? 'px-2.5 gap-2 justify-start' : 'justify-center w-10']">
+              <IconRenderer name="RotateCw" size="15" class="shrink-0" />
+              <span v-if="isToolbarExpanded" class="text-[11px] font-semibold text-slate-200">Повторить</span>
+            </button>
+            <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+              <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Повторить (Ctrl+Y)</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="w-full h-px bg-[#26292d]"></div>
+        <div class="w-full h-px bg-[#26292d] my-1"></div>
 
-      <div class="relative group/tool">
-        <button type="button" @click.stop="isTemplateModalOpen = true" class="w-10 h-10 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center transition-all">
-          <IconRenderer name="Layout" size="18" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Библиотека шаблонов</div>
+        <!-- Add New Block Plus Button -->
+        <div class="relative group/tool">
+          <button
+            type="button"
+            @click.stop="addBlockMenuAfterIndex = (addBlockMenuAfterIndex === -1 ? null : -1); activeBlockMenuId = null"
+            :class="['h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center transition-all shadow-lg shadow-emerald-950/50 cursor-pointer w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start font-bold' : 'justify-center w-10']"
+          >
+            <IconRenderer name="Plus" size="18" class="shrink-0" />
+            <span v-if="isToolbarExpanded" class="text-xs font-bold">Новый блок</span>
+          </button>
+          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="bg-emerald-950 border border-emerald-500/50 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Добавить новый блок</div>
+          </div>
+
+          <!-- Add block dropdown from sidebar -->
+          <div v-if="addBlockMenuAfterIndex === -1" @click.stop class="absolute left-full top-0 ml-3 z-50 bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-1.5 flex flex-col gap-0.5 w-56">
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'heading'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="FileText" size="14" class="text-cyan-400 shrink-0" />Заголовок</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'text'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Edit3" size="14" class="text-emerald-400 shrink-0" />Текст</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'image'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Image" size="14" class="text-pink-400 shrink-0" />Картинка</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'callout'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Lightbulb" size="14" class="text-amber-400 shrink-0" />Совет / Уведомление</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'checklist'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="CheckCircle2" size="14" class="text-emerald-400 shrink-0" />Чек-лист</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'spoiler'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="HelpCircle" size="14" class="text-cyan-400 shrink-0" />Спойлер / Аккордеон</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'before_after'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Maximize2" size="14" class="text-emerald-400 shrink-0" />Слайдер До / После</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'section'); addBlockMenuAfterIndex = null" class="text-left text-xs text-cyan-300 font-semibold hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Layout" size="14" class="text-cyan-400 shrink-0" />Секция с колонками</button>
+            <button @click="addBlockAt(props.guide.blocks.length - 1, 'multiblock'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5"><IconRenderer name="Layers" size="14" class="text-cyan-400 shrink-0" />Мультиструктура</button>
+            <div class="border-t border-[#26292d] mt-0.5 pt-0.5">
+              <button @click="addBlockAt(props.guide.blocks.length - 1, 'divider'); addBlockMenuAfterIndex = null" class="text-left text-xs text-slate-400 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 w-full"><IconRenderer name="Minus" size="14" class="text-slate-500 shrink-0" />Разделитель</button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="relative group/tool">
-        <button type="button" @click.stop="isTreeModalOpen = true" class="w-10 h-10 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center transition-all">
-          <IconRenderer name="Layers" size="18" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Структура блоков</div>
+        <div class="w-full h-px bg-[#26292d] my-1"></div>
+
+        <!-- Templates Button -->
+        <div class="relative group/tool">
+          <button type="button" @click.stop="isTemplateModalOpen = true" :class="['h-9 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
+            <IconRenderer name="Layout" size="16" class="shrink-0" />
+            <span v-if="isToolbarExpanded" class="text-xs font-semibold text-cyan-300">Шаблоны</span>
+          </button>
+          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Библиотека шаблонов</div>
+          </div>
         </div>
-      </div>
 
-      <div class="relative group/tool">
-        <button type="button" @click.stop="isOutlineOpen = !isOutlineOpen" :class="['w-10 h-10 rounded-xl border flex items-center justify-center transition-all', isOutlineOpen ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white border-[#26292d]']">
-          <IconRenderer name="List" size="18" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Содержание / Навигация</div>
+        <!-- Structure Tree Button -->
+        <div class="relative group/tool">
+          <button type="button" @click.stop="isTreeModalOpen = true" :class="['h-9 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
+            <IconRenderer name="Layers" size="16" class="shrink-0" />
+            <span v-if="isToolbarExpanded" class="text-xs font-semibold text-purple-300">Структура</span>
+          </button>
+          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Структура блоков</div>
+          </div>
         </div>
-      </div>
 
-      <div class="relative group/tool">
-        <button type="button" @click="cleanEmptyBlocks" class="w-10 h-10 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center transition-all">
-          <IconRenderer name="Sparkles" size="18" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-[#0c0d0e] border border-amber-500/40 text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Очистить пустые блоки</div>
+        <!-- Outline Navigation Button -->
+        <div class="relative group/tool">
+          <button type="button" @click.stop="isOutlineOpen = !isOutlineOpen" :class="['h-9 rounded-xl border flex items-center transition-all w-full', isOutlineOpen ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white border-[#26292d]', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
+            <IconRenderer name="List" size="16" class="shrink-0" />
+            <span v-if="isToolbarExpanded" class="text-xs font-semibold">Содержание</span>
+          </button>
+          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Содержание / Навигация</div>
+          </div>
         </div>
-      </div>
 
-      <div class="relative group/tool">
-        <button type="button" @click.stop="isImportExportOpen = true" class="w-10 h-10 rounded-xl bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white border border-[#26292d] flex items-center justify-center transition-all">
-          <IconRenderer name="FileText" size="18" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Импорт / Экспорт JSON</div>
+        <!-- Clean Empty Blocks -->
+        <div class="relative group/tool">
+          <button type="button" @click="cleanEmptyBlocks" :class="['h-9 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
+            <IconRenderer name="Sparkles" size="16" class="shrink-0" />
+            <span v-if="isToolbarExpanded" class="text-xs font-semibold text-amber-300">Очистить</span>
+          </button>
+          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="bg-[#0c0d0e] border border-amber-500/40 text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Очистить пустые блоки</div>
+          </div>
         </div>
-      </div>
 
-      <div class="relative group/tool">
-        <button type="button" @click.stop="isHelpModalOpen = true" class="w-10 h-10 rounded-xl bg-[#121416] hover:bg-[#212429] text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all">
-          <IconRenderer name="HelpCircle" size="18" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Горячие клавиши</div>
+        <!-- Import / Export JSON -->
+        <div class="relative group/tool">
+          <button type="button" @click.stop="isImportExportOpen = true" :class="['h-9 rounded-xl bg-[#121416] hover:bg-[#212429] text-dark-muted hover:text-white border border-[#26292d] flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
+            <IconRenderer name="FileText" size="16" class="shrink-0" />
+            <span v-if="isToolbarExpanded" class="text-xs font-semibold">Импорт/Экспорт</span>
+          </button>
+          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Импорт / Экспорт JSON</div>
+          </div>
         </div>
-      </div>
 
-      <div class="w-full h-px bg-[#26292d]"></div>
-
-      <div class="relative group/tool">
-        <button type="button" @click="emit('toggle-preview')" class="w-10 h-10 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 flex items-center justify-center transition-all shadow-md">
-          <IconRenderer name="Eye" size="18" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Предпросмотр</div>
+        <!-- Hotkeys Help -->
+        <div class="relative group/tool">
+          <button type="button" @click.stop="isHelpModalOpen = true" :class="['h-9 rounded-xl bg-[#121416] hover:bg-[#212429] text-cyan-400 border border-[#26292d] flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
+            <IconRenderer name="HelpCircle" size="16" class="shrink-0" />
+            <span v-if="isToolbarExpanded" class="text-xs font-semibold text-cyan-400">Горячие клавиши</span>
+          </button>
+          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Горячие клавиши</div>
+          </div>
         </div>
-      </div>
 
-      <div class="relative group/tool">
-        <button type="button" @click="emit('publish')" class="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all shadow-lg shadow-emerald-950/50">
-          <IconRenderer name="Check" size="18" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-emerald-950 border border-emerald-500/50 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Сохранить гайд</div>
-        </div>
-      </div>
+        <div class="w-full h-px bg-[#26292d] my-1"></div>
 
-      <div class="relative group/tool">
-        <button type="button" @click="emit('delete')" class="w-10 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center transition-all">
-          <IconRenderer name="Trash2" size="18" />
-        </button>
-        <div class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none">
-          <div class="bg-rose-950 border border-rose-500/50 text-rose-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Удалить гайд</div>
+        <!-- Preview Toggle -->
+        <div class="relative group/tool">
+          <button type="button" @click="emit('toggle-preview')" :class="['h-9 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 flex items-center transition-all shadow-md w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
+            <IconRenderer name="Eye" size="16" class="shrink-0" />
+            <span v-if="isToolbarExpanded" class="text-xs font-semibold text-cyan-300">Предпросмотр</span>
+          </button>
+          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Предпросмотр</div>
+          </div>
         </div>
+
+        <!-- Save Button -->
+        <div class="relative group/tool">
+          <button type="button" @click="emit('publish')" :class="['h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center transition-all shadow-lg shadow-emerald-950/50 w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start font-bold' : 'justify-center w-10']">
+            <IconRenderer name="Check" size="16" class="shrink-0" />
+            <span v-if="isToolbarExpanded" class="text-xs font-bold">Сохранить</span>
+          </button>
+          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="bg-emerald-950 border border-emerald-500/50 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Сохранить гайд</div>
+          </div>
+        </div>
+
+        <!-- Delete Button -->
+        <div class="relative group/tool">
+          <button type="button" @click="emit('delete')" :class="['h-9 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center transition-all w-full', isToolbarExpanded ? 'px-3 gap-2.5 justify-start' : 'justify-center w-10']">
+            <IconRenderer name="Trash2" size="16" class="shrink-0" />
+            <span v-if="isToolbarExpanded" class="text-xs font-semibold text-rose-400">Удалить</span>
+          </button>
+          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="bg-rose-950 border border-rose-500/50 text-rose-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Удалить гайд</div>
+          </div>
+        </div>
+
       </div>
     </aside>
 
