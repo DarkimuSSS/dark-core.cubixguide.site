@@ -975,14 +975,14 @@ const handleViewAllAuthorGuides = (username: string) => {
     </header>
 
     <!-- Main Content Container (Global Unified Scrollbar) -->
-    <main class="flex-1 overflow-y-auto custom-scrollbar relative">
-      <div v-if="isLoading" class="flex flex-col items-center justify-center h-full text-dark-muted space-y-3">
+    <main class="flex-1 overflow-y-auto custom-scrollbar relative flex flex-col">
+      <div v-if="isLoading" class="flex flex-col items-center justify-center flex-1 text-dark-muted space-y-3">
         <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
         <div class="text-xs">Загрузка гайдов...</div>
       </div>
 
       <template v-else>
-        <div class="max-w-[1600px] mx-auto w-full">
+        <div class="max-w-[1600px] mx-auto w-full flex-1 flex flex-col justify-between">
           <!-- 1. HOMEPAGE CATALOG VIEW (DEFAULT LANDING) -->
           <div v-if="mode === 'home'" class="px-3 sm:px-6 pt-4">
             <HomePage
