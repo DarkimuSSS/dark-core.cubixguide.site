@@ -21,7 +21,8 @@ const activeGuide = ref<Guide | null>(null);
 
 // MODE: 'home' (Главная) | 'reader' (Вики Гайда) | 'editor' (Конструктор) | 'favorites' (Избранное)
 const mode = ref<'home' | 'reader' | 'editor' | 'favorites'>('home');
-const isLoading = ref<boolean>(true);
+// Bookmarked / Favorited guide IDs in LocalStorage
+const favoriteGuideIds = ref<string[]>([]);
 
 // Theme Switcher State: 'dark' | 'light' | 'emerald' | 'cyberpunk'
 type ThemeMode = 'dark' | 'light' | 'emerald' | 'cyberpunk';
