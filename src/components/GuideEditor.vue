@@ -1643,7 +1643,7 @@ const stopOutlineDrag = () => {
     <!-- ═══════════════════════════════════════════ -->
     <!-- META CARD: Title + Summary always visible  -->
     <!-- ═══════════════════════════════════════════ -->
-    <div :class="['rounded-2xl shadow-xl overflow-hidden mb-6 mt-4 transition-all', getVariantClass(guide.meta.variant)]">
+    <div :class="['rounded-2xl shadow-xl mb-6 mt-4 transition-all relative z-10', getVariantClass(guide.meta.variant)]">
 
       <!-- Always visible: Title & Summary -->
       <div class="p-6 space-y-4">
@@ -1729,16 +1729,16 @@ const stopOutlineDrag = () => {
             </select>
           </div>
           <!-- Server -->
-          <div>
+          <div class="relative z-30">
             <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Сервер CubixWorld</label>
             <div class="relative">
               <button type="button" @click.stop="isEditorServerDropdownOpen = !isEditorServerDropdownOpen" class="w-full bg-[#0c0d0e] border border-[#26292d] hover:border-emerald-500/50 text-xs font-bold rounded-lg px-3 py-2 flex items-center justify-between transition-all">
                 <span :class="guide.meta.server ? 'text-cyan-300' : 'text-dark-muted'">{{ guide.meta.server || '(Все сервера)' }}</span>
                 <IconRenderer name="ChevronDown" size="14" :class="['text-dark-muted transition-transform', isEditorServerDropdownOpen ? 'rotate-180' : '']" />
               </button>
-              <div v-if="isEditorServerDropdownOpen" class="absolute top-full left-0 mt-1 bg-[#16181a] border border-[#26292d] rounded-xl shadow-2xl p-2 z-50 space-y-1 w-full">
+              <div v-if="isEditorServerDropdownOpen" class="absolute top-full left-0 mt-1 bg-[#16181a] border border-[#26292d] rounded-xl shadow-2xl p-2 z-[100] space-y-1 w-full">
                 <input type="text" v-model="editorServerSearch" placeholder="Поиск..." class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-lg px-3 py-1.5 mb-1 focus:outline-none" />
-                <div class="grid grid-cols-2 gap-1 max-h-40 overflow-y-auto">
+                <div class="grid grid-cols-2 gap-1 max-h-48 overflow-y-auto custom-scrollbar">
                   <button @click="updateServerTag(''); isEditorServerDropdownOpen = false" class="text-left px-2 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:bg-[#212429] border border-[#26292d]">(Все)</button>
                   <button v-for="srv in filteredEditorServers" :key="srv" @click="updateServerTag(srv); isEditorServerDropdownOpen = false" :class="['text-left px-2 py-1.5 rounded-lg text-xs font-semibold truncate', guide.meta.server === srv ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-[#212429] border border-[#26292d]']">{{ srv }}</button>
                 </div>
