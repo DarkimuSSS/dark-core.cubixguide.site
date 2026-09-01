@@ -25,13 +25,13 @@ const categories = [
   { id: 'donators', title: '6. Донат привилегии', icon: 'Crown' }
 ];
 
-const availableServers = [
-  { id: 'OneBlock', name: 'OneBlock', forumUrl: 'https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera' },
-  { id: 'HiTech', name: 'HiTech 1.12.2 / 1.7.10', forumUrl: 'https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera' },
-  { id: 'MagicRPG', name: 'MagicRPG', forumUrl: 'https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera' },
-  { id: 'SkyBlock', name: 'SkyBlock EVO / Ultra', forumUrl: 'https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera' },
-  { id: 'TechnoMagic', name: 'TechnoMagic', forumUrl: 'https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera' }
-];
+const availableServers = ref<Array<{ id: string; name: string }>>([
+  { id: 'OneBlock', name: 'OneBlock' },
+  { id: 'HiTech', name: 'HiTech' },
+  { id: 'MagicRPG', name: 'MagicRPG' },
+  { id: 'SkyBlock', name: 'SkyBlock' },
+  { id: 'TechnoMagic', name: 'TechnoMagic' }
+]);
 
 const generalRules = [
   // 1. Основные правила
@@ -506,6 +506,20 @@ const fetchServerRulesFromApi = async (serverId: string) => {
   }
 };
 
+const fetchServerListFromApi = async () => {
+  try {
+    const res = await fetch('/api/servers');
+    if (res.ok) {
+      const list = await res.json();
+      if (Array.isArray(list) && list.length > 0) {
+        availableServers.value = list.map((s: string) => ({ id: s, name: s }));
+      }
+    }
+  } catch (e) {
+    console.warn('Не удалось загрузить живой список серверов с /api/servers');
+  }
+};
+
 watch(selectedServer, (newServer) => {
   if (newServer) {
     fetchServerRulesFromApi(newServer);
@@ -513,6 +527,7 @@ watch(selectedServer, (newServer) => {
 }, { immediate: true });
 
 onMounted(() => {
+  fetchServerListFromApi();
   fetchServerRulesFromApi(selectedServer.value);
 });
 
