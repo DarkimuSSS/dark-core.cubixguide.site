@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, recordTelemetryEvent, getTelemetryStats } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor } from './db';
+import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
 const app = express();
@@ -99,7 +100,7 @@ app.get('/api/servers', async (req, res) => {
 
 // AUTHENTICATION ENDPOINTS
 
-// Login Author
+// Login Author (Local SQLite)
 app.post('/api/auth/login', (req, res) => {
   try {
     const { username, password } = req.body;
@@ -110,6 +111,27 @@ app.post('/api/auth/login', (req, res) => {
     res.json(user);
   } catch (err: any) {
     res.status(401).json({ error: err.message });
+  }
+});
+
+// CubixWorld Native TCP Authentication Endpoint
+app.post('/api/auth/cubix-login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Укажите никнейм и пароль CubixWorld' });
+    }
+
+    const authResult = await authenticateViaCubixTcp(username, password);
+    if (!authResult.success) {
+      return res.status(401).json({ error: authResult.error || 'Неверный никнейм или пароль CubixWorld' });
+    }
+
+    // User authenticated successfully via CubixWorld TCP -> Upsert author profile
+    const authorUser = upsertCubixAuthor(authResult.username || username);
+    res.json(authorUser);
+  } catch (err: any) {
+    res.status(500).json({ error: `Ошибка авторизации CubixWorld: ${err.message}` });
   }
 });
 

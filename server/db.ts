@@ -288,6 +288,37 @@ export function loginUser(username: string, password: string) {
     isVerified: Boolean(user.is_verified),
     createdAt: user.created_at
   };
+export function upsertCubixAuthor(cleanUsername: string) {
+  let user = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
+
+  if (!user) {
+    // Automatically create author account for valid CubixWorld user
+    const pwdHash = hashPassword(`cubix_tcp_${Date.now()}_${Math.random()}`);
+    const createdAt = new Date().toISOString().split('T')[0];
+
+    const stmt = db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, is_verified, created_at) VALUES (?, ?, 0, 0, 1, 1, ?)');
+    stmt.run(cleanUsername, pwdHash, createdAt);
+
+    saveAuthorProfile({
+      username: cleanUsername,
+      avatarUrl: `https://mc-heads.net/avatar/${cleanUsername}/100`,
+      bio: `Игрок и автор руководств проекта CubixWorld.`,
+      server: 'HiTech',
+      badges: ['CubixWorld Игрок'],
+      updatedAt: createdAt
+    });
+
+    user = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
+  }
+
+  return {
+    username: user.username,
+    isAdmin: Boolean(user.is_admin),
+    canEditOthers: Boolean(user.can_edit_others),
+    canCreateGuides: Boolean(user.can_create_guides),
+    isVerified: Boolean(user.is_verified),
+    createdAt: user.created_at
+  };
 }
 
 export function listAllAuthors() {

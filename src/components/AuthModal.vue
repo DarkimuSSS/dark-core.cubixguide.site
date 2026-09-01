@@ -16,6 +16,7 @@ const password = ref('');
 const showPassword = ref(false);
 const errorMessage = ref('');
 const isLoading = ref(false);
+const authMode = ref<'cubix' | 'local'>('cubix'); // Default to CubixWorld TCP Login
 
 const handleLogin = async () => {
   errorMessage.value = '';
@@ -26,7 +27,9 @@ const handleLogin = async () => {
 
   try {
     isLoading.value = true;
-    const res = await fetch('/api/auth/login', {
+    const endpoint = authMode.value === 'cubix' ? '/api/auth/cubix-login' : '/api/auth/login';
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -49,7 +52,7 @@ const handleLogin = async () => {
       errorMessage.value = data.error || 'Неверный никнейм или пароль';
     }
   } catch (err) {
-    errorMessage.value = 'Ошибка соединения с сервером';
+    errorMessage.value = 'Ошибка соединения с сервером авторизации';
   } finally {
     isLoading.value = false;
   }
@@ -80,6 +83,33 @@ const handleLogin = async () => {
         </button>
       </div>
 
+      <!-- Mode Switcher Tabs -->
+      <div class="grid grid-cols-2 gap-1.5 p-1 bg-[#0c0d0e] rounded-2xl border border-[#26292d]">
+        <button
+          type="button"
+          @click="authMode = 'cubix'; errorMessage = ''"
+          :class="[
+            'py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all',
+            authMode === 'cubix' ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 text-white shadow-md' : 'text-dark-muted hover:text-white'
+          ]"
+        >
+          <IconRenderer name="Globe" size="14" />
+          <span>CubixWorld TCP</span>
+        </button>
+
+        <button
+          type="button"
+          @click="authMode = 'local'; errorMessage = ''"
+          :class="[
+            'py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all',
+            authMode === 'local' ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 text-white shadow-md' : 'text-dark-muted hover:text-white'
+          ]"
+        >
+          <IconRenderer name="Shield" size="14" />
+          <span>Вход Авторов</span>
+        </button>
+      </div>
+
       <!-- Error Message -->
       <div v-if="errorMessage" class="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs font-bold flex items-center gap-2">
         <IconRenderer name="AlertTriangle" size="16" class="text-rose-400 flex-shrink-0" />
@@ -89,22 +119,26 @@ const handleLogin = async () => {
       <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">Никнейм автора</label>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">
+            {{ authMode === 'cubix' ? 'Игровой никнейм CubixWorld' : 'Никнейм автора' }}
+          </label>
           <input
             type="text"
             v-model="username"
-            placeholder="Ваш никнейм..."
+            :placeholder="authMode === 'cubix' ? 'Никнейм в лаунчере...' : 'Ваш никнейм...'"
             class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-emerald-accent"
           />
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">Пароль</label>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">
+            {{ authMode === 'cubix' ? 'Пароль от аккаунта CubixWorld' : 'Пароль' }}
+          </label>
           <div class="relative">
             <input
               :type="showPassword ? 'text' : 'password'"
               v-model="password"
-              placeholder="Введите пароль..."
+              :placeholder="authMode === 'cubix' ? 'Пароль CubixWorld...' : 'Введите пароль...'"
               class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3.5 pr-10 py-2.5 focus:outline-none focus:border-emerald-accent"
             />
             <button
