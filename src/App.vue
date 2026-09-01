@@ -635,6 +635,7 @@ const confirmDeleteGuide = async () => {
 const initialCatalogSearchQuery = ref('');
 const headerSearchQuery = ref('');
 const isHeaderSearchFocused = ref(false);
+const isHeaderNavMenuOpen = ref(false);
 
 const handleHeaderSearchInput = (val: string) => {
   headerSearchQuery.value = val;
@@ -650,6 +651,7 @@ const handleHeaderCategorySelect = (category: string) => {
   if (mode.value !== 'home') {
     mode.value = 'home';
   }
+  isHeaderNavMenuOpen.value = false;
   showToast(`Категория: ${category}`);
 };
 
@@ -692,68 +694,96 @@ const handleViewAllAuthorGuides = (username: string) => {
 
         <div class="h-6 w-px bg-[#262a30] hidden lg:block"></div>
 
-        <!-- Navigation Tabs Dock -->
-        <nav class="hidden lg:flex items-center bg-[#090a0c] p-1 rounded-2xl border border-[#262a30] shadow-inner gap-1">
-          <!-- 1. Главная -->
+        <!-- Expandable Mega-Menu Trigger Button -->
+        <div class="relative">
           <button
             type="button"
-            @click="mode = 'home'"
+            @click="isHeaderNavMenuOpen = !isHeaderNavMenuOpen"
             :class="[
-              'px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 cursor-pointer',
-              mode === 'home'
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
-                : 'text-slate-300 hover:text-white hover:bg-[#181b20]'
+              'px-3.5 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 shadow-md cursor-pointer border',
+              isHeaderNavMenuOpen
+                ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-950/60 ring-2 ring-emerald-500/40'
+                : 'bg-[#090a0c] text-slate-200 border-[#262a30] hover:border-emerald-500/40 hover:text-white'
             ]"
           >
-            <IconRenderer name="Home" size="14" />
-            <span>Каталог</span>
+            <IconRenderer name="Menu" size="16" class="text-emerald-400" />
+            <span>Навигация & Разделы</span>
+            <IconRenderer name="ChevronDown" size="14" :class="['text-slate-400 transition-transform duration-300', isHeaderNavMenuOpen ? 'rotate-180 text-white' : '']" />
           </button>
 
-          <!-- 2. Вики Статья -->
-          <button
-            v-if="activeGuide"
-            type="button"
-            @click="mode = 'reader'"
-            :class="[
-              'px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 cursor-pointer',
-              mode === 'reader'
-                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-950/60 ring-1 ring-cyan-400/40'
-                : 'text-slate-300 hover:text-white hover:bg-[#181b20]'
-            ]"
+          <!-- Rich Interactive Mega-Menu Dropdown Panel -->
+          <div
+            v-if="isHeaderNavMenuOpen"
+            @click.stop
+            class="absolute top-full left-0 mt-3 w-80 sm:w-96 bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 z-50 space-y-4 animate-in fade-in zoom-in-95 duration-200"
           >
-            <IconRenderer name="BookOpen" size="14" />
-            <span>Статья</span>
-          </button>
+            <!-- Navigation Modes -->
+            <div>
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1">Основные разделы:</div>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  @click="mode = 'home'; isHeaderNavMenuOpen = false"
+                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2.5 cursor-pointer', mode === 'home' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
+                >
+                  <IconRenderer name="Home" size="18" class="text-emerald-400" />
+                  <div>
+                    <div class="text-xs font-bold">Каталог</div>
+                    <div class="text-[10px] text-dark-muted">Все гайды статьи</div>
+                  </div>
+                </button>
 
-          <!-- 3. Избранное / Закладки -->
-          <button
-            type="button"
-            @click="mode = 'favorites'"
-            :class="[
-              'px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 cursor-pointer',
-              mode === 'favorites'
-                ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-950/60 ring-1 ring-amber-400/40'
-                : 'text-slate-300 hover:text-white hover:bg-[#181b20]'
-            ]"
-          >
-            <IconRenderer name="Star" size="14" :class="mode === 'favorites' ? 'text-white' : 'text-amber-400'" />
-            <span>Закладки</span>
-            <span v-if="favoriteGuideIds.length > 0" :class="['text-[10px] px-1.5 py-0.2 rounded-full font-black', mode === 'favorites' ? 'bg-white/20 text-white' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30']">
-              {{ favoriteGuideIds.length }}
-            </span>
-          </button>
+                <button
+                  v-if="activeGuide"
+                  @click="mode = 'reader'; isHeaderNavMenuOpen = false"
+                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2.5 cursor-pointer', mode === 'reader' ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-cyan-500/40']"
+                >
+                  <IconRenderer name="BookOpen" size="18" class="text-cyan-400" />
+                  <div>
+                    <div class="text-xs font-bold">Вики Статья</div>
+                    <div class="text-[10px] text-dark-muted">Текущая статья</div>
+                  </div>
+                </button>
 
-          <!-- 4. Случайный гайд -->
-          <button
-            type="button"
-            @click="openRandomGuide"
-            class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold text-purple-400 hover:text-purple-300 hover:bg-[#181b20] flex items-center gap-1.5 transition-all duration-300 cursor-pointer"
-            title="Открыть случайную статью из базы"
-          >
-            <IconRenderer name="Sparkles" size="14" class="text-purple-400 animate-pulse" />
-            <span>Случайный</span>
-          </button>
-        </nav>
+                <button
+                  @click="mode = 'favorites'; isHeaderNavMenuOpen = false"
+                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2.5 cursor-pointer', mode === 'favorites' ? 'bg-amber-500/15 border-amber-500/50 text-amber-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-amber-500/40']"
+                >
+                  <IconRenderer name="Star" size="18" class="text-amber-400" />
+                  <div>
+                    <div class="text-xs font-bold">Закладки</div>
+                    <div class="text-[10px] text-dark-muted">{{ favoriteGuideIds.length }} сохранено</div>
+                  </div>
+                </button>
+
+                <button
+                  @click="openRandomGuide(); isHeaderNavMenuOpen = false"
+                  class="p-3 rounded-2xl bg-[#090a0c] border border-[#262a30] hover:border-purple-500/40 text-left transition-all flex items-center gap-2.5 cursor-pointer group"
+                >
+                  <IconRenderer name="Sparkles" size="18" class="text-purple-400 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <div class="text-xs font-bold text-purple-300">Случайный</div>
+                    <div class="text-[10px] text-dark-muted">Случайный гайд</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Categories Quick Filter -->
+            <div class="border-t border-[#262a30] pt-3 space-y-2">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">Фильтр по категориям:</div>
+              <div class="flex flex-wrap gap-1.5">
+                <button
+                  v-for="cat in ['ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий']"
+                  :key="cat"
+                  @click="handleHeaderCategorySelect(cat)"
+                  class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#090a0c] hover:bg-emerald-600 hover:text-white border border-[#262a30] text-slate-300 transition-all cursor-pointer"
+                >
+                  {{ cat }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Center: Smart Embedded Global Search Input (Scalable Modularity) -->
