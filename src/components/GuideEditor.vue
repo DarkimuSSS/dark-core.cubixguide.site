@@ -1188,8 +1188,21 @@ const scrollToBlockInEditor = (id: string) => {
   }
 };
 
-// Dragging functionality for Floating Outline Widget
-const outlinePosition = ref<{ x: number | null; y: number | null }>({ x: null, y: null });
+// Dragging functionality for Floating Outline Widget with localStorage persistence
+const loadOutlinePosition = () => {
+  try {
+    const saved = localStorage.getItem('cubix_outline_position');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return { x: null, y: null };
+};
+
+const outlinePosition = ref<{ x: number | null; y: number | null }>(loadOutlinePosition());
 const isOutlineDragging = ref(false);
 let outlineDragOffset = { x: 0, y: 0 };
 
@@ -1207,10 +1220,14 @@ const startOutlineDrag = (e: MouseEvent) => {
 
 const onOutlineDrag = (e: MouseEvent) => {
   if (!isOutlineDragging.value) return;
-  outlinePosition.value = {
-    x: Math.max(10, Math.min(window.innerWidth - 250, e.clientX - outlineDragOffset.x)),
+  const newPos = {
+    x: Math.max(10, Math.min(window.innerWidth - 270, e.clientX - outlineDragOffset.x)),
     y: Math.max(10, Math.min(window.innerHeight - 150, e.clientY - outlineDragOffset.y))
   };
+  outlinePosition.value = newPos;
+  try {
+    localStorage.setItem('cubix_outline_position', JSON.stringify(newPos));
+  } catch (err) {}
 };
 
 const stopOutlineDrag = () => {
