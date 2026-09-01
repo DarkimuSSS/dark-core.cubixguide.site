@@ -584,6 +584,14 @@ const handleAutoParseRules = async () => {
         serverName: selectedServer.value
       })
     });
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const textResponse = await res.text();
+      console.error('[ParseRules API Non-JSON response]:', textResponse);
+      throw new Error(`Сервер вернул HTML вместо JSON. Убедитесь, что бэкенд запущен и перезапущен через pm2! (${res.status} ${res.statusText})`);
+    }
+
     const data = await res.json();
     if (res.ok && data.data) {
       loadedServerRules.value[selectedServer.value] = data.data;
