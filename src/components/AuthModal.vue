@@ -101,7 +101,7 @@ const handleLogin = async () => {
           ]"
         >
           <IconRenderer name="Globe" size="14" />
-          <span>CubixWorld TCP</span>
+          <span>CubixWorld</span>
         </button>
 
         <button
