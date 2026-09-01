@@ -1223,14 +1223,36 @@ const scrollToBlockInEditor = (id: string) => {
       <div class="space-y-1.5 overflow-y-auto custom-scrollbar max-h-[calc(100vh-12rem)] pr-0.5">
         
         <!-- Undo / Redo Row -->
-        <div class="flex items-center justify-between gap-1.5 w-full">
-          <button type="button" @click="undoState" :disabled="historyIndex <= 0" class="h-10 flex-1 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all">
-            <IconRenderer name="RotateCcw" size="18" class="shrink-0" />
-          </button>
+        <div :class="['flex items-center gap-1.5', isToolbarExpanded ? 'w-full flex-row' : 'flex-col items-center']">
+          <div class="relative group/tool w-full flex justify-center">
+            <button 
+              type="button" 
+              @click="undoState" 
+              :disabled="historyIndex <= 0" 
+              :class="[
+                'rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center transition-all',
+                isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0'
+              ]"
+            >
+              <IconRenderer name="RotateCcw" size="18" class="shrink-0" />
+              <span v-if="isToolbarExpanded" class="text-xs font-semibold text-slate-200">Отменить</span>
+            </button>
+          </div>
 
-          <button type="button" @click="redoState" :disabled="historyIndex >= historyStack.length - 1" class="h-10 flex-1 rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center justify-center transition-all">
-            <IconRenderer name="RotateCw" size="18" class="shrink-0" />
-          </button>
+          <div class="relative group/tool w-full flex justify-center">
+            <button 
+              type="button" 
+              @click="redoState" 
+              :disabled="historyIndex >= historyStack.length - 1" 
+              :class="[
+                'rounded-xl bg-[#121416] hover:bg-[#212429] disabled:opacity-30 text-cyan-400 border border-[#26292d] flex items-center transition-all',
+                isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start w-full' : 'w-10 h-10 justify-center shrink-0'
+              ]"
+            >
+              <IconRenderer name="RotateCw" size="18" class="shrink-0" />
+              <span v-if="isToolbarExpanded" class="text-xs font-semibold text-slate-200">Повторить</span>
+            </button>
+          </div>
         </div>
 
         <div class="w-full h-px bg-[#26292d] my-1"></div>
