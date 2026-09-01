@@ -32,10 +32,10 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Global Light Theme Complete Overrides */
+/* Global Light Theme Complete Overrides (Soft Eye-Friendly Slate & Cream) */
 html.theme-light body {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #f1f3f5;
+  color: #1e293b;
 }
 
 html.theme-light .bg-\[\#0c0d0e\],
@@ -46,9 +46,9 @@ html.theme-light .bg-\[\#0c0d0e\]\/95,
 html.theme-light .from-\[\#0c0d0e\],
 html.theme-light .to-\[\#0c0d0e\],
 html.theme-light footer {
-  background-color: #f8fafc !important;
+  background-color: #f1f3f5 !important;
   background-image: none !important;
-  color: #0f172a !important;
+  color: #1e293b !important;
 }
 
 html.theme-light .bg-\[\#16181a\],
@@ -61,27 +61,27 @@ html.theme-light .bg-\[\#101214\],
 html.theme-light .from-\[\#16181a\],
 html.theme-light .to-\[\#101214\] {
   background-color: #ffffff !important;
-  color: #0f172a !important;
+  color: #1e293b !important;
 }
 
 html.theme-light .bg-\[\#121416\]\/80,
 html.theme-light .bg-\[\#121416\]\/90,
 html.theme-light .bg-\[\#1f2328\],
 html.theme-light .bg-\[\#212429\] {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
+  background-color: #e9ecef !important;
+  color: #1e293b !important;
 }
 
 html.theme-light .border-\[\#26292d\],
 html.theme-light .border-\[\#26292d\]\/80,
 html.theme-light .border-\[\#26292d\]\/50 {
-  border-color: #cbd5e1 !important;
+  border-color: #dbe0e5 !important;
 }
 
 html.theme-light .text-white,
 html.theme-light .text-slate-100,
 html.theme-light .text-slate-200 {
-  color: #0f172a !important;
+  color: #1e293b !important;
 }
 
 html.theme-light .text-slate-300,
@@ -93,9 +93,9 @@ html.theme-light .text-dark-muted {
 html.theme-light input,
 html.theme-light textarea,
 html.theme-light select {
-  color: #0f172a !important;
+  color: #1e293b !important;
   background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
+  border-color: #dbe0e5 !important;
 }
 
 /* Light Theme Overrides for Special Components & Modals */
@@ -111,7 +111,7 @@ html.theme-light .card-banner-shadow {
 }
 
 html.theme-light .profile-modal-banner-overlay {
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.45), rgba(248, 250, 252, 0.95)) !important;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.45), rgba(241, 243, 245, 0.95)) !important;
 }
 
 html.theme-light .profile-modal-banner-img {
@@ -136,16 +136,20 @@ html.theme-light .bg-purple-500\/15 {
 /* TOC Items in Light Mode */
 html.theme-light .bg-emerald-950\/30 {
   background-color: #ffffff !important;
-  color: #0f172a !important;
+  color: #1e293b !important;
 }
 
 html.theme-light .bg-\[\#121417\],
-html.theme-light .bg-\[\#121417\]\/95,
+html.theme-light .bg-\[\#121417\]\/95 {
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+}
+
 html.theme-light .bg-\[\#090a0c\],
 html.theme-light .bg-\[\#181b20\],
 html.theme-light .bg-\[\#1a1d22\] {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
 }
 
 html.theme-light .border-\[\#262a30\] {
