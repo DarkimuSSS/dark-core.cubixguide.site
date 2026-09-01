@@ -1514,6 +1514,46 @@ const stopOutlineDrag = () => {
           rows="2"
           class="w-full bg-transparent text-slate-400 text-sm focus:outline-none placeholder:text-dark-muted/40 resize-none"
         ></textarea>
+
+        <!-- ALWAYS VISIBLE STATUS & VISIBILITY SWITCHES -->
+        <div class="pt-2 border-t border-[#26292d]/60 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Published Switch -->
+          <div class="flex items-center justify-between p-3 rounded-xl bg-[#0c0d0e] border border-[#26292d]">
+            <div class="space-y-0.5">
+              <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                <IconRenderer :name="guide.meta.published ? 'CheckCircle2' : 'FileEdit'" size="14" :class="guide.meta.published ? 'text-emerald-400' : 'text-amber-400'" />
+                <span>Статус: {{ guide.meta.published ? 'Опубликован' : 'Черновик' }}</span>
+              </div>
+              <div class="text-[10px] text-dark-muted">Разрешить выгрузку гайда в базу</div>
+            </div>
+            <button 
+              type="button"
+              @click="updatePublished(!guide.meta.published)"
+              :class="['w-11 h-6 rounded-full transition-colors relative p-0.5 border cursor-pointer', guide.meta.published ? 'bg-emerald-600 border-emerald-400' : 'bg-[#1c1f22] border-[#26292d]']"
+            >
+              <div :class="['w-4 h-4 rounded-full bg-white transition-transform shadow-md', guide.meta.published ? 'translate-x-5' : 'translate-x-0']"></div>
+            </button>
+          </div>
+
+          <!-- Visible Switch -->
+          <div :class="['flex items-center justify-between p-3 rounded-xl bg-[#0c0d0e] border transition-all', guide.meta.published ? 'border-[#26292d]' : 'border-[#26292d]/40 opacity-50']">
+            <div class="space-y-0.5">
+              <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                <IconRenderer :name="guide.meta.isVisible ? 'Eye' : 'EyeOff'" size="14" :class="guide.meta.isVisible ? 'text-cyan-400' : 'text-slate-400'" />
+                <span>Отображение: {{ guide.meta.isVisible ? 'Публичный' : 'Скрытый' }}</span>
+              </div>
+              <div class="text-[10px] text-dark-muted">Виден обычным пользователям</div>
+            </div>
+            <button 
+              type="button"
+              :disabled="!guide.meta.published"
+              @click="updateIsVisible(!guide.meta.isVisible)"
+              :class="['w-11 h-6 rounded-full transition-colors relative p-0.5 border cursor-pointer disabled:cursor-not-allowed', guide.meta.isVisible ? 'bg-cyan-600 border-cyan-400' : 'bg-[#1c1f22] border-[#26292d]']"
+            >
+              <div :class="['w-4 h-4 rounded-full bg-white transition-transform shadow-md', guide.meta.isVisible ? 'translate-x-5' : 'translate-x-0']"></div>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Toggle button -->
@@ -1587,46 +1627,6 @@ const stopOutlineDrag = () => {
             <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Сложность</label>
             <div class="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-lg border border-[#26292d]">
               <button v-for="diff in difficulties" :key="diff" type="button" @click="updateDifficulty(diff)" :class="['flex-1 py-1 rounded text-[11px] font-semibold transition-all', guide.meta.difficulty === diff ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'text-dark-muted hover:text-white']">{{ diff }}</button>
-            </div>
-          </div>
-
-          <!-- PUBLISH & VISIBILITY STATUS CONTROLS -->
-          <div class="sm:col-span-2 pt-2 border-t border-[#26292d]/60 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <!-- Published Switch -->
-            <div class="flex items-center justify-between p-3 rounded-xl bg-[#0c0d0e] border border-[#26292d]">
-              <div class="space-y-0.5">
-                <div class="text-xs font-bold text-white flex items-center gap-1.5">
-                  <IconRenderer :name="guide.meta.published ? 'CheckCircle2' : 'FileEdit'" size="14" :class="guide.meta.published ? 'text-emerald-400' : 'text-amber-400'" />
-                  <span>Статус: {{ guide.meta.published ? 'Опубликован' : 'Черновик' }}</span>
-                </div>
-                <div class="text-[10px] text-dark-muted">Разрешить выгрузку гайда в базу</div>
-              </div>
-              <button 
-                type="button"
-                @click="updatePublished(!guide.meta.published)"
-                :class="['w-11 h-6 rounded-full transition-colors relative p-0.5 border', guide.meta.published ? 'bg-emerald-600 border-emerald-400' : 'bg-[#1c1f22] border-[#26292d]']"
-              >
-                <div :class="['w-4 h-4 rounded-full bg-white transition-transform shadow-md', guide.meta.published ? 'translate-x-5' : 'translate-x-0']"></div>
-              </button>
-            </div>
-
-            <!-- Visible Switch -->
-            <div :class="['flex items-center justify-between p-3 rounded-xl bg-[#0c0d0e] border transition-all', guide.meta.published ? 'border-[#26292d]' : 'border-[#26292d]/40 opacity-50']">
-              <div class="space-y-0.5">
-                <div class="text-xs font-bold text-white flex items-center gap-1.5">
-                  <IconRenderer :name="guide.meta.isVisible ? 'Eye' : 'EyeOff'" size="14" :class="guide.meta.isVisible ? 'text-cyan-400' : 'text-slate-400'" />
-                  <span>Видимость: {{ guide.meta.isVisible ? 'Публичный' : 'Скрытый' }}</span>
-                </div>
-                <div class="text-[10px] text-dark-muted">Отображать обычным игрокам</div>
-              </div>
-              <button 
-                type="button"
-                :disabled="!guide.meta.published"
-                @click="updateIsVisible(!guide.meta.isVisible)"
-                :class="['w-11 h-6 rounded-full transition-colors relative p-0.5 border disabled:cursor-not-allowed', guide.meta.isVisible ? 'bg-cyan-600 border-cyan-400' : 'bg-[#1c1f22] border-[#26292d]']"
-              >
-                <div :class="['w-4 h-4 rounded-full bg-white transition-transform shadow-md', guide.meta.isVisible ? 'translate-x-5' : 'translate-x-0']"></div>
-              </button>
             </div>
           </div>
         </div>
