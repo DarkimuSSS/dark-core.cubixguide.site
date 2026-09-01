@@ -633,9 +633,29 @@ const confirmDeleteGuide = async () => {
 };
 
 const initialCatalogSearchQuery = ref('');
+const headerSearchQuery = ref('');
+const isHeaderSearchFocused = ref(false);
+
+const handleHeaderSearchInput = (val: string) => {
+  headerSearchQuery.value = val;
+  initialCatalogSearchQuery.value = val;
+  if (mode.value !== 'home') {
+    mode.value = 'home';
+  }
+};
+
+const handleHeaderCategorySelect = (category: string) => {
+  initialCatalogSearchQuery.value = category;
+  headerSearchQuery.value = category;
+  if (mode.value !== 'home') {
+    mode.value = 'home';
+  }
+  showToast(`Категория: ${category}`);
+};
 
 const handleViewAllAuthorGuides = (username: string) => {
   initialCatalogSearchQuery.value = username;
+  headerSearchQuery.value = username;
   mode.value = 'home';
   isProfileModalOpen.value = false;
   showToast(`Показаны все гайды автора ${username}`);
@@ -644,22 +664,22 @@ const handleViewAllAuthorGuides = (username: string) => {
 
 <template>
   <div class="h-screen w-screen overflow-hidden bg-[#0c0d0e] text-[#e2e8f0] font-sans antialiased flex flex-col">
-    <!-- RICH VIBRANT HIGH-TECH TOP HEADER BAR -->
-    <header class="bg-[#121417]/95 backdrop-blur-xl border-b border-[#262a30] h-16 shrink-0 px-4 sm:px-6 flex items-center justify-between z-40 shadow-2xl transition-all select-none">
+    <!-- MODULAR EXPANDABLE HIGH-TECH TOP HEADER BAR -->
+    <header class="bg-[#121417]/95 backdrop-blur-xl border-b border-[#262a30] h-16 shrink-0 px-4 sm:px-6 flex items-center justify-between z-40 shadow-2xl transition-all select-none gap-4">
       
-      <!-- Left: Logo, Title & Navigation Dock -->
-      <div class="flex items-center gap-5">
+      <!-- Left: Logo & Navigation Dock -->
+      <div class="flex items-center gap-4">
         <!-- Logo Brand Button -->
         <button 
           @click="mode = 'home'"
-          class="flex items-center gap-3 group text-left transition-all hover:opacity-95 cursor-pointer"
+          class="flex items-center gap-3 group text-left transition-all hover:opacity-95 cursor-pointer shrink-0"
         >
           <div class="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/50 group-hover:shadow-emerald-500/20 group-hover:scale-105 transition-all duration-300 overflow-hidden">
             <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center text-emerald-400 overflow-hidden">
               <img src="/logo.jpg" alt="CubixGuide Logo" class="w-full h-full object-cover" />
             </div>
           </div>
-          <div class="space-y-0.5">
+          <div class="space-y-0.5 hidden sm:block">
             <div class="flex items-center gap-2">
               <span class="text-base font-black text-white tracking-tight group-hover:text-emerald-400 transition-colors">CubixGuide</span>
               <span class="text-[9px] uppercase font-bold tracking-wider bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full shadow-sm">
@@ -670,16 +690,16 @@ const handleViewAllAuthorGuides = (username: string) => {
           </div>
         </button>
 
-        <div class="h-6 w-px bg-[#262a30] hidden md:block"></div>
+        <div class="h-6 w-px bg-[#262a30] hidden lg:block"></div>
 
         <!-- Navigation Tabs Dock -->
-        <nav class="hidden md:flex items-center bg-[#090a0c] p-1 rounded-2xl border border-[#262a30] shadow-inner gap-1">
+        <nav class="hidden lg:flex items-center bg-[#090a0c] p-1 rounded-2xl border border-[#262a30] shadow-inner gap-1">
           <!-- 1. Главная -->
           <button
             type="button"
             @click="mode = 'home'"
             :class="[
-              'px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 cursor-pointer',
+              'px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 cursor-pointer',
               mode === 'home'
                 ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
                 : 'text-slate-300 hover:text-white hover:bg-[#181b20]'
@@ -695,7 +715,7 @@ const handleViewAllAuthorGuides = (username: string) => {
             type="button"
             @click="mode = 'reader'"
             :class="[
-              'px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 cursor-pointer',
+              'px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 cursor-pointer',
               mode === 'reader'
                 ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-950/60 ring-1 ring-cyan-400/40'
                 : 'text-slate-300 hover:text-white hover:bg-[#181b20]'
@@ -710,7 +730,7 @@ const handleViewAllAuthorGuides = (username: string) => {
             type="button"
             @click="mode = 'favorites'"
             :class="[
-              'px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 cursor-pointer',
+              'px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 cursor-pointer',
               mode === 'favorites'
                 ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-950/60 ring-1 ring-amber-400/40'
                 : 'text-slate-300 hover:text-white hover:bg-[#181b20]'
@@ -727,7 +747,7 @@ const handleViewAllAuthorGuides = (username: string) => {
           <button
             type="button"
             @click="openRandomGuide"
-            class="px-3 py-1.5 rounded-xl text-xs font-extrabold text-purple-400 hover:text-purple-300 hover:bg-[#181b20] flex items-center gap-1.5 transition-all duration-300 cursor-pointer"
+            class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold text-purple-400 hover:text-purple-300 hover:bg-[#181b20] flex items-center gap-1.5 transition-all duration-300 cursor-pointer"
             title="Открыть случайную статью из базы"
           >
             <IconRenderer name="Sparkles" size="14" class="text-purple-400 animate-pulse" />
@@ -736,11 +756,49 @@ const handleViewAllAuthorGuides = (username: string) => {
         </nav>
       </div>
 
+      <!-- Center: Smart Embedded Global Search Input (Scalable Modularity) -->
+      <div class="flex-1 max-w-md mx-2 relative group hidden md:block">
+        <div class="relative flex items-center">
+          <IconRenderer name="Search" size="15" class="absolute left-3.5 text-slate-400 group-focus-within:text-emerald-400 transition-colors pointer-events-none" />
+          <input
+            type="text"
+            :value="headerSearchQuery"
+            @input="handleHeaderSearchInput(($event.target as HTMLInputElement).value)"
+            @focus="isHeaderSearchFocused = true"
+            @blur="setTimeout(() => isHeaderSearchFocused = false, 200)"
+            placeholder="Быстрый поиск руководств, модов и разделов..."
+            class="w-full bg-[#090a0c] border border-[#262a30] focus:border-emerald-500/60 focus:bg-[#0e1013] text-white placeholder-slate-500 text-xs rounded-2xl pl-10 pr-8 py-2 focus:outline-none transition-all shadow-inner"
+          />
+          <button
+            v-if="headerSearchQuery"
+            @click="handleHeaderSearchInput('')"
+            class="absolute right-3 text-slate-400 hover:text-white p-0.5 rounded-md hover:bg-[#1f2328] transition-colors"
+          >
+            <IconRenderer name="X" size="12" />
+          </button>
+        </div>
+
+        <!-- Quick Category Dropdown Pills Bar on Focus -->
+        <div v-if="isHeaderSearchFocused" class="absolute top-full left-0 right-0 mt-2 bg-[#121417] border border-[#262a30] rounded-2xl shadow-2xl p-3 z-50 space-y-2 animate-in fade-in zoom-in-95 duration-150">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">Быстрые категории:</div>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              v-for="cat in ['ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий']"
+              :key="cat"
+              @click="handleHeaderCategorySelect(cat)"
+              class="text-xs font-semibold px-2.5 py-1 rounded-xl bg-[#1a1d22] hover:bg-emerald-600 hover:text-white border border-[#262a30] text-slate-300 transition-all cursor-pointer"
+            >
+              {{ cat }}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Right: Action Buttons & Author User Card -->
-      <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-2.5 shrink-0">
         
         <!-- Unsaved Draft Indicator Badge -->
-        <div v-if="hasUnsavedDraft && isAuthenticated" class="hidden xl:flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl shadow-md">
+        <div v-if="hasUnsavedDraft && isAuthenticated" class="hidden 2xl:flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl shadow-md">
           <IconRenderer name="Sliders" size="13" class="text-amber-400 animate-pulse" />
           <span class="text-[11px] text-amber-300 font-semibold">Черновик ({{ draftSavedTime }})</span>
           <button @click="restoreDraft" class="text-[10px] bg-amber-600 text-white font-bold px-2 py-0.5 rounded-lg hover:bg-amber-500 transition-colors cursor-pointer">
