@@ -583,6 +583,15 @@ try {
 
   const { GREGTECH_RULES_DATA } = require('../src/data/gregtechRulesData');
   saveServerRules(GREGTECH_RULES_DATA);
+
+  const { HITECH_RULES_DATA } = require('../src/data/hitechRulesData');
+  saveServerRules(HITECH_RULES_DATA);
+
+  const { ICEANDFIRE_RULES_DATA } = require('../src/data/iceandfireRulesData');
+  saveServerRules(ICEANDFIRE_RULES_DATA);
+
+  const { INDUSTRIAL_RULES_DATA } = require('../src/data/industrialRulesData');
+  saveServerRules(INDUSTRIAL_RULES_DATA);
 } catch (e) {
   console.error('Error seeding server rules:', e);
 }
