@@ -611,6 +611,9 @@ try {
 
   const { OCEANBLOCK_1165_RULES_DATA } = require('../src/data/oceanblock1165RulesData');
   saveServerRules(OCEANBLOCK_1165_RULES_DATA);
+
+  const { COBBLEMON_1211_RULES_DATA } = require('../src/data/cobblemon1211RulesData');
+  saveServerRules(COBBLEMON_1211_RULES_DATA);
 } catch (e) {
   console.error('Error seeding server rules:', e);
 }

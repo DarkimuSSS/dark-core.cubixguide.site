@@ -12,10 +12,10 @@ app.use(express.json({ limit: '10mb' }));
 
 const DEFAULT_CUBIX_SERVERS = [
   "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
-  "OneBlock-Mobile", "Pixelmon_1211", "HiTech", "TechnoMagic", "UltraSky", 
+  "OneBlock-Mobile", "Pixelmon_1211", "HiTech", "TechnoMagic", 
   "HiTech-Mobile", "Cobblemon_1211", "TechnoMagic-Mobile", "OceanBlock_1165", 
-  "Industrial", "GregTech", "Pixelmon_1165", "Pixelmon", "TechnomagicTest", 
-  "SkyTech", "MagicalTech"
+  "Industrial", "GregTech", "Pixelmon_1165", "Pixelmon", 
+  "SkyTech"
 ];
 
 // Helper to format DB row to Guide object
