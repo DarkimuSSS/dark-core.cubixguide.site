@@ -51,8 +51,8 @@ const handleLogin = async () => {
     } else {
       errorMessage.value = data.error || 'Неверный никнейм или пароль';
     }
-  } catch (err) {
-    errorMessage.value = 'Ошибка соединения с сервером авторизации';
+  } catch (err: any) {
+    errorMessage.value = err.message ? `Ошибка: ${err.message}` : 'Ошибка соединения с бэкендом';
   } finally {
     isLoading.value = false;
   }
