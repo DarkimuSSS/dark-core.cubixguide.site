@@ -139,18 +139,14 @@ export class CubixAuthClient {
   // ==========================================
 
   private encryptPassword(password: string, modulusHex: string, exponentHex: string): Buffer {
-    const publicKey = crypto.createPublicKey({
-      key: {
-        kty: 'RSA',
-        n: Buffer.from(modulusHex, 'hex').toString('base64url'),
-        e: Buffer.from(exponentHex, 'hex').toString('base64url'),
-      },
-      format: 'jwk',
-    });
+    const modulusBuf = Buffer.from(modulusHex, 'hex');
+    const pem = '-----BEGIN PUBLIC KEY-----\n' +
+      Buffer.from('30820122300d06092a864886f70d01010105000382010f003082010a0282010100' + modulusHex + '0203010001', 'hex').toString('base64').match(/.{1,64}/g)?.join('\n') +
+      '\n-----END PUBLIC KEY-----';
 
     return crypto.publicEncrypt(
       {
-        key: publicKey,
+        key: pem,
         padding: crypto.constants.RSA_PKCS1_PADDING,
       },
       Buffer.from(password, 'utf8')
