@@ -1103,41 +1103,122 @@ const handleViewAllAuthorGuides = (username: string) => {
             </div>
           </div>
 
-          <!-- 3. EDITOR VIEW (Only for authenticated author) -->
-        <div v-else-if="mode === 'editor' && isAuthenticated && activeGuide" class="px-3 sm:px-4 pt-4">
-          <GuideEditor
-            :guide="activeGuide"
-            @update:guide="updateActiveGuide"
-            @toggle-preview="handleTogglePreview"
-            @publish="handlePublish"
-            @delete="requestDeleteGuide"
+          <!-- 3. MY UNPUBLISHED DRAFTS VIEW -->
+          <div v-else-if="mode === 'drafts' && isAuthenticated" class="px-3 sm:px-6 pt-4 space-y-6 pb-24">
+            <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
+              <div>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                  <IconRenderer name="FileText" size="22" class="text-purple-400" />
+                  Мои черновики ({{ myDraftsList.length }})
+                </h2>
+                <p class="text-xs text-dark-muted">Неопубликованные руководства, находящиеся в процессе написания</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button @click="createNewGuide" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all shadow-md flex items-center gap-1.5">
+                  <IconRenderer name="Plus" size="14" />
+                  <span>Создать черновик</span>
+                </button>
+                <button @click="mode = 'home'" class="text-xs text-cyan-400 hover:underline">На Главную</button>
+              </div>
+            </div>
+
+            <div v-if="myDraftsList.length === 0" class="text-center py-20 bg-[#16181a] border border-[#26292d] rounded-2xl space-y-3">
+              <IconRenderer name="FileText" size="36" class="mx-auto text-purple-400/40" />
+              <h3 class="text-base font-bold text-white">Черновиков пока нет</h3>
+              <p class="text-xs text-dark-muted">Создайте новый гайд, и не опубликованные статьи будут сохранены здесь</p>
+              <button @click="createNewGuide" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-lg">
+                + Создать первый черновик
+              </button>
+            </div>
+
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div
+                v-for="guide in myDraftsList"
+                :key="guide.meta.id"
+                @click="selectGuide(guide.meta.id); mode = 'editor';"
+                class="group bg-[#16181a] hover:bg-[#1c1f22] border border-purple-500/30 hover:border-purple-400 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl hover:shadow-purple-950/30 hover:-translate-y-1 overflow-hidden relative"
+              >
+                <!-- DRAFT BADGE TOP LEFT -->
+                <div class="absolute top-2.5 left-2.5 z-20 bg-purple-500/20 text-purple-300 border border-purple-500/40 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold backdrop-blur-md shadow-md flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+                  <span>Черновик</span>
+                </div>
+
+                <!-- COVER BANNER -->
+                <div class="h-28 sm:h-32 w-full relative overflow-hidden flex-shrink-0">
+                  <img v-if="guide.meta.coverUrl" :src="guide.meta.coverUrl" class="w-full h-full object-cover object-[center_30%] group-hover:scale-105 transition-transform duration-500" />
+                  <div v-else-if="guide.meta.coverGradient" :class="['w-full h-full bg-gradient-to-tr', guide.meta.coverGradient]"></div>
+                  <div v-else class="w-full h-full bg-gradient-to-r from-purple-950 via-slate-900 to-[#121416]"></div>
+                  <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/20 to-black/30 pointer-events-none"></div>
+                </div>
+
+                <!-- BODY -->
+                <div class="p-4 sm:p-5 space-y-3 flex-1 flex flex-col justify-between">
+                  <div class="space-y-1.5">
+                    <h3 class="text-base font-bold text-white group-hover:text-purple-300 transition-colors line-clamp-2 leading-snug">
+                      {{ guide.meta.title || '(Без названия)' }}
+                    </h3>
+                    <p class="text-xs text-dark-muted line-clamp-2 leading-relaxed">
+                      {{ guide.meta.summary || 'Черновик статьи в процессе наполнения...' }}
+                    </p>
+                  </div>
+
+                  <div class="flex items-center justify-between pt-2.5 border-t border-[#26292d]/80 text-[11px]">
+                    <span class="text-[10px] text-dark-muted">Блоков: {{ (guide.blocks || []).length }}</span>
+                    <div class="flex items-center gap-1.5">
+                      <button 
+                        @click.stop="requestDeleteGuideById(guide.meta.id)" 
+                        class="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-bold transition-all"
+                        title="Удалить черновик"
+                      >
+                        Удалить
+                      </button>
+                      <button class="bg-purple-600 group-hover:bg-purple-500 text-white px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
+                        <IconRenderer name="Edit3" size="12" />
+                        <span>Редактировать</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. EDITOR VIEW (Only for authenticated author) -->
+          <div v-else-if="mode === 'editor' && isAuthenticated && activeGuide" class="px-3 sm:px-6 pt-4">
+            <GuideEditor
+              :guide="activeGuide"
+              @update:guide="updateActiveGuide"
+              @toggle-preview="handleTogglePreview"
+              @publish="handlePublish"
+              @delete="requestDeleteGuide"
+            />
+          </div>
+
+          <!-- 5. SINGLE GUIDE WIKI READER VIEW -->
+          <div v-else-if="activeGuide" class="px-3 sm:px-6 pt-4">
+            <GuideView
+              :guide="activeGuide"
+              :all-guides="guides"
+              :is-favorited="favoriteGuideIds.includes(activeGuide.meta.id)"
+              :is-preview-mode="isPreviewActive"
+              @select-guide="selectGuide"
+              @toggle-bookmark="toggleBookmarkGuide"
+              @edit-mode="openEditorProtection"
+              @open-author="openAuthorProfile"
+              @exit-preview="handleExitPreview"
+            />
+          </div>
+
+          <!-- SINGLE UNIFIED SITE FOOTER -->
+          <SiteFooter
+            :guides-count="guides.length"
+            :servers-count="21"
+            @navigate="mode = 'home'"
+            @open-terms="isTermsOpen = true"
           />
         </div>
-
-        <!-- 4. SINGLE GUIDE WIKI READER VIEW -->
-        <div v-else-if="activeGuide" class="px-3 sm:px-4 pt-4">
-          <GuideView
-            :guide="activeGuide"
-            :all-guides="guides"
-            :is-favorited="favoriteGuideIds.includes(activeGuide.meta.id)"
-            :is-preview-mode="isPreviewActive"
-            @select-guide="selectGuide"
-            @toggle-bookmark="toggleBookmarkGuide"
-            @edit-mode="openEditorProtection"
-            @open-author="openAuthorProfile"
-            @exit-preview="handleExitPreview"
-          />
-        </div>
-      </div>
-    </template>
-
-      <!-- SINGLE UNIFIED SITE FOOTER -->
-      <SiteFooter
-        :guides-count="guides.length"
-        :servers-count="21"
-        @navigate="mode = 'home'"
-        @open-terms="isTermsOpen = true"
-      />
+      </template>
 
       <!-- DELETE GUIDE CONFIRMATION MODAL -->
       <ConfirmModal
