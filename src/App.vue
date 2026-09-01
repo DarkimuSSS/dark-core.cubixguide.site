@@ -74,20 +74,20 @@ const handleClearDrafts = () => {
 // Bookmarked / Favorited guide IDs in LocalStorage
 const favoriteGuideIds = ref<string[]>([]);
 
-// Theme Switcher State: 'dark' | 'light' | 'emerald' | 'cyberpunk'
-type ThemeMode = 'dark' | 'light' | 'emerald' | 'cyberpunk';
+// Theme Switcher State: 'dark' | 'light' | 'emerald' | 'cyberpunk' | 'midnight' | 'sapphire' | 'sunset' | 'dracula'
+type ThemeMode = 'dark' | 'light' | 'emerald' | 'cyberpunk' | 'midnight' | 'sapphire' | 'sunset' | 'dracula';
 const currentTheme = ref<ThemeMode>('dark');
 
 const applyTheme = (theme: ThemeMode) => {
   currentTheme.value = theme;
   localStorage.setItem('cubix_theme', theme);
   const html = document.documentElement;
-  html.classList.remove('theme-dark', 'theme-light', 'theme-emerald', 'theme-cyberpunk');
+  html.classList.remove('theme-dark', 'theme-light', 'theme-emerald', 'theme-cyberpunk', 'theme-midnight', 'theme-sapphire', 'theme-sunset', 'theme-dracula');
   html.classList.add(`theme-${theme}`);
 };
 
 const toggleTheme = () => {
-  const themes: ThemeMode[] = ['dark', 'light', 'emerald', 'cyberpunk'];
+  const themes: ThemeMode[] = ['dark', 'light', 'emerald', 'cyberpunk', 'midnight', 'sapphire', 'sunset', 'dracula'];
   const cur = currentTheme.value || 'dark';
   const idx = themes.indexOf(cur);
   const nextIdx = (idx >= 0 ? idx + 1 : 0) % themes.length;

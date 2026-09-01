@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 
-type ThemeMode = 'dark' | 'light' | 'emerald' | 'cyberpunk';
+type ThemeMode = 'dark' | 'light' | 'emerald' | 'cyberpunk' | 'midnight' | 'sapphire' | 'sunset' | 'dracula';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -46,7 +46,11 @@ const themesList: { id: ThemeMode; name: string; icon: string; color: string; de
   { id: 'dark', name: 'Тёмная (Dark Core)', icon: 'Moon', color: 'text-cyan-400', desc: 'Фирменный тёмный стеклянный стиль', previewBg: 'bg-[#0c0d0e] border-[#26292d]' },
   { id: 'light', name: 'Светлая (Daylight)', icon: 'Sun', color: 'text-amber-400', desc: 'Контрастный дневной белый интерфейс', previewBg: 'bg-slate-100 border-slate-300' },
   { id: 'emerald', name: 'Изумрудная (Emerald)', icon: 'Sparkles', color: 'text-emerald-400', desc: 'Глубокие изумрудные тона', previewBg: 'bg-[#061410] border-[#153e33]' },
-  { id: 'cyberpunk', name: 'Киберпанк (Neon)', icon: 'Zap', color: 'text-pink-400', desc: 'Яркие неоновые розовые акценты', previewBg: 'bg-[#120917] border-[#3b184c]' }
+  { id: 'cyberpunk', name: 'Киберпанк (Neon)', icon: 'Zap', color: 'text-pink-400', desc: 'Яркие неоновые розовые акценты', previewBg: 'bg-[#120917] border-[#3b184c]' },
+  { id: 'midnight', name: 'Полночь (Midnight Blue)', icon: 'Moon', color: 'text-blue-400', desc: 'Глубокий тёмно-синий океанский стиль', previewBg: 'bg-[#070b14] border-[#14223b]' },
+  { id: 'sapphire', name: 'Сапфир (Royal Blue)', icon: 'Shield', color: 'text-sky-400', desc: 'Королевский насыщенный синий', previewBg: 'bg-[#06101e] border-[#133256]' },
+  { id: 'sunset', name: 'Закат (Warm Sunset)', icon: 'Sun', color: 'text-amber-500', desc: 'Теплые закатные янтарные градиенты', previewBg: 'bg-[#140b08] border-[#3d1e12]' },
+  { id: 'dracula', name: 'Дракула (Vampire Violet)', icon: 'Sparkles', color: 'text-purple-400', desc: 'Элегантный тёмно-фиолетовый стиль', previewBg: 'bg-[#100a1c] border-[#2e1c4e]' }
 ];
 
 const fileInput = ref<HTMLInputElement | null>(null);
