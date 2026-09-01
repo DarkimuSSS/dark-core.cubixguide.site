@@ -577,12 +577,15 @@ const getVariantClass = (variant?: BlockVariant) => {
                       <img :src="sub.imageUrl" :alt="sub.imageCaption" class="max-h-[500px] w-auto object-contain rounded-xl" />
                     </div>
                   </div>
-                  <div v-else-if="sub.type === 'checklist'" class="p-4 rounded-xl bg-[#121416] border border-[#26292d] space-y-2">
-                    <div class="text-xs font-bold text-white mb-2">{{ sub.checklistTitle || 'Чек-лист' }}</div>
-                    <div v-for="item in (sub.checklistItems || [])" :key="item.id" class="flex items-center gap-2 text-xs text-slate-200">
-                      <input type="checkbox" :checked="item.completed" disabled class="accent-emerald-500 rounded" />
-                      <span>{{ item.text }}</span>
+                  <div v-else-if="sub.type === 'checklist'" class="p-4 rounded-xl bg-[#0c0d0e] border border-[#26292d] space-y-2">
+                    <div v-if="sub.checklistTitle" class="text-xs font-bold text-white mb-2 flex items-center gap-1.5 border-b border-[#26292d]/80 pb-2">
+                      <IconRenderer name="CheckCircle2" size="14" class="text-emerald-400" />
+                      <span>{{ sub.checklistTitle }}</span>
                     </div>
+                    <label v-for="item in (sub.checklistItems || [])" :key="item.id" class="flex items-center gap-2.5 p-2 rounded-lg bg-[#16181a] border border-[#26292d] cursor-pointer hover:border-emerald-500/40 text-xs transition-all group/subchk select-none">
+                      <input type="checkbox" :checked="item.completed" @change="item.completed = !item.completed" class="w-3.5 h-3.5 accent-emerald-500 rounded cursor-pointer shrink-0" />
+                      <span :class="['transition-all flex-1', item.completed ? 'line-through text-dark-muted/70' : 'text-slate-200 group-hover/subchk:text-white']">{{ item.text }}</span>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -657,10 +660,10 @@ const getVariantClass = (variant?: BlockVariant) => {
 
             <!-- Interactive Reader Step Checklist -->
             <div v-else-if="block.type === 'checklist'" :class="['p-6 rounded-2xl h-full flex flex-col justify-between shadow-xl space-y-4', getVariantClass(block.variant)]">
-              <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
+              <div v-if="block.checklistTitle" class="flex items-center justify-between border-b border-[#26292d]/80 pb-3">
                 <div class="text-sm font-bold text-white flex items-center gap-2">
                   <IconRenderer name="CheckCircle2" size="18" class="text-emerald-400" />
-                  {{ block.checklistTitle || 'Пошаговый чек-лист' }}
+                  {{ block.checklistTitle }}
                 </div>
               </div>
 
@@ -668,11 +671,20 @@ const getVariantClass = (variant?: BlockVariant) => {
                 <label 
                   v-for="item in (block.checklistItems || [])" 
                   :key="item.id"
-                  class="flex items-center gap-3 p-3 rounded-xl bg-[#0c0d0e] border border-[#26292d] cursor-pointer hover:border-[#3b3f46] transition-all"
+                  class="flex items-center gap-3 p-3.5 rounded-xl bg-[#0c0d0e] border border-[#26292d] cursor-pointer hover:border-emerald-500/40 transition-all group/chk select-none"
                 >
-                  <span :class="['text-xs sm:text-sm transition-all', item.completed ? 'line-through text-dark-muted' : 'text-slate-200']">
+                  <input
+                    type="checkbox"
+                    :checked="item.completed"
+                    @change="item.completed = !item.completed"
+                    class="w-4 h-4 rounded border-[#26292d] bg-[#16181a] text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-emerald-500 shrink-0"
+                  />
+                  <span :class="['text-xs sm:text-sm font-medium transition-all flex-1', item.completed ? 'line-through text-dark-muted/70' : 'text-slate-200 group-hover/chk:text-white']">
                     {{ item.text }}
                   </span>
+                  <div v-if="item.completed" class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] shrink-0">
+                    ✓
+                  </div>
                 </label>
               </div>
             </div>
