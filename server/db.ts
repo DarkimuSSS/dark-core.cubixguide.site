@@ -114,19 +114,21 @@ export function saveServerRules(rulesData: { server_id: string; server_name: str
 }
 
 export function recordTelemetryEvent(
-  eventType: 'page_view' | 'guide_view' | 'guide_create' | 'guide_edit' | 'guide_publish' | 'guide_delete' | 'user_login',
+  eventType: string,
   details: {
     guideId?: string;
     guideTitle?: string;
     username?: string;
     ipAddress?: string;
     userAgent?: string;
+    extraData?: string;
+    durationSeconds?: number;
   }
 ) {
   try {
     const stmt = db.prepare(`
-      INSERT INTO telemetry_logs (event_type, guide_id, guide_title, username, ip_address, user_agent, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO telemetry_logs (event_type, guide_id, guide_title, username, ip_address, user_agent, extra_data, duration_seconds, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       eventType,
@@ -135,6 +137,8 @@ export function recordTelemetryEvent(
       details.username || null,
       details.ipAddress || null,
       details.userAgent || null,
+      details.extraData || null,
+      details.durationSeconds || null,
       new Date().toISOString()
     );
   } catch (err) {
@@ -146,6 +150,8 @@ export function getTelemetryStats() {
   const totalViews = (db.prepare(`SELECT COUNT(*) as count FROM telemetry_logs WHERE event_type IN ('guide_view', 'page_view')`).get() as any)?.count || 0;
   const totalEdits = (db.prepare(`SELECT COUNT(*) as count FROM telemetry_logs WHERE event_type IN ('guide_edit', 'guide_create', 'guide_publish')`).get() as any)?.count || 0;
   const totalLogins = (db.prepare(`SELECT COUNT(*) as count FROM telemetry_logs WHERE event_type = 'user_login'`).get() as any)?.count || 0;
+  const totalSearches = (db.prepare(`SELECT COUNT(*) as count FROM telemetry_logs WHERE event_type = 'search_query'`).get() as any)?.count || 0;
+  const totalBookmarks = (db.prepare(`SELECT COUNT(*) as count FROM telemetry_logs WHERE event_type = 'bookmark_toggle'`).get() as any)?.count || 0;
   
   const recentLogs = db.prepare(`
     SELECT * FROM telemetry_logs ORDER BY id DESC LIMIT 50
@@ -159,11 +165,31 @@ export function getTelemetryStats() {
     ORDER BY views DESC LIMIT 5
   `).all();
 
+  const topSearches = db.prepare(`
+    SELECT extra_data as query, COUNT(*) as count
+    FROM telemetry_logs
+    WHERE event_type = 'search_query' AND extra_data IS NOT NULL AND extra_data != ''
+    GROUP BY extra_data
+    ORDER BY count DESC LIMIT 5
+  `).all();
+
+  const categoryClicks = db.prepare(`
+    SELECT extra_data as category, COUNT(*) as count
+    FROM telemetry_logs
+    WHERE event_type = 'category_select' AND extra_data IS NOT NULL
+    GROUP BY extra_data
+    ORDER BY count DESC LIMIT 5
+  `).all();
+
   return {
     totalViews,
     totalEdits,
     totalLogins,
+    totalSearches,
+    totalBookmarks,
     topGuides,
+    topSearches,
+    categoryClicks,
     recentLogs
   };
 }
@@ -178,7 +204,8 @@ try { db.exec(`ALTER TABLE guides ADD COLUMN server TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN co_authors TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN cover_url TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN cover_gradient TEXT;`); } catch (e) {}
-try { db.exec(`ALTER TABLE guides ADD COLUMN is_visible INTEGER NOT NULL DEFAULT 0;`); } catch (e) {}
+try { db.exec(`ALTER TABLE telemetry_logs ADD COLUMN extra_data TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE telemetry_logs ADD COLUMN duration_seconds INTEGER;`); } catch (e) {}
 
 // Password hashing helper (SHA-256 with salt from environment)
 export function hashPassword(password: string): string {

@@ -284,14 +284,16 @@ app.get('/api/guides/:id', (req, res) => {
 // Telemetry API Endpoints (For Admin Stats & Client Track)
 app.post('/api/telemetry/track', (req, res) => {
   try {
-    const { eventType, guideId, guideTitle, username } = req.body;
+    const { eventType, guideId, guideTitle, username, extraData, durationSeconds } = req.body;
     if (eventType) {
       recordTelemetryEvent(eventType, {
         guideId,
         guideTitle,
         username,
         ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
-        userAgent: req.headers['user-agent']
+        userAgent: req.headers['user-agent'],
+        extraData: extraData ? String(extraData) : undefined,
+        durationSeconds: typeof durationSeconds === 'number' ? durationSeconds : undefined
       });
     }
     res.json({ ok: true });

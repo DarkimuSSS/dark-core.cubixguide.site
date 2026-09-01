@@ -296,7 +296,8 @@ const handlePopState = () => {
 };
 
 const toggleBookmarkGuide = (guideId: string) => {
-  if (favoriteGuideIds.value.includes(guideId)) {
+  const isAdding = !favoriteGuideIds.value.includes(guideId);
+  if (!isAdding) {
     favoriteGuideIds.value = favoriteGuideIds.value.filter(id => id !== guideId);
     showToast('Удалено из закладок');
   } else {
@@ -304,6 +305,18 @@ const toggleBookmarkGuide = (guideId: string) => {
     showToast('Добавлено в закладки ⭐');
   }
   localStorage.setItem('cubix_favorite_guides', JSON.stringify(favoriteGuideIds.value));
+
+  // Отправка события телеметрии о закладках
+  fetch('/api/telemetry/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      eventType: 'bookmark_toggle',
+      guideId: guideId,
+      username: currentUsername.value || undefined,
+      extraData: isAdding ? 'add' : 'remove'
+    })
+  }).catch(() => {});
 };
 
 const favoritedGuidesList = computed(() => {
@@ -704,11 +717,29 @@ const handleExitPreview = () => {
   mode.value = 'editor';
 };
 
+let searchDebounceTimeout: any = null;
+
 const handleHeaderSearchInput = (val: string) => {
   headerSearchQuery.value = val;
   initialCatalogSearchQuery.value = val;
   if (mode.value !== 'home') {
     mode.value = 'home';
+  }
+
+  // Дебаунс отправки статистики поисковых запросов в телеметрию
+  if (searchDebounceTimeout) clearTimeout(searchDebounceTimeout);
+  if (val.trim().length >= 2) {
+    searchDebounceTimeout = setTimeout(() => {
+      fetch('/api/telemetry/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType: 'search_query',
+          username: currentUsername.value || undefined,
+          extraData: val.trim()
+        })
+      }).catch(() => {});
+    }, 1200);
   }
 };
 
@@ -720,6 +751,17 @@ const handleHeaderCategorySelect = (category: string) => {
   }
   isHeaderNavMenuOpen.value = false;
   showToast(`Категория: ${category}`);
+
+  // Отправка выборки категорий в телеметрию
+  fetch('/api/telemetry/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      eventType: 'category_select',
+      username: currentUsername.value || undefined,
+      extraData: category
+    })
+  }).catch(() => {});
 };
 
 const handleViewAllAuthorGuides = (username: string) => {

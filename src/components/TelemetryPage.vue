@@ -142,51 +142,56 @@ const getEventTypeBadgeClass = (type: string) => {
 
     <!-- Main Content -->
     <template v-else-if="stats">
-      <!-- Top 3 Metrics Widgets Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <!-- Top 5 Metrics Widgets Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
         <!-- Widget 1: Total Views -->
-        <div class="p-5 rounded-3xl bg-gradient-to-br from-[#16181a] to-[#121416] border border-cyan-500/30 shadow-xl space-y-3 relative overflow-hidden group">
-          <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-opacity text-cyan-400">
-            <IconRenderer name="Eye" size="100" />
-          </div>
+        <div class="p-4 rounded-3xl bg-gradient-to-br from-[#16181a] to-[#121416] border border-cyan-500/30 shadow-xl space-y-2 relative overflow-hidden group">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">Просмотры статей</span>
-            <div class="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
-              <IconRenderer name="Eye" size="18" />
-            </div>
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400">Просмотры</span>
+            <IconRenderer name="Eye" size="16" class="text-cyan-400" />
           </div>
-          <div class="text-3xl font-black text-white tracking-tight">{{ stats.totalViews.toLocaleString() }}</div>
-          <div class="text-[11px] text-dark-muted">Общий суммарный трафик чтения вики-гайдов</div>
+          <div class="text-2xl font-black text-white tracking-tight">{{ stats.totalViews.toLocaleString() }}</div>
+          <div class="text-[10px] text-dark-muted truncate">Чтения статей</div>
         </div>
 
         <!-- Widget 2: Total Edits -->
-        <div class="p-5 rounded-3xl bg-gradient-to-br from-[#16181a] to-[#121416] border border-emerald-500/30 shadow-xl space-y-3 relative overflow-hidden group">
-          <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-opacity text-emerald-400">
-            <IconRenderer name="Edit3" size="100" />
-          </div>
+        <div class="p-4 rounded-3xl bg-gradient-to-br from-[#16181a] to-[#121416] border border-emerald-500/30 shadow-xl space-y-2 relative overflow-hidden group">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Активность авторов</span>
-            <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-              <IconRenderer name="Edit3" size="18" />
-            </div>
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">Редакции</span>
+            <IconRenderer name="Edit3" size="16" class="text-emerald-400" />
           </div>
-          <div class="text-3xl font-black text-white tracking-tight">{{ stats.totalEdits.toLocaleString() }}</div>
-          <div class="text-[11px] text-dark-muted">Создано, отредактировано и опубликовано статей</div>
+          <div class="text-2xl font-black text-white tracking-tight">{{ stats.totalEdits.toLocaleString() }}</div>
+          <div class="text-[10px] text-dark-muted truncate">Правки авторов</div>
         </div>
 
         <!-- Widget 3: Total Logins -->
-        <div class="p-5 rounded-3xl bg-gradient-to-br from-[#16181a] to-[#121416] border border-purple-500/30 shadow-xl space-y-3 relative overflow-hidden group">
-          <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-opacity text-purple-400">
-            <IconRenderer name="UserCheck" size="100" />
-          </div>
+        <div class="p-4 rounded-3xl bg-gradient-to-br from-[#16181a] to-[#121416] border border-purple-500/30 shadow-xl space-y-2 relative overflow-hidden group">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-purple-400">Входы авторов</span>
-            <div class="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
-              <IconRenderer name="UserCheck" size="18" />
-            </div>
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-purple-400">Входы</span>
+            <IconRenderer name="UserCheck" size="16" class="text-purple-400" />
           </div>
-          <div class="text-3xl font-black text-white tracking-tight">{{ stats.totalLogins.toLocaleString() }}</div>
-          <div class="text-[11px] text-dark-muted">Авторизаций авторов через Cubix/SQLite</div>
+          <div class="text-2xl font-black text-white tracking-tight">{{ stats.totalLogins.toLocaleString() }}</div>
+          <div class="text-[10px] text-dark-muted truncate">Сессии авторов</div>
+        </div>
+
+        <!-- Widget 4: Total Searches -->
+        <div class="p-4 rounded-3xl bg-gradient-to-br from-[#16181a] to-[#121416] border border-amber-500/30 shadow-xl space-y-2 relative overflow-hidden group">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-400">Поиски</span>
+            <IconRenderer name="Search" size="16" class="text-amber-400" />
+          </div>
+          <div class="text-2xl font-black text-white tracking-tight">{{ (stats.totalSearches || 0).toLocaleString() }}</div>
+          <div class="text-[10px] text-dark-muted truncate">Запросы в поиске</div>
+        </div>
+
+        <!-- Widget 5: Total Bookmarks -->
+        <div class="p-4 rounded-3xl bg-gradient-to-br from-[#16181a] to-[#121416] border border-rose-500/30 shadow-xl space-y-2 relative overflow-hidden group col-span-2 md:col-span-1">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-400">Закладки</span>
+            <IconRenderer name="Star" size="16" class="text-rose-400" />
+          </div>
+          <div class="text-2xl font-black text-white tracking-tight">{{ (stats.totalBookmarks || 0).toLocaleString() }}</div>
+          <div class="text-[10px] text-dark-muted truncate">Сохранения в ⭐</div>
         </div>
       </div>
 
