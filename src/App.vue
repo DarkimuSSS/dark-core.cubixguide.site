@@ -23,8 +23,23 @@ const activeGuide = ref<Guide | null>(null);
 const mode = ref<'home' | 'reader' | 'editor' | 'favorites'>('home');
 const isLoading = ref<boolean>(true);
 
-// Bookmarked / Favorited guide IDs in LocalStorage
-const favoriteGuideIds = ref<string[]>([]);
+// Theme Switcher State: 'dark' | 'light' | 'emerald' | 'cyberpunk'
+type ThemeMode = 'dark' | 'light' | 'emerald' | 'cyberpunk';
+const currentTheme = ref<ThemeMode>('dark');
+
+const applyTheme = (theme: ThemeMode) => {
+  currentTheme.value = theme;
+  localStorage.setItem('cubix_theme', theme);
+  const html = document.documentElement;
+  html.classList.remove('theme-dark', 'theme-light', 'theme-emerald', 'theme-cyberpunk');
+  html.classList.add(`theme-${theme}`);
+};
+
+const toggleTheme = () => {
+  const themes: ThemeMode[] = ['dark', 'light', 'emerald', 'cyberpunk'];
+  const nextIdx = (themes.indexOf(currentTheme.value) + 1) % themes.length;
+  applyTheme(themes[nextIdx]);
+};
 
 // Author Profile Modal & Current Logged In User
 const isProfileModalOpen = ref(false);
@@ -151,8 +166,11 @@ watch([mode, activeGuideId, isProfileModalOpen, profileUsername], () => {
   updateUrlRoute();
 });
 
-// Check Session Auth Status & Favorites
+// Check Session Auth Status & Favorites & Saved Theme
 onMounted(() => {
+  const savedTheme = (localStorage.getItem('cubix_theme') as ThemeMode) || 'dark';
+  applyTheme(savedTheme);
+
   const savedUser = localStorage.getItem('cubix_logged_username');
   const savedAdmin = localStorage.getItem('cubix_logged_is_admin');
   if (savedUser) {
@@ -680,6 +698,21 @@ const handleViewAllAuthorGuides = (username: string) => {
 
       <!-- Center & Right Navigation Actions -->
       <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Theme Switcher Toggle Button -->
+        <button
+          type="button"
+          @click="toggleTheme"
+          class="px-2.5 py-1.5 rounded-xl bg-[#0c0d0e] hover:bg-[#1f2328] border border-[#26292d] text-slate-300 hover:text-white flex items-center gap-2 text-xs font-bold transition-all shadow-md group"
+          :title="`Текущая тема: ${currentTheme.toUpperCase()}. Нажмите для смены темы`"
+        >
+          <IconRenderer 
+            :name="currentTheme === 'light' ? 'Sun' : currentTheme === 'emerald' ? 'Sparkles' : currentTheme === 'cyberpunk' ? 'Zap' : 'Moon'" 
+            size="14" 
+            :class="currentTheme === 'light' ? 'text-amber-400' : currentTheme === 'emerald' ? 'text-emerald-400' : currentTheme === 'cyberpunk' ? 'text-pink-400' : 'text-cyan-400'"
+          />
+          <span class="hidden md:inline text-[11px] capitalize">{{ currentTheme }}</span>
+        </button>
+
         <!-- Draft restoration banner -->
         <div v-if="hasUnsavedDraft && isAuthenticated" class="hidden lg:flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl">
           <IconRenderer name="Sliders" size="14" class="text-amber-400 animate-pulse" />
