@@ -213,6 +213,54 @@ const getYouTubeEmbedUrl = (url?: string): string => {
   return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
 };
 
+// SPREADSHEET TABLE HELPER FUNCTIONS
+const addSpreadsheetColumn = (block: GuideBlock) => {
+  const headers = [...(block.tableHeaders || ['Колонка 1', 'Колонка 2'])];
+  headers.push(`Колонка ${headers.length + 1}`);
+  const rows = (block.tableRows || []).map(row => [...row, '']);
+  updateBlock({ ...block, tableHeaders: headers, tableRows: rows });
+};
+
+const removeSpreadsheetColumn = (block: GuideBlock, colIdx: number) => {
+  const headers = [...(block.tableHeaders || [])];
+  if (headers.length <= 1) return;
+  headers.splice(colIdx, 1);
+  const rows = (block.tableRows || []).map(row => {
+    const r = [...row];
+    r.splice(colIdx, 1);
+    return r;
+  });
+  updateBlock({ ...block, tableHeaders: headers, tableRows: rows });
+};
+
+const addSpreadsheetRow = (block: GuideBlock) => {
+  const colCount = (block.tableHeaders || ['Колонка 1']).length;
+  const rows = [...(block.tableRows || [])];
+  rows.push(Array(colCount).fill(''));
+  updateBlock({ ...block, tableRows: rows });
+};
+
+const removeSpreadsheetRow = (block: GuideBlock, rowIdx: number) => {
+  const rows = [...(block.tableRows || [])];
+  if (rows.length <= 1) return;
+  rows.splice(rowIdx, 1);
+  updateBlock({ ...block, tableRows: rows });
+};
+
+const updateSpreadsheetHeader = (block: GuideBlock, colIdx: number, val: string) => {
+  const headers = [...(block.tableHeaders || [])];
+  headers[colIdx] = val;
+  updateBlock({ ...block, tableHeaders: headers });
+};
+
+const updateSpreadsheetCell = (block: GuideBlock, rowIdx: number, colIdx: number, val: string) => {
+  const rows = (block.tableRows || []).map(r => [...r]);
+  if (rows[rowIdx]) {
+    rows[rowIdx][colIdx] = val;
+    updateBlock({ ...block, tableRows: rows });
+  }
+};
+
 // DRAG AND DROP FOR SECTION SUB-BLOCKS
 const draggedSubBlock = ref<{ blockId: string; colId: string; subIdx: number } | null>(null);
 const dragOverSubBlock = ref<{ blockId: string; colId: string; subIdx: number } | null>(null);
@@ -1027,6 +1075,20 @@ const addBlockAt = (index: number, type: BlockType) => {
         embedTitle: ''
       };
       break;
+    case 'spreadsheet':
+      newBlock = {
+        id: `b_${Date.now()}`,
+        type: 'spreadsheet',
+        customWidth: 100,
+        spreadsheetTitle: 'Таблица предметов и характеристик',
+        tableHeaders: ['Предмет / Модуль', 'Редкость', 'Энергия (EU/t)', 'Статус'],
+        tableRows: [
+          ['Квантовый Генератор', 'Легендарный', '32,768', 'Активен'],
+          ['Энергетический Кристалл', 'Редкий', '2,048', 'Заряжается'],
+          ['Улучшенный МФЭУ', 'Обычный', '512', 'Готов']
+        ]
+      };
+      break;
     case 'divider':
       newBlock = {
         id: `b_${Date.now()}`,
@@ -1398,6 +1460,7 @@ const stopOutlineDrag = () => {
             <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'before_after')" @click="addBlockAt(props.guide.blocks.length - 1, 'before_after'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="Maximize2" size="14" class="text-emerald-400 shrink-0" />Слайдер До / После</button>
             <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'youtube')" @click="addBlockAt(props.guide.blocks.length - 1, 'youtube'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="Video" size="14" class="text-rose-400 shrink-0" />YouTube Видео</button>
             <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'embed')" @click="addBlockAt(props.guide.blocks.length - 1, 'embed'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="Code" size="14" class="text-indigo-400 shrink-0" />Embed / iFrame</button>
+            <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'spreadsheet')" @click="addBlockAt(props.guide.blocks.length - 1, 'spreadsheet'); toolbarAddBlockOpen = false" class="text-left text-xs text-emerald-300 font-semibold hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="Table" size="14" class="text-emerald-400 shrink-0" />Интерактивная Таблица</button>
             <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'section')" @click="addBlockAt(props.guide.blocks.length - 1, 'section'); toolbarAddBlockOpen = false" class="text-left text-xs text-cyan-300 font-semibold hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="Layout" size="14" class="text-cyan-400 shrink-0" />Секция с колонками</button>
             <button draggable="true" @dragstart="onNewBlockTypeDragStart($event, 'multiblock')" @click="addBlockAt(props.guide.blocks.length - 1, 'multiblock'); toolbarAddBlockOpen = false" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-colors"><IconRenderer name="Layers" size="14" class="text-cyan-400 shrink-0" />Мультиструктура</button>
             <div class="border-t border-[#26292d] mt-0.5 pt-0.5">
@@ -2299,6 +2362,112 @@ const stopOutlineDrag = () => {
                     class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500 transition-all"
                   />
                 </div>
+              </div>
+            </div>
+
+            <!-- INTERACTIVE SPREADSHEET TABLE BLOCK (GOOGLE SHEETS STYLE) -->
+            <div v-else-if="block.type === 'spreadsheet'" class="space-y-4">
+              <div class="flex items-center justify-between border-b border-[#26292d] pb-2 flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <IconRenderer name="Table" size="16" class="text-emerald-400" />
+                  <input
+                    type="text"
+                    :value="block.spreadsheetTitle"
+                    @input="updateBlock({ ...block, spreadsheetTitle: ($event.target as HTMLInputElement).value })"
+                    placeholder="Название таблицы данных..."
+                    class="bg-transparent text-white font-bold text-xs focus:outline-none focus:border-b focus:border-emerald-500 transition-all placeholder:text-dark-muted/60"
+                  />
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    @click="addSpreadsheetColumn(block)"
+                    class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold flex items-center gap-1 transition-all"
+                  >
+                    <IconRenderer name="Plus" size="12" />
+                    <span>+ Колонка</span>
+                  </button>
+                  <button
+                    type="button"
+                    @click="addSpreadsheetRow(block)"
+                    class="px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold flex items-center gap-1 transition-all"
+                  >
+                    <IconRenderer name="Plus" size="12" />
+                    <span>+ Строка</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Spreadsheet Table Container -->
+              <div class="w-full overflow-x-auto rounded-xl border border-[#26292d] bg-[#0c0d0e] shadow-xl custom-scrollbar">
+                <table class="w-full text-left border-collapse text-xs">
+                  <!-- Table Header -->
+                  <thead>
+                    <tr class="bg-[#16181a] border-b border-[#26292d]">
+                      <th class="p-2 w-8 text-center text-[10px] text-dark-muted font-mono border-r border-[#26292d]">#</th>
+                      <th
+                        v-for="(header, colIdx) in (block.tableHeaders || [])"
+                        :key="colIdx"
+                        class="p-2 border-r border-[#26292d] min-w-[140px] group/colhead relative"
+                      >
+                        <div class="flex items-center justify-between gap-1">
+                          <input
+                            type="text"
+                            :value="header"
+                            @input="updateSpreadsheetHeader(block, colIdx, ($event.target as HTMLInputElement).value)"
+                            placeholder="Имя колонки..."
+                            class="w-full bg-transparent font-extrabold text-emerald-400 text-xs focus:outline-none focus:bg-[#121416] px-1 py-0.5 rounded transition-all"
+                          />
+                          <button
+                            v-if="(block.tableHeaders || []).length > 1"
+                            type="button"
+                            @click="removeSpreadsheetColumn(block, colIdx)"
+                            class="text-dark-muted hover:text-rose-400 opacity-0 group-hover/colhead:opacity-100 transition-opacity p-0.5"
+                            title="Удалить колонку"
+                          >
+                            <IconRenderer name="X" size="11" />
+                          </button>
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <!-- Table Body Rows -->
+                  <tbody>
+                    <tr
+                      v-for="(row, rowIdx) in (block.tableRows || [])"
+                      :key="rowIdx"
+                      class="border-b border-[#26292d]/60 hover:bg-[#121416]/50 transition-colors group/tablerow"
+                    >
+                      <td class="p-2 text-center text-[10px] font-mono text-dark-muted border-r border-[#26292d] bg-[#121416]/30 relative">
+                        <span>{{ rowIdx + 1 }}</span>
+                        <button
+                          v-if="(block.tableRows || []).length > 1"
+                          type="button"
+                          @click="removeSpreadsheetRow(block, rowIdx)"
+                          class="absolute inset-0 bg-rose-600/90 text-white opacity-0 group-hover/tablerow:opacity-100 transition-opacity flex items-center justify-center"
+                          title="Удалить строку"
+                        >
+                          <IconRenderer name="Trash2" size="11" />
+                        </button>
+                      </td>
+
+                      <td
+                        v-for="(cell, colIdx) in row"
+                        :key="colIdx"
+                        class="p-1 border-r border-[#26292d]/60 min-w-[140px]"
+                      >
+                        <input
+                          type="text"
+                          :value="cell"
+                          @input="updateSpreadsheetCell(block, rowIdx, colIdx, ($event.target as HTMLInputElement).value)"
+                          placeholder="..."
+                          class="w-full bg-transparent text-slate-200 text-xs px-2 py-1 focus:bg-[#16181a] focus:text-white rounded focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 

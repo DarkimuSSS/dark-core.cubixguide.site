@@ -10,7 +10,8 @@ export type BlockType =
   | 'spoiler'
   | 'before_after'
   | 'youtube'
-  | 'embed';
+  | 'embed'
+  | 'spreadsheet';
 
 export type Category = 
   | 'ХайТек' 
@@ -103,6 +104,11 @@ export interface GuideBlock {
   // Generic iFrame / Web Embed Block
   embedUrl?: string;
   embedTitle?: string;
+
+  // Interactive Spreadsheet / Data Table Block (Google Sheets Style)
+  spreadsheetTitle?: string;
+  tableHeaders?: string[];
+  tableRows?: string[][];
   
   anchorId?: string; // Custom anchor ID or manual link key
   showInOutline?: boolean; // Explicit toggle: force include or exclude from Table of Contents

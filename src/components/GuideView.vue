@@ -806,6 +806,55 @@ const getVariantClass = (variant?: BlockVariant) => {
                 Embed виджет не настроен
               </div>
             </div>
+
+            <!-- Interactive Spreadsheet / Data Table Block (Google Sheets Style) -->
+            <div v-else-if="block.type === 'spreadsheet'" :class="['p-5 rounded-2xl h-full flex flex-col justify-between shadow-xl space-y-3', getVariantClass(block.variant)]">
+              <div v-if="block.spreadsheetTitle" class="flex items-center justify-between border-b border-[#26292d]/80 pb-2.5">
+                <div class="text-sm font-bold text-white flex items-center gap-2">
+                  <IconRenderer name="Table" size="18" class="text-emerald-400" />
+                  <span>{{ block.spreadsheetTitle }}</span>
+                </div>
+                <span class="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  {{ (block.tableRows || []).length }} строк
+                </span>
+              </div>
+
+              <!-- Table Data View -->
+              <div class="w-full overflow-x-auto rounded-xl border border-[#26292d] bg-[#0c0d0e] shadow-lg custom-scrollbar">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="bg-[#16181a] border-b border-[#26292d]">
+                      <th class="p-2.5 w-10 text-center text-[10px] text-dark-muted font-mono border-r border-[#26292d]">#</th>
+                      <th
+                        v-for="(header, colIdx) in (block.tableHeaders || [])"
+                        :key="colIdx"
+                        class="p-2.5 border-r border-[#26292d] font-extrabold text-emerald-400 text-xs min-w-[140px]"
+                      >
+                        {{ header }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="(row, rowIdx) in (block.tableRows || [])"
+                      :key="rowIdx"
+                      class="border-b border-[#26292d]/60 hover:bg-[#16181a]/60 transition-colors"
+                    >
+                      <td class="p-2.5 text-center text-[10px] font-mono text-dark-muted border-r border-[#26292d] bg-[#121416]/40">
+                        {{ rowIdx + 1 }}
+                      </td>
+                      <td
+                        v-for="(cell, colIdx) in row"
+                        :key="colIdx"
+                        class="p-2.5 border-r border-[#26292d]/60 text-slate-200 min-w-[140px] font-medium"
+                      >
+                        {{ cell || '—' }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </main>
