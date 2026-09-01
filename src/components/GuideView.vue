@@ -63,6 +63,13 @@ const isChecklistItemCompleted = (itemId: string, defaultCompleted?: boolean) =>
 
 watch(() => props.guide.meta.id, () => {
   loadChecklistState();
+  if (typeof window !== 'undefined') {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTop = 0;
+    }
+  }
 }, { immediate: true });
 
 const toggleBlockCollapse = (blockId: string) => {

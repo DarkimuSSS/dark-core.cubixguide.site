@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
 import HomePage from './components/HomePage.vue';
 import GuideEditor from './components/GuideEditor.vue';
 import GuideView from './components/GuideView.vue';
@@ -486,6 +486,15 @@ const selectGuide = (guideId: string) => {
     }
   }
   mode.value = 'reader';
+
+  // Автоматический сброс скролла на самый верх при открытии статьи
+  nextTick(() => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'instant' });
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  });
 };
 
 const openRandomGuide = () => {
