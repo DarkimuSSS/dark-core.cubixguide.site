@@ -168,9 +168,14 @@ const handleLogin = async () => {
         </button>
       </form>
 
-      <!-- Closed Registration Note -->
-      <div class="text-center text-[11px] text-dark-muted pt-2 border-t border-[#26292d]">
-        🔒 Регистрация авторов осуществляется только по запросу через Главного Администратора (<span class="text-emerald-400 font-bold">DarkimuSSS</span>).
+      <!-- Closed Registration Note & Legal Disclaimer -->
+      <div class="space-y-1.5 pt-3 border-t border-[#26292d] text-center text-[10px] text-dark-muted">
+        <p>
+          🔒 <span class="text-slate-300">Прямая сквозная аутентификация</span>. Ваш пароль зашифрован по RSA ключу и <strong>не сохраняется</strong> на нашем сайте.
+        </p>
+        <p class="text-[9.5px]">
+          CubixGuide Wiki — неофициальный фанатский ресурс и не связан с администрацией CubixWorld.
+        </p>
       </div>
     </div>
   </div>

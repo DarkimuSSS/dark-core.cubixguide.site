@@ -100,6 +100,21 @@ const emit = defineEmits<{ (e: 'close'): void }>();
             <section class="space-y-2">
               <h3 class="text-sm font-bold text-white flex items-center gap-2">
                 <span class="w-5 h-5 rounded-lg bg-emerald-500/20 text-emerald-400 text-[10px] font-black flex items-center justify-center border border-emerald-500/30">5</span>
+                Безопасность и авторизация CubixWorld
+              </h3>
+              <p>
+                Авторизация через сервер CubixWorld используется <strong class="text-white">исключительно для сквозного подтверждения владения аккаунтом</strong>. 
+                Наш ресурс <strong class="text-emerald-400">НЕ сохраняет, НЕ логирует и НЕ передаёт третьим лицам</strong> ваши пароли от игрового аккаунта. 
+              </p>
+              <p>
+                Передача учетных данных происходит по прямой зашифрованной TCP-связи с официальным сервером авторизации. CubixGuide Wiki является неофициальным независимым ресурсом и не несёт ответственности за действия сторонних сервисов.
+              </p>
+            </section>
+
+            <!-- Section 6 -->
+            <section class="space-y-2">
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <span class="w-5 h-5 rounded-lg bg-emerald-500/20 text-emerald-400 text-[10px] font-black flex items-center justify-center border border-emerald-500/30">6</span>
                 Интеллектуальная собственность
               </h3>
               <p>
