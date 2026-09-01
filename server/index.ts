@@ -256,7 +256,7 @@ app.get('/api/guides/:id', (req, res) => {
 app.post('/api/guides', (req, res) => {
   try {
     const guide: Guide = req.body;
-    if (!guide || !guide.meta || !guide.meta.title) {
+    if (!guide || !guide.meta || !guide.meta.id) {
       return res.status(400).json({ error: 'Неверные данные гайда' });
     }
 
