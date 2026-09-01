@@ -365,13 +365,13 @@ const getDifficultyBadge = (diff: string) => {
           class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl hover:shadow-emerald-950/30 hover:-translate-y-1 overflow-hidden"
         >
           <!-- COVER BANNER CONTAINER WITH BADGES OVERLAID ON TOP -->
-          <div class="h-28 sm:h-32 w-full relative overflow-hidden flex-shrink-0">
+          <div class="h-28 sm:h-32 w-full relative overflow-hidden flex-shrink-0 card-cover-banner">
             <img v-if="guide.meta.coverUrl" :src="guide.meta.coverUrl" class="w-full h-full object-cover object-[center_30%] group-hover:scale-105 transition-transform duration-500" />
             <div v-else-if="guide.meta.coverGradient" :class="['w-full h-full bg-gradient-to-tr', guide.meta.coverGradient]"></div>
-            <div v-else class="w-full h-full bg-gradient-to-r from-slate-900 via-slate-800 to-[#121416]"></div>
+            <div v-else class="w-full h-full bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900"></div>
 
             <!-- Gradient Shadow Overlay for Readable Badges -->
-            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/20 to-black/30 pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/30 to-black/40 pointer-events-none card-banner-shadow"></div>
 
             <!-- BADGES OVERLAID DIRECTLY ON THE BANNER -->
             <div class="absolute inset-x-0 bottom-2.5 px-4 sm:px-5 z-10 flex items-center justify-between flex-wrap gap-1.5">
