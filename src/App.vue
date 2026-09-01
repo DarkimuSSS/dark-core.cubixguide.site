@@ -869,21 +869,6 @@ const handleViewAllAuthorGuides = (username: string) => {
             <IconRenderer name="X" size="12" />
           </button>
         </div>
-
-        <!-- Quick Category Dropdown Pills Bar on Focus -->
-        <div v-if="isHeaderSearchFocused" class="absolute top-full left-0 right-0 mt-2 bg-[#121417] border border-[#262a30] rounded-2xl shadow-2xl p-3 z-50 space-y-2 animate-in fade-in zoom-in-95 duration-150">
-          <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">Быстрые категории:</div>
-          <div class="flex flex-wrap gap-1.5">
-            <button
-              v-for="cat in ['ХайТек', 'Магия RPG', 'СкайБлок', 'Автоматизация', 'Общий']"
-              :key="cat"
-              @click="handleHeaderCategorySelect(cat)"
-              class="text-xs font-semibold px-2.5 py-1 rounded-xl bg-[#1a1d22] hover:bg-emerald-600 hover:text-white border border-[#262a30] text-slate-300 transition-all cursor-pointer"
-            >
-              {{ cat }}
-            </button>
-          </div>
-        </div>
       </div>
 
       <!-- Right: Action Buttons & Author User Card -->
