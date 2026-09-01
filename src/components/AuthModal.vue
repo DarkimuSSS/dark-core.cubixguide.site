@@ -169,11 +169,11 @@ const handleLogin = async () => {
       </form>
 
       <!-- Closed Registration Note & Legal Disclaimer -->
-      <div class="space-y-1.5 pt-3 border-t border-[#26292d] text-center text-[10px] text-dark-muted">
-        <p>
-          🔒 <span class="text-slate-300">Прямая сквозная аутентификация</span>. Ваш пароль зашифрован по RSA ключу и <strong>не сохраняется</strong> на нашем сайте.
+      <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 space-y-1.5 text-center text-[10.5px] leading-relaxed shadow-lg">
+        <p class="text-amber-200 font-medium">
+          🔒 <span class="font-bold text-white">Прямая сквозная аутентификация</span>. Ваш пароль зашифрован RSA-ключом и <strong class="text-amber-400">не сохраняется</strong> на нашем сайте.
         </p>
-        <p class="text-[9.5px]">
+        <p class="text-[10px] text-amber-400/80 pt-1 border-t border-amber-500/20">
           CubixGuide Wiki — неофициальный фанатский ресурс и не связан с администрацией CubixWorld.
         </p>
       </div>
