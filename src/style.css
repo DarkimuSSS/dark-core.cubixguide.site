@@ -139,25 +139,38 @@ html.theme-light .bg-emerald-950\/30 {
   color: #0f172a !important;
 }
 
+html.theme-light .bg-\[\#121417\],
+html.theme-light .bg-\[\#121417\]\/95,
+html.theme-light .bg-\[\#090a0c\],
+html.theme-light .bg-\[\#181b20\],
+html.theme-light .bg-\[\#1a1d22\] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+html.theme-light .border-\[\#262a30\] {
+  border-color: #cbd5e1 !important;
+}
+
 /* Emerald Theme Override */
 html.theme-emerald body {
   background-color: #061410;
   color: #e2e8f0;
 }
-html.theme-emerald .bg-\[\#0c0d0e\] { background-color: #061410 !important; }
-html.theme-emerald .bg-\[\#16181a\] { background-color: #0c201a !important; }
-html.theme-emerald .bg-\[\#121416\] { background-color: #091a15 !important; }
-html.theme-emerald .border-\[\#26292d\] { border-color: #153e33 !important; }
+html.theme-emerald .bg-\[\#0c0d0e\], html.theme-emerald .bg-\[\#090a0c\] { background-color: #061410 !important; }
+html.theme-emerald .bg-\[\#16181a\], html.theme-emerald .bg-\[\#121417\], html.theme-emerald .bg-\[\#121417\]\/95 { background-color: #0c201a !important; }
+html.theme-emerald .bg-\[\#121416\], html.theme-emerald .bg-\[\#181b20\], html.theme-emerald .bg-\[\#1a1d22\] { background-color: #091a15 !important; }
+html.theme-emerald .border-\[\#26292d\], html.theme-emerald .border-\[\#262a30\] { border-color: #153e33 !important; }
 
 /* Cyberpunk Theme Override */
 html.theme-cyberpunk body {
   background-color: #120917;
   color: #f5d0fe;
 }
-html.theme-cyberpunk .bg-\[\#0c0d0e\] { background-color: #120917 !important; }
-html.theme-cyberpunk .bg-\[\#16181a\] { background-color: #1f0f29 !important; }
-html.theme-cyberpunk .bg-\[\#121416\] { background-color: #180b21 !important; }
-html.theme-cyberpunk .border-\[\#26292d\] { border-color: #3b184c !important; }
+html.theme-cyberpunk .bg-\[\#0c0d0e\], html.theme-cyberpunk .bg-\[\#090a0c\] { background-color: #120917 !important; }
+html.theme-cyberpunk .bg-\[\#16181a\], html.theme-cyberpunk .bg-\[\#121417\], html.theme-cyberpunk .bg-\[\#121417\]\/95 { background-color: #1f0f29 !important; }
+html.theme-cyberpunk .bg-\[\#121416\], html.theme-cyberpunk .bg-\[\#181b20\], html.theme-cyberpunk .bg-\[\#1a1d22\] { background-color: #180b21 !important; }
+html.theme-cyberpunk .border-\[\#26292d\], html.theme-cyberpunk .border-\[\#262a30\] { border-color: #3b184c !important; }
 
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {
