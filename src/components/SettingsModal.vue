@@ -103,6 +103,7 @@ const handleFileUpload = (e: Event) => {
         </button>
 
         <button
+          v-if="isAdmin"
           @click="selectedTab = 'data'"
           :class="['flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all', selectedTab === 'data' ? 'bg-[#16181a] text-emerald-400 shadow-md border border-[#26292d]' : 'text-dark-muted hover:text-white']"
         >
