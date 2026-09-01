@@ -2,7 +2,10 @@
 import { ref, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 
-defineProps<{ isOpen: boolean }>();
+defineProps<{ 
+  isOpen: boolean;
+  embedded?: boolean;
+}>();
 const emit = defineEmits<{ (e: 'close'): void }>();
 
 const searchQuery = ref('');
@@ -387,18 +390,18 @@ const filteredRules = computed(() => {
 </script>
 
 <template>
-  <Teleport to="body">
+  <Teleport to="body" :disabled="embedded">
     <Transition name="modal-fade">
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-4"
-        @click.self="emit('close')"
+        :class="embedded ? 'w-full' : 'fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-4'"
+        @click.self="!embedded && emit('close')"
       >
-        <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+        <!-- Backdrop (only if modal mode) -->
+        <div v-if="!embedded" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
 
-        <!-- Modal -->
-        <div class="relative w-full max-w-4xl max-h-[90vh] bg-[#16181a] border border-[#26292d] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+        <!-- Container -->
+        <div :class="['relative w-full bg-[#16181a] border border-[#26292d] rounded-3xl shadow-2xl flex flex-col overflow-hidden', embedded ? 'min-h-[80vh]' : 'max-w-4xl max-h-[90vh]']">
 
           <!-- Header -->
           <div class="flex items-center justify-between px-6 py-4 border-b border-[#26292d] shrink-0 bg-[#121416]">

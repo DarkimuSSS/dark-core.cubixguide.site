@@ -22,8 +22,8 @@ const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
 const activeGuide = ref<Guide | null>(null);
 
-// MODE: 'home' (Главная) | 'reader' (Вики Гайда) | 'editor' (Конструктор) | 'favorites' (Избранное) | 'drafts' (Мои Черновики)
-const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts'>('home');
+// MODE: 'home' (Главная) | 'reader' (Вики Гайда) | 'editor' (Конструктор) | 'favorites' (Избранное) | 'drafts' (Мои Черновики) | 'rules' (Правила проекта)
+const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules'>('home');
 const isLoading = ref<boolean>(true);
 
 const handleExportData = () => {
@@ -183,6 +183,8 @@ const updateUrlRoute = () => {
     params.set('tab', 'Закладки');
   } else if (mode.value === 'drafts') {
     params.set('tab', 'Черновики');
+  } else if (mode.value === 'rules') {
+    params.set('tab', 'Правила');
   }
 
   const queryString = params.toString() ? `?${params.toString()}` : '/';
@@ -208,7 +210,9 @@ const syncFromUrlPath = () => {
     if (found) activeGuide.value = JSON.parse(JSON.stringify(found));
   }
 
-  if (tab === 'Вики' || tab === 'reader') {
+  if (tab === 'Правила' || tab === 'rules') {
+    mode.value = 'rules';
+  } else if (tab === 'Вики' || tab === 'reader') {
     mode.value = 'reader';
   } else if (tab === 'Конструктор' || tab === 'editor') {
     mode.value = isAuthenticated.value ? 'editor' : 'reader';
@@ -794,8 +798,19 @@ const handleViewAllAuthorGuides = (username: string) => {
                 </button>
 
                 <button
+                  @click="mode = 'rules'; isHeaderNavMenuOpen = false"
+                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'rules' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
+                >
+                  <IconRenderer name="Shield" size="18" class="text-emerald-400 shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold truncate">Правила</div>
+                    <div class="text-[10px] text-dark-muted truncate">Свод правил проекта</div>
+                  </div>
+                </button>
+
+                <button
                   @click="openRandomGuide(); isHeaderNavMenuOpen = false"
-                  class="p-3 rounded-2xl bg-[#090a0c] border border-[#262a30] hover:border-purple-500/40 text-left transition-all flex items-center gap-2 cursor-pointer group"
+                  class="p-3 rounded-2xl bg-[#090a0c] border border-[#26292d] hover:border-purple-500/40 text-left transition-all flex items-center gap-2 cursor-pointer group"
                 >
                   <IconRenderer name="Sparkles" size="18" class="text-purple-400 group-hover:scale-110 transition-transform shrink-0" />
                   <div class="min-w-0">
@@ -1091,6 +1106,11 @@ const handleViewAllAuthorGuides = (username: string) => {
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- 3. RULES PAGE VIEW -->
+          <div v-else-if="mode === 'rules'" class="px-3 sm:px-6 pt-4 pb-24 space-y-6">
+            <RulesModal :is-open="true" :embedded="true" @close="mode = 'home'" />
           </div>
 
           <!-- 3. MY UNPUBLISHED DRAFTS VIEW -->
