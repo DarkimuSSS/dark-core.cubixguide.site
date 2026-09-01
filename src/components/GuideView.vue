@@ -616,6 +616,52 @@ const getVariantClass = (variant?: BlockVariant) => {
                         <CalloutBlock :block="sub" :is-editing="false" />
                       </div>
 
+                      <!-- Sub Spoiler -->
+                      <div v-else-if="sub.type === 'spoiler'">
+                        <SpoilerBlock :block="sub" :is-editing="false" />
+                      </div>
+
+                      <!-- Sub Before-After Slider -->
+                      <div v-else-if="sub.type === 'before_after'">
+                        <BeforeAfterSlider :block="sub" :is-editing="false" />
+                      </div>
+
+                      <!-- Sub YouTube Video -->
+                      <div v-else-if="sub.type === 'youtube'" class="aspect-video w-full rounded-xl overflow-hidden border border-[#26292d] bg-black shadow-lg">
+                        <iframe :src="getYouTubeEmbedUrl(sub.youtubeUrl)" class="w-full h-full border-0" allowfullscreen></iframe>
+                      </div>
+
+                      <!-- Sub Embed iFrame -->
+                      <div v-else-if="sub.type === 'embed'" class="w-full h-56 rounded-xl overflow-hidden border border-[#26292d] bg-[#0c0d0e] shadow-lg">
+                        <iframe :src="sub.embedUrl" class="w-full h-full border-0"></iframe>
+                      </div>
+
+                      <!-- Sub Spreadsheet Table -->
+                      <div v-else-if="sub.type === 'spreadsheet'" class="w-full overflow-x-auto rounded-xl border border-[#26292d] bg-[#0c0d0e] shadow-lg p-2">
+                        <div v-if="sub.spreadsheetTitle" class="text-xs font-bold text-emerald-400 mb-1.5">{{ sub.spreadsheetTitle }}</div>
+                        <table class="w-full text-left border-collapse text-[11px]">
+                          <thead>
+                            <tr class="bg-[#16181a] border-b border-[#26292d]">
+                              <th v-for="(h, hIdx) in (sub.tableHeaders || [])" :key="hIdx" class="p-1.5 font-bold text-emerald-400 border-r border-[#26292d]">{{ h }}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="(r, rIdx) in (sub.tableRows || [])" :key="rIdx" class="border-b border-[#26292d]/50">
+                              <td v-for="(c, cIdx) in r" :key="cIdx" class="p-1.5 text-slate-200 border-r border-[#26292d]">{{ c || '—' }}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <!-- Sub Checklist -->
+                      <div v-else-if="sub.type === 'checklist'" class="p-3 rounded-xl bg-[#0c0d0e] border border-[#26292d] space-y-1.5">
+                        <div v-if="sub.checklistTitle" class="text-xs font-bold text-white border-b border-[#26292d] pb-1">{{ sub.checklistTitle }}</div>
+                        <div v-for="item in (sub.checklistItems || [])" :key="item.id" class="flex items-center gap-2 text-xs text-slate-200">
+                          <input type="checkbox" :checked="isChecklistItemCompleted(item.id, item.completed)" class="w-3.5 h-3.5 accent-emerald-500 rounded" />
+                          <span :class="isChecklistItemCompleted(item.id, item.completed) ? 'line-through text-dark-muted' : ''">{{ item.text }}</span>
+                        </div>
+                      </div>
+
                       <!-- Sub Image -->
                       <div v-else-if="sub.type === 'image'" class="w-full flex flex-col items-center gap-2">
                         <div v-if="sub.imageUrl" class="rounded-xl overflow-hidden bg-[#0c0d0e] border border-[#26292d] w-full h-56 sm:h-64 flex items-center justify-center p-1.5 shadow-md relative group/imgview cursor-zoom-in" @click="activeZoomImage = sub.imageUrl">

@@ -1863,6 +1863,34 @@ const stopOutlineDrag = () => {
                 <button @click="moveBlock(index, 'down'); activeBlockMenuId = null" :disabled="index === guide.blocks.length - 1" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 disabled:opacity-30">
                   <IconRenderer name="ArrowDown" size="14" class="text-slate-400 shrink-0" />Переместить вниз
                 </button>
+
+                <!-- Pack into Section Submenu (if any section exists in guide) -->
+                <div v-if="block.type !== 'section' && guide.blocks.some(b => b.type === 'section')" class="relative group/packsec">
+                  <button type="button" class="w-full text-left text-xs text-cyan-300 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                      <IconRenderer name="Layout" size="14" class="text-cyan-400 shrink-0" />
+                      Поместить в секцию
+                    </span>
+                    <span class="text-[10px] text-dark-muted font-bold">▸</span>
+                  </button>
+                  <div class="absolute left-full top-0 ml-1 hidden group-hover/packsec:flex flex-col bg-[#16181a] border border-[#26292d] rounded-xl shadow-2xl p-1.5 gap-1 w-52 z-50">
+                    <template v-for="secBlock in guide.blocks.filter(b => b.type === 'section')" :key="secBlock.id">
+                      <div class="text-[10px] font-bold text-dark-muted px-2 py-0.5 border-b border-[#26292d] truncate">
+                        {{ secBlock.sectionTitle || 'Секция с колонками' }}
+                      </div>
+                      <button
+                        v-for="(col, colIdx) in (secBlock.columns || [])"
+                        :key="col.id"
+                        @click="packBlockIntoSection(index, secBlock.id, col.id); activeBlockMenuId = null"
+                        class="text-left text-[11px] text-slate-200 hover:bg-[#26292d] px-2.5 py-1.5 rounded-lg flex items-center justify-between"
+                      >
+                        <span>В колонку {{ colIdx + 1 }}</span>
+                        <span class="text-[9px] text-cyan-400 font-bold">({{ col.customWidth || 50 }}%)</span>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+
                 <div class="border-t border-[#26292d] my-0.5"></div>
                 <button
                   @click="updateBlock({ ...block, showInOutline: !(block.showInOutline ?? (block.type === 'heading')) }); activeBlockMenuId = null"
@@ -2039,8 +2067,13 @@ const stopOutlineDrag = () => {
                               <option value="heading">Заголовок</option>
                               <option value="text">Текст</option>
                               <option value="callout">Совет / Callout</option>
+                              <option value="checklist">Чек-лист</option>
                               <option value="spoiler">Спойлер</option>
+                              <option value="before_after">До / После</option>
                               <option value="image">Картинка</option>
+                              <option value="youtube">YouTube</option>
+                              <option value="embed">Embed</option>
+                              <option value="spreadsheet">Таблица</option>
                             </select>
                           </div>
                           <div class="flex items-center gap-1">
@@ -2064,6 +2097,52 @@ const stopOutlineDrag = () => {
                         </div>
                         <div v-else-if="sub.type === 'callout'">
                           <CalloutBlock :block="sub" :is-editing="true" @update="(updated) => updateSubBlock(block, col.id, updated)" />
+                        </div>
+                        <div v-else-if="sub.type === 'spoiler'">
+                          <SpoilerBlock :block="sub" :is-editing="true" @update="(updated) => updateSubBlock(block, col.id, updated)" />
+                        </div>
+                        <div v-else-if="sub.type === 'before_after'">
+                          <BeforeAfterSlider :block="sub" :is-editing="true" @update="(updated) => updateSubBlock(block, col.id, updated)" />
+                        </div>
+                        <div v-else-if="sub.type === 'youtube'" class="space-y-1.5">
+                          <input type="text" :value="sub.youtubeUrl" @input="updateSubBlock(block, col.id, { ...sub, youtubeUrl: ($event.target as HTMLInputElement).value })" placeholder="URL YouTube..." class="w-full bg-[#121416] border border-[#26292d] text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-rose-500" />
+                          <div v-if="sub.youtubeUrl" class="aspect-video w-full rounded-lg overflow-hidden border border-[#26292d] bg-black">
+                            <iframe :src="getYouTubeEmbedUrl(sub.youtubeUrl)" class="w-full h-full border-0" allowfullscreen></iframe>
+                          </div>
+                        </div>
+                        <div v-else-if="sub.type === 'embed'" class="space-y-1.5">
+                          <input type="text" :value="sub.embedUrl" @input="updateSubBlock(block, col.id, { ...sub, embedUrl: ($event.target as HTMLInputElement).value })" placeholder="HTTPS URL виджета..." class="w-full bg-[#121416] border border-[#26292d] text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-500" />
+                          <div v-if="sub.embedUrl" class="h-48 w-full rounded-lg overflow-hidden border border-[#26292d] bg-black">
+                            <iframe :src="sub.embedUrl" class="w-full h-full border-0"></iframe>
+                          </div>
+                        </div>
+                        <div v-else-if="sub.type === 'spreadsheet'" class="space-y-2">
+                          <input type="text" :value="sub.spreadsheetTitle" @input="updateSubBlock(block, col.id, { ...sub, spreadsheetTitle: ($event.target as HTMLInputElement).value })" placeholder="Название таблицы..." class="w-full bg-transparent text-emerald-400 text-xs font-bold focus:outline-none" />
+                          <div class="overflow-x-auto rounded border border-[#26292d] bg-[#0c0d0e]">
+                            <table class="w-full text-left text-[11px]">
+                              <thead>
+                                <tr class="bg-[#16181a] border-b border-[#26292d]">
+                                  <th v-for="(h, hIdx) in (sub.tableHeaders || [])" :key="hIdx" class="p-1 border-r border-[#26292d]">
+                                    <input type="text" :value="h" @input="updateSpreadsheetHeader(sub, hIdx, ($event.target as HTMLInputElement).value)" class="w-full bg-transparent text-emerald-400 font-bold focus:outline-none text-[10px]" />
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr v-for="(r, rIdx) in (sub.tableRows || [])" :key="rIdx" class="border-b border-[#26292d]/50">
+                                  <td v-for="(c, cIdx) in r" :key="cIdx" class="p-1 border-r border-[#26292d]">
+                                    <input type="text" :value="c" @input="updateSpreadsheetCell(sub, rIdx, cIdx, ($event.target as HTMLInputElement).value)" class="w-full bg-transparent text-slate-200 text-[10px] focus:outline-none" />
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                        <div v-else-if="sub.type === 'checklist'" class="space-y-1.5">
+                          <input type="text" :value="sub.checklistTitle" @input="updateSubBlock(block, col.id, { ...sub, checklistTitle: ($event.target as HTMLInputElement).value })" placeholder="Заголовок чек-листа..." class="w-full bg-transparent text-white text-xs font-bold focus:outline-none" />
+                          <div v-for="(item, iIdx) in (sub.checklistItems || [])" :key="item.id" class="flex items-center gap-1.5 p-1 bg-[#121416] border border-[#26292d] rounded">
+                            <input type="checkbox" :checked="item.completed" @change="toggleChecklistItem(sub, iIdx)" class="w-3 h-3 accent-emerald-500 rounded" />
+                            <input type="text" :value="item.text" @input="updateChecklistItemText(sub, iIdx, ($event.target as HTMLInputElement).value)" class="flex-1 bg-transparent text-[11px] text-white focus:outline-none" />
+                          </div>
                         </div>
                         <div v-else-if="sub.type === 'image'" class="space-y-1.5">
                           <div v-if="sub.imageUrl" class="rounded-xl border border-[#26292d] overflow-hidden bg-[#0c0d0e] h-48 w-full flex items-center justify-center p-1">
