@@ -38,7 +38,14 @@ const handleLogin = async () => {
       })
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data: any = {};
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      throw new Error(`Сервер вернул ошибку (${res.status}): ${text.substring(0, 100)}`);
+    }
+
     if (res.ok && data.username) {
       emit('authenticate', {
         username: data.username,
@@ -52,7 +59,7 @@ const handleLogin = async () => {
       errorMessage.value = data.error || 'Неверный никнейм или пароль';
     }
   } catch (err: any) {
-    errorMessage.value = err.message ? `Ошибка: ${err.message}` : 'Ошибка соединения с бэкендом';
+    errorMessage.value = err.message ? err.message : 'Ошибка соединения с бэкендом';
   } finally {
     isLoading.value = false;
   }
