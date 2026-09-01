@@ -242,7 +242,7 @@ app.post('/api/guides', (req, res) => {
     }
 
     const stmt = db.prepare(`
-      INSERT INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, server, cover_url, cover_gradient, blocks)
+      INSERT OR REPLACE INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, server, cover_url, cover_gradient, blocks)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
@@ -264,6 +264,7 @@ app.post('/api/guides', (req, res) => {
 
     res.status(201).json(guide);
   } catch (err: any) {
+    console.error('API /api/guides POST Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -325,11 +326,31 @@ app.put('/api/guides/:id', (req, res) => {
     );
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: 'Гайд не найден для обновления' });
+      // Fallback: If guide ID doesn't exist in DB yet (e.g. built-in sample guide edited for the first time), insert it
+      const insertStmt = db.prepare(`
+        INSERT INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, server, cover_url, cover_gradient, blocks)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      insertStmt.run(
+        guideId,
+        guide.meta.title,
+        guide.meta.category,
+        guide.meta.author,
+        JSON.stringify(guide.meta.coAuthors || []),
+        guide.meta.difficulty,
+        guide.meta.summary || '',
+        guide.meta.updatedAt || new Date().toISOString().split('T')[0],
+        guide.meta.published ? 1 : 0,
+        guide.meta.server || null,
+        guide.meta.coverUrl || null,
+        guide.meta.coverGradient || null,
+        JSON.stringify(guide.blocks || [])
+      );
     }
 
     res.json(guide);
   } catch (err: any) {
+    console.error('API /api/guides PUT Error:', err);
     res.status(500).json({ error: err.message });
   }
 });

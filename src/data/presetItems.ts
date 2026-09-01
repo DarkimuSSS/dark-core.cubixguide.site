@@ -1,6 +1,6 @@
-import type { ItemDefinition, MultiblockMaterial } from '../types/guide';
+import type { PresetItem, MultiblockPaletteItem } from '../types/guide';
 
-export const PRESET_ITEMS: ItemDefinition[] = [
+export const PRESET_ITEMS: PresetItem[] = [
   // Applied Energistics 2
   { id: 'ae2_me_controller', name: 'МЭ Контроллер', mod: 'Applied Energistics 2', icon: 'Cpu', color: '#8b5cf6', defaultTooltip: 'Центральный модуль МЭ сети' },
   { id: 'ae2_fluix_crystal', name: 'Изменчивый кристалл', mod: 'Applied Energistics 2', icon: 'Zap', color: '#a855f7', defaultTooltip: 'Резонирующий кристалл для кабелей и крафтов' },
@@ -30,7 +30,7 @@ export const PRESET_ITEMS: ItemDefinition[] = [
   { id: 'vanilla_glass', name: 'Стекло', mod: 'Minecraft', icon: 'Grid', color: '#94a3b8', defaultTooltip: 'Прозрачное стекло' },
 ];
 
-export const PRESET_MULTIBLOCK_MATERIALS: MultiblockMaterial[] = [
+export const PRESET_MULTIBLOCK_MATERIALS: MultiblockPaletteItem[] = [
   { id: 'reactor_casing', name: 'Корпус реактора', icon: 'Box', color: '#475569' },
   { id: 'reactor_glass', name: 'Стекло реактора', icon: 'Grid', color: '#38bdf8' },
   { id: 'control_rod', name: 'Управляющий стержень', icon: 'Sliders', color: '#10b981' },

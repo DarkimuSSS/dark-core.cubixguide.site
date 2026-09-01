@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import { PRESET_MULTIBLOCK_MATERIALS } from '../data/presetItems';
-import type { GuideBlock, MultiblockLayer, MultiblockMaterial } from '../types/guide';
+import type { GuideBlock, MultiblockLayer, MultiblockPaletteItem } from '../types/guide';
 
 const props = defineProps<{
   block: GuideBlock;
@@ -17,7 +17,7 @@ const activeLayerIndex = ref<number>(0);
 const selectedMaterialId = ref<string>(props.block.palette?.[0]?.id || PRESET_MULTIBLOCK_MATERIALS[0].id);
 
 const currentSize = computed(() => props.block.gridSize || 3);
-const currentPalette = computed<MultiblockMaterial[]>(() => props.block.palette && props.block.palette.length > 0 ? props.block.palette : PRESET_MULTIBLOCK_MATERIALS);
+const currentPalette = computed<MultiblockPaletteItem[]>(() => props.block.palette && props.block.palette.length > 0 ? props.block.palette : PRESET_MULTIBLOCK_MATERIALS);
 
 const layersList = computed<MultiblockLayer[]>(() => {
   if (props.block.layers && props.block.layers.length > 0) {
@@ -119,7 +119,7 @@ const removeLayer = (index: number) => {
   }
 };
 
-const getMaterial = (id: string | null): MultiblockMaterial => {
+const getMaterial = (id: string | null): MultiblockPaletteItem => {
   if (!id) return { id: 'empty', name: 'Воздух / Пусто', icon: 'Square', color: '#16181a' };
   return currentPalette.value.find(p => p.id === id) || { id, name: id, icon: 'Box', color: '#94a3b8' };
 };

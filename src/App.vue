@@ -397,9 +397,11 @@ const createNewGuide = async () => {
       },
       {
         id: `b_${Date.now()}_4`,
-        type: 'crafting',
-        craftingGrid: Array(9).fill(null).map((_, i) => ({ index: i, item: null, count: 1 })),
-        craftingOutput: { index: 9, item: PRESET_ITEMS[0], count: 1 }
+        type: 'checklist',
+        checklistTitle: 'Этапы выполнения',
+        checklistItems: [
+          { id: 'c1', text: 'Собрать ресурсы', completed: false }
+        ]
       }
     ]
   };
@@ -569,9 +571,9 @@ const handleViewAllAuthorGuides = (username: string) => {
           @click="mode = 'home'"
           class="flex items-center gap-3 group text-left transition-opacity hover:opacity-90"
         >
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/50">
-            <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
-              <IconRenderer name="Box" size="20" />
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/50 overflow-hidden">
+            <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform overflow-hidden">
+              <img src="/logo.jpg" alt="CubixGuide Logo" class="w-full h-full object-cover" />
             </div>
           </div>
           <div>
@@ -729,8 +731,8 @@ const handleViewAllAuthorGuides = (username: string) => {
       </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="flex-1 overflow-hidden relative">
+    <!-- Main Content Container (Global Unified Scrollbar) -->
+    <main class="flex-1 overflow-y-auto custom-scrollbar relative">
       <div v-if="isLoading" class="flex flex-col items-center justify-center h-full text-dark-muted space-y-3">
         <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
         <div class="text-xs">Загрузка гайдов...</div>
@@ -738,7 +740,7 @@ const handleViewAllAuthorGuides = (username: string) => {
 
       <template v-else>
         <!-- 1. HOMEPAGE CATALOG VIEW (DEFAULT LANDING) -->
-        <div v-if="mode === 'home'" class="h-full overflow-y-auto custom-scrollbar px-3 sm:px-4 pt-4">
+        <div v-if="mode === 'home'" class="px-3 sm:px-4 pt-4">
           <HomePage
             :guides="guides"
             :initial-search-query="initialCatalogSearchQuery"
@@ -759,7 +761,7 @@ const handleViewAllAuthorGuides = (username: string) => {
         </div>
 
         <!-- 2. BOOKMARKS / FAVORITES VIEW -->
-        <div v-else-if="mode === 'favorites'" class="h-full overflow-y-auto custom-scrollbar px-3 sm:px-4 pt-4 space-y-6 pb-24">
+        <div v-else-if="mode === 'favorites'" class="px-3 sm:px-4 pt-4 space-y-6 pb-24">
           <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
             <div>
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
@@ -777,39 +779,86 @@ const handleViewAllAuthorGuides = (username: string) => {
             <p class="text-xs text-dark-muted">Нажмите на звёздочку при чтении гайда, чтобы сохранить его сюда</p>
           </div>
 
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             <div
               v-for="guide in favoritedGuidesList"
               :key="guide.meta.id"
               @click="selectGuide(guide.meta.id)"
-              class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 p-6 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between space-y-5 shadow-lg"
+              class="group bg-[#16181a] hover:bg-[#1c1f22] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl hover:shadow-emerald-950/30 hover:-translate-y-1 overflow-hidden"
             >
-              <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <!-- COVER BANNER WITH BADGES & BOOKMARK REMOVE BUTTON -->
+              <div class="h-28 sm:h-32 w-full relative overflow-hidden flex-shrink-0">
+                <img v-if="guide.meta.coverUrl" :src="guide.meta.coverUrl" class="w-full h-full object-cover object-[center_30%] group-hover:scale-105 transition-transform duration-500" />
+                <div v-else-if="guide.meta.coverGradient" :class="['w-full h-full bg-gradient-to-tr', guide.meta.coverGradient]"></div>
+                <div v-else class="w-full h-full bg-gradient-to-r from-slate-900 via-slate-800 to-[#121416]"></div>
+
+                <!-- Gradient Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/20 to-black/30 pointer-events-none"></div>
+
+                <!-- Top Right Bookmark Star Button -->
+                <button 
+                  @click.stop="toggleBookmarkGuide(guide.meta.id)" 
+                  class="absolute top-2.5 right-2.5 z-20 w-8 h-8 rounded-xl bg-black/60 hover:bg-rose-500/30 border border-amber-500/40 hover:border-rose-400 text-amber-400 hover:text-rose-400 flex items-center justify-center backdrop-blur-md transition-all shadow-lg"
+                  title="Удалить из закладок"
+                >
+                  <IconRenderer name="Star" size="16" class="fill-amber-400 text-amber-400" />
+                </button>
+
+                <!-- Badges Overlaid on Banner -->
+                <div class="absolute inset-x-0 bottom-2.5 px-4 sm:px-5 z-10 flex items-center justify-between flex-wrap gap-1.5">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border shadow-md backdrop-blur-md bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
                     {{ guide.meta.category }}
                   </span>
-                  <button @click.stop="toggleBookmarkGuide(guide.meta.id)" class="text-amber-400 hover:text-rose-400 p-1" title="Удалить из закладок">
-                    <IconRenderer name="Star" size="18" />
-                  </button>
+
+                  <div class="flex items-center gap-1">
+                    <span v-if="guide.meta.server" class="text-[9px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-1.5 py-0.5 rounded shadow-md backdrop-blur-md">
+                      🎮 {{ guide.meta.server }}
+                    </span>
+                    <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded-full border shadow-md backdrop-blur-md bg-purple-500/20 text-purple-300 border-purple-500/30">
+                      {{ guide.meta.difficulty }}
+                    </span>
+                  </div>
                 </div>
-                <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
-                  {{ guide.meta.title }}
-                </h3>
-                <p class="text-xs text-dark-muted line-clamp-2 leading-relaxed">
-                  {{ guide.meta.summary }}
-                </p>
               </div>
 
-              <button class="w-full bg-[#121416] group-hover:bg-emerald-600 text-slate-300 group-hover:text-white py-2 rounded-xl text-xs font-bold transition-all">
-                Открыть гайд
-              </button>
+              <!-- CARD BODY -->
+              <div class="p-4 sm:p-5 space-y-3 flex-1 flex flex-col justify-between">
+                <div class="space-y-1.5">
+                  <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+                    {{ guide.meta.title }}
+                  </h3>
+                  <p class="text-xs text-dark-muted line-clamp-2 leading-relaxed">
+                    {{ guide.meta.summary || 'Интерактивное руководство по сборке...' }}
+                  </p>
+                </div>
+
+                <!-- Bottom Row Metadata with Avatar and Author Profile -->
+                <div class="flex items-center justify-between pt-2.5 border-t border-[#26292d]/80 text-[11px]">
+                  <div 
+                    @click.stop="openAuthorProfile(guide.meta.author)"
+                    class="flex items-center gap-2 hover:text-emerald-400 transition-colors cursor-pointer group/author"
+                    title="Просмотреть профиль автора"
+                  >
+                    <!-- Avatar with Glow Ring -->
+                    <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md flex-shrink-0">
+                      <div class="w-full h-full bg-[#0c0d0e] rounded-[6px] flex items-center justify-center overflow-hidden">
+                        <span class="text-[10px] font-black text-emerald-400">{{ guide.meta.author ? guide.meta.author.charAt(0).toUpperCase() : 'A' }}</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-slate-200 text-xs group-hover/author:text-emerald-400 group-hover/author:underline">{{ guide.meta.author }}</span>
+                  </div>
+
+                  <button class="bg-[#121416] group-hover:bg-emerald-600 text-slate-300 group-hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all">
+                    Читать →
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- 3. EDITOR VIEW (Only for authenticated author) -->
-        <div v-else-if="mode === 'editor' && isAuthenticated && activeGuide" class="h-full overflow-y-auto custom-scrollbar px-3 sm:px-4 pt-4">
+        <div v-else-if="mode === 'editor' && isAuthenticated && activeGuide" class="px-3 sm:px-4 pt-4">
           <GuideEditor
             :guide="activeGuide"
             @update:guide="updateActiveGuide"
@@ -820,14 +869,17 @@ const handleViewAllAuthorGuides = (username: string) => {
         </div>
 
         <!-- 4. SINGLE GUIDE WIKI READER VIEW -->
-        <GuideView
-          v-else-if="activeGuide"
-          :guide="activeGuide"
-          :all-guides="guides"
-          @select-guide="selectGuide"
-          @edit-mode="openEditorProtection"
-          @open-author="openAuthorProfile"
-        />
+        <div v-else-if="activeGuide" class="px-3 sm:px-4 pt-4">
+          <GuideView
+            :guide="activeGuide"
+            :all-guides="guides"
+            :is-favorited="favoriteGuideIds.includes(activeGuide.meta.id)"
+            @select-guide="selectGuide"
+            @toggle-bookmark="toggleBookmarkGuide"
+            @edit-mode="openEditorProtection"
+            @open-author="openAuthorProfile"
+          />
+        </div>
       </template>
 
       <!-- DELETE GUIDE CONFIRMATION MODAL -->

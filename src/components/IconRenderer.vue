@@ -5,7 +5,7 @@ import * as LucideIcons from 'lucide-vue-next';
 const props = defineProps<{
   name: string;
   size?: number | string;
-  class?: string;
+  class?: string | string[];
   color?: string;
 }>();
 

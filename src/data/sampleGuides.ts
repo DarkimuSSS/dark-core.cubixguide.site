@@ -5,9 +5,9 @@ export const SAMPLE_GUIDES: Guide[] = [
     meta: {
       id: 'guide-new-1',
       title: 'New Minecraft Guide',
-      category: 'General',
+      category: 'Общий',
       author: 'Author',
-      difficulty: 'Beginner',
+      difficulty: 'Новичок',
       summary: 'Empty guide template ready for editing.',
       updatedAt: new Date().toISOString().split('T')[0],
       published: false

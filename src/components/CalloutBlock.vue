@@ -14,9 +14,36 @@ const emit = defineEmits<{
 
 const calloutConfig = computed(() => {
   switch (props.block.calloutType) {
+    case 'info':
+      return {
+        label: 'Инфо',
+        icon: 'Info',
+        border: 'border-cyan-500/40',
+        bg: 'bg-cyan-500/10',
+        text: 'text-cyan-400',
+        badge: 'bg-cyan-500/20 text-cyan-300'
+      };
+    case 'recipe':
+      return {
+        label: 'Крафт',
+        icon: 'Hammer',
+        border: 'border-purple-500/40',
+        bg: 'bg-purple-500/10',
+        text: 'text-purple-400',
+        badge: 'bg-purple-500/20 text-purple-300'
+      };
+    case 'note':
+      return {
+        label: 'Заметка',
+        icon: 'FileText',
+        border: 'border-indigo-500/40',
+        bg: 'bg-indigo-500/10',
+        text: 'text-indigo-400',
+        badge: 'bg-indigo-500/20 text-indigo-300'
+      };
     case 'warning':
       return {
-        label: 'Предупреждение',
+        label: 'Важно',
         icon: 'AlertTriangle',
         border: 'border-amber-500/40',
         bg: 'bg-amber-500/10',
@@ -45,7 +72,7 @@ const calloutConfig = computed(() => {
   }
 });
 
-const setCalloutType = (type: 'tip' | 'warning' | 'danger') => {
+const setCalloutType = (type: 'tip' | 'warning' | 'danger' | 'info' | 'recipe' | 'note') => {
   emit('update', {
     ...props.block,
     calloutType: type
@@ -72,32 +99,91 @@ const updateText = (val: string) => {
     <!-- Editing Controls -->
     <div v-if="isEditing" class="flex flex-wrap items-center justify-between gap-3 mb-3 border-b border-dark-border/50 pb-3">
       <div class="flex items-center gap-2">
-        <span class="text-xs font-semibold uppercase tracking-wider text-dark-muted">Тип уведомления:</span>
-        <div class="flex items-center gap-1.5 bg-dark-bg p-1 rounded-md border border-dark-border">
-          <button 
-            type="button"
-            @click="setCalloutType('tip')"
-            :class="['px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1.5 transition-all', props.block.calloutType === 'tip' || !props.block.calloutType ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-dark-muted hover:text-white']"
-          >
-            <IconRenderer name="Lightbulb" size="14" />
-            Совет
-          </button>
-          <button 
-            type="button"
-            @click="setCalloutType('warning')"
-            :class="['px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1.5 transition-all', props.block.calloutType === 'warning' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-dark-muted hover:text-white']"
-          >
-            <IconRenderer name="AlertTriangle" size="14" />
-            Важно
-          </button>
-          <button 
-            type="button"
-            @click="setCalloutType('danger')"
-            :class="['px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1.5 transition-all', props.block.calloutType === 'danger' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-dark-muted hover:text-white']"
-          >
-            <IconRenderer name="OctagonAlert" size="14" />
-            Опасность
-          </button>
+        <span class="text-[11px] font-bold uppercase tracking-wider text-dark-muted">Тип:</span>
+        <div class="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-lg border border-[#26292d]">
+          <!-- Tip (Совет) -->
+          <div class="relative group/calloutbtn">
+            <button 
+              type="button"
+              @click="setCalloutType('tip')"
+              :class="['p-1.5 rounded-md transition-all flex items-center justify-center', props.block.calloutType === 'tip' || !props.block.calloutType ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm' : 'text-dark-muted hover:text-white']"
+            >
+              <IconRenderer name="Lightbulb" size="14" />
+            </button>
+            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover/calloutbtn:flex items-center pointer-events-none z-30">
+              <div class="bg-[#0c0d0e] border border-emerald-500/40 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-lg whitespace-nowrap shadow-2xl">Совет</div>
+            </div>
+          </div>
+
+          <!-- Info (Информация) -->
+          <div class="relative group/calloutbtn">
+            <button 
+              type="button"
+              @click="setCalloutType('info')"
+              :class="['p-1.5 rounded-md transition-all flex items-center justify-center', props.block.calloutType === 'info' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 shadow-sm' : 'text-dark-muted hover:text-white']"
+            >
+              <IconRenderer name="Info" size="14" />
+            </button>
+            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover/calloutbtn:flex items-center pointer-events-none z-30">
+              <div class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 text-[10px] font-bold px-2 py-0.5 rounded-lg whitespace-nowrap shadow-2xl">Информация</div>
+            </div>
+          </div>
+
+          <!-- Recipe (Крафт) -->
+          <div class="relative group/calloutbtn">
+            <button 
+              type="button"
+              @click="setCalloutType('recipe')"
+              :class="['p-1.5 rounded-md transition-all flex items-center justify-center', props.block.calloutType === 'recipe' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-sm' : 'text-dark-muted hover:text-white']"
+            >
+              <IconRenderer name="Hammer" size="14" />
+            </button>
+            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover/calloutbtn:flex items-center pointer-events-none z-30">
+              <div class="bg-[#0c0d0e] border border-purple-500/40 text-purple-300 text-[10px] font-bold px-2 py-0.5 rounded-lg whitespace-nowrap shadow-2xl">Крафт / Мод</div>
+            </div>
+          </div>
+
+          <!-- Note (Примечание) -->
+          <div class="relative group/calloutbtn">
+            <button 
+              type="button"
+              @click="setCalloutType('note')"
+              :class="['p-1.5 rounded-md transition-all flex items-center justify-center', props.block.calloutType === 'note' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 shadow-sm' : 'text-dark-muted hover:text-white']"
+            >
+              <IconRenderer name="FileText" size="14" />
+            </button>
+            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover/calloutbtn:flex items-center pointer-events-none z-30">
+              <div class="bg-[#0c0d0e] border border-indigo-500/40 text-indigo-300 text-[10px] font-bold px-2 py-0.5 rounded-lg whitespace-nowrap shadow-2xl">Заметка</div>
+            </div>
+          </div>
+
+          <!-- Warning (Важно) -->
+          <div class="relative group/calloutbtn">
+            <button 
+              type="button"
+              @click="setCalloutType('warning')"
+              :class="['p-1.5 rounded-md transition-all flex items-center justify-center', props.block.calloutType === 'warning' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm' : 'text-dark-muted hover:text-white']"
+            >
+              <IconRenderer name="AlertTriangle" size="14" />
+            </button>
+            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover/calloutbtn:flex items-center pointer-events-none z-30">
+              <div class="bg-[#0c0d0e] border border-amber-500/40 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-lg whitespace-nowrap shadow-2xl">Важно</div>
+            </div>
+          </div>
+
+          <!-- Danger (Опасность) -->
+          <div class="relative group/calloutbtn">
+            <button 
+              type="button"
+              @click="setCalloutType('danger')"
+              :class="['p-1.5 rounded-md transition-all flex items-center justify-center', props.block.calloutType === 'danger' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-sm' : 'text-dark-muted hover:text-white']"
+            >
+              <IconRenderer name="OctagonAlert" size="14" />
+            </button>
+            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover/calloutbtn:flex items-center pointer-events-none z-30">
+              <div class="bg-[#0c0d0e] border border-rose-500/40 text-rose-300 text-[10px] font-bold px-2 py-0.5 rounded-lg whitespace-nowrap shadow-2xl">Опасность</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import IconRenderer from './IconRenderer.vue';
+import SiteFooter from './SiteFooter.vue';
 import type { Guide, Category } from '../types/guide';
 
 const props = defineProps<{
@@ -516,5 +517,13 @@ const getDifficultyBadge = (diff: string) => {
         </span>
       </div>
     </div>
+
+    <!-- SITE FOOTER AT THE VERY BOTTOM OF HOMEPAGE SCROLL -->
+    <SiteFooter
+      :guides-count="guides.length"
+      :servers-count="21"
+      @navigate="$emit('create-guide')"
+      @open-terms="false"
+    />
   </div>
 </template>

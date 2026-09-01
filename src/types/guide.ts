@@ -3,15 +3,16 @@ export type BlockType =
   | 'text' 
   | 'image' 
   | 'callout' 
-  | 'crafting' 
   | 'multiblock' 
   | 'checklist'
   | 'divider'
-  | 'section';
+  | 'section'
+  | 'spoiler'
+  | 'before_after';
 
 export type Category = 'ХайТек' | 'Магия RPG' | 'СкайБлок' | 'Автоматизация' | 'Общий';
 export type Difficulty = 'Новичок' | 'Опытный' | 'Мастер';
-export type CalloutType = 'info' | 'warning' | 'tip' | 'danger';
+export type CalloutType = 'info' | 'warning' | 'tip' | 'danger' | 'recipe' | 'note';
 export type BlockSpan = 'span-1' | 'span-2' | 'span-3' | 'span-4' | 'span-6';
 export type BlockAlign = 'left' | 'center' | 'right';
 export type BlockVariant = 'default' | 'subtle' | 'accent' | 'bordered';
@@ -22,6 +23,7 @@ export interface PresetItem {
   mod: string;
   icon: string;
   color: string;
+  defaultTooltip?: string;
 }
 
 export interface CraftingSlot {
@@ -64,6 +66,27 @@ export interface GuideBlock {
   customHeight?: number; // Custom height in pixels (90px - 1000px)
   align?: BlockAlign;
   variant?: BlockVariant;
+  sectionStyle?: 'card' | 'transparent';
+  sectionTitle?: string; // Custom title for Section block
+  fullWidth?: boolean; // If true inside section, block spans across full width (100%) below/above columns
+  
+  // Badge / Tag overlay
+  badgeText?: string;
+  badgeColor?: 'emerald' | 'cyan' | 'purple' | 'amber' | 'rose';
+
+  // Spoiler Block
+  spoilerTitle?: string;
+  spoilerContent?: string;
+  isExpandedByDefault?: boolean;
+
+  // Before / After Comparison Slider Block
+  beforeImageUrl?: string;
+  afterImageUrl?: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+  
+  anchorId?: string; // Custom anchor ID or manual link key
+  showInOutline?: boolean; // Explicit toggle: force include or exclude from Table of Contents
   
   // Heading Block
   headingText?: string;
@@ -99,6 +122,9 @@ export interface GuideBlock {
 
   // Unified Multi-block Columns Container
   columns?: SectionColumn[];
+  fullWidthBlocksBottom?: GuideBlock[]; // Sub-blocks displayed inside the section card below columns at 100% width
+  fullWidthBlocksTop?: GuideBlock[]; // Sub-blocks displayed inside the section card above columns at 100% width
+
 }
 
 export interface GuideMeta {

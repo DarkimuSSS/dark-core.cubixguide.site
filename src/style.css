@@ -55,3 +55,27 @@ body {
 .crafting-arrow {
   filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4));
 }
+
+/* Vue transition: fade (outline sidebar) */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
+/* Vue transition: meta-expand (collapsible guide settings) */
+.meta-expand-enter-active,
+.meta-expand-leave-active {
+  transition: max-height 0.3s ease, opacity 0.25s ease;
+  overflow: hidden;
+  max-height: 600px;
+}
+.meta-expand-enter-from,
+.meta-expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}

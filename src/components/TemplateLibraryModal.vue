@@ -2,7 +2,6 @@
 import { ref, onMounted, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import type { GuideBlock } from '../types/guide';
-import { PRESET_ITEMS } from '../data/presetItems';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -46,6 +45,48 @@ const toggleFavorite = (tplId: string, e: MouseEvent) => {
 };
 
 const templates: LayoutTemplate[] = [
+  {
+    id: 'tpl_top_cols_bottom_full',
+    name: '2 Колонки сверху + 1 Широкий блок снизу',
+    description: 'Вверху 2 параллельные колонки (например, Описание и Иллюстрация), а под ними единый широкий блок на всю ширину.',
+    icon: 'Layout',
+    previewLayout: '[ 2 Колонки Сверху | 1 Широкий Блок Снизу ]',
+    category: 'Составные колонки',
+    blocks: [
+      {
+        id: 'tpl_sec_grid_1',
+        type: 'section',
+        sectionStyle: 'card',
+        customWidth: 100,
+        columns: [
+          {
+            id: 'col_g1',
+            customWidth: 50,
+            blocks: [
+              { id: 'sub_g1', type: 'heading', headingText: 'Первый блок', headingLevel: 'h2', customWidth: 100 },
+              { id: 'sub_g2', type: 'text', textContent: 'Описание левой колонки...', customWidth: 100 }
+            ]
+          },
+          {
+            id: 'col_g2',
+            customWidth: 50,
+            blocks: [
+              { id: 'sub_g3', type: 'heading', headingText: 'Второй блок', headingLevel: 'h2', customWidth: 100 },
+              { id: 'sub_g4', type: 'text', textContent: 'Описание правой колонки...', customWidth: 100 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'tpl_sec_grid_2',
+        type: 'callout',
+        calloutType: 'tip',
+        calloutTitle: 'Третий блок (На всю ширину карточки)',
+        calloutText: 'Это широкий подблок, который идет ниже под колонками.',
+        customWidth: 100
+      }
+    ]
+  },
   {
     id: 'tpl_stacked_left_image_right',
     name: '2 Блока слева (Заголовок + Текст) | 1 Картинка справа (4/6 + 2/6)',
@@ -96,11 +137,11 @@ const templates: LayoutTemplate[] = [
     ]
   },
   {
-    id: 'tpl_stacked_text_callout_crafting',
-    name: '2 Блока слева (Текст + Предупреждение) | 1 Крафт справа (3/6 + 3/6)',
-    description: 'Слева стопкой стоят описательный текст и важный совет, а справа — схема верстака.',
-    icon: 'Grid',
-    previewLayout: '[ Текст + Совет (3/6) | Крафт 3x3 (3/6) ]',
+    id: 'tpl_stacked_text_callout_multiblock',
+    name: '2 Блока слева (Текст + Предупреждение) | 1 Схема справа (3/6 + 3/6)',
+    description: 'Слева стопкой стоят описательный текст и важный совет, а справа — схема мультиструктуры.',
+    icon: 'Layers',
+    previewLayout: '[ Текст + Совет (3/6) | Схема 3D (3/6) ]',
     category: 'Составные колонки',
     blocks: [
       {
@@ -134,9 +175,10 @@ const templates: LayoutTemplate[] = [
             blocks: [
               {
                 id: 'tpl_sub_6',
-                type: 'crafting',
-                craftingGrid: Array(9).fill(null).map((_, i) => ({ index: i, item: null, count: 1 })),
-                craftingOutput: { index: 9, item: PRESET_ITEMS[0], count: 1 },
+                type: 'multiblock',
+                gridSize: 3,
+                palette: [],
+                layers: [],
                 customWidth: 100
               }
             ]
@@ -225,7 +267,7 @@ const applyTemplate = (tpl: LayoutTemplate) => {
 
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-    <div class="bg-[#16181a] border border-[#26292d] rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="bg-[#16181a] border border-[#26292d] rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
       <!-- Header -->
       <div class="px-6 py-4 border-b border-[#26292d] flex items-center justify-between bg-[#121416]">
         <div class="flex items-center gap-3">
@@ -319,8 +361,80 @@ const applyTemplate = (tpl: LayoutTemplate) => {
             </p>
           </div>
 
-          <div class="bg-[#0c0d0e] border border-[#26292d] p-3 rounded-lg flex items-center justify-center font-mono text-xs text-emerald-400 font-bold border-dashed group-hover:border-emerald-500/40">
-            {{ tpl.previewLayout }}
+          <!-- Interactive Visual Blueprint / Layout Preview -->
+          <div class="bg-[#0c0d0e] border border-[#26292d] p-3.5 rounded-xl group-hover:border-emerald-500/40 transition-colors">
+            <!-- Template 0: 2 cols top + 1 full bottom -->
+            <div v-if="tpl.id === 'tpl_top_cols_bottom_full'" class="flex flex-col gap-1.5 h-16 w-full">
+              <div class="flex gap-1.5 h-9 w-full">
+                <div class="w-[50%] bg-[#16181a] border border-[#26292d] rounded-md p-1 flex flex-col justify-center gap-0.5">
+                  <div class="h-1.5 w-3/4 bg-cyan-500/40 rounded"></div>
+                  <div class="h-1 w-full bg-slate-700/50 rounded"></div>
+                </div>
+                <div class="w-[50%] bg-[#16181a] border border-[#26292d] rounded-md p-1 flex flex-col justify-center gap-0.5">
+                  <div class="h-1.5 w-3/4 bg-emerald-500/40 rounded"></div>
+                  <div class="h-1 w-full bg-slate-700/50 rounded"></div>
+                </div>
+              </div>
+              <div class="h-5 w-full bg-amber-950/20 border border-amber-500/30 rounded-md flex items-center justify-center">
+                <span class="text-[8px] text-amber-300 font-mono">Третий блок (100% Ширина)</span>
+              </div>
+            </div>
+            <!-- Template 1: 2 stacked left, 1 right -->
+            <div v-if="tpl.id === 'tpl_stacked_left_image_right'" class="flex gap-2 h-16 w-full">
+              <div class="w-[70%] bg-[#16181a] border border-[#26292d] rounded-lg p-1.5 flex flex-col gap-1">
+                <div class="h-2 w-3/4 bg-cyan-500/40 rounded"></div>
+                <div class="h-1.5 w-full bg-slate-700/50 rounded"></div>
+                <div class="h-1.5 w-4/5 bg-slate-700/50 rounded"></div>
+              </div>
+              <div class="w-[30%] bg-pink-950/20 border border-pink-500/30 rounded-lg flex flex-col items-center justify-center gap-1">
+                <IconRenderer name="Image" size="14" class="text-pink-400" />
+                <span class="text-[9px] text-pink-300 font-mono">Картинка</span>
+              </div>
+            </div>
+
+            <!-- Template 2: 2 stacked text+callout, 1 multiblock right -->
+            <div v-else-if="tpl.id === 'tpl_stacked_text_callout_multiblock'" class="flex gap-2 h-16 w-full">
+              <div class="w-[50%] bg-[#16181a] border border-[#26292d] rounded-lg p-1.5 flex flex-col justify-between">
+                <div class="h-2 w-full bg-slate-700/60 rounded"></div>
+                <div class="h-4 bg-amber-500/20 border border-amber-500/30 rounded flex items-center px-1">
+                  <span class="text-[8px] text-amber-300">💡 Совет</span>
+                </div>
+              </div>
+              <div class="w-[50%] bg-purple-950/20 border border-purple-500/30 rounded-lg flex flex-col items-center justify-center gap-0.5">
+                <IconRenderer name="Layers" size="14" class="text-purple-400" />
+                <span class="text-[9px] text-purple-300 font-mono">3D Схема</span>
+              </div>
+            </div>
+
+            <!-- Template 3: 2 Equal columns -->
+            <div v-else-if="tpl.id === 'tpl_text_image'" class="flex gap-2 h-16 w-full">
+              <div class="w-[50%] bg-[#16181a] border border-[#26292d] rounded-lg p-2 flex flex-col gap-1.5">
+                <div class="h-2 w-full bg-slate-700/60 rounded"></div>
+                <div class="h-2 w-2/3 bg-slate-700/60 rounded"></div>
+              </div>
+              <div class="w-[50%] bg-pink-950/20 border border-pink-500/30 rounded-lg flex items-center justify-center gap-1">
+                <IconRenderer name="Image" size="14" class="text-pink-400" />
+              </div>
+            </div>
+
+            <!-- Template 4: 3 Equal columns -->
+            <div v-else-if="tpl.id === 'tpl_image_text_image'" class="flex gap-2 h-16 w-full">
+              <div class="w-[33%] bg-pink-950/20 border border-pink-500/30 rounded-lg flex items-center justify-center">
+                <IconRenderer name="Image" size="12" class="text-pink-400" />
+              </div>
+              <div class="w-[33%] bg-[#16181a] border border-[#26292d] rounded-lg p-1 flex flex-col justify-center gap-1">
+                <div class="h-1.5 w-full bg-slate-700/60 rounded"></div>
+                <div class="h-1.5 w-3/4 bg-slate-700/60 rounded"></div>
+              </div>
+              <div class="w-[33%] bg-pink-950/20 border border-pink-500/30 rounded-lg flex items-center justify-center">
+                <IconRenderer name="Image" size="12" class="text-pink-400" />
+              </div>
+            </div>
+
+            <!-- Fallback text badge -->
+            <div v-else class="flex items-center justify-center font-mono text-xs text-emerald-400 font-bold">
+              {{ tpl.previewLayout }}
+            </div>
           </div>
 
           <button 
