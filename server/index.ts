@@ -30,6 +30,11 @@ function formatGuideRow(row: any): Guide {
     }
   }
 
+  const published = Boolean(row.published);
+  const rawVisible = row.is_visible !== undefined ? Boolean(row.is_visible) : false;
+  // По условию: если не опубликован (published === false), то автоматически НЕ виден обычным пользователям
+  const isVisible = published ? rawVisible : false;
+
   return {
     meta: {
       id: row.id,
@@ -40,7 +45,8 @@ function formatGuideRow(row: any): Guide {
       difficulty: row.difficulty,
       summary: row.summary || '',
       updatedAt: row.updated_at,
-      published: Boolean(row.published),
+      published: published,
+      isVisible: isVisible,
       server: row.server || undefined,
       coverUrl: row.cover_url || undefined,
       coverGradient: row.cover_gradient || undefined
@@ -58,22 +64,35 @@ app.get('/api/servers', async (req, res) => {
     const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     const response = await fetch('https://online.cubix.world/api/metrics/server-list', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json'
-      },
       signal: controller.signal
     });
     clearTimeout(timeoutId);
 
-    if (response.ok) {
-      const data = await response.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return res.json(data);
-      }
+    if (!response.ok) {
+      throw new Error(`Cubix metrics API returned status ${response.status}`);
     }
-    res.json(DEFAULT_CUBIX_SERVERS);
-  } catch (err) {
+
+    const data: any = await response.json();
+    const serverMap = new Map<string, string>();
+
+    if (Array.isArray(data)) {
+      data.forEach((srv: any) => {
+        if (srv.name) {
+          const cleanName = String(srv.name).trim();
+          serverMap.set(cleanName.toLowerCase(), cleanName);
+        }
+      });
+    }
+
+    DEFAULT_CUBIX_SERVERS.forEach(srv => {
+      if (!serverMap.has(srv.toLowerCase())) {
+        serverMap.set(srv.toLowerCase(), srv);
+      }
+    });
+
+    const uniqueServers = Array.from(serverMap.values());
+    res.json(uniqueServers);
+  } catch (err: any) {
     res.json(DEFAULT_CUBIX_SERVERS);
   }
 });
@@ -115,23 +134,23 @@ app.post('/api/admin/register-author', (req, res) => {
   try {
     const { username, password, adminUsername } = req.body;
     if (!username || !password || !adminUsername) {
-      return res.status(400).json({ error: 'Заполните никнейм и пароль нового автора' });
+      return res.status(400).json({ error: 'Укажите никнейм автора, пароль и аккаунт админа' });
     }
     const result = registerAuthorByAdmin(username, password, adminUsername);
-    res.status(201).json(result);
+    res.json(result);
   } catch (err: any) {
-    res.status(403).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
 // Update Author Permissions & Verification (Admin)
-app.post('/api/admin/permissions', (req, res) => {
+app.post('/api/admin/update-permissions', (req, res) => {
   try {
     const { targetUsername, canEditOthers, canCreateGuides, isVerified, adminUsername } = req.body;
     if (!targetUsername || !adminUsername) {
-      return res.status(400).json({ error: 'Укажите никнейм автора' });
+      return res.status(400).json({ error: 'Не указан целевой автор или админ' });
     }
-    const result = updateAuthorPermissionsByAdmin(targetUsername, Boolean(canEditOthers), Boolean(canCreateGuides), Boolean(isVerified), adminUsername);
+    const result = updateAuthorPermissionsByAdmin(targetUsername, canEditOthers, canCreateGuides, isVerified, adminUsername);
     res.json(result);
   } catch (err: any) {
     res.status(403).json({ error: err.message });
@@ -241,9 +260,13 @@ app.post('/api/guides', (req, res) => {
       return res.status(400).json({ error: 'Неверные данные гайда' });
     }
 
+    const isPublished = Boolean(guide.meta.published);
+    // Если не опубликован, автоматически НЕ виден
+    const isVisible = isPublished ? Boolean(guide.meta.isVisible) : false;
+
     const stmt = db.prepare(`
-      INSERT OR REPLACE INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, server, cover_url, cover_gradient, blocks)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, is_visible, server, cover_url, cover_gradient, blocks)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -255,14 +278,22 @@ app.post('/api/guides', (req, res) => {
       guide.meta.difficulty,
       guide.meta.summary || '',
       guide.meta.updatedAt || new Date().toISOString().split('T')[0],
-      guide.meta.published ? 1 : 0,
+      isPublished ? 1 : 0,
+      isVisible ? 1 : 0,
       guide.meta.server || null,
       guide.meta.coverUrl || null,
       guide.meta.coverGradient || null,
       JSON.stringify(guide.blocks || [])
     );
 
-    res.status(201).json(guide);
+    res.status(201).json({
+      ...guide,
+      meta: {
+        ...guide.meta,
+        published: isPublished,
+        isVisible: isVisible
+      }
+    });
   } catch (err: any) {
     console.error('API /api/guides POST Error:', err);
     res.status(500).json({ error: err.message });
@@ -303,9 +334,12 @@ app.put('/api/guides/:id', (req, res) => {
       return res.status(403).json({ error: 'У вас нет прав для редактирования чужого гайда' });
     }
 
+    const isPublished = Boolean(guide.meta.published);
+    const isVisible = isPublished ? Boolean(guide.meta.isVisible) : false;
+
     const stmt = db.prepare(`
       UPDATE guides
-      SET title = ?, category = ?, author = ?, co_authors = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, server = ?, cover_url = ?, cover_gradient = ?, blocks = ?
+      SET title = ?, category = ?, author = ?, co_authors = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, is_visible = ?, server = ?, cover_url = ?, cover_gradient = ?, blocks = ?
       WHERE id = ?
     `);
 
@@ -317,7 +351,8 @@ app.put('/api/guides/:id', (req, res) => {
       guide.meta.difficulty,
       guide.meta.summary || '',
       guide.meta.updatedAt || new Date().toISOString().split('T')[0],
-      guide.meta.published ? 1 : 0,
+      isPublished ? 1 : 0,
+      isVisible ? 1 : 0,
       guide.meta.server || null,
       guide.meta.coverUrl || null,
       guide.meta.coverGradient || null,
@@ -328,8 +363,8 @@ app.put('/api/guides/:id', (req, res) => {
     if (result.changes === 0) {
       // Fallback: If guide ID doesn't exist in DB yet (e.g. built-in sample guide edited for the first time), insert it
       const insertStmt = db.prepare(`
-        INSERT INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, server, cover_url, cover_gradient, blocks)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, is_visible, server, cover_url, cover_gradient, blocks)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       insertStmt.run(
         guideId,
@@ -340,7 +375,8 @@ app.put('/api/guides/:id', (req, res) => {
         guide.meta.difficulty,
         guide.meta.summary || '',
         guide.meta.updatedAt || new Date().toISOString().split('T')[0],
-        guide.meta.published ? 1 : 0,
+        isPublished ? 1 : 0,
+        isVisible ? 1 : 0,
         guide.meta.server || null,
         guide.meta.coverUrl || null,
         guide.meta.coverGradient || null,

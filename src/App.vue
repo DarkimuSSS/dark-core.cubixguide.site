@@ -473,7 +473,8 @@ const createNewGuide = async () => {
       difficulty: 'Новичок',
       summary: 'Новое руководство по сборке.',
       updatedAt: new Date().toISOString().split('T')[0],
-      published: true
+      published: false,
+      isVisible: false
     },
     blocks: [
       {

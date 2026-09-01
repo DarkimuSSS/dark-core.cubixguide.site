@@ -35,7 +35,8 @@ db.exec(`
     difficulty TEXT NOT NULL,
     summary TEXT,
     updated_at TEXT NOT NULL,
-    published INTEGER NOT NULL DEFAULT 1,
+    published INTEGER NOT NULL DEFAULT 0,
+    is_visible INTEGER NOT NULL DEFAULT 0,
     server TEXT,
     cover_url TEXT,
     cover_gradient TEXT,
@@ -68,6 +69,7 @@ try { db.exec(`ALTER TABLE guides ADD COLUMN server TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN co_authors TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN cover_url TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN cover_gradient TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE guides ADD COLUMN is_visible INTEGER NOT NULL DEFAULT 0;`); } catch (e) {}
 
 // Password hashing helper (SHA-256 with salt from environment)
 export function hashPassword(password: string): string {
@@ -368,11 +370,13 @@ if (guideCount.count === 0) {
       const raw = fs.readFileSync(exportPath, 'utf-8');
       const items = JSON.parse(raw);
       const stmt = db.prepare(`
-        INSERT OR IGNORE INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, server, cover_url, cover_gradient, blocks)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR IGNORE INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, is_visible, server, cover_url, cover_gradient, blocks)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       for (const g of items) {
+        const isPub = g.published !== undefined ? g.published : 1;
+        const isVis = g.is_visible !== undefined ? g.is_visible : (isPub ? 1 : 0);
         stmt.run(
           g.id,
           g.title,
@@ -382,7 +386,8 @@ if (guideCount.count === 0) {
           g.difficulty,
           g.summary || '',
           g.updated_at || new Date().toISOString().split('T')[0],
-          g.published !== undefined ? g.published : 1,
+          isPub,
+          isVis,
           g.server || '',
           g.cover_url || '',
           g.cover_gradient || '',

@@ -137,7 +137,8 @@ export interface GuideMeta {
   difficulty: Difficulty;
   summary: string;
   updatedAt: string;
-  published: boolean;
+  published: boolean; // Опубликован ли гайд (true/false)
+  isVisible: boolean; // Виден ли гайд обычным пользователям (true/false)
   server?: string;
   coverUrl?: string;
   coverGradient?: string;

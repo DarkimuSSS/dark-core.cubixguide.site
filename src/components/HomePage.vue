@@ -101,6 +101,16 @@ const filteredServers = computed(() => {
 const filteredGuides = computed(() => {
   const safeGuides = props.guides || [];
   return safeGuides.filter(guide => {
+    // Проверка видимости: гайд виден обычным пользователям только если isVisible === true и published === true
+    const isOwner = props.currentUsername && guide.meta.author.toLowerCase() === props.currentUsername.toLowerCase();
+    const isCoAuthor = props.currentUsername && (guide.meta.coAuthors || []).some(ca => ca.toLowerCase() === props.currentUsername?.toLowerCase());
+    const canSeePrivate = props.isAdmin || props.canEditOthers || isOwner || isCoAuthor;
+
+    // Если гайд не виден для публики и пользователь не владелец/админ — скрываем его из каталога
+    if (!guide.meta.isVisible && !canSeePrivate) {
+      return false;
+    }
+
     const matchesCategory = selectedCategory.value === 'Все' || guide.meta.category === selectedCategory.value;
     const matchesServer = selectedServer.value === 'Все' || guide.meta.server === selectedServer.value;
     const q = searchQuery.value.toLowerCase().trim();
@@ -372,6 +382,12 @@ const getDifficultyBadge = (diff: string) => {
 
             <!-- Gradient Shadow Overlay for Readable Badges -->
             <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-[#16181a]/30 to-black/40 pointer-events-none card-banner-shadow"></div>
+
+            <!-- DRAFT / PRIVATE BADGE OVERLAY -->
+            <div v-if="!guide.meta.published || !guide.meta.isVisible" class="absolute top-2.5 left-2.5 z-20 flex items-center gap-1 bg-rose-950/90 border border-rose-500/60 text-rose-300 text-[10px] font-extrabold px-2 py-0.5 rounded-lg shadow-xl backdrop-blur-md">
+              <IconRenderer name="EyeOff" size="12" />
+              <span>Черновик (Скрыт)</span>
+            </div>
 
             <!-- BADGES OVERLAID DIRECTLY ON THE BANNER -->
             <div class="absolute inset-x-0 bottom-2.5 px-4 sm:px-5 z-10 flex items-center justify-between flex-wrap gap-1.5">

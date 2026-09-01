@@ -134,6 +134,11 @@ const authorGuides = computed(() => {
   if (!props.username || !props.allGuides) return [];
   const target = props.username.toLowerCase().trim();
   return props.allGuides.filter(g => {
+    const isOwner = props.isOwnProfile;
+    const canSeePrivate = props.isAdmin || isOwner;
+    // Если гайд не виден публике и запрашивающий — не владелец и не админ, скрываем
+    if (!g.meta.isVisible && !canSeePrivate) return false;
+
     const mainAuthor = (g.meta.author || '').toLowerCase().trim();
     if (mainAuthor === target) return true;
     const coAuthors = (g.meta.coAuthors || []).map(s => s.toLowerCase().trim());
