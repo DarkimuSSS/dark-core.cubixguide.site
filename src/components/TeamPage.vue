@@ -18,7 +18,8 @@ const fetchTeam = async () => {
     const res = await fetch('/api/team');
     if (res.ok) {
       const data = await res.json();
-      teamData.value = data.team || {};
+      const rawTeam = data?.team || data || {};
+      teamData.value = rawTeam;
     }
   } catch (e) {
     console.error('Error fetching team API:', e);
@@ -33,9 +34,11 @@ onMounted(() => {
 
 const serverList = computed(() => {
   const list: { id: number; name: string }[] = [];
-  Object.values(teamData.value).forEach((srv: any) => {
-    if (srv.server_name) {
-      list.push({ id: srv.server_id, name: srv.server_name });
+  const rawList = Array.isArray(teamData.value) ? teamData.value : Object.values(teamData.value || {});
+  
+  rawList.forEach((srv: any) => {
+    if (srv && srv.server_name) {
+      list.push({ id: srv.server_id || Math.random(), name: srv.server_name });
     }
   });
   return list;
@@ -45,25 +48,27 @@ const serverList = computed(() => {
 const filteredTeam = computed(() => {
   const result: { serverId: number; serverName: string; members: any[] }[] = [];
   const query = searchQuery.value.toLowerCase().trim();
+  const rawList = Array.isArray(teamData.value) ? teamData.value : Object.values(teamData.value || {});
 
-  Object.values(teamData.value).forEach((srv: any) => {
+  rawList.forEach((srv: any) => {
+    if (!srv || !srv.server_name) return;
     const srvName = srv.server_name || '';
     if (selectedServerFilter.value !== 'all' && srvName !== selectedServerFilter.value) {
       return;
     }
 
     const members: any[] = [];
-    if (srv.team) {
-      Object.values(srv.team).forEach((m: any) => {
-        if (!query || m.name.toLowerCase().includes(query) || m.group_name.toLowerCase().includes(query)) {
-          members.push(m);
-        }
-      });
-    }
+    const rawMembers = Array.isArray(srv.team) ? srv.team : Object.values(srv.team || {});
+
+    rawMembers.forEach((m: any) => {
+      if (m && m.name && (!query || m.name.toLowerCase().includes(query) || (m.group_name && m.group_name.toLowerCase().includes(query)))) {
+        members.push(m);
+      }
+    });
 
     if (members.length > 0) {
       result.push({
-        serverId: srv.server_id,
+        serverId: srv.server_id || Math.random(),
         serverName: srvName,
         members
       });
