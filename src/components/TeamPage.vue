@@ -18,24 +18,44 @@ const fetchTeam = async () => {
     const res = await fetch('https://cubixworld.net/api/team');
     if (res.ok) {
       const data = await res.json();
-      console.log('Received Direct CubixWorld Team Data:', data);
+      console.log('API Response:', data);
 
-      let rootServersObj: any = data;
-      if (data && data.team && typeof data.team === 'object') {
-        rootServersObj = data.team;
-      }
+      const parsedServers: any[] = [];
+      const rootObj = (data && data.team) ? data.team : data;
 
-      const serversList: any[] = [];
-      if (rootServersObj && typeof rootServersObj === 'object') {
-        Object.keys(rootServersObj).forEach(key => {
-          const item = rootServersObj[key];
-          if (item && typeof item === 'object' && item.server_name) {
-            serversList.push(item);
+      if (rootObj && typeof rootObj === 'object') {
+        Object.keys(rootObj).forEach(key => {
+          const serverBlock = rootObj[key];
+          if (serverBlock && typeof serverBlock === 'object' && serverBlock.server_name) {
+            const memberList: any[] = [];
+            const rawTeamObj = serverBlock.team || {};
+
+            Object.keys(rawTeamObj).forEach(mKey => {
+              const member = rawTeamObj[mKey];
+              if (member && member.name) {
+                memberList.push({
+                  id: member.id || Math.random(),
+                  name: member.name,
+                  group: member.group,
+                  group_name: member.group_name || 'Персонал',
+                  server: member.server,
+                  server_name: member.server_name || serverBlock.server_name
+                });
+              }
+            });
+
+            if (memberList.length > 0) {
+              parsedServers.push({
+                serverId: serverBlock.server_id || Math.random(),
+                serverName: serverBlock.server_name,
+                members: memberList
+              });
+            }
           }
         });
       }
 
-      teamData.value = serversList;
+      teamData.value = parsedServers;
     }
   } catch (e) {
     console.error('Error fetching team API:', e);
@@ -52,8 +72,8 @@ const serverList = computed(() => {
   const list: { id: number; name: string }[] = [];
   if (Array.isArray(teamData.value)) {
     teamData.value.forEach((srv: any) => {
-      if (srv && srv.server_name) {
-        list.push({ id: srv.server_id || Math.random(), name: srv.server_name });
+      if (srv && srv.serverName) {
+        list.push({ id: srv.serverId, name: srv.serverName });
       }
     });
   }
@@ -88,34 +108,23 @@ const filteredTeam = computed(() => {
   const serversArray = Array.isArray(teamData.value) ? teamData.value : [];
 
   serversArray.forEach((srv: any) => {
-    if (!srv || !srv.server_name) return;
-    const srvName = srv.server_name || '';
+    const srvName = srv.serverName || '';
     if (selectedServerFilter.value !== 'all' && srvName !== selectedServerFilter.value) {
       return;
     }
 
     const members: any[] = [];
-    const teamObj = srv.team;
-    let rawMembers: any[] = [];
-
-    if (Array.isArray(teamObj)) {
-      rawMembers = teamObj;
-    } else if (teamObj && typeof teamObj === 'object') {
-      rawMembers = Object.values(teamObj);
-    }
-
-    rawMembers.forEach((m: any) => {
-      if (m && m.name && (!query || m.name.toLowerCase().includes(query) || (m.group_name && m.group_name.toLowerCase().includes(query)))) {
+    (srv.members || []).forEach((m: any) => {
+      if (!query || m.name.toLowerCase().includes(query) || (m.group_name && m.group_name.toLowerCase().includes(query))) {
         members.push(m);
       }
     });
 
     if (members.length > 0) {
-      // Sort members inside server by role hierarchy priority
       members.sort((a, b) => getRolePriority(b.group_name) - getRolePriority(a.group_name));
 
       result.push({
-        serverId: srv.server_id || Math.random(),
+        serverId: srv.serverId,
         serverName: srvName,
         members
       });
