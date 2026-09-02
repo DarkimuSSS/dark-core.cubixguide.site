@@ -286,7 +286,10 @@ app.get('/api/admin/authors', (req, res) => {
 app.get('/api/profiles/:username', (req, res) => {
   try {
     const userRow = db.prepare('SELECT is_verified FROM users WHERE LOWER(username) = LOWER(?)').get(req.params.username) as any;
-    const isVerified = userRow ? Boolean(userRow.is_verified) : (req.params.username.toLowerCase() === 'darkimusss');
+    if (!userRow) {
+      return res.status(404).json({ error: 'Автор не зарегистрирован' });
+    }
+    const isVerified = Boolean(userRow.is_verified);
     const profile = getAuthorProfile(req.params.username);
     res.json({ ...profile, isVerified });
   } catch (err: any) {
