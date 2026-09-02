@@ -875,39 +875,7 @@ const handleViewAllAuthorGuides = (username: string) => {
 
         <div class="h-6 w-px bg-[#262a30] hidden lg:block"></div>
 
-        <!-- Direct Navbar Navigation Items -->
-        <div class="hidden xl:flex items-center gap-1.5">
-          <button
-            type="button"
-            @click="mode = 'team'"
-            :class="[
-              'px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm',
-              mode === 'team'
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 ring-2 ring-amber-500/30'
-                : 'bg-[#090a0c] hover:bg-[#181b20] border-[#262a30] text-slate-300 hover:text-white'
-            ]"
-            title="Команда Проекта CubixWorld"
-          >
-            <IconRenderer name="Shield" size="14" class="text-amber-400" />
-            <span>Команда Проекта</span>
-          </button>
 
-          <button
-            v-if="currentUserIsAdmin"
-            type="button"
-            @click="mode = 'admin'"
-            :class="[
-              'px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm',
-              mode === 'admin'
-                ? 'bg-cyan-600 text-white border-cyan-400 ring-2 ring-cyan-500/30'
-                : 'bg-[#090a0c] hover:bg-[#181b20] border-[#262a30] text-cyan-400 hover:text-cyan-300'
-            ]"
-            title="Панель Управления Авторами"
-          >
-            <IconRenderer name="Users" size="14" class="text-cyan-400" />
-            <span>Панель Авторов</span>
-          </button>
-        </div>
 
         <!-- Expandable Mega-Menu Trigger Button -->
         <div class="relative">
