@@ -636,14 +636,42 @@ const handleBannerFileUpload = (e: Event) => {
 
                 <!-- Official CubixWorld Team Staff Badges -->
                 <div v-if="authorTeamRoles.length > 0" class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                  <!-- Single role badge if author has only 1 role -->
                   <span
-                    v-for="(r, idx) in authorTeamRoles"
-                    :key="idx"
+                    v-if="authorTeamRoles.length === 1"
                     class="text-[11px] font-extrabold bg-gradient-to-r from-purple-900/90 to-cyan-900/90 text-amber-300 border border-amber-500/50 px-3 py-1 rounded-full shadow-lg backdrop-blur-md flex items-center gap-1.5"
                   >
                     <IconRenderer name="Shield" size="13" class="text-amber-400" />
-                    <span>{{ r.groupName }} ({{ r.serverName }})</span>
+                    <span>{{ authorTeamRoles[0].groupName }} ({{ authorTeamRoles[0].serverName }})</span>
                   </span>
+
+                  <!-- Compact "Команда проекта" badge with hover tooltip if author has > 1 roles -->
+                  <div v-else class="relative group/teamtool inline-flex items-center">
+                    <span class="text-[11px] font-extrabold bg-gradient-to-r from-purple-900/90 via-amber-900/90 to-cyan-900/90 text-amber-300 border border-amber-500/60 px-3.5 py-1 rounded-full shadow-xl backdrop-blur-md flex items-center gap-2 cursor-help hover:border-amber-400 transition-all">
+                      <IconRenderer name="Shield" size="14" class="text-amber-400" />
+                      <span>Команда проекта ({{ authorTeamRoles.length }})</span>
+                    </span>
+
+                    <!-- Multi-role Tooltip Popup -->
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 hidden group-hover/teamtool:flex flex-col items-start pointer-events-none z-50 min-w-[240px]">
+                      <div class="bg-[#0c0d0e] border border-amber-500/60 text-white text-xs font-semibold p-3 rounded-2xl shadow-2xl backdrop-blur-xl space-y-2 w-full">
+                        <div class="text-[11px] font-black text-amber-400 border-b border-[#26292d] pb-1.5 flex items-center gap-1.5">
+                          <IconRenderer name="Shield" size="13" />
+                          <span>Должности в Персонале ({{ authorTeamRoles.length }})</span>
+                        </div>
+                        <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                          <div
+                            v-for="(r, idx) in authorTeamRoles"
+                            :key="idx"
+                            class="flex items-center justify-between gap-2 text-[11px] bg-[#16181a] px-2.5 py-1 rounded-xl border border-[#26292d]"
+                          >
+                            <span class="font-extrabold text-amber-300 truncate">{{ r.groupName }}</span>
+                            <span class="text-[10px] text-slate-400 font-bold px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 whitespace-nowrap">{{ r.serverName }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Custom Badges List -->
