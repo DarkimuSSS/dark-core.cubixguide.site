@@ -44,6 +44,27 @@ const serverList = computed(() => {
   return list;
 });
 
+// Role priority hierarchy for sorting (higher priority first)
+const getRolePriority = (groupName: string): number => {
+  const g = (groupName || '').toLowerCase();
+  if (g.includes('главный') || g.includes('руковод') || g.includes('разработ')) return 100;
+  if (g.includes('старший администратор')) return 90;
+  if (g.includes('администратор')) return 80;
+  if (g.includes('мл') || g.includes('младший')) return 70;
+  if (g.includes('модератор')) return 60;
+  if (g.includes('хелпер')) return 50;
+  if (g.includes('строитель')) return 40;
+  return 10;
+};
+
+const totalStaffCount = computed(() => {
+  let count = 0;
+  filteredTeam.value.forEach(g => {
+    count += g.members.length;
+  });
+  return count;
+});
+
 // Group staff members by server and handle multi-role staff
 const filteredTeam = computed(() => {
   const result: { serverId: number; serverName: string; members: any[] }[] = [];
@@ -67,6 +88,9 @@ const filteredTeam = computed(() => {
     });
 
     if (members.length > 0) {
+      // Sort members inside server by role hierarchy priority
+      members.sort((a, b) => getRolePriority(b.group_name) - getRolePriority(a.group_name));
+
       result.push({
         serverId: srv.server_id || Math.random(),
         serverName: srvName,
@@ -79,7 +103,10 @@ const filteredTeam = computed(() => {
 });
 
 const getRoleBadgeStyle = (groupName: string) => {
-  const g = groupName.toLowerCase();
+  const g = (groupName || '').toLowerCase();
+  if (g.includes('главный') || g.includes('руковод') || g.includes('разработ')) {
+    return 'bg-purple-600/30 text-purple-200 border-purple-400/60 shadow-purple-950/60 font-black';
+  }
   if (g.includes('старший администратор')) {
     return 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-rose-950/40';
   }
@@ -88,6 +115,9 @@ const getRoleBadgeStyle = (groupName: string) => {
   }
   if (g.includes('мл') || g.includes('младший')) {
     return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-cyan-950/40';
+  }
+  if (g.includes('модератор')) {
+    return 'bg-blue-500/20 text-blue-300 border-blue-500/40 shadow-blue-950/40';
   }
   if (g.includes('хелпер')) {
     return 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-amber-950/40';
@@ -109,11 +139,14 @@ const getRoleBadgeStyle = (groupName: string) => {
             <IconRenderer name="Shield" size="24" />
           </div>
           <div>
-            <h1 class="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+            <h1 class="text-2xl font-black text-white tracking-tight flex items-center gap-2 flex-wrap">
               <span>Команда Проекта CubixWorld</span>
               <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">STAFF</span>
+              <span v-if="totalStaffCount > 0" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-mono">
+                {{ totalStaffCount }} человек
+              </span>
             </h1>
-            <p class="text-xs text-dark-muted">Официальный состав администрации, хелперов и разработчиков всех серверов</p>
+            <p class="text-xs text-dark-muted">Официальный состав администрации, модераторов, хелперов и строителей всех серверов</p>
           </div>
         </div>
       </div>
