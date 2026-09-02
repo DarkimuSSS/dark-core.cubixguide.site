@@ -18,7 +18,8 @@ const fetchTeam = async () => {
     const res = await fetch('/api/team');
     if (res.ok) {
       const data = await res.json();
-      const rawTeam = data?.team || data || {};
+      // Extract deep team structure safely
+      const rawTeam = data?.team?.team || data?.team || data || {};
       teamData.value = rawTeam;
     }
   } catch (e) {
@@ -32,11 +33,25 @@ onMounted(() => {
   fetchTeam();
 });
 
+// Helper to normalize objects or arrays into a clean array of server objects
+const normalizedServersList = computed(() => {
+  if (!teamData.value) return [];
+  const val = teamData.value;
+  let serversArray: any[] = [];
+
+  if (Array.isArray(val)) {
+    serversArray = val;
+  } else if (typeof val === 'object') {
+    serversArray = Object.values(val);
+  }
+
+  // If server_name is inside srv or nested
+  return serversArray.filter(srv => srv && typeof srv === 'object' && (srv.server_name || srv.team));
+});
+
 const serverList = computed(() => {
   const list: { id: number; name: string }[] = [];
-  const rawList = Array.isArray(teamData.value) ? teamData.value : Object.values(teamData.value || {});
-  
-  rawList.forEach((srv: any) => {
+  normalizedServersList.value.forEach((srv: any) => {
     if (srv && srv.server_name) {
       list.push({ id: srv.server_id || Math.random(), name: srv.server_name });
     }
@@ -69,9 +84,8 @@ const totalStaffCount = computed(() => {
 const filteredTeam = computed(() => {
   const result: { serverId: number; serverName: string; members: any[] }[] = [];
   const query = searchQuery.value.toLowerCase().trim();
-  const rawList = Array.isArray(teamData.value) ? teamData.value : Object.values(teamData.value || {});
 
-  rawList.forEach((srv: any) => {
+  normalizedServersList.value.forEach((srv: any) => {
     if (!srv || !srv.server_name) return;
     const srvName = srv.server_name || '';
     if (selectedServerFilter.value !== 'all' && srvName !== selectedServerFilter.value) {
@@ -79,7 +93,7 @@ const filteredTeam = computed(() => {
     }
 
     const members: any[] = [];
-    const rawMembers = Array.isArray(srv.team) ? srv.team : Object.values(srv.team || {});
+    const rawMembers = srv.team ? (Array.isArray(srv.team) ? srv.team : Object.values(srv.team)) : [];
 
     rawMembers.forEach((m: any) => {
       if (m && m.name && (!query || m.name.toLowerCase().includes(query) || (m.group_name && m.group_name.toLowerCase().includes(query)))) {
