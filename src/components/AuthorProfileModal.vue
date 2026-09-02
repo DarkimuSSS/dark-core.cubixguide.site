@@ -69,6 +69,8 @@ const newBadgeInput = ref('');
 const newLinkLabel = ref('');
 const newLinkUrl = ref('');
 
+const authorTeamRoles = ref<{ serverName: string; groupName: string }[]>([]);
+
 const fetchProfile = async () => {
   if (!props.username) return;
   try {
@@ -79,6 +81,25 @@ const fetchProfile = async () => {
       profile.value = data;
       isAuthorVerified.value = Boolean(data.isVerified);
       if (!profile.value.customLinks) profile.value.customLinks = [];
+    }
+
+    // Fetch Team API data to display official staff badges
+    const teamRes = await fetch('/api/team');
+    if (teamRes.ok) {
+      const teamData = await teamRes.json();
+      const roles: { serverName: string; groupName: string }[] = [];
+      if (teamData && teamData.team) {
+        Object.values(teamData.team).forEach((srvObj: any) => {
+          if (srvObj.team) {
+            Object.values(srvObj.team).forEach((m: any) => {
+              if (m.name && m.name.toLowerCase() === props.username.toLowerCase()) {
+                roles.push({ serverName: srvObj.server_name, groupName: m.group_name });
+              }
+            });
+          }
+        });
+      }
+      authorTeamRoles.value = roles;
     }
   } catch (err) {
     console.error('Error fetching profile:', err);
@@ -592,7 +613,19 @@ const handleBannerFileUpload = (e: Event) => {
                   </div>
                 </div>
 
-                <!-- Badges List -->
+                <!-- Official CubixWorld Team Staff Badges -->
+                <div v-if="authorTeamRoles.length > 0" class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                  <span
+                    v-for="(r, idx) in authorTeamRoles"
+                    :key="idx"
+                    class="text-[11px] font-extrabold bg-gradient-to-r from-purple-900/90 to-cyan-900/90 text-amber-300 border border-amber-500/50 px-3 py-1 rounded-full shadow-lg backdrop-blur-md flex items-center gap-1.5"
+                  >
+                    <IconRenderer name="Shield" size="13" class="text-amber-400" />
+                    <span>{{ r.groupName }} ({{ r.serverName }})</span>
+                  </span>
+                </div>
+
+                <!-- Custom Badges List -->
                 <div v-if="profile.badges && profile.badges.length > 0" class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
                   <span
                     v-for="badge in profile.badges"

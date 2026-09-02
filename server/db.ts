@@ -378,6 +378,78 @@ export function loginUser(username: string, password: string) {
   };
 }
 
+// Cache & Sync for https://cubixworld.net/api/team
+let teamApiCache: { timestamp: number; data: any } | null = null;
+
+export async function fetchCubixTeamData() {
+  const now = Date.now();
+  if (teamApiCache && now - teamApiCache.timestamp < 10 * 60 * 1000) { // 10 minutes cache
+    return teamApiCache.data;
+  }
+
+  try {
+    const fetch = (await import('node-fetch')).default as any;
+    const res = await fetch('https://cubixworld.net/api/team');
+    if (res.ok) {
+      const data = await res.json();
+      teamApiCache = { timestamp: now, data };
+      return data;
+    }
+  } catch (err) {
+    console.error('Ошибка обращения к https://cubixworld.net/api/team:', err);
+  }
+  return teamApiCache?.data || null;
+}
+
+export async function syncAuthorWithCubixTeam(cleanUsername: string) {
+  const teamData = await fetchCubixTeamData();
+  if (!teamData || !teamData.team) return;
+
+  const foundRoles: { serverName: string; groupName: string }[] = [];
+  const seniorAdminServers: string[] = [];
+
+  // Iterate over all servers in CubixWorld team API
+  Object.values(teamData.team).forEach((srvObj: any) => {
+    const rawSrvName = srvObj.server_name || '';
+    // Normalize server name e.g. "HiTech #1" -> "HiTech"
+    const normalizedServer = rawSrvName.split('#')[0].trim();
+
+    if (srvObj.team) {
+      Object.values(srvObj.team).forEach((member: any) => {
+        if (member.name && member.name.toLowerCase() === cleanUsername.toLowerCase()) {
+          foundRoles.push({
+            serverName: rawSrvName,
+            groupName: member.group_name
+          });
+
+          // Check if "Старший администратор"
+          if (member.group_name && member.group_name.toLowerCase().includes('старший администратор')) {
+            if (!seniorAdminServers.includes(normalizedServer)) {
+              seniorAdminServers.push(normalizedServer);
+            }
+          }
+        }
+      });
+    }
+  });
+
+  // If user is Senior Admin on one or multiple servers -> Auto-assign those servers in DB
+  if (seniorAdminServers.length > 0) {
+    const user = db.prepare('SELECT assigned_servers FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
+    if (user) {
+      let existingAssigned: string[] = [];
+      try {
+        if (user.assigned_servers) existingAssigned = JSON.parse(user.assigned_servers);
+      } catch (e) {}
+
+      const mergedServers = Array.from(new Set([...existingAssigned, ...seniorAdminServers]));
+      db.prepare('UPDATE users SET assigned_servers = ? WHERE LOWER(username) = LOWER(?)').run(JSON.stringify(mergedServers), cleanUsername);
+    }
+  }
+
+  return { foundRoles, seniorAdminServers };
+}
+
 export function upsertCubixAuthor(cleanUsername: string, accountInfo?: any) {
   let user = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
 
@@ -419,6 +491,9 @@ export function upsertCubixAuthor(cleanUsername: string, accountInfo?: any) {
       });
     }
   }
+
+  // Trigger background sync with CubixWorld Team API
+  syncAuthorWithCubixTeam(cleanUsername).catch(err => console.error('Team sync error:', err));
 
   return {
     username: user.username,

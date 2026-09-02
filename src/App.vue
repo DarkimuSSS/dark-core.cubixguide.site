@@ -13,6 +13,7 @@ import RulesModal from './components/RulesModal.vue';
 import SettingsModal from './components/SettingsModal.vue';
 import TelemetryPage from './components/TelemetryPage.vue';
 import AdminPanel from './components/AdminPanel.vue';
+import TeamPage from './components/TeamPage.vue';
 import { PRESET_ITEMS } from './data/presetItems';
 import { hasPermission } from './data/roles';
 import type { Guide, AuthorProfile, UserRole, UserPermission } from './types/guide';
@@ -193,6 +194,8 @@ const updateUrlRoute = () => {
     params.set('tab', 'Телеметрия');
   } else if (mode.value === 'admin') {
     params.set('tab', 'АдминПанель');
+  } else if (mode.value === 'team') {
+    params.set('tab', 'Команда');
   } else if (mode.value === 'rules') {
     if (initialRulesTab.value === 'server') {
       params.set('tab', 'Внутриигровые');
@@ -240,6 +243,8 @@ const syncFromUrlPath = () => {
     mode.value = 'telemetry';
   } else if (tab === 'АдминПанель' || tab === 'admin' || tab === 'Авторы') {
     mode.value = 'admin';
+  } else if (tab === 'Команда' || tab === 'team' || tab === 'Персонал') {
+    mode.value = 'team';
   } else if (tab === 'Вики' || tab === 'reader') {
     mode.value = 'reader';
   } else if (tab === 'Конструктор' || tab === 'editor') {
@@ -1124,6 +1129,20 @@ const handleViewAllAuthorGuides = (username: string) => {
           </span>
         </button>
 
+        <!-- CubixWorld Team Staff Page Button -->
+        <button
+          type="button"
+          @click="mode = 'team'"
+          :class="[
+            'px-3.5 py-2 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md',
+            mode === 'team' ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' : 'bg-[#090a0c] hover:bg-[#181b20] border-[#262a30] text-slate-300 hover:text-white'
+          ]"
+          title="Команда Проекта CubixWorld"
+        >
+          <IconRenderer name="Shield" size="15" class="text-amber-400" />
+          <span class="hidden xl:inline">Команда Проекта</span>
+        </button>
+
         <!-- Admin Quick Access Button -->
         <button
           v-if="currentUserIsAdmin"
@@ -1387,6 +1406,14 @@ const handleViewAllAuthorGuides = (username: string) => {
               :is-admin="currentUserIsAdmin"
               @go-home="mode = 'home'"
               @select-guide="selectGuide"
+            />
+          </div>
+
+          <!-- CUBIXWORLD TEAM STAFF FULL PAGE VIEW -->
+          <div v-else-if="mode === 'team'" class="px-3 sm:px-6 pt-4">
+            <TeamPage
+              @go-home="mode = 'home'"
+              @open-author="openAuthorProfile"
             />
           </div>
 

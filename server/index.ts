@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, getServerRules, saveServerRules } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules } from './db';
 import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
@@ -97,6 +97,16 @@ app.get('/api/servers', async (req, res) => {
     res.json(uniqueServers);
   } catch (err: any) {
     res.json(DEFAULT_CUBIX_SERVERS);
+  }
+});
+
+// Fetch CubixWorld Team Staff Data from official API
+app.get('/api/team', async (req, res) => {
+  try {
+    const data = await fetchCubixTeamData();
+    res.json(data || { team: {} });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 });
 
