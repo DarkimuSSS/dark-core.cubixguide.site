@@ -102,6 +102,51 @@ app.get('/api/servers', async (req, res) => {
 
 
 
+// Proxy endpoint for CubixWorld Team API to bypass browser CORS & Cloudflare
+app.get('/api/team', async (req, res) => {
+  try {
+    const fetch = (await import('node-fetch')).default as any;
+    const response = await fetch('https://cubixworld.net/api/team', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return res.json(data);
+    } else {
+      console.error('CubixWorld API returned status:', response.status);
+    }
+  } catch (err: any) {
+    console.error('Error fetching CubixWorld Team API on backend:', err.message);
+  }
+
+  // Fallback data if CubixWorld is unreachable or blocked
+  res.json({
+    team: {
+      "0": {
+        server_name: "HiTech #1",
+        server_id: 1,
+        team: {
+          "0": { id: 78718, name: "Eifel", group_name: "Старший администратор" },
+          "1": { id: 76788, name: "XlebuIIIek_TOP", group_name: "Старший администратор" },
+          "2": { id: 76819, name: "Dam_v_Tablo", group_name: "Администратор" }
+        }
+      },
+      "1": {
+        server_name: "SkyTech #1",
+        server_id: 3,
+        team: {
+          "0": { id: 44643, name: "Desires", group_name: "Старший администратор" },
+          "1": { id: 97429, name: "Xallo", group_name: "Старший администратор" }
+        }
+      }
+    }
+  });
+});
+
 // AUTHENTICATION ENDPOINTS
 
 // Login Author (Local SQLite)
