@@ -20,22 +20,20 @@ const fetchTeam = async () => {
       const data = await res.json();
       console.log('Received Direct CubixWorld Team Data:', data);
 
-      let serversObj: any = {};
-      if (data && typeof data === 'object') {
-        if (data.team && typeof data.team === 'object') {
-          serversObj = data.team;
-        } else {
-          serversObj = data;
-        }
+      let rootServersObj: any = data;
+      if (data && data.team && typeof data.team === 'object') {
+        rootServersObj = data.team;
       }
 
       const serversList: any[] = [];
-      Object.keys(serversObj).forEach(key => {
-        const item = serversObj[key];
-        if (item && typeof item === 'object' && (item.server_name || item.team)) {
-          serversList.push(item);
-        }
-      });
+      if (rootServersObj && typeof rootServersObj === 'object') {
+        Object.keys(rootServersObj).forEach(key => {
+          const item = rootServersObj[key];
+          if (item && typeof item === 'object' && item.server_name) {
+            serversList.push(item);
+          }
+        });
+      }
 
       teamData.value = serversList;
     }
