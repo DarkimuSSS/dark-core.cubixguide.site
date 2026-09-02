@@ -71,6 +71,7 @@ const newLinkUrl = ref('');
 
 const authorTeamRoles = ref<{ serverName: string; groupName: string }[]>([]);
 const isAuthorRegistered = ref(true);
+const isTeamRolesModalOpen = ref(false);
 
 const fetchProfile = async () => {
   if (!props.username) return;
@@ -645,36 +646,17 @@ const handleBannerFileUpload = (e: Event) => {
                     <span>{{ authorTeamRoles[0].groupName }} ({{ authorTeamRoles[0].serverName }})</span>
                   </span>
 
-                  <!-- Compact "Команда проекта" badge with hover tooltip if author has > 1 roles -->
-                  <div v-else class="relative group/teamtool inline-flex items-center">
-                    <span class="text-[11px] font-extrabold bg-gradient-to-r from-purple-900/90 via-amber-900/90 to-cyan-900/90 text-amber-300 border border-amber-500/60 px-3.5 py-1 rounded-full shadow-xl backdrop-blur-md flex items-center gap-2 cursor-help hover:border-amber-400 transition-all">
-                      <IconRenderer name="Shield" size="14" class="text-amber-400" />
-                      <span>Команда проекта ({{ authorTeamRoles.length }})</span>
-                    </span>
-
-                    <!-- Multi-role Tooltip Popup (Positioned BELOW the badge for 100% visibility) -->
-                    <div class="absolute top-full left-0 mt-2 hidden group-hover/teamtool:flex flex-col items-start pointer-events-none z-50 w-72 sm:w-80">
-                      <div class="bg-[#0c0d0e] border border-amber-500/60 text-white text-xs font-semibold p-3.5 rounded-2xl shadow-2xl backdrop-blur-xl space-y-2 w-full ring-1 ring-amber-500/20">
-                        <div class="text-[11px] font-black text-amber-400 border-b border-[#26292d] pb-1.5 flex items-center justify-between">
-                          <span class="flex items-center gap-1.5">
-                            <IconRenderer name="Shield" size="13" />
-                            <span>Должности в Персонале</span>
-                          </span>
-                          <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300">{{ authorTeamRoles.length }}</span>
-                        </div>
-                        <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
-                          <div
-                            v-for="(r, idx) in authorTeamRoles"
-                            :key="idx"
-                            class="flex items-center justify-between gap-2 text-[11px] bg-[#16181a] px-3 py-1.5 rounded-xl border border-[#26292d]"
-                          >
-                            <span class="font-extrabold text-amber-300 truncate">{{ r.groupName }}</span>
-                            <span class="text-[10px] text-slate-400 font-bold px-2 py-0.5 rounded bg-slate-800 border border-slate-700 whitespace-nowrap">{{ r.serverName }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <!-- Compact "Команда проекта" button opening separate popup modal -->
+                  <button
+                    v-else
+                    type="button"
+                    @click.stop="isTeamRolesModalOpen = true"
+                    class="text-[11px] font-extrabold bg-gradient-to-r from-purple-900/90 via-amber-900/90 to-cyan-900/90 hover:from-purple-800 hover:to-cyan-800 text-amber-300 border border-amber-500/60 hover:border-amber-400 px-3.5 py-1 rounded-full shadow-xl backdrop-blur-md flex items-center gap-2 transition-all cursor-pointer group/tbtn"
+                  >
+                    <IconRenderer name="Shield" size="14" class="text-amber-400 group-hover/tbtn:scale-110 transition-transform" />
+                    <span>Команда проекта ({{ authorTeamRoles.length }})</span>
+                    <IconRenderer name="Info" size="13" class="text-amber-400/80" />
+                  </button>
                 </div>
 
                 <!-- Custom Badges List -->
@@ -1029,6 +1011,66 @@ const handleBannerFileUpload = (e: Event) => {
 
       </div>
 
+    </div>
+
+    <!-- STANDALONE MODAL OVERLAY FOR MULTI-STAFF ROLES LIST -->
+    <div
+      v-if="isTeamRolesModalOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn"
+      @click.self="isTeamRolesModalOpen = false"
+    >
+      <div class="bg-[#16181a] border border-amber-500/60 w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
+          <h3 class="text-sm font-black text-amber-400 flex items-center gap-2">
+            <IconRenderer name="Shield" size="18" class="text-amber-400" />
+            <span>Должности в Персонале ({{ authorTeamRoles.length }})</span>
+          </h3>
+          <button
+            type="button"
+            @click="isTeamRolesModalOpen = false"
+            class="text-slate-400 hover:text-white p-1 rounded-xl hover:bg-[#26292d] transition-colors"
+          >
+            <IconRenderer name="X" size="18" />
+          </button>
+        </div>
+
+        <!-- Author Target Info -->
+        <div class="flex items-center gap-3 bg-[#0c0d0e] p-3 rounded-2xl border border-[#26292d]">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-purple-600 p-0.5 shrink-0 overflow-hidden shadow-md">
+            <img :src="profile.avatarUrl || `https://cubixworld.net/api/account.load.avatar?login=${encodeURIComponent(username)}`" class="w-full h-full object-cover rounded-[10px]" />
+          </div>
+          <div>
+            <div class="text-xs font-extrabold text-white">{{ username }}</div>
+            <div class="text-[11px] text-dark-muted font-medium">Официальные роли на серверах CubixWorld</div>
+          </div>
+        </div>
+
+        <!-- Scrollable Roles List -->
+        <div class="space-y-2 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
+          <div
+            v-for="(r, idx) in authorTeamRoles"
+            :key="idx"
+            class="flex items-center justify-between gap-3 bg-[#0c0d0e] p-3 rounded-2xl border border-[#26292d] hover:border-amber-500/40 transition-colors shadow-sm"
+          >
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+              <span class="text-xs font-black text-amber-300 truncate">{{ r.groupName }}</span>
+            </div>
+            <span class="text-[10.5px] text-slate-300 font-extrabold px-2.5 py-1 rounded-xl bg-slate-800 border border-slate-700 whitespace-nowrap shadow-sm">
+              🎮 {{ r.serverName }}
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          @click="isTeamRolesModalOpen = false"
+          class="w-full py-2.5 rounded-xl bg-[#0c0d0e] hover:bg-[#202327] border border-[#26292d] text-white text-xs font-extrabold transition-all cursor-pointer shadow-md"
+        >
+          Понятно
+        </button>
+      </div>
     </div>
   </div>
 </template>
