@@ -383,13 +383,18 @@ let teamApiCache: { timestamp: number; data: any } | null = null;
 
 export async function fetchCubixTeamData() {
   const now = Date.now();
-  if (teamApiCache && now - teamApiCache.timestamp < 10 * 60 * 1000) { // 10 minutes cache
+  if (teamApiCache && now - teamApiCache.timestamp < 5 * 60 * 1000) { // 5 minutes cache
     return teamApiCache.data;
   }
 
   try {
     const fetch = (await import('node-fetch')).default as any;
-    const res = await fetch('https://cubixworld.net/api/team');
+    const res = await fetch('https://cubixworld.net/api/team', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*'
+      }
+    });
     if (res.ok) {
       const data = await res.json();
       teamApiCache = { timestamp: now, data };
