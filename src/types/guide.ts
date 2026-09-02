@@ -222,4 +222,5 @@ export interface AuthorProfile {
   updatedAt?: string;
   role?: UserRole;
   customPermissions?: UserPermission[];
+  assignedServers?: string[]; // Сервера, за которыми закреплен автор
 }

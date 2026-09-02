@@ -199,6 +199,7 @@ try { db.exec(`ALTER TABLE users ADD COLUMN can_create_guides INTEGER NOT NULL D
 try { db.exec(`ALTER TABLE users ADD COLUMN is_verified INTEGER NOT NULL DEFAULT 0;`); } catch (e) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'author';`); } catch (e) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN custom_permissions TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN assigned_servers TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE profiles ADD COLUMN custom_links TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE profiles ADD COLUMN banner_url TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN status TEXT DEFAULT 'approved';`); } catch (e) {}
@@ -357,6 +358,11 @@ export function loginUser(username: string, password: string) {
     if (user.custom_permissions) customPerms = JSON.parse(user.custom_permissions);
   } catch (e) {}
 
+  let assignedSrvs = [];
+  try {
+    if (user.assigned_servers) assignedSrvs = JSON.parse(user.assigned_servers);
+  } catch (e) {}
+
   const role = user.role || (user.is_admin ? 'super_admin' : 'author');
 
   return {
@@ -367,6 +373,7 @@ export function loginUser(username: string, password: string) {
     isVerified: Boolean(user.is_verified),
     role: role,
     customPermissions: customPerms,
+    assignedServers: assignedSrvs,
     createdAt: user.created_at
   };
 }
@@ -428,6 +435,7 @@ export function updateAuthorRoleByAdmin(
   targetUsername: string,
   role: string,
   customPermissions: string[] | null,
+  assignedServers: string[] | null,
   adminUsername: string
 ) {
   const cleanTarget = targetUsername.trim();
@@ -437,20 +445,26 @@ export function updateAuthorRoleByAdmin(
   }
 
   const customPermsJson = customPermissions && customPermissions.length > 0 ? JSON.stringify(customPermissions) : null;
+  const assignedServersJson = assignedServers && assignedServers.length > 0 ? JSON.stringify(assignedServers) : null;
   const isAdminFlag = role === 'super_admin' || role === 'admin' ? 1 : 0;
   
-  const stmt = db.prepare('UPDATE users SET role = ?, custom_permissions = ?, is_admin = ? WHERE LOWER(username) = LOWER(?)');
-  stmt.run(role, customPermsJson, isAdminFlag, cleanTarget);
+  const stmt = db.prepare('UPDATE users SET role = ?, custom_permissions = ?, assigned_servers = ?, is_admin = ? WHERE LOWER(username) = LOWER(?)');
+  stmt.run(role, customPermsJson, assignedServersJson, isAdminFlag, cleanTarget);
 
-  return { success: true, message: `Роль и права автора ${cleanTarget} успешно обновлены!` };
+  return { success: true, message: `Роль, закрепленные сервера и права автора ${cleanTarget} успешно обновлены!` };
 }
 
 export function listAllAuthors() {
-  const rows = db.prepare('SELECT username, is_admin, can_edit_others, can_create_guides, is_verified, role, custom_permissions, created_at FROM users ORDER BY created_at DESC').all();
+  const rows = db.prepare('SELECT username, is_admin, can_edit_others, can_create_guides, is_verified, role, custom_permissions, assigned_servers, created_at FROM users ORDER BY created_at DESC').all();
   return rows.map((r: any) => {
     let customPerms = [];
     try {
       if (r.custom_permissions) customPerms = JSON.parse(r.custom_permissions);
+    } catch (e) {}
+
+    let assignedSrvs = [];
+    try {
+      if (r.assigned_servers) assignedSrvs = JSON.parse(r.assigned_servers);
     } catch (e) {}
 
     const role = r.role || (r.is_admin ? 'super_admin' : 'author');
@@ -463,6 +477,7 @@ export function listAllAuthors() {
       isVerified: Boolean(r.is_verified),
       role: role,
       customPermissions: customPerms,
+      assignedServers: assignedSrvs,
       createdAt: r.created_at
     };
   });

@@ -14,6 +14,7 @@ const props = defineProps<{
   guide: Guide;
   canApprove?: boolean;
   isAuthorRole?: boolean;
+  assignedServers?: string[];
 }>();
 
 const emit = defineEmits<{
@@ -33,6 +34,24 @@ const DEFAULT_SERVERS = [
   "Industrial", "GregTech", "Pixelmon_1165", "Pixelmon", "TechnomagicTest", 
   "SkyTech", "MagicalTech"
 ];
+
+const serverList = ref<string[]>([...DEFAULT_SERVERS]);
+const isEditorServerDropdownOpen = ref(false);
+const editorServerSearch = ref('');
+
+const allowedServersList = computed(() => {
+  if (!props.assignedServers || props.assignedServers.length === 0) {
+    return serverList.value;
+  }
+  return serverList.value.filter(s => props.assignedServers?.includes(s));
+});
+
+const filteredEditorServers = computed(() => {
+  const list = allowedServersList.value;
+  const q = editorServerSearch.value.toLowerCase().trim();
+  if (!q) return list;
+  return list.filter(s => s.toLowerCase().includes(q));
+});
 
 const isImportExportOpen = ref(false);
 const isTemplateModalOpen = ref(false);
@@ -396,15 +415,7 @@ const handleTextFormatSyntax = (syntax: 'bold' | 'italic' | 'code' | 'link' | 'h
   activeEl.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
-const serverList = ref<string[]>([...DEFAULT_SERVERS]);
-const isEditorServerDropdownOpen = ref(false);
-const editorServerSearch = ref('');
 
-const filteredEditorServers = computed(() => {
-  const q = editorServerSearch.value.toLowerCase().trim();
-  if (!q) return serverList.value;
-  return serverList.value.filter(s => s.toLowerCase().includes(q));
-});
 
 const getServerIcon = (name: string) => {
   const n = name.toLowerCase();

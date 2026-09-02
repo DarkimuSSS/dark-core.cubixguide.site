@@ -331,6 +331,7 @@ const favoritedGuidesList = computed(() => {
 
 const currentUserRole = ref<UserRole>('guest');
 const currentUserCustomPermissions = ref<UserPermission[]>([]);
+const currentUserAssignedServers = ref<string[]>([]);
 
 const userHasPerm = (permission: UserPermission): boolean => {
   if (!isAuthenticated.value) return false;
@@ -367,7 +368,7 @@ const openEditorProtection = () => {
   }
 };
 
-const handleAuthentication = (payload: { username: string; isAdmin: boolean; canEditOthers?: boolean; canCreateGuides?: boolean; role?: UserRole; customPermissions?: UserPermission[] }) => {
+const handleAuthentication = (payload: { username: string; isAdmin: boolean; canEditOthers?: boolean; canCreateGuides?: boolean; role?: UserRole; customPermissions?: UserPermission[]; assignedServers?: string[] }) => {
   isAuthenticated.value = true;
   currentUsername.value = payload.username;
   currentUserIsAdmin.value = payload.isAdmin;
@@ -375,6 +376,7 @@ const handleAuthentication = (payload: { username: string; isAdmin: boolean; can
   currentUserCanCreateGuides.value = payload.canCreateGuides !== undefined ? Boolean(payload.canCreateGuides) : true;
   currentUserRole.value = payload.role || (payload.isAdmin ? 'super_admin' : 'author');
   currentUserCustomPermissions.value = payload.customPermissions || [];
+  currentUserAssignedServers.value = payload.assignedServers || [];
 
   localStorage.setItem('cubix_logged_username', payload.username);
   localStorage.setItem('cubix_logged_is_admin', payload.isAdmin ? 'true' : 'false');
@@ -1402,6 +1404,7 @@ const handleViewAllAuthorGuides = (username: string) => {
             <GuideEditor
               :guide="activeGuide"
               :can-approve="userHasPerm('approve_guide') || currentUserIsAdmin"
+              :assigned-servers="currentUserAssignedServers"
               @update:guide="updateActiveGuide"
               @toggle-preview="handleTogglePreview"
               @publish="handlePublish"

@@ -20,6 +20,15 @@ const isLoading = ref(false);
 const adminMessage = ref('');
 const searchQuery = ref('');
 const editingCustomPermsAuthor = ref<string | null>(null);
+const editingAssignedServersAuthor = ref<string | null>(null);
+
+const availableServersList = ref<string[]>([
+  "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
+  "OneBlock-Mobile", "Pixelmon_1211", "HiTech", "TechnoMagic", "UltraSky", 
+  "HiTech-Mobile", "Cobblemon_1211", "TechnoMagic-Mobile", "OceanBlock_1165", 
+  "Industrial", "GregTech", "Pixelmon_1165", "Pixelmon", "TechnomagicTest", 
+  "SkyTech", "MagicalTech"
+]);
 
 // Registration State
 const newAuthorUsername = ref('');
@@ -338,6 +347,41 @@ const handleAdminToggleGranularPermission = async (author: any, permissionKey: U
       fetchAdminAuthorsList();
     } else {
       adminMessage.value = data.error || 'Ошибка изменения прав';
+    }
+  } catch (err) {
+    adminMessage.value = 'Ошибка соединения с сервером';
+  }
+};
+
+const handleAdminToggleAssignedServer = async (author: any, serverName: string) => {
+  adminMessage.value = '';
+  const currentRole = (author.role as UserRole) || 'author';
+  let currentServers: string[] = Array.isArray(author.assignedServers) ? [...author.assignedServers] : [];
+
+  if (currentServers.includes(serverName)) {
+    currentServers = currentServers.filter(s => s !== serverName);
+  } else {
+    currentServers.push(serverName);
+  }
+
+  try {
+    const res = await fetch('/api/admin/roles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetUsername: author.username,
+        role: currentRole,
+        customPermissions: author.customPermissions || null,
+        assignedServers: currentServers,
+        adminUsername: props.currentUsername
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      adminMessage.value = `Список привязанных серверов для ${author.username} обновлён!`;
+      fetchAdminAuthorsList();
+    } else {
+      adminMessage.value = data.error || 'Ошибка обновления привязки серверов';
     }
   } catch (err) {
     adminMessage.value = 'Ошибка соединения с сервером';
@@ -707,6 +751,43 @@ const isAuthorHasPermission = (author: any, perm: UserPermission): boolean => {
                     </div>
                     <div :class="['w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors', isAuthorHasPermission(author, p.key) ? 'bg-cyan-500 border-cyan-400 text-black font-extrabold' : 'border-slate-700 bg-slate-800']">
                       <IconRenderer v-if="isAuthorHasPermission(author, p.key)" name="Check" size="10" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Assigned Servers Selection Drawer -->
+                <div class="pt-2">
+                  <div class="flex items-center justify-between">
+                    <button
+                      @click="editingAssignedServersAuthor = editingAssignedServersAuthor === author.username ? null : author.username"
+                      class="text-[11px] font-bold text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <IconRenderer name="Box" size="13" />
+                      <span>{{ editingAssignedServersAuthor === author.username ? 'Свернуть выбор серверов' : 'Закрепить автора за серверами CubixWorld' }}</span>
+                    </button>
+
+                    <span class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                      {{ (author.assignedServers && author.assignedServers.length > 0) ? `Закреплено: ${author.assignedServers.length}` : 'Все сервера' }}
+                    </span>
+                  </div>
+
+                  <div v-if="editingAssignedServersAuthor === author.username" class="mt-2 p-3 rounded-2xl bg-[#090a0c] border border-emerald-500/30 space-y-2 animate-in fade-in duration-200">
+                    <div class="text-[10px] text-dark-muted">Выберите сервера, на которые автор может писать гайды (если не выбран ни один — разрешено создание на всех серверах):</div>
+                    <div class="flex flex-wrap gap-1.5">
+                      <button
+                        v-for="srv in availableServersList"
+                        :key="srv"
+                        @click="handleAdminToggleAssignedServer(author, srv)"
+                        :class="[
+                          'px-2.5 py-1 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1',
+                          (author.assignedServers || []).includes(srv)
+                            ? 'bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-950/40'
+                            : 'bg-[#121416] text-slate-400 border-[#26292d] hover:border-slate-600 hover:text-white'
+                        ]"
+                      >
+                        <IconRenderer v-if="(author.assignedServers || []).includes(srv)" name="Check" size="12" />
+                        <span>{{ srv }}</span>
+                      </button>
                     </div>
                   </div>
                 </div>

@@ -167,14 +167,14 @@ app.post('/api/admin/register-author', (req, res) => {
   }
 });
 
-// Update Author Role & Granular Permissions (Admin)
+// Update Author Role & Granular Permissions & Assigned Servers (Admin)
 app.post('/api/admin/roles', (req, res) => {
   try {
-    const { targetUsername, role, customPermissions, adminUsername } = req.body;
+    const { targetUsername, role, customPermissions, assignedServers, adminUsername } = req.body;
     if (!targetUsername || !adminUsername || !role) {
       return res.status(400).json({ error: 'Не указаны целевой автор, роль или админ' });
     }
-    const result = updateAuthorRoleByAdmin(targetUsername, role, customPermissions, adminUsername);
+    const result = updateAuthorRoleByAdmin(targetUsername, role, customPermissions, assignedServers, adminUsername);
     res.json(result);
   } catch (err: any) {
     res.status(403).json({ error: err.message });
