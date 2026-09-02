@@ -10,6 +10,7 @@ export const SYSTEM_PERMISSIONS: { key: UserPermission; label: string; descripti
   { key: 'manage_authors', label: 'Управление авторами', description: 'Разрешает регистрировать авторов и сбрасывать им пароли' },
   { key: 'manage_roles', label: 'Управление ролями и правами', description: 'Разрешает изменять роли и точечные права пользователей' },
   { key: 'view_telemetry', label: 'Доступ к Телеметрии', description: 'Просмотр статистики просмотров, поиска и логов действий' },
+  { key: 'view_rules', label: 'Просмотр правил', description: 'Просмотр общих и внутриигровых правил всех серверов' },
   { key: 'manage_rules', label: 'Управление правилами', description: 'Разрешает редактировать внутриигровые и общие правила' }
 ];
 
@@ -22,7 +23,7 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
     permissions: [
       'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide',
       'delete_other_guide', 'publish_guide', 'manage_authors', 'manage_roles',
-      'view_telemetry', 'manage_rules'
+      'view_telemetry', 'view_rules', 'manage_rules'
     ]
   },
   admin: {
@@ -32,7 +33,7 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
     badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
     permissions: [
       'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide',
-      'delete_other_guide', 'publish_guide', 'manage_authors', 'view_telemetry', 'manage_rules'
+      'delete_other_guide', 'publish_guide', 'manage_authors', 'view_telemetry', 'view_rules', 'manage_rules'
     ]
   },
   editor: {
@@ -41,7 +42,7 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
     description: 'Проверка, редактирование и публикация статей всех авторов',
     badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
     permissions: [
-      'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide', 'publish_guide'
+      'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide', 'publish_guide', 'view_rules'
     ]
   },
   author: {
@@ -50,7 +51,7 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
     description: 'Создание и редактирование собственных вики-гайдов',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     permissions: [
-      'create_guide', 'edit_own_guide', 'delete_own_guide', 'publish_guide'
+      'create_guide', 'edit_own_guide', 'delete_own_guide', 'publish_guide', 'view_rules'
     ]
   },
   helper: {
@@ -59,15 +60,15 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
     description: 'Создание черновиков статей без права прямой публикации',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
     permissions: [
-      'create_guide', 'edit_own_guide'
+      'create_guide', 'edit_own_guide', 'view_rules'
     ]
   },
   guest: {
     role: 'guest',
     name: 'Читатель',
-    description: 'Только чтение опубликованных руководств',
+    description: 'Чтение опубликованных руководств и страниц правил',
     badgeColor: 'bg-slate-500/20 text-slate-400 border-slate-500/40',
-    permissions: []
+    permissions: ['view_rules']
   }
 };
 

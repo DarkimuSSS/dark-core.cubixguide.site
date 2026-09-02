@@ -191,7 +191,8 @@ export type UserPermission =
   | 'manage_authors'     // Регистрация, сброс паролей и удаление авторов
   | 'manage_roles'       // Назначение ролей и кастомных прав
   | 'view_telemetry'     // Доступ к телеметрии и логам действий
-  | 'manage_rules';      // Управление правилами серверов
+  | 'view_rules'         // Просмотр страницы правил (Общие + Внутриигровые)
+  | 'manage_rules';      // Управление и редактирование правил серверов
 
 export type UserRole = 'super_admin' | 'admin' | 'editor' | 'author' | 'helper' | 'guest';
 
