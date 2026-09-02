@@ -564,10 +564,10 @@ const handleBannerFileUpload = (e: Event) => {
       </div>
 
       <!-- EXACT ORIGINAL COMPACT MODAL CONTAINER WITH HIGH VISIBILITY FULL BODY BANNER -->
-      <div class="bg-[#16181a] border border-[#26292d] w-full rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar relative overflow-hidden">
+      <div class="bg-[#16181a] border border-[#26292d] w-full rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar relative">
 
         <!-- VIBRANT HIGH-VISIBILITY BODY BANNER BACKGROUND LAYER -->
-        <div v-if="profile.bannerUrl" class="absolute inset-0 pointer-events-none z-0">
+        <div v-if="profile.bannerUrl" class="absolute inset-0 pointer-events-none z-0 rounded-3xl overflow-hidden">
           <img :src="profile.bannerUrl" class="w-full h-full object-cover opacity-85 profile-modal-banner-img" />
           <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-[#16181a]/95 profile-modal-banner-overlay"></div>
         </div>
@@ -652,21 +652,24 @@ const handleBannerFileUpload = (e: Event) => {
                       <span>Команда проекта ({{ authorTeamRoles.length }})</span>
                     </span>
 
-                    <!-- Multi-role Tooltip Popup -->
-                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 hidden group-hover/teamtool:flex flex-col items-start pointer-events-none z-50 min-w-[240px]">
-                      <div class="bg-[#0c0d0e] border border-amber-500/60 text-white text-xs font-semibold p-3 rounded-2xl shadow-2xl backdrop-blur-xl space-y-2 w-full">
-                        <div class="text-[11px] font-black text-amber-400 border-b border-[#26292d] pb-1.5 flex items-center gap-1.5">
-                          <IconRenderer name="Shield" size="13" />
-                          <span>Должности в Персонале ({{ authorTeamRoles.length }})</span>
+                    <!-- Multi-role Tooltip Popup (Positioned BELOW the badge for 100% visibility) -->
+                    <div class="absolute top-full left-0 mt-2 hidden group-hover/teamtool:flex flex-col items-start pointer-events-none z-50 w-72 sm:w-80">
+                      <div class="bg-[#0c0d0e] border border-amber-500/60 text-white text-xs font-semibold p-3.5 rounded-2xl shadow-2xl backdrop-blur-xl space-y-2 w-full ring-1 ring-amber-500/20">
+                        <div class="text-[11px] font-black text-amber-400 border-b border-[#26292d] pb-1.5 flex items-center justify-between">
+                          <span class="flex items-center gap-1.5">
+                            <IconRenderer name="Shield" size="13" />
+                            <span>Должности в Персонале</span>
+                          </span>
+                          <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300">{{ authorTeamRoles.length }}</span>
                         </div>
-                        <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
                           <div
                             v-for="(r, idx) in authorTeamRoles"
                             :key="idx"
-                            class="flex items-center justify-between gap-2 text-[11px] bg-[#16181a] px-2.5 py-1 rounded-xl border border-[#26292d]"
+                            class="flex items-center justify-between gap-2 text-[11px] bg-[#16181a] px-3 py-1.5 rounded-xl border border-[#26292d]"
                           >
                             <span class="font-extrabold text-amber-300 truncate">{{ r.groupName }}</span>
-                            <span class="text-[10px] text-slate-400 font-bold px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 whitespace-nowrap">{{ r.serverName }}</span>
+                            <span class="text-[10px] text-slate-400 font-bold px-2 py-0.5 rounded bg-slate-800 border border-slate-700 whitespace-nowrap">{{ r.serverName }}</span>
                           </div>
                         </div>
                       </div>
