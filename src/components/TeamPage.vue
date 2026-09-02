@@ -18,20 +18,26 @@ const fetchTeam = async () => {
     const res = await fetch('/api/team');
     if (res.ok) {
       const data = await res.json();
-      // Handle official JSON structure: { "team": { "0": { "server_name": "...", "team": { "0": ... } } } }
-      let rootServersObj = data;
-      if (data && data.team && typeof data.team === 'object') {
-        rootServersObj = data.team;
+      console.log('Received Team Data from API:', data);
+
+      let serversObj: any = {};
+      if (data && typeof data === 'object') {
+        if (data.team && typeof data.team === 'object') {
+          serversObj = data.team;
+        } else {
+          serversObj = data;
+        }
       }
-      
-      const serversArray: any[] = [];
-      Object.values(rootServersObj).forEach((item: any) => {
-        if (item && typeof item === 'object' && item.server_name) {
-          serversArray.push(item);
+
+      const serversList: any[] = [];
+      Object.keys(serversObj).forEach(key => {
+        const item = serversObj[key];
+        if (item && typeof item === 'object' && (item.server_name || item.team)) {
+          serversList.push(item);
         }
       });
 
-      teamData.value = serversArray;
+      teamData.value = serversList;
     }
   } catch (e) {
     console.error('Error fetching team API:', e);
@@ -91,7 +97,14 @@ const filteredTeam = computed(() => {
     }
 
     const members: any[] = [];
-    const rawMembers = srv.team ? (Array.isArray(srv.team) ? srv.team : Object.values(srv.team)) : [];
+    const teamObj = srv.team;
+    let rawMembers: any[] = [];
+
+    if (Array.isArray(teamObj)) {
+      rawMembers = teamObj;
+    } else if (teamObj && typeof teamObj === 'object') {
+      rawMembers = Object.values(teamObj);
+    }
 
     rawMembers.forEach((m: any) => {
       if (m && m.name && (!query || m.name.toLowerCase().includes(query) || (m.group_name && m.group_name.toLowerCase().includes(query)))) {
