@@ -18,9 +18,20 @@ const fetchTeam = async () => {
     const res = await fetch('/api/team');
     if (res.ok) {
       const data = await res.json();
-      // Extract deep team structure safely
-      const rawTeam = data?.team?.team || data?.team || data || {};
-      teamData.value = rawTeam;
+      // Handle official JSON structure: { "team": { "0": { "server_name": "...", "team": { "0": ... } } } }
+      let rootServersObj = data;
+      if (data && data.team && typeof data.team === 'object') {
+        rootServersObj = data.team;
+      }
+      
+      const serversArray: any[] = [];
+      Object.values(rootServersObj).forEach((item: any) => {
+        if (item && typeof item === 'object' && item.server_name) {
+          serversArray.push(item);
+        }
+      });
+
+      teamData.value = serversArray;
     }
   } catch (e) {
     console.error('Error fetching team API:', e);
@@ -33,29 +44,15 @@ onMounted(() => {
   fetchTeam();
 });
 
-// Helper to normalize objects or arrays into a clean array of server objects
-const normalizedServersList = computed(() => {
-  if (!teamData.value) return [];
-  const val = teamData.value;
-  let serversArray: any[] = [];
-
-  if (Array.isArray(val)) {
-    serversArray = val;
-  } else if (typeof val === 'object') {
-    serversArray = Object.values(val);
-  }
-
-  // If server_name is inside srv or nested
-  return serversArray.filter(srv => srv && typeof srv === 'object' && (srv.server_name || srv.team));
-});
-
 const serverList = computed(() => {
   const list: { id: number; name: string }[] = [];
-  normalizedServersList.value.forEach((srv: any) => {
-    if (srv && srv.server_name) {
-      list.push({ id: srv.server_id || Math.random(), name: srv.server_name });
-    }
-  });
+  if (Array.isArray(teamData.value)) {
+    teamData.value.forEach((srv: any) => {
+      if (srv && srv.server_name) {
+        list.push({ id: srv.server_id || Math.random(), name: srv.server_name });
+      }
+    });
+  }
   return list;
 });
 
@@ -84,8 +81,9 @@ const totalStaffCount = computed(() => {
 const filteredTeam = computed(() => {
   const result: { serverId: number; serverName: string; members: any[] }[] = [];
   const query = searchQuery.value.toLowerCase().trim();
+  const serversArray = Array.isArray(teamData.value) ? teamData.value : [];
 
-  normalizedServersList.value.forEach((srv: any) => {
+  serversArray.forEach((srv: any) => {
     if (!srv || !srv.server_name) return;
     const srvName = srv.server_name || '';
     if (selectedServerFilter.value !== 'all' && srvName !== selectedServerFilter.value) {
