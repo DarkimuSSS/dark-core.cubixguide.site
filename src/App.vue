@@ -1056,6 +1056,23 @@ const handleViewAllAuthorGuides = (username: string) => {
           </span>
         </button>
 
+        <!-- Admin Quick Access Button -->
+        <button
+          v-if="currentUserIsAdmin"
+          type="button"
+          @click="mode = 'admin'"
+          :class="[
+            'px-3 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md cursor-pointer border',
+            mode === 'admin'
+              ? 'bg-cyan-600 text-white border-cyan-400 shadow-cyan-950/60 ring-2 ring-cyan-500/40'
+              : 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+          ]"
+          title="Панель Управления Авторами"
+        >
+          <IconRenderer name="Users" size="15" />
+          <span class="hidden xl:inline">Панель Авторов</span>
+        </button>
+
         <!-- Global Settings Button -->
         <button
           type="button"
