@@ -898,12 +898,12 @@ const handleViewAllAuthorGuides = (username: string) => {
           <div
             v-if="isHeaderNavMenuOpen"
             @click.stop
-            class="absolute top-full left-0 mt-3 w-[520px] sm:w-[680px] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 sm:p-5 z-50 space-y-4 animate-in fade-in zoom-in-95 duration-200"
+            class="absolute top-full left-0 mt-3 w-[560px] sm:w-[840px] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 sm:p-5 z-50 space-y-4 animate-in fade-in zoom-in-95 duration-200"
           >
             <!-- Navigation Modes -->
             <div>
               <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1">Основные разделы:</div>
-              <div class="grid grid-cols-3 gap-2">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   @click="mode = 'home'; isHeaderNavMenuOpen = false"
                   :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'home' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
@@ -1009,14 +1009,14 @@ const handleViewAllAuthorGuides = (username: string) => {
               </div>
             </div>
 
-            <!-- Rich Interactive Categories Hub (3 COLUMNS GRID) -->
+            <!-- Rich Interactive Categories Hub (4 COLUMNS GRID) -->
             <div class="border-t border-[#262a30] pt-3.5 space-y-2.5">
               <div class="flex items-center justify-between px-1">
                 <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Тематические категории:</div>
                 <span class="text-[10px] text-emerald-400 font-bold">10 направлений</span>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-72 overflow-y-auto pr-1">
                 <button
                   v-for="cat in [
                     { name: 'ХайТек', icon: 'Cpu', color: 'from-cyan-500/20 to-blue-500/10 border-cyan-500/40 text-cyan-300', desc: 'Автоматизация & Энергия' },
