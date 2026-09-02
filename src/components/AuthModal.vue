@@ -55,6 +55,7 @@ const handleLogin = async () => {
       });
       username.value = '';
       password.value = '';
+      emit('close');
     } else {
       errorMessage.value = data.error || 'Неверный никнейм или пароль';
     }
