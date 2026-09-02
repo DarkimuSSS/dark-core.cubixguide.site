@@ -70,6 +70,7 @@ const newLinkLabel = ref('');
 const newLinkUrl = ref('');
 
 const authorTeamRoles = ref<{ serverName: string; groupName: string }[]>([]);
+const isAuthorRegistered = ref(true);
 
 const fetchProfile = async () => {
   if (!props.username) return;
@@ -80,7 +81,10 @@ const fetchProfile = async () => {
       const data = await res.json();
       profile.value = data;
       isAuthorVerified.value = Boolean(data.isVerified);
+      isAuthorRegistered.value = true;
       if (!profile.value.customLinks) profile.value.customLinks = [];
+    } else {
+      isAuthorRegistered.value = false;
     }
 
     // Fetch Team API data directly to display official staff badges
@@ -88,12 +92,14 @@ const fetchProfile = async () => {
     if (teamRes.ok) {
       const teamData = await teamRes.json();
       const roles: { serverName: string; groupName: string }[] = [];
-      if (teamData && teamData.team) {
-        Object.values(teamData.team).forEach((srvObj: any) => {
-          if (srvObj.team) {
+      const rootTeam = (teamData && teamData.team) ? teamData.team : teamData;
+
+      if (rootTeam && typeof rootTeam === 'object') {
+        Object.values(rootTeam).forEach((srvObj: any) => {
+          if (srvObj && srvObj.team && typeof srvObj.team === 'object') {
             Object.values(srvObj.team).forEach((m: any) => {
-              if (m.name && m.name.toLowerCase() === props.username.toLowerCase()) {
-                roles.push({ serverName: srvObj.server_name, groupName: m.group_name });
+              if (m && m.name && m.name.toLowerCase() === props.username.toLowerCase()) {
+                roles.push({ serverName: srvObj.server_name || m.server_name, groupName: m.group_name });
               }
             });
           }
@@ -103,6 +109,7 @@ const fetchProfile = async () => {
     }
   } catch (err) {
     console.error('Error fetching profile:', err);
+    isAuthorRegistered.value = false;
   } finally {
     isLoading.value = false;
   }
@@ -558,6 +565,51 @@ const handleBannerFileUpload = (e: Event) => {
           <div v-if="isLoading" class="py-12 text-center text-dark-muted space-y-2">
             <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
             <div class="text-xs">Загрузка профиля...</div>
+          </div>
+
+          <!-- UNREGISTERED AUTHOR NOTICE DISPLAY -->
+          <div v-else-if="!isAuthorRegistered" class="py-10 text-center space-y-5 animate-in fade-in duration-300">
+            <!-- Staff Avatar / Initials -->
+            <div class="w-24 h-24 rounded-3xl bg-gradient-to-tr from-amber-600 via-purple-600 to-cyan-500 p-0.5 shadow-2xl mx-auto ring-2 ring-black/40">
+              <div class="w-full h-full bg-[#0c0d0e] rounded-[22px] flex items-center justify-center overflow-hidden">
+                <img :src="`https://cubixworld.net/api/account.load.avatar?login=${encodeURIComponent(username)}`" class="w-full h-full object-cover" />
+              </div>
+            </div>
+
+            <div class="space-y-2 max-w-md mx-auto">
+              <h2 class="text-2xl font-black text-white flex items-center justify-center gap-2">
+                <span>{{ username }}</span>
+              </h2>
+
+              <!-- Official CubixWorld Team Staff Badges -->
+              <div v-if="authorTeamRoles.length > 0" class="flex flex-wrap items-center justify-center gap-2 pt-1">
+                <span
+                  v-for="(r, idx) in authorTeamRoles"
+                  :key="idx"
+                  class="text-[11px] font-extrabold bg-gradient-to-r from-purple-900/90 to-cyan-900/90 text-amber-300 border border-amber-500/50 px-3 py-1 rounded-full shadow-lg backdrop-blur-md flex items-center gap-1.5"
+                >
+                  <IconRenderer name="Shield" size="13" class="text-amber-400" />
+                  <span>{{ r.groupName }} ({{ r.serverName }})</span>
+                </span>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-[#0c0d0e] border border-[#26292d] text-amber-300/90 text-xs font-semibold space-y-1 mt-4">
+                <div class="flex items-center justify-center gap-1.5 font-bold text-amber-400">
+                  <IconRenderer name="AlertCircle" size="16" />
+                  <span>Не является зарегистрированным автором вики</span>
+                </div>
+                <p class="text-[11px] text-dark-muted leading-relaxed pt-1">
+                  Данный игрок состоит в персонале проекта CubixWorld, но ещё не создавал профиль автора и статьи на вики-портале.
+                </p>
+              </div>
+            </div>
+
+            <button
+              @click="emit('close')"
+              class="px-5 py-2.5 rounded-xl bg-[#0c0d0e] hover:bg-[#181b20] border border-[#26292d] text-slate-300 hover:text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+            >
+              Закрыть окно
+            </button>
           </div>
 
           <template v-else>
