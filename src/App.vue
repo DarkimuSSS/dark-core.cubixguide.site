@@ -1129,36 +1129,7 @@ const handleViewAllAuthorGuides = (username: string) => {
           </span>
         </button>
 
-        <!-- CubixWorld Team Staff Page Button -->
-        <button
-          type="button"
-          @click="mode = 'team'"
-          :class="[
-            'px-3.5 py-2 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md',
-            mode === 'team' ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' : 'bg-[#090a0c] hover:bg-[#181b20] border-[#262a30] text-slate-300 hover:text-white'
-          ]"
-          title="Команда Проекта CubixWorld"
-        >
-          <IconRenderer name="Shield" size="15" class="text-amber-400" />
-          <span class="hidden xl:inline">Команда Проекта</span>
-        </button>
 
-        <!-- Admin Quick Access Button -->
-        <button
-          v-if="currentUserIsAdmin"
-          type="button"
-          @click="mode = 'admin'"
-          :class="[
-            'px-3 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md cursor-pointer border',
-            mode === 'admin'
-              ? 'bg-cyan-600 text-white border-cyan-400 shadow-cyan-950/60 ring-2 ring-cyan-500/40'
-              : 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
-          ]"
-          title="Панель Управления Авторами"
-        >
-          <IconRenderer name="Users" size="15" />
-          <span class="hidden xl:inline">Панель Авторов</span>
-        </button>
 
         <!-- Global Settings Button -->
         <button

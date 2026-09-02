@@ -17,6 +17,8 @@ const currentYear = new Date().getFullYear();
 
 const navLinks = [
   { label: 'Главная', mode: 'home', icon: 'Grid' },
+  { label: 'Команда Проекта', mode: 'team', icon: 'Shield' },
+  { label: 'Панель Авторов', mode: 'admin', icon: 'Users' },
   { label: 'Закладки', mode: 'favorites', icon: 'Star' },
 ];
 
