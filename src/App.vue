@@ -973,10 +973,21 @@ const handleViewAllAuthorGuides = (username: string) => {
                 </button>
 
                 <button
+                  @click="mode = 'team'; isHeaderNavMenuOpen = false"
+                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'team' ? 'bg-amber-500/15 border-amber-500/50 text-amber-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-amber-500/40']"
+                >
+                  <IconRenderer name="Shield" size="18" class="text-amber-400 shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold truncate">Команда Проекта</div>
+                    <div class="text-[10px] text-dark-muted truncate">Состав серверов</div>
+                  </div>
+                </button>
+
+                <button
                   @click="mode = 'rules'; isHeaderNavMenuOpen = false"
                   :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'rules' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
                 >
-                  <IconRenderer name="Shield" size="18" class="text-emerald-400 shrink-0" />
+                  <IconRenderer name="ShieldCheck" size="18" class="text-emerald-400 shrink-0" />
                   <div class="min-w-0">
                     <div class="text-xs font-bold truncate">Правила</div>
                     <div class="text-[10px] text-dark-muted truncate">Свод правил проекта</div>
