@@ -83,8 +83,8 @@ const fetchProfile = async () => {
       if (!profile.value.customLinks) profile.value.customLinks = [];
     }
 
-    // Fetch Team API data to display official staff badges
-    const teamRes = await fetch('/api/team');
+    // Fetch Team API data directly to display official staff badges
+    const teamRes = await fetch('https://cubixworld.net/api/team');
     if (teamRes.ok) {
       const teamData = await teamRes.json();
       const roles: { serverName: string; groupName: string }[] = [];

@@ -15,10 +15,10 @@ const searchQuery = ref('');
 const fetchTeam = async () => {
   isLoading.value = true;
   try {
-    const res = await fetch('/api/team');
+    const res = await fetch('https://cubixworld.net/api/team');
     if (res.ok) {
       const data = await res.json();
-      console.log('Received Team Data from API:', data);
+      console.log('Received Direct CubixWorld Team Data:', data);
 
       let serversObj: any = {};
       if (data && typeof data === 'object') {

@@ -100,15 +100,7 @@ app.get('/api/servers', async (req, res) => {
   }
 });
 
-// Fetch CubixWorld Team Staff Data from official API
-app.get('/api/team', async (req, res) => {
-  try {
-    const data = await fetchCubixTeamData();
-    res.json(data || { team: {} });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
+
 
 // AUTHENTICATION ENDPOINTS
 
