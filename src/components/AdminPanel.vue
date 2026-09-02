@@ -1,0 +1,491 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import IconRenderer from './IconRenderer.vue';
+import ConfirmModal from './ConfirmModal.vue';
+
+const props = defineProps<{
+  isAdmin: boolean;
+  currentUsername: string;
+}>();
+
+const emit = defineEmits<{
+  (e: 'go-home'): void;
+}>();
+
+const registeredAuthorsList = ref<any[]>([]);
+const authorAvatarsMap = ref<Record<string, string>>({});
+const isLoading = ref(false);
+const adminMessage = ref('');
+const searchQuery = ref('');
+
+// Registration State
+const newAuthorUsername = ref('');
+const newAuthorPassword = ref('');
+const showNewAuthorPassword = ref(false);
+
+// Deletion State
+const isDeleteConfirmOpen = ref(false);
+const authorToDelete = ref<string | null>(null);
+
+// Reset Password State
+const resetTargetUsername = ref<string | null>(null);
+const resetNewPassword = ref('');
+const showResetPasswordToggle = ref(false);
+
+const fetchAdminAuthorsList = async () => {
+  if (!props.isAdmin) return;
+  isLoading.value = true;
+  adminMessage.value = '';
+  try {
+    const res = await fetch('/api/admin/authors');
+    if (res.ok) {
+      const list = await res.json();
+      registeredAuthorsList.value = list;
+
+      for (const a of list) {
+        try {
+          const pres = await fetch(`/api/profiles/${encodeURIComponent(a.username)}`);
+          if (pres.ok) {
+            const p = await pres.json();
+            if (p.avatarUrl) {
+              authorAvatarsMap.value[a.username.toLowerCase()] = p.avatarUrl;
+            }
+          }
+        } catch (e) {}
+      }
+    }
+  } catch (e) {
+    console.error('Ошибка загрузки списка авторов:', e);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchAdminAuthorsList();
+});
+
+const filteredAuthors = computed(() => {
+  const q = searchQuery.value.toLowerCase().trim();
+  if (!q) return registeredAuthorsList.value;
+  return registeredAuthorsList.value.filter(a =>
+    a.username.toLowerCase().includes(q)
+  );
+});
+
+const handleAdminRegisterAuthor = async () => {
+  adminMessage.value = '';
+  if (!newAuthorUsername.value.trim() || !newAuthorPassword.value.trim()) {
+    adminMessage.value = 'Заполните никнейм и пароль для нового автора';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/register-author', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: newAuthorUsername.value.trim(),
+        password: newAuthorPassword.value.trim(),
+        adminUsername: props.currentUsername
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      adminMessage.value = `Успешно зарегистрирован новый автор: ${data.username}!`;
+      newAuthorUsername.value = '';
+      newAuthorPassword.value = '';
+      fetchAdminAuthorsList();
+    } else {
+      adminMessage.value = data.error || 'Ошибка создания автора';
+    }
+  } catch (err) {
+    adminMessage.value = 'Ошибка обращения к серверу';
+  }
+};
+
+const handleToggleAuthorPermission = async (author: any, permType: 'editOthers' | 'createGuides' | 'verification') => {
+  adminMessage.value = '';
+  const newEditOthers = permType === 'editOthers' ? !author.canEditOthers : author.canEditOthers;
+  const newCreateGuides = permType === 'createGuides' ? !author.canCreateGuides : author.canCreateGuides;
+  const newIsVerified = permType === 'verification' ? !author.isVerified : author.isVerified;
+
+  try {
+    const res = await fetch('/api/admin/permissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetUsername: author.username,
+        canEditOthers: newEditOthers,
+        canCreateGuides: newCreateGuides,
+        isVerified: newIsVerified,
+        adminUsername: props.currentUsername
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      adminMessage.value = data.message || 'Права и верификация автора обновлены!';
+      fetchAdminAuthorsList();
+    } else {
+      adminMessage.value = data.error || 'Ошибка обновления прав';
+    }
+  } catch (err) {
+    adminMessage.value = 'Ошибка соединения с сервером';
+  }
+};
+
+const handleAdminResetAuthorPassword = async (targetUser: string) => {
+  adminMessage.value = '';
+  if (!resetNewPassword.value.trim()) {
+    adminMessage.value = 'Укажите новый пароль';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetUsername: targetUser,
+        newPassword: resetNewPassword.value.trim(),
+        adminUsername: props.currentUsername
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      adminMessage.value = data.message || `Пароль для ${targetUser} сброшен!`;
+      resetTargetUsername.value = null;
+      resetNewPassword.value = '';
+    } else {
+      adminMessage.value = data.error || 'Ошибка сброса пароля';
+    }
+  } catch (err) {
+    adminMessage.value = 'Ошибка обращения к серверу';
+  }
+};
+
+const promptDeleteAuthor = (targetUser: string) => {
+  authorToDelete.value = targetUser;
+  isDeleteConfirmOpen.value = true;
+};
+
+const confirmDeleteAuthor = async () => {
+  if (!authorToDelete.value) return;
+  const targetUser = authorToDelete.value;
+  isDeleteConfirmOpen.value = false;
+  authorToDelete.value = null;
+  adminMessage.value = '';
+
+  try {
+    const res = await fetch(`/api/admin/authors/${encodeURIComponent(targetUser)}?adminUsername=${encodeURIComponent(props.currentUsername)}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (res.ok) {
+      adminMessage.value = data.message || `Автор ${targetUser} удален!`;
+      fetchAdminAuthorsList();
+    } else {
+      adminMessage.value = data.error || 'Ошибка удаления автора';
+    }
+  } catch (err) {
+    adminMessage.value = 'Ошибка соединения с сервером';
+  }
+};
+</script>
+
+<template>
+  <div class="space-y-6 pb-24 animate-in fade-in duration-300">
+    <!-- Header Title Bar -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#26292d] pb-5">
+      <div class="space-y-1">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 shadow-md">
+            <IconRenderer name="Users" size="24" />
+          </div>
+          <div>
+            <h1 class="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+              <span>Панель Управления Авторами</span>
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">ADMIN PANEL</span>
+            </h1>
+            <p class="text-xs text-dark-muted">Управление учетными записями авторов, верификацией, доступом к созданию гайдов и паролями</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          @click="fetchAdminAuthorsList"
+          :disabled="isLoading"
+          class="px-3.5 py-2 rounded-xl bg-[#16181a] hover:bg-[#202327] border border-[#26292d] text-slate-200 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-md"
+        >
+          <IconRenderer name="RotateCw" size="14" :class="['text-cyan-400', isLoading ? 'animate-spin' : '']" />
+          <span>Обновить список</span>
+        </button>
+
+        <button
+          @click="emit('go-home')"
+          class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+        >
+          <span>На Главную</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Alert / Status Notification Message -->
+    <div v-if="adminMessage" class="p-4 rounded-2xl bg-cyan-950/40 border border-cyan-500/50 text-cyan-200 text-xs font-semibold flex items-center justify-between shadow-lg">
+      <div class="flex items-center gap-2">
+        <IconRenderer name="Info" size="16" class="text-cyan-400 shrink-0" />
+        <span>{{ adminMessage }}</span>
+      </div>
+      <button @click="adminMessage = ''" class="text-slate-400 hover:text-white">
+        <IconRenderer name="X" size="14" />
+      </button>
+    </div>
+
+    <!-- Main Grid: Registration Form (Left) & Author List (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      
+      <!-- Left: Create New Author Account Card -->
+      <div class="lg:col-span-1 p-6 rounded-3xl bg-[#16181a] border border-[#26292d] shadow-xl space-y-4">
+        <div class="flex items-center gap-2.5 border-b border-[#26292d] pb-3">
+          <IconRenderer name="UserPlus" size="18" class="text-emerald-400" />
+          <h3 class="text-sm font-extrabold text-white">Регистрация Нового Автора</h3>
+        </div>
+
+        <p class="text-xs text-dark-muted leading-relaxed">
+          Создайте аккаунт автора для публикации вики-руководств. Новые авторы смогут входить по указанному нику и паролю.
+        </p>
+
+        <form @submit.prevent="handleAdminRegisterAuthor" class="space-y-3.5 pt-1">
+          <div class="space-y-1">
+            <label class="text-[11px] font-bold text-slate-300">Никнейм автора (Cubix/Локальный):</label>
+            <div class="relative">
+              <input
+                type="text"
+                v-model="newAuthorUsername"
+                placeholder="Игровой никнейм..."
+                class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500/70 text-white text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none transition-all"
+              />
+              <IconRenderer name="User" size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" />
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-[11px] font-bold text-slate-300">Начальный пароль:</label>
+            <div class="relative">
+              <input
+                :type="showNewAuthorPassword ? 'text' : 'password'"
+                v-model="newAuthorPassword"
+                placeholder="Пароль пользователя..."
+                class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500/70 text-white text-xs rounded-xl pl-9 pr-9 py-2.5 focus:outline-none transition-all"
+              />
+              <IconRenderer name="Lock" size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" />
+              <button
+                type="button"
+                @click="showNewAuthorPassword = !showNewAuthorPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white"
+              >
+                <IconRenderer :name="showNewAuthorPassword ? 'EyeOff' : 'Eye'" size="14" />
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
+          >
+            <IconRenderer name="UserPlus" size="16" />
+            <span>Зарегистрировать Автора</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Right: Registered Authors Management Table -->
+      <div class="lg:col-span-2 p-6 rounded-3xl bg-[#16181a] border border-[#26292d] shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-[#26292d] pb-3">
+          <div class="flex items-center gap-2.5">
+            <IconRenderer name="Users" size="18" class="text-cyan-400" />
+            <h3 class="text-sm font-extrabold text-white">Список Авторов & Права доступа ({{ registeredAuthorsList.length }})</h3>
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative w-full sm:w-56">
+            <input
+              type="text"
+              v-model="searchQuery"
+              placeholder="Поиск по никнейму..."
+              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-[11px] rounded-xl pl-8 pr-3 py-1.5 focus:outline-none focus:border-cyan-500/60"
+            />
+            <IconRenderer name="Search" size="13" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-muted" />
+          </div>
+        </div>
+
+        <div v-if="isLoading" class="py-12 text-center text-dark-muted text-xs space-y-2">
+          <div class="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div>Загрузка авторов...</div>
+        </div>
+
+        <div v-else-if="filteredAuthors.length === 0" class="py-12 text-center text-dark-muted text-xs">
+          Авторов по данному запросу не найдено
+        </div>
+
+        <!-- Authors Grid / List Cards -->
+        <div v-else class="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-1">
+          <div
+            v-for="author in filteredAuthors"
+            :key="author.username"
+            class="p-4 rounded-2xl bg-[#0c0d0e] border border-[#26292d] hover:border-[#3b3f46] transition-all space-y-3"
+          >
+            <!-- Author Main Row Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#1c1f22]">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md shrink-0">
+                  <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center overflow-hidden">
+                    <img v-if="authorAvatarsMap[author.username.toLowerCase()]" :src="authorAvatarsMap[author.username.toLowerCase()]" class="w-full h-full object-cover" />
+                    <span v-else class="text-xs font-black text-emerald-400">{{ author.username.charAt(0).toUpperCase() }}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-extrabold text-white">{{ author.username }}</span>
+                    <span v-if="author.isAdmin" class="px-2 py-0.2 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[9px] font-black uppercase">АДМИН</span>
+                    <span v-if="author.isVerified" class="px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-extrabold uppercase flex items-center gap-1">
+                      <IconRenderer name="Check" size="10" />
+                      <span>Verified</span>
+                    </span>
+                  </div>
+                  <div class="text-[10px] text-dark-muted">Создан: {{ author.createdAt || 'Ранее' }}</div>
+                </div>
+              </div>
+
+              <!-- Quick Password Reset / Delete Actions -->
+              <div class="flex items-center gap-2 self-end sm:self-center">
+                <button
+                  @click="resetTargetUsername = (resetTargetUsername === author.username ? null : author.username); resetNewPassword = '';"
+                  class="px-2.5 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  title="Сбросить пароль автора"
+                >
+                  <IconRenderer name="Key" size="12" />
+                  <span>Пароль</span>
+                </button>
+
+                <button
+                  v-if="author.username.toLowerCase() !== currentUsername.toLowerCase()"
+                  @click="promptDeleteAuthor(author.username)"
+                  class="px-2.5 py-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  title="Удалить автора"
+                >
+                  <IconRenderer name="Trash2" size="12" />
+                  <span>Удалить</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Inline Admin Password Reset Panel -->
+            <div v-if="resetTargetUsername === author.username" class="p-3 rounded-xl bg-[#16181a] border border-amber-500/40 space-y-2 animate-in fade-in duration-200">
+              <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                <IconRenderer name="Key" size="13" />
+                <span>Сброс пароля для {{ author.username }}:</span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <div class="relative flex-1">
+                  <input
+                    :type="showResetPasswordToggle ? 'text' : 'password'"
+                    v-model="resetNewPassword"
+                    placeholder="Укажите новый пароль..."
+                    class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3 pr-8 py-1.5 focus:outline-none focus:border-amber-500/60"
+                  />
+                  <button
+                    type="button"
+                    @click="showResetPasswordToggle = !showResetPasswordToggle"
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white"
+                  >
+                    <IconRenderer :name="showResetPasswordToggle ? 'EyeOff' : 'Eye'" size="12" />
+                  </button>
+                </div>
+
+                <button
+                  @click="handleAdminResetAuthorPassword(author.username)"
+                  class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs transition-all cursor-pointer shrink-0"
+                >
+                  Сохранить
+                </button>
+                <button
+                  @click="resetTargetUsername = null"
+                  class="px-2.5 py-1.5 rounded-xl bg-[#26292d] text-slate-300 text-xs font-bold shrink-0"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+
+            <!-- Author Permissions Toggles Bar -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+              <!-- Permission 1: Verification Badge -->
+              <button
+                @click="handleToggleAuthorPermission(author, 'verification')"
+                :class="[
+                  'p-2 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer',
+                  author.isVerified ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-[#121416] border-[#26292d] text-slate-400 hover:border-slate-500/40'
+                ]"
+              >
+                <div class="flex items-center gap-2">
+                  <IconRenderer name="Check" size="14" :class="author.isVerified ? 'text-emerald-400' : 'text-slate-500'" />
+                  <span class="text-[11px] font-bold">Верификация (Галочка)</span>
+                </div>
+                <div :class="['w-3.5 h-3.5 rounded-full transition-colors', author.isVerified ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-slate-700']"></div>
+              </button>
+
+              <!-- Permission 2: Can Create Guides -->
+              <button
+                @click="handleToggleAuthorPermission(author, 'createGuides')"
+                :class="[
+                  'p-2 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer',
+                  author.canCreateGuides ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300' : 'bg-[#121416] border-[#26292d] text-slate-400 hover:border-slate-500/40'
+                ]"
+              >
+                <div class="flex items-center gap-2">
+                  <IconRenderer name="Plus" size="14" :class="author.canCreateGuides ? 'text-cyan-400' : 'text-slate-500'" />
+                  <span class="text-[11px] font-bold">Создание Гайдов</span>
+                </div>
+                <div :class="['w-3.5 h-3.5 rounded-full transition-colors', author.canCreateGuides ? 'bg-cyan-400 shadow-sm shadow-cyan-400/50' : 'bg-slate-700']"></div>
+              </button>
+
+              <!-- Permission 3: Can Edit Others -->
+              <button
+                @click="handleToggleAuthorPermission(author, 'editOthers')"
+                :class="[
+                  'p-2 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer',
+                  author.canEditOthers ? 'bg-purple-500/15 border-purple-500/40 text-purple-300' : 'bg-[#121416] border-[#26292d] text-slate-400 hover:border-slate-500/40'
+                ]"
+              >
+                <div class="flex items-center gap-2">
+                  <IconRenderer name="Shield" size="14" :class="author.canEditOthers ? 'text-purple-400' : 'text-slate-500'" />
+                  <span class="text-[11px] font-bold">Правка Чужих Гайдов</span>
+                </div>
+                <div :class="['w-3.5 h-3.5 rounded-full transition-colors', author.canEditOthers ? 'bg-purple-400 shadow-sm shadow-purple-400/50' : 'bg-slate-700']"></div>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Confirm Author Delete Modal -->
+    <ConfirmModal
+      :is-open="isDeleteConfirmOpen"
+      title="Удаление авторов"
+      :message="`Вы действительно хотите удалить аккаунт автора ${authorToDelete}? Локальный пароль и доступ будут заблокированы.`"
+      confirm-text="Да, удалить автора"
+      cancel-text="Отмена"
+      type="danger"
+      @confirm="confirmDeleteAuthor"
+      @cancel="isDeleteConfirmOpen = false"
+    />
+  </div>
+</template>

@@ -12,6 +12,7 @@ import TermsModal from './components/TermsModal.vue';
 import RulesModal from './components/RulesModal.vue';
 import SettingsModal from './components/SettingsModal.vue';
 import TelemetryPage from './components/TelemetryPage.vue';
+import AdminPanel from './components/AdminPanel.vue';
 import { PRESET_ITEMS } from './data/presetItems';
 import type { Guide, AuthorProfile } from './types/guide';
 
@@ -189,6 +190,8 @@ const updateUrlRoute = () => {
     params.set('tab', 'Черновики');
   } else if (mode.value === 'telemetry') {
     params.set('tab', 'Телеметрия');
+  } else if (mode.value === 'admin') {
+    params.set('tab', 'АдминПанель');
   } else if (mode.value === 'rules') {
     if (initialRulesTab.value === 'server') {
       params.set('tab', 'Внутриигровые');
@@ -234,6 +237,8 @@ const syncFromUrlPath = () => {
     mode.value = 'rules';
   } else if (tab === 'Телеметрия' || tab === 'telemetry' || tab === 'Аналитика') {
     mode.value = 'telemetry';
+  } else if (tab === 'АдминПанель' || tab === 'admin' || tab === 'Авторы') {
+    mode.value = 'admin';
   } else if (tab === 'Вики' || tab === 'reader') {
     mode.value = 'reader';
   } else if (tab === 'Конструктор' || tab === 'editor') {
@@ -872,6 +877,18 @@ const handleViewAllAuthorGuides = (username: string) => {
 
                 <button
                   v-if="currentUserIsAdmin"
+                  @click="mode = 'admin'; isHeaderNavMenuOpen = false"
+                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'admin' ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-cyan-500/40']"
+                >
+                  <IconRenderer name="Users" size="18" class="text-cyan-400 shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold truncate">Панель Авторов</div>
+                    <div class="text-[10px] text-dark-muted truncate">Управление доступом</div>
+                  </div>
+                </button>
+
+                <button
+                  v-if="currentUserIsAdmin"
                   @click="mode = 'telemetry'; isHeaderNavMenuOpen = false"
                   :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'telemetry' ? 'bg-purple-500/15 border-purple-500/50 text-purple-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-purple-500/40']"
                 >
@@ -1285,6 +1302,15 @@ const handleViewAllAuthorGuides = (username: string) => {
               :is-admin="currentUserIsAdmin"
               @go-home="mode = 'home'"
               @select-guide="selectGuide"
+            />
+          </div>
+
+          <!-- DEDICATED ADMIN PANEL FULL PAGE VIEW -->
+          <div v-else-if="mode === 'admin' && currentUserIsAdmin" class="px-3 sm:px-6 pt-4">
+            <AdminPanel
+              :is-admin="currentUserIsAdmin"
+              :current-username="currentUsername || ''"
+              @go-home="mode = 'home'"
             />
           </div>
 
