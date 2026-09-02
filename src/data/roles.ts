@@ -7,6 +7,7 @@ export const SYSTEM_PERMISSIONS: { key: UserPermission; label: string; descripti
   { key: 'delete_own_guide', label: 'Удаление своих гайдов', description: 'Разрешает безвозвратно удалять свои статьи' },
   { key: 'delete_other_guide', label: 'Удаление чужих гайдов', description: 'Разрешает удалять статьи других авторов' },
   { key: 'publish_guide', label: 'Публикация гайдов', description: 'Разрешает публиковать статьи в открытый доступ' },
+  { key: 'approve_guide', label: 'Модерация & Одобрение', description: 'Одобрение гайдов авторов и модерация статей' },
   { key: 'manage_authors', label: 'Управление авторами', description: 'Разрешает регистрировать авторов и сбрасывать им пароли' },
   { key: 'manage_roles', label: 'Управление ролями и правами', description: 'Разрешает изменять роли и точечные права пользователей' },
   { key: 'view_telemetry', label: 'Доступ к Телеметрии', description: 'Просмотр статистики просмотров, поиска и логов действий' },
@@ -22,27 +23,27 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
     badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
     permissions: [
       'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide',
-      'delete_other_guide', 'publish_guide', 'manage_authors', 'manage_roles',
+      'delete_other_guide', 'publish_guide', 'approve_guide', 'manage_authors', 'manage_roles',
       'view_telemetry', 'view_rules', 'manage_rules'
     ]
   },
   admin: {
     role: 'admin',
     name: 'Администратор',
-    description: 'Управление статьями, авторами, правилами и аналитикой',
+    description: 'Управление статьями, модерацией, авторами, правилами и аналитикой',
     badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
     permissions: [
       'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide',
-      'delete_other_guide', 'publish_guide', 'manage_authors', 'view_telemetry', 'view_rules', 'manage_rules'
+      'delete_other_guide', 'publish_guide', 'approve_guide', 'manage_authors', 'view_telemetry', 'view_rules', 'manage_rules'
     ]
   },
   editor: {
     role: 'editor',
     name: 'Редактор',
-    description: 'Проверка, редактирование и публикация статей всех авторов',
+    description: 'Проверка, редактирование, модерация и публикация статей',
     badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
     permissions: [
-      'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide', 'publish_guide', 'view_rules'
+      'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide', 'publish_guide', 'approve_guide', 'view_rules'
     ]
   },
   author: {

@@ -48,6 +48,8 @@ function formatGuideRow(row: any): Guide {
       updatedAt: row.updated_at,
       published: published,
       isVisible: isVisible,
+      status: row.status || (published ? 'approved' : 'draft'),
+      rejectionReason: row.rejection_reason || undefined,
       server: row.server || undefined,
       coverUrl: row.cover_url || undefined,
       coverGradient: row.cover_gradient || undefined
@@ -350,12 +352,13 @@ app.post('/api/guides', (req, res) => {
     });
 
     const isPublished = Boolean(guide.meta.published);
-    // Если не опубликован, автоматически НЕ виден
     const isVisible = isPublished ? Boolean(guide.meta.isVisible) : false;
+    const guideStatus = guide.meta.status || (isPublished ? 'approved' : 'draft');
+    const rejectionReason = guide.meta.rejectionReason || null;
 
     const stmt = db.prepare(`
-      INSERT OR REPLACE INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, is_visible, server, cover_url, cover_gradient, blocks)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, is_visible, status, rejection_reason, server, cover_url, cover_gradient, blocks)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -369,6 +372,8 @@ app.post('/api/guides', (req, res) => {
       guide.meta.updatedAt,
       isPublished ? 1 : 0,
       isVisible ? 1 : 0,
+      guideStatus,
+      rejectionReason,
       guide.meta.server || null,
       guide.meta.coverUrl || null,
       guide.meta.coverGradient || null,
@@ -428,11 +433,13 @@ app.put('/api/guides/:id', (req, res) => {
     
     const isPublished = Boolean(guide.meta.published);
     const isVisible = isPublished ? Boolean(guide.meta.isVisible) : false;
+    const guideStatus = guide.meta.status || (isPublished ? 'approved' : 'draft');
+    const rejectionReason = guide.meta.rejectionReason || null;
 
     if (!existingRow) {
       const stmt = db.prepare(`
-        INSERT INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, is_visible, server, cover_url, cover_gradient, blocks)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO guides (id, title, category, author, co_authors, difficulty, summary, updated_at, published, is_visible, status, rejection_reason, server, cover_url, cover_gradient, blocks)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       stmt.run(
         guideId,
@@ -445,6 +452,8 @@ app.put('/api/guides/:id', (req, res) => {
         guide.meta.updatedAt,
         isPublished ? 1 : 0,
         isVisible ? 1 : 0,
+        guideStatus,
+        rejectionReason,
         guide.meta.server || null,
         guide.meta.coverUrl || null,
         guide.meta.coverGradient || null,
@@ -453,7 +462,7 @@ app.put('/api/guides/:id', (req, res) => {
     } else {
       const stmt = db.prepare(`
         UPDATE guides
-        SET title = ?, category = ?, author = ?, co_authors = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, is_visible = ?, server = ?, cover_url = ?, cover_gradient = ?, blocks = ?
+        SET title = ?, category = ?, author = ?, co_authors = ?, difficulty = ?, summary = ?, updated_at = ?, published = ?, is_visible = ?, status = ?, rejection_reason = ?, server = ?, cover_url = ?, cover_gradient = ?, blocks = ?
         WHERE id = ?
       `);
       stmt.run(
@@ -466,6 +475,8 @@ app.put('/api/guides/:id', (req, res) => {
         guide.meta.updatedAt,
         isPublished ? 1 : 0,
         isVisible ? 1 : 0,
+        guideStatus,
+        rejectionReason,
         guide.meta.server || null,
         guide.meta.coverUrl || null,
         guide.meta.coverGradient || null,

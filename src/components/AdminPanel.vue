@@ -35,6 +35,91 @@ const resetTargetUsername = ref<string | null>(null);
 const resetNewPassword = ref('');
 const showResetPasswordToggle = ref(false);
 
+// Moderation Queue State
+const pendingGuidesList = ref<any[]>([]);
+const isModerationLoading = ref(false);
+
+const fetchPendingGuides = async () => {
+  isModerationLoading.value = true;
+  try {
+    const res = await fetch('/api/guides');
+    if (res.ok) {
+      const all = await res.json();
+      pendingGuidesList.value = all.filter((g: any) => g.meta.status === 'pending_moderation');
+    }
+  } catch (e) {
+    console.error('Ошибка загрузки гайдов на модерации:', e);
+  } finally {
+    isModerationLoading.value = false;
+  }
+};
+
+const handleApproveGuide = async (guide: any) => {
+  adminMessage.value = '';
+  const updated = {
+    ...guide,
+    meta: {
+      ...guide.meta,
+      published: true,
+      isVisible: true,
+      status: 'approved'
+    }
+  };
+
+  try {
+    const res = await fetch(`/api/guides/${guide.meta.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-author-username': props.currentUsername
+      },
+      body: JSON.stringify(updated)
+    });
+
+    if (res.ok) {
+      adminMessage.value = `Гайд "${guide.meta.title}" успешно ОДОБРЕН и ОПУБЛИКОВАН! 🚀`;
+      fetchPendingGuides();
+    } else {
+      adminMessage.value = 'Ошибка модерации гайда';
+    }
+  } catch (e) {
+    adminMessage.value = 'Ошибка соединения с сервером';
+  }
+};
+
+const handleRejectGuide = async (guide: any) => {
+  adminMessage.value = '';
+  const updated = {
+    ...guide,
+    meta: {
+      ...guide.meta,
+      published: false,
+      isVisible: false,
+      status: 'rejected'
+    }
+  };
+
+  try {
+    const res = await fetch(`/api/guides/${guide.meta.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-author-username': props.currentUsername
+      },
+      body: JSON.stringify(updated)
+    });
+
+    if (res.ok) {
+      adminMessage.value = `Гайд "${guide.meta.title}" отправлен на доработку автору! ❌`;
+      fetchPendingGuides();
+    } else {
+      adminMessage.value = 'Ошибка отклонения гайда';
+    }
+  } catch (e) {
+    adminMessage.value = 'Ошибка соединения с сервером';
+  }
+};
+
 const fetchAdminAuthorsList = async () => {
   if (!props.isAdmin) return;
   isLoading.value = true;
@@ -66,6 +151,7 @@ const fetchAdminAuthorsList = async () => {
 
 onMounted(() => {
   fetchAdminAuthorsList();
+  fetchPendingGuides();
 });
 
 const filteredAuthors = computed(() => {
@@ -310,6 +396,71 @@ const isAuthorHasPermission = (author: any, perm: UserPermission): boolean => {
       <button @click="adminMessage = ''" class="text-slate-400 hover:text-white">
         <IconRenderer name="X" size="14" />
       </button>
+    </div>
+
+    <!-- MODERATION QUEUE CARD (If any pending guides) -->
+    <div v-if="pendingGuidesList.length > 0" class="p-6 rounded-3xl bg-amber-950/20 border border-amber-500/40 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-amber-500/30 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40">
+            <IconRenderer name="Clock" size="18" />
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white flex items-center gap-2">
+              <span>Очередь Модерации Гайдов</span>
+              <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black font-extrabold">{{ pendingGuidesList.length }}</span>
+            </h3>
+            <p class="text-xs text-amber-200/70">Статьи авторов, ожидающие вашей проверки перед публикацией</p>
+          </div>
+        </div>
+
+        <button @click="fetchPendingGuides" class="text-xs text-amber-300 hover:underline flex items-center gap-1">
+          <IconRenderer name="RotateCw" size="12" :class="isModerationLoading ? 'animate-spin' : ''" />
+          <span>Обновить</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div v-for="guide in pendingGuidesList" :key="guide.meta.id" class="p-4 rounded-2xl bg-[#0c0d0e] border border-amber-500/30 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <h4 class="text-sm font-bold text-white line-clamp-1">{{ guide.meta.title || '(Без названия)' }}</h4>
+              <div class="text-[11px] text-amber-300 flex items-center gap-2 mt-0.5">
+                <span>Автор: <strong>{{ guide.meta.author }}</strong></span>
+                <span>•</span>
+                <span>Сервер: {{ guide.meta.server || 'Все' }}</span>
+              </div>
+            </div>
+            <span class="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">
+              На модерации
+            </span>
+          </div>
+
+          <p class="text-xs text-dark-muted line-clamp-2">{{ guide.meta.summary || 'Описание отсутствует' }}</p>
+
+          <div class="flex items-center justify-between pt-2 border-t border-[#1c1f22]">
+            <span class="text-[10px] text-dark-muted">Обновлен: {{ guide.meta.updatedAt }}</span>
+            
+            <div class="flex items-center gap-2">
+              <button
+                @click="handleRejectGuide(guide)"
+                class="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+              >
+                <IconRenderer name="X" size="13" />
+                <span>Отклонить</span>
+              </button>
+              
+              <button
+                @click="handleApproveGuide(guide)"
+                class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition-all cursor-pointer shadow-md flex items-center gap-1"
+              >
+                <IconRenderer name="Check" size="14" />
+                <span>Опубликовать</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Main Grid: Registration Form (Left) & Author List (Right) -->

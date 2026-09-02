@@ -589,6 +589,63 @@ const createNewGuide = async () => {
   }
 };
 
+const handleSubmitModeration = async () => {
+  if (!activeGuide.value) return;
+  if (!canUserEditActiveGuide.value) {
+    showToast(`У вас нет прав для сохранения изменений в чужом гайде (Автор: ${activeGuide.value.meta.author})`);
+    return;
+  }
+
+  activeGuide.value.meta.published = false;
+  activeGuide.value.meta.isVisible = false;
+  activeGuide.value.meta.status = 'pending_moderation';
+  activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
+
+  try {
+    const authorUser = currentUsername.value || '';
+    let res = await fetch(`/api/guides/${activeGuide.value.meta.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-author-username': authorUser
+      },
+      body: JSON.stringify(activeGuide.value)
+    });
+
+    if (!res.ok) {
+      res = await fetch('/api/guides', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-author-username': authorUser
+        },
+        body: JSON.stringify(activeGuide.value)
+      });
+    }
+
+    if (res.ok) {
+      const savedGuide = await res.json();
+      const idx = guides.value.findIndex(g => g.meta.id === activeGuide.value?.meta.id);
+      if (idx !== -1) {
+        guides.value[idx] = savedGuide;
+      } else {
+        guides.value.unshift(savedGuide);
+      }
+      activeGuide.value = savedGuide;
+      clearDraftLocalStorage(savedGuide.meta.id);
+      showToast('Гайд успешно отправлен на модерацию Администратору! 📩');
+      mode.value = 'home';
+      await fetchGuides();
+    } else {
+      const errData = await res.json();
+      showToast(errData.error || 'Ошибка отправки на модерацию');
+    }
+  } catch (err) {
+    console.error('Ошибка отправки на модерацию:', err);
+    showToast('Ошибка обращения к серверу');
+  }
+};
+
 const handlePublish = async () => {
   if (!activeGuide.value) return;
   if (!canUserEditActiveGuide.value) {
@@ -596,6 +653,7 @@ const handlePublish = async () => {
     return;
   }
   activeGuide.value.meta.published = true;
+  activeGuide.value.meta.status = 'approved';
   activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
 
   try {
@@ -631,12 +689,12 @@ const handlePublish = async () => {
       }
       activeGuide.value = savedGuide;
       clearDraftLocalStorage(savedGuide.meta.id);
-      showToast('Гайд успешно сохранен в базу данных!');
+      showToast('Гайд успешно опубликован!');
       mode.value = 'reader';
       await fetchGuides();
     } else {
       const errData = await res.json();
-      showToast(errData.error || 'Ошибка при сохранении гайда');
+      showToast(errData.error || 'Ошибка при публикации гайда');
     }
   } catch (err) {
     console.error('Ошибка сохранения:', err);
@@ -1343,9 +1401,11 @@ const handleViewAllAuthorGuides = (username: string) => {
           <div v-else-if="mode === 'editor' && isAuthenticated && activeGuide" class="px-3 sm:px-6 pt-4">
             <GuideEditor
               :guide="activeGuide"
+              :can-approve="userHasPerm('approve_guide') || currentUserIsAdmin"
               @update:guide="updateActiveGuide"
               @toggle-preview="handleTogglePreview"
               @publish="handlePublish"
+              @submit-moderation="handleSubmitModeration"
               @delete="requestDeleteGuide"
             />
           </div>

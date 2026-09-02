@@ -12,12 +12,17 @@ import type { Guide, GuideBlock, Category, Difficulty, BlockType, BlockSpan, Blo
 
 const props = defineProps<{
   guide: Guide;
+  canApprove?: boolean;
+  isAuthorRole?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:guide', guide: Guide): void;
   (e: 'toggle-preview'): void;
   (e: 'publish'): void;
+  (e: 'submit-moderation'): void;
+  (e: 'approve'): void;
+  (e: 'reject', reason: string): void;
   (e: 'delete'): void;
 }>();
 
@@ -1582,14 +1587,34 @@ const stopOutlineDrag = () => {
           </div>
         </div>
 
-        <!-- Save Button -->
+        <!-- Save / Submit Moderation Action Button -->
         <div class="relative group/tool w-full flex justify-center">
-          <button type="button" @click="emit('publish')" :class="['rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center transition-all shadow-lg shadow-emerald-950/50', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']">
-            <IconRenderer name="Check" size="18" class="shrink-0" />
-            <span v-if="isToolbarExpanded" class="text-xs font-bold">Сохранить</span>
+          <!-- ADMIN / MODERATOR: Publish Directly -->
+          <button
+            v-if="props.canApprove"
+            type="button"
+            @click="emit('publish')"
+            :class="['rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center transition-all shadow-lg shadow-emerald-950/50 cursor-pointer', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']"
+          >
+            <IconRenderer name="CheckCircle2" size="18" class="shrink-0 text-emerald-200" />
+            <span v-if="isToolbarExpanded" class="text-xs font-bold truncate">Опубликовать</span>
           </button>
+
+          <!-- REGULAR AUTHOR: Send for Moderation -->
+          <button
+            v-else
+            type="button"
+            @click="emit('submit-moderation')"
+            :class="['rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white flex items-center transition-all shadow-lg shadow-amber-950/50 cursor-pointer', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']"
+          >
+            <IconRenderer name="Send" size="17" class="shrink-0 text-amber-100" />
+            <span v-if="isToolbarExpanded" class="text-xs font-extrabold truncate">На модерацию</span>
+          </button>
+
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
-            <div class="bg-emerald-950 border border-emerald-500/50 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">Сохранить гайд</div>
+            <div class="bg-[#0c0d0e] border border-amber-500/50 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+              {{ props.canApprove ? 'Опубликовать гайд' : 'Отправить гайд на модерацию' }}
+            </div>
           </div>
         </div>
 

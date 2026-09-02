@@ -201,7 +201,8 @@ try { db.exec(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'author';
 try { db.exec(`ALTER TABLE users ADD COLUMN custom_permissions TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE profiles ADD COLUMN custom_links TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE profiles ADD COLUMN banner_url TEXT;`); } catch (e) {}
-try { db.exec(`ALTER TABLE guides ADD COLUMN server TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE guides ADD COLUMN status TEXT DEFAULT 'approved';`); } catch (e) {}
+try { db.exec(`ALTER TABLE guides ADD COLUMN rejection_reason TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN co_authors TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN cover_url TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN cover_gradient TEXT;`); } catch (e) {}

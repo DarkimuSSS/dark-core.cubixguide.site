@@ -164,6 +164,8 @@ export interface GuideMeta {
   updatedAt: string;
   published: boolean; // Опубликован ли гайд (true/false)
   isVisible: boolean; // Виден ли гайд обычным пользователям (true/false)
+  status?: 'draft' | 'pending_moderation' | 'approved' | 'rejected'; // Статус модерации гайда
+  rejectionReason?: string;
   server?: string;
   coverUrl?: string;
   coverGradient?: string;
@@ -188,6 +190,7 @@ export type UserPermission =
   | 'delete_own_guide'   // Удаление своих гайдов
   | 'delete_other_guide' // Удаление чужих гайдов
   | 'publish_guide'      // Публикация / Скрытие гайдов
+  | 'approve_guide'      // Одобрение или отклонение модерации гайдов
   | 'manage_authors'     // Регистрация, сброс паролей и удаление авторов
   | 'manage_roles'       // Назначение ролей и кастомных прав
   | 'view_telemetry'     // Доступ к телеметрии и логам действий
