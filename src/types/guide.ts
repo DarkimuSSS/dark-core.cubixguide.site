@@ -181,6 +181,28 @@ export interface CustomAuthorLink {
   url: string;
 }
 
+export type UserPermission =
+  | 'create_guide'       // Создание собственных гайдов
+  | 'edit_own_guide'     // Редактирование своих гайдов
+  | 'edit_other_guide'   // Редактирование чужих гайдов
+  | 'delete_own_guide'   // Удаление своих гайдов
+  | 'delete_other_guide' // Удаление чужих гайдов
+  | 'publish_guide'      // Публикация / Скрытие гайдов
+  | 'manage_authors'     // Регистрация, сброс паролей и удаление авторов
+  | 'manage_roles'       // Назначение ролей и кастомных прав
+  | 'view_telemetry'     // Доступ к телеметрии и логам действий
+  | 'manage_rules';      // Управление правилами серверов
+
+export type UserRole = 'super_admin' | 'admin' | 'editor' | 'author' | 'helper' | 'guest';
+
+export interface SystemRoleDefinition {
+  role: UserRole;
+  name: string;
+  description: string;
+  badgeColor: string;
+  permissions: UserPermission[];
+}
+
 export interface AuthorProfile {
   username: string;
   avatarUrl?: string;
@@ -194,4 +216,6 @@ export interface AuthorProfile {
   badges?: string[];
   pinnedGuideId?: string;
   updatedAt?: string;
+  role?: UserRole;
+  customPermissions?: UserPermission[];
 }

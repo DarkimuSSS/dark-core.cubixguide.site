@@ -14,7 +14,8 @@ import SettingsModal from './components/SettingsModal.vue';
 import TelemetryPage from './components/TelemetryPage.vue';
 import AdminPanel from './components/AdminPanel.vue';
 import { PRESET_ITEMS } from './data/presetItems';
-import type { Guide, AuthorProfile } from './types/guide';
+import { hasPermission } from './data/roles';
+import type { Guide, AuthorProfile, UserRole, UserPermission } from './types/guide';
 
 const isTermsOpen = ref(false);
 const isRulesOpen = ref(false);
@@ -328,22 +329,27 @@ const favoritedGuidesList = computed(() => {
   return guides.value.filter(g => favoriteGuideIds.value.includes(g.meta.id));
 });
 
-const currentUserCanEditOthers = ref<boolean>(false);
-const currentUserCanCreateGuides = ref<boolean>(true);
+const currentUserRole = ref<UserRole>('guest');
+const currentUserCustomPermissions = ref<UserPermission[]>([]);
+
+const userHasPerm = (permission: UserPermission): boolean => {
+  if (!isAuthenticated.value) return false;
+  return hasPermission(currentUserRole.value, currentUserCustomPermissions.value, permission);
+};
 
 const canUserEditActiveGuide = computed(() => {
   if (!isAuthenticated.value || !currentUsername.value || !activeGuide.value) return false;
   
-  // Super Admin or Users with explicitly granted canEditOthers permission can edit all guides
-  if (currentUserIsAdmin.value || currentUserCanEditOthers.value) return true;
+  // Super Admin or role/custom permission to edit all guides
+  if (userHasPerm('edit_other_guide') || currentUserIsAdmin.value) return true;
   
   const authorName = (activeGuide.value.meta.author || '').toLowerCase().trim();
   const currentName = currentUsername.value.toLowerCase().trim();
-  if (authorName === currentName) return true;
+  if (authorName === currentName && userHasPerm('edit_own_guide')) return true;
   
-  // Co-authors can also edit
+  // Co-authors can also edit if they have edit_own_guide
   const coAuthors = (activeGuide.value.meta.coAuthors || []).map(s => s.toLowerCase().trim());
-  if (coAuthors.includes(currentName)) return true;
+  if (coAuthors.includes(currentName) && userHasPerm('edit_own_guide')) return true;
   
   return false;
 });
@@ -361,16 +367,18 @@ const openEditorProtection = () => {
   }
 };
 
-const handleAuthentication = (payload: { username: string; isAdmin: boolean; canEditOthers?: boolean; canCreateGuides?: boolean }) => {
+const handleAuthentication = (payload: { username: string; isAdmin: boolean; canEditOthers?: boolean; canCreateGuides?: boolean; role?: UserRole; customPermissions?: UserPermission[] }) => {
   isAuthenticated.value = true;
   currentUsername.value = payload.username;
   currentUserIsAdmin.value = payload.isAdmin;
   currentUserCanEditOthers.value = Boolean(payload.canEditOthers);
   currentUserCanCreateGuides.value = payload.canCreateGuides !== undefined ? Boolean(payload.canCreateGuides) : true;
+  currentUserRole.value = payload.role || (payload.isAdmin ? 'super_admin' : 'author');
+  currentUserCustomPermissions.value = payload.customPermissions || [];
 
   localStorage.setItem('cubix_logged_username', payload.username);
   localStorage.setItem('cubix_logged_is_admin', payload.isAdmin ? 'true' : 'false');
-  localStorage.setItem('cubix_logged_can_edit_others', payload.canEditOthers ? 'true' : 'false');
+  localStorage.setItem('cubix_logged_role', currentUserRole.value);
   isAuthModalOpen.value = false;
   fetchCurrentAuthorProfile(payload.username);
   showToast(`Добро пожаловать, ${payload.username}!`);

@@ -194,10 +194,11 @@ export function getTelemetryStats() {
   };
 }
 
-// Migration helpers for missing columns on pre-existing database tables
 try { db.exec(`ALTER TABLE users ADD COLUMN can_edit_others INTEGER NOT NULL DEFAULT 0;`); } catch (e) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN can_create_guides INTEGER NOT NULL DEFAULT 1;`); } catch (e) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN is_verified INTEGER NOT NULL DEFAULT 0;`); } catch (e) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'author';`); } catch (e) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN custom_permissions TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE profiles ADD COLUMN custom_links TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE profiles ADD COLUMN banner_url TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE guides ADD COLUMN server TEXT;`); } catch (e) {}
@@ -350,12 +351,21 @@ export function loginUser(username: string, password: string) {
     throw new Error('Неверный никнейм или пароль');
   }
 
+  let customPerms = [];
+  try {
+    if (user.custom_permissions) customPerms = JSON.parse(user.custom_permissions);
+  } catch (e) {}
+
+  const role = user.role || (user.is_admin ? 'super_admin' : 'author');
+
   return {
     username: user.username,
-    isAdmin: Boolean(user.is_admin),
+    isAdmin: Boolean(user.is_admin) || role === 'super_admin' || role === 'admin',
     canEditOthers: Boolean(user.can_edit_others),
     canCreateGuides: Boolean(user.can_create_guides),
     isVerified: Boolean(user.is_verified),
+    role: role,
+    customPermissions: customPerms,
     createdAt: user.created_at
   };
 }
@@ -413,16 +423,48 @@ export function upsertCubixAuthor(cleanUsername: string, accountInfo?: any) {
   };
 }
 
+export function updateAuthorRoleByAdmin(
+  targetUsername: string,
+  role: string,
+  customPermissions: string[] | null,
+  adminUsername: string
+) {
+  const cleanTarget = targetUsername.trim();
+  const adminRow = db.prepare('SELECT is_admin, role FROM users WHERE LOWER(username) = LOWER(?)').get(adminUsername) as any;
+  if (!adminRow || (!adminRow.is_admin && adminRow.role !== 'super_admin' && adminRow.role !== 'admin')) {
+    throw new Error('Только Администратор может изменять роли и права авторов');
+  }
+
+  const customPermsJson = customPermissions && customPermissions.length > 0 ? JSON.stringify(customPermissions) : null;
+  const isAdminFlag = role === 'super_admin' || role === 'admin' ? 1 : 0;
+  
+  const stmt = db.prepare('UPDATE users SET role = ?, custom_permissions = ?, is_admin = ? WHERE LOWER(username) = LOWER(?)');
+  stmt.run(role, customPermsJson, isAdminFlag, cleanTarget);
+
+  return { success: true, message: `Роль и права автора ${cleanTarget} успешно обновлены!` };
+}
+
 export function listAllAuthors() {
-  const rows = db.prepare('SELECT username, is_admin, can_edit_others, can_create_guides, is_verified, created_at FROM users ORDER BY created_at DESC').all();
-  return rows.map((r: any) => ({
-    username: r.username,
-    isAdmin: Boolean(r.is_admin),
-    canEditOthers: Boolean(r.can_edit_others),
-    canCreateGuides: Boolean(r.can_create_guides),
-    isVerified: Boolean(r.is_verified),
-    createdAt: r.created_at
-  }));
+  const rows = db.prepare('SELECT username, is_admin, can_edit_others, can_create_guides, is_verified, role, custom_permissions, created_at FROM users ORDER BY created_at DESC').all();
+  return rows.map((r: any) => {
+    let customPerms = [];
+    try {
+      if (r.custom_permissions) customPerms = JSON.parse(r.custom_permissions);
+    } catch (e) {}
+
+    const role = r.role || (r.is_admin ? 'super_admin' : 'author');
+
+    return {
+      username: r.username,
+      isAdmin: Boolean(r.is_admin) || role === 'super_admin' || role === 'admin',
+      canEditOthers: Boolean(r.can_edit_others),
+      canCreateGuides: Boolean(r.can_create_guides),
+      isVerified: Boolean(r.is_verified),
+      role: role,
+      customPermissions: customPerms,
+      createdAt: r.created_at
+    };
+  });
 }
 
 // Seed Super Admin with username and password strictly from environment

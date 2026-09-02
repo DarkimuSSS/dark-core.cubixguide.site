@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import ConfirmModal from './ConfirmModal.vue';
+import { SYSTEM_PERMISSIONS, DEFAULT_SYSTEM_ROLES, hasPermission } from '../data/roles';
+import type { UserRole, UserPermission } from '../types/guide';
 
 const props = defineProps<{
   isAdmin: boolean;
@@ -17,6 +19,7 @@ const authorAvatarsMap = ref<Record<string, string>>({});
 const isLoading = ref(false);
 const adminMessage = ref('');
 const searchQuery = ref('');
+const editingCustomPermsAuthor = ref<string | null>(null);
 
 // Registration State
 const newAuthorUsername = ref('');
@@ -191,6 +194,73 @@ const confirmDeleteAuthor = async () => {
     adminMessage.value = 'Ошибка соединения с сервером';
   }
 };
+
+const handleAdminChangeUserRole = async (author: any, role: UserRole) => {
+  adminMessage.value = '';
+  try {
+    const res = await fetch('/api/admin/roles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetUsername: author.username,
+        role: role,
+        customPermissions: author.customPermissions || null,
+        adminUsername: props.currentUsername
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      adminMessage.value = data.message || `Роль автора ${author.username} изменена на ${role}!`;
+      fetchAdminAuthorsList();
+    } else {
+      adminMessage.value = data.error || 'Ошибка смены роли';
+    }
+  } catch (err) {
+    adminMessage.value = 'Ошибка соединения с сервером';
+  }
+};
+
+const handleAdminToggleGranularPermission = async (author: any, permissionKey: UserPermission) => {
+  adminMessage.value = '';
+  const currentRole = (author.role as UserRole) || 'author';
+  const roleDefaults = DEFAULT_SYSTEM_ROLES[currentRole]?.permissions || [];
+  
+  let currentCustom: UserPermission[] = Array.isArray(author.customPermissions) && author.customPermissions.length > 0
+    ? [...author.customPermissions]
+    : [...roleDefaults];
+
+  if (currentCustom.includes(permissionKey)) {
+    currentCustom = currentCustom.filter(p => p !== permissionKey);
+  } else {
+    currentCustom.push(permissionKey);
+  }
+
+  try {
+    const res = await fetch('/api/admin/roles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetUsername: author.username,
+        role: currentRole,
+        customPermissions: currentCustom,
+        adminUsername: props.currentUsername
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      adminMessage.value = `Индивидуальное право "${permissionKey}" обновлено для ${author.username}`;
+      fetchAdminAuthorsList();
+    } else {
+      adminMessage.value = data.error || 'Ошибка изменения прав';
+    }
+  } catch (err) {
+    adminMessage.value = 'Ошибка соединения с сервером';
+  }
+};
+
+const isAuthorHasPermission = (author: any, perm: UserPermission): boolean => {
+  return hasPermission(author.role || 'author', author.customPermissions, perm);
+};
 </script>
 
 <template>
@@ -347,10 +417,15 @@ const confirmDeleteAuthor = async () => {
                 </div>
 
                 <div>
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-sm font-extrabold text-white">{{ author.username }}</span>
-                    <span v-if="author.isAdmin" class="px-2 py-0.2 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[9px] font-black uppercase">АДМИН</span>
-                    <span v-if="author.isVerified" class="px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-extrabold uppercase flex items-center gap-1">
+                    
+                    <!-- ROLE BADGE -->
+                    <span :class="['px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase border shadow-sm', DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.badgeColor || 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40']">
+                      {{ DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.name || author.role }}
+                    </span>
+
+                    <span v-if="author.isVerified" class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-extrabold uppercase flex items-center gap-1">
                       <IconRenderer name="Check" size="10" />
                       <span>Verified</span>
                     </span>
@@ -421,52 +496,70 @@ const confirmDeleteAuthor = async () => {
               </div>
             </div>
 
-            <!-- Author Permissions Toggles Bar -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
-              <!-- Permission 1: Verification Badge -->
-              <button
-                @click="handleToggleAuthorPermission(author, 'verification')"
-                :class="[
-                  'p-2 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer',
-                  author.isVerified ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-[#121416] border-[#26292d] text-slate-400 hover:border-slate-500/40'
-                ]"
-              >
+            <!-- Role Selector & Permissions Matrix Expansion Bar -->
+            <div class="space-y-3 pt-2 border-t border-[#1c1f22]">
+              <!-- Role Selector Row -->
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#121416] p-3 rounded-xl border border-[#26292d]">
                 <div class="flex items-center gap-2">
-                  <IconRenderer name="Check" size="14" :class="author.isVerified ? 'text-emerald-400' : 'text-slate-500'" />
-                  <span class="text-[11px] font-bold">Верификация (Галочка)</span>
+                  <IconRenderer name="Shield" size="16" class="text-purple-400" />
+                  <div>
+                    <div class="text-xs font-extrabold text-white">Системная Роль Пользователя:</div>
+                    <div class="text-[10px] text-dark-muted">{{ DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.description || 'Определяет дефолтные права в системе' }}</div>
+                  </div>
                 </div>
-                <div :class="['w-3.5 h-3.5 rounded-full transition-colors', author.isVerified ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-slate-700']"></div>
-              </button>
 
-              <!-- Permission 2: Can Create Guides -->
-              <button
-                @click="handleToggleAuthorPermission(author, 'createGuides')"
-                :class="[
-                  'p-2 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer',
-                  author.canCreateGuides ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300' : 'bg-[#121416] border-[#26292d] text-slate-400 hover:border-slate-500/40'
-                ]"
-              >
-                <div class="flex items-center gap-2">
-                  <IconRenderer name="Plus" size="14" :class="author.canCreateGuides ? 'text-cyan-400' : 'text-slate-500'" />
-                  <span class="text-[11px] font-bold">Создание Гайдов</span>
-                </div>
-                <div :class="['w-3.5 h-3.5 rounded-full transition-colors', author.canCreateGuides ? 'bg-cyan-400 shadow-sm shadow-cyan-400/50' : 'bg-slate-700']"></div>
-              </button>
+                <select
+                  :value="author.role || 'author'"
+                  @change="handleAdminChangeUserRole(author, ($event.target as HTMLSelectElement).value as UserRole)"
+                  class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-bold rounded-xl px-3 py-1.5 focus:outline-none focus:border-purple-500 cursor-pointer"
+                >
+                  <option v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)" :key="r.role" :value="r.role">
+                    {{ r.name }}
+                  </option>
+                </select>
+              </div>
 
-              <!-- Permission 3: Can Edit Others -->
-              <button
-                @click="handleToggleAuthorPermission(author, 'editOthers')"
-                :class="[
-                  'p-2 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer',
-                  author.canEditOthers ? 'bg-purple-500/15 border-purple-500/40 text-purple-300' : 'bg-[#121416] border-[#26292d] text-slate-400 hover:border-slate-500/40'
-                ]"
-              >
-                <div class="flex items-center gap-2">
-                  <IconRenderer name="Shield" size="14" :class="author.canEditOthers ? 'text-purple-400' : 'text-slate-500'" />
-                  <span class="text-[11px] font-bold">Правка Чужих Гайдов</span>
+              <!-- Granular Permissions Matrix Toggle Drawer -->
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <button
+                    @click="editingCustomPermsAuthor = editingCustomPermsAuthor === author.username ? null : author.username"
+                    class="text-[11px] font-bold text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <IconRenderer name="Sliders" size="13" />
+                    <span>{{ editingCustomPermsAuthor === author.username ? 'Скрыть матрицу 10 точечных прав' : 'Настроить 10 точечных прав (Override)' }}</span>
+                  </button>
+
+                  <span v-if="author.customPermissions && author.customPermissions.length > 0" class="text-[9.5px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono">
+                    Индивидуальные права ({{ author.customPermissions.length }})
+                  </span>
                 </div>
-                <div :class="['w-3.5 h-3.5 rounded-full transition-colors', author.canEditOthers ? 'bg-purple-400 shadow-sm shadow-purple-400/50' : 'bg-slate-700']"></div>
-              </button>
+
+                <!-- Expanded Granular Permissions Grid (10 items) -->
+                <div v-if="editingCustomPermsAuthor === author.username" class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 rounded-2xl bg-[#090a0c] border border-cyan-500/30 animate-in fade-in duration-200">
+                  <div
+                    v-for="p in SYSTEM_PERMISSIONS"
+                    :key="p.key"
+                    @click="handleAdminToggleGranularPermission(author, p.key)"
+                    :class="[
+                      'p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2',
+                      isAuthorHasPermission(author, p.key)
+                        ? 'bg-cyan-950/40 border-cyan-500/50 text-cyan-200'
+                        : 'bg-[#121416] border-[#26292d] text-slate-400 hover:border-slate-600'
+                    ]"
+                  >
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold flex items-center gap-1.5">
+                        <span>{{ p.label }}</span>
+                      </div>
+                      <div class="text-[9.5px] text-dark-muted leading-tight truncate">{{ p.description }}</div>
+                    </div>
+                    <div :class="['w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors', isAuthorHasPermission(author, p.key) ? 'bg-cyan-500 border-cyan-400 text-black font-extrabold' : 'border-slate-700 bg-slate-800']">
+                      <IconRenderer v-if="isAuthorHasPermission(author, p.key)" name="Check" size="10" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div>

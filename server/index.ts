@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, getServerRules, saveServerRules } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, getServerRules, saveServerRules } from './db';
 import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
@@ -162,6 +162,20 @@ app.post('/api/admin/register-author', (req, res) => {
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// Update Author Role & Granular Permissions (Admin)
+app.post('/api/admin/roles', (req, res) => {
+  try {
+    const { targetUsername, role, customPermissions, adminUsername } = req.body;
+    if (!targetUsername || !adminUsername || !role) {
+      return res.status(400).json({ error: 'Не указаны целевой автор, роль или админ' });
+    }
+    const result = updateAuthorRoleByAdmin(targetUsername, role, customPermissions, adminUsername);
+    res.json(result);
+  } catch (err: any) {
+    res.status(403).json({ error: err.message });
   }
 });
 
