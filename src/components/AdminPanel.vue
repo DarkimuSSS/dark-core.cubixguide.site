@@ -348,7 +348,7 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
     const data = await res.json();
     if (res.ok) {
       adminMessage.value = `Привязанные сервера для ${author.username} обновлены!`;
-      fetchAdminAuthorsList();
+      author.assignedServers = currentServers;
     } else {
       adminMessage.value = data.error || 'Ошибка обновления серверов';
     }
