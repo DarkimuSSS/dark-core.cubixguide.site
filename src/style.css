@@ -492,17 +492,60 @@ html.theme-crimson .profile-modal-banner-overlay {
   background: linear-gradient(to bottom, rgba(20, 6, 8, 0.5) 0%, rgba(32, 9, 13, 0.85) 45%, #20090d 100%) !important;
 }
 
-html.theme-crimson ::-webkit-scrollbar-track {
-  background: #140608;
+html.theme-emerald .border-emerald-500\/30,
+html.theme-emerald .border-emerald-500\/40,
+html.theme-emerald .border-emerald-500\/50 {
+  border-color: #10b981 !important;
 }
 
-html.theme-crimson ::-webkit-scrollbar-thumb {
-  background: #4a1219;
-  border-radius: 4px;
+html.theme-emerald .text-emerald-400,
+html.theme-emerald .text-emerald-300 {
+  color: #34d399 !important;
 }
 
-html.theme-crimson ::-webkit-scrollbar-thumb:hover {
-  background: #f43f5e;
+html.theme-emerald .bg-emerald-600,
+html.theme-emerald .bg-emerald-500 {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+
+/* Velvet Crimson Full Overrides for buttons, icons and borders */
+html.theme-crimson .text-emerald-400,
+html.theme-crimson .text-emerald-300,
+html.theme-crimson .text-cyan-400,
+html.theme-crimson .text-cyan-300 {
+  color: #f43f5e !important;
+}
+
+html.theme-crimson .bg-emerald-600,
+html.theme-crimson .bg-emerald-500,
+html.theme-crimson .bg-cyan-600,
+html.theme-crimson .bg-cyan-500 {
+  background-color: #e11d48 !important;
+  color: #ffffff !important;
+}
+
+html.theme-crimson .bg-emerald-600:hover,
+html.theme-crimson .bg-emerald-500:hover,
+html.theme-crimson .bg-cyan-600:hover,
+html.theme-crimson .bg-cyan-500:hover {
+  background-color: #be123c !important;
+}
+
+html.theme-crimson .border-emerald-500\/30,
+html.theme-crimson .border-emerald-500\/40,
+html.theme-crimson .border-emerald-500\/50,
+html.theme-crimson .border-cyan-500\/30,
+html.theme-crimson .border-cyan-500\/40 {
+  border-color: #9f1239 !important;
+}
+
+html.theme-crimson .bg-emerald-500\/10,
+html.theme-crimson .bg-emerald-500\/15,
+html.theme-crimson .bg-cyan-500\/10,
+html.theme-crimson .bg-cyan-500\/15 {
+  background-color: #4c0519 !important;
+  color: #fda4af !important;
 }
 
 
