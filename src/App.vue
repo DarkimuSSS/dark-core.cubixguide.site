@@ -1080,6 +1080,17 @@ const handleViewAllAuthorGuides = (username: string) => {
                     <div class="text-[10px] text-dark-muted truncate">Случайный гайд</div>
                   </div>
                 </button>
+
+                <button
+                  @click="isSettingsOpen = true; isHeaderNavMenuOpen = false"
+                  class="p-3 rounded-2xl bg-[#090a0c] border border-[#26292d] hover:border-cyan-500/40 text-left transition-all flex items-center gap-2 cursor-pointer group"
+                >
+                  <IconRenderer name="Settings" size="18" class="text-cyan-400 group-hover:rotate-90 transition-transform shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-cyan-300 truncate">Настройки</div>
+                    <div class="text-[10px] text-dark-muted truncate">Темы и параметры</div>
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -1186,14 +1197,15 @@ const handleViewAllAuthorGuides = (username: string) => {
           type="button"
           @click="mode = 'editor'"
           :class="[
-            'px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 shadow-md cursor-pointer',
+            'px-2.5 sm:px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all duration-300 shadow-md cursor-pointer shrink-0',
             mode === 'editor' 
               ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-950/60 ring-2 ring-emerald-500/50' 
               : 'bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/40'
           ]"
+          title="Конструктор гайдов"
         >
           <IconRenderer name="Edit3" size="15" />
-          <span>Конструктор</span>
+          <span class="hidden sm:inline">Конструктор</span>
         </button>
 
         <!-- Author User Profile Card Widget -->
@@ -1201,7 +1213,7 @@ const handleViewAllAuthorGuides = (username: string) => {
           v-if="isAuthenticated && currentUsername"
           type="button"
           @click="openAuthorProfile(currentUsername)"
-          class="px-3 py-1.5 rounded-xl bg-[#090a0c] hover:bg-[#181b20] text-purple-300 border border-[#262a30] hover:border-purple-500/40 text-xs font-extrabold flex items-center gap-2.5 transition-all duration-300 shadow-md group cursor-pointer"
+          class="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-[#090a0c] hover:bg-[#181b20] text-purple-300 border border-[#262a30] hover:border-purple-500/40 text-xs font-extrabold flex items-center gap-2 transition-all duration-300 shadow-md group cursor-pointer shrink-0"
           title="Открыть ваш профиль автора"
         >
           <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-500 p-0.5 flex-shrink-0 shadow-sm overflow-hidden group-hover:scale-105 transition-transform">
@@ -1210,33 +1222,32 @@ const handleViewAllAuthorGuides = (username: string) => {
               <span v-else>{{ currentUsername.charAt(0).toUpperCase() }}</span>
             </div>
           </div>
-          <span class="font-extrabold text-slate-200 group-hover:text-purple-300 transition-colors flex items-center gap-1.5">
+          <span class="hidden sm:flex items-center gap-1.5 font-extrabold text-slate-200 group-hover:text-purple-300 transition-colors">
             <span>{{ currentUsername }}</span>
             <span v-if="currentUserIsAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-400/30 px-1.5 py-0.2 rounded-md font-mono">Админ</span>
           </span>
         </button>
 
-
-
         <!-- Global Settings Button -->
         <button
           type="button"
           @click="isSettingsOpen = true"
-          class="p-2.5 rounded-xl bg-[#090a0c] hover:bg-[#181b20] border border-[#262a30] hover:border-cyan-500/40 text-slate-400 hover:text-white flex items-center justify-center transition-all shadow-md group cursor-pointer"
+          class="p-2 sm:p-2.5 rounded-xl bg-[#090a0c] hover:bg-[#181b20] border border-[#262a30] hover:border-cyan-500/40 text-slate-400 hover:text-white flex items-center justify-center transition-all shadow-md group cursor-pointer shrink-0"
           title="Настройки приложения"
         >
           <IconRenderer name="Settings" size="16" class="text-cyan-400 group-hover:rotate-90 transition-transform duration-300" />
         </button>
 
         <!-- Logged In / Logged Out Controls -->
-        <div v-if="!isAuthenticated">
+        <div v-if="!isAuthenticated" class="shrink-0">
           <button
             type="button"
             @click="isAuthModalOpen = true"
-            class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white text-xs font-extrabold flex items-center gap-2 transition-all shadow-lg shadow-emerald-950/50 cursor-pointer"
+            class="px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-950/50 cursor-pointer"
           >
             <IconRenderer name="UserCheck" size="16" />
-            <span>Войти в аккаунт</span>
+            <span class="hidden sm:inline">Войти в аккаунт</span>
+            <span class="sm:hidden text-xs">Войти</span>
           </button>
         </div>
 
