@@ -268,7 +268,7 @@ const getRoleBadgeStyle = (groupName: string) => {
             <!-- Member Avatar -->
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 via-purple-600 to-cyan-500 p-0.5 shrink-0 shadow-md">
               <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center overflow-hidden">
-                <img :src="`https://cubixworld.net/api/account.load.avatar?login=${encodeURIComponent(m.name)}`" class="w-full h-full object-cover" />
+                <img :src="`/api/avatar/${encodeURIComponent(m.name)}`" class="w-full h-full object-cover" />
               </div>
             </div>
 

@@ -87,7 +87,7 @@ const fetchProfile = async () => {
       // Create readable temporary profile for display
       profile.value = {
         username: props.username,
-        avatarUrl: `https://cubixworld.net/api/account.load.avatar?login=${encodeURIComponent(props.username)}`,
+        avatarUrl: `/api/avatar/${encodeURIComponent(props.username)}`,
         bannerUrl: '/default_banner.jpg',
         bio: 'Участник проекта CubixWorld.',
         server: '',
