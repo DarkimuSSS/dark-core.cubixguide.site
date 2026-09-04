@@ -39,6 +39,17 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
       'delete_other_guide', 'publish_guide', 'approve_guide', 'manage_authors', 'view_telemetry', 'view_rules', 'manage_rules'
     ]
   },
+  manager: {
+    role: 'manager',
+    name: 'Управляющий',
+    description: 'Управление закрепленными серверами, публикация, одобрение статей и модерация',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    priority: 15,
+    permissions: [
+      'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide',
+      'delete_other_guide', 'publish_guide', 'approve_guide', 'view_telemetry', 'view_rules', 'manage_rules'
+    ]
+  },
   editor: {
     role: 'editor',
     name: 'Редактор',

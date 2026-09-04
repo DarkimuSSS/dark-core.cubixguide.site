@@ -197,7 +197,7 @@ export type UserPermission =
   | 'view_rules'         // Просмотр страницы правил (Общие + Внутриигровые)
   | 'manage_rules';      // Управление и редактирование правил серверов
 
-export type UserRole = 'super_admin' | 'admin' | 'editor' | 'author' | 'helper' | 'guest';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'editor' | 'author' | 'helper' | 'guest';
 
 export interface SystemRoleDefinition {
   role: UserRole;

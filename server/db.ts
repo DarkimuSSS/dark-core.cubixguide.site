@@ -262,6 +262,7 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
 const ROLE_PRIORITIES: Record<string, number> = {
   super_admin: 0,
   admin: 10,
+  manager: 15,
   editor: 20,
   author: 30,
   helper: 40,
@@ -504,9 +505,34 @@ export async function syncAuthorWithCubixTeam(cleanUsername: string) {
     }
   });
 
-  // If user is Senior Admin on one or multiple servers -> Auto-assign those servers in DB
+  // If user is Senior Admin on one or multiple servers -> Check public account info for "Управляющий"
   if (seniorAdminServers.length > 0) {
-    const user = db.prepare('SELECT assigned_servers FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
+    let isManager = false;
+    try {
+      const fetch = (await import('node-fetch')).default as any;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const publicRes = await fetch(`https://cubixworld.net/api/account.info.public?login=${encodeURIComponent(cleanUsername)}`, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*'
+        }
+      });
+      clearTimeout(timeoutId);
+
+      if (publicRes.ok) {
+        const publicData = await publicRes.json();
+        const jsonString = JSON.stringify(publicData).toLowerCase();
+        if (jsonString.includes('управляющий')) {
+          isManager = true;
+        }
+      }
+    } catch (e) {
+      console.error('Ошибка проверки account.info.public для пользователя:', cleanUsername, e);
+    }
+
+    const user = db.prepare('SELECT role, is_admin, assigned_servers FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
     if (user) {
       let existingAssigned: string[] = [];
       try {
@@ -514,7 +540,18 @@ export async function syncAuthorWithCubixTeam(cleanUsername: string) {
       } catch (e) {}
 
       const mergedServers = Array.from(new Set([...existingAssigned, ...seniorAdminServers]));
-      db.prepare('UPDATE users SET assigned_servers = ? WHERE LOWER(username) = LOWER(?)').run(JSON.stringify(mergedServers), cleanUsername);
+      
+      // Upgrade role to manager if confirmed "Управляющий" and not already super_admin / admin
+      let targetRole = user.role;
+      if (isManager && user.role !== 'super_admin' && user.role !== 'admin') {
+        targetRole = 'manager';
+      }
+
+      db.prepare('UPDATE users SET assigned_servers = ?, role = ? WHERE LOWER(username) = LOWER(?)').run(
+        JSON.stringify(mergedServers),
+        targetRole,
+        cleanUsername
+      );
     }
   }
 
