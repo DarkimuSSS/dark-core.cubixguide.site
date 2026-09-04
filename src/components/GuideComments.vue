@@ -86,12 +86,56 @@ watch(() => [props.guideId, props.currentUsername], () => {
   fetchComments();
 });
 
-const rootComments = computed(() => {
-  return comments.value.filter(c => !c.parentId);
+const sortBy = ref<'newest' | 'popular'>('newest');
+const visibleLimit = ref<number>(10);
+const expandedThreadIds = ref<Set<string>>(new Set());
+
+const toggleThreadExpansion = (parentId: string) => {
+  const set = new Set(expandedThreadIds.value);
+  if (set.has(parentId)) {
+    set.delete(parentId);
+  } else {
+    set.add(parentId);
+  }
+  expandedThreadIds.value = set;
+};
+
+const loadMoreComments = () => {
+  visibleLimit.value += 10;
+};
+
+const sortedRootComments = computed(() => {
+  const roots = comments.value.filter(c => !c.parentId);
+  if (sortBy.value === 'popular') {
+    return roots.slice().sort((a, b) => {
+      const scoreA = (a.reactions?.good || 0) - (a.reactions?.bad || 0);
+      const scoreB = (b.reactions?.good || 0) - (b.reactions?.bad || 0);
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }
+  // Newest first
+  return roots.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+});
+
+const visibleRootComments = computed(() => {
+  return sortedRootComments.value.slice(0, visibleLimit.value);
+});
+
+const remainingCommentsCount = computed(() => {
+  return Math.max(0, sortedRootComments.value.length - visibleLimit.value);
 });
 
 const getReplies = (parentId: string) => {
-  return comments.value.filter(c => c.parentId === parentId);
+  return comments.value.filter(c => c.parentId === parentId).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+};
+
+const getVisibleReplies = (parentId: string) => {
+  const all = getReplies(parentId);
+  if (expandedThreadIds.value.has(parentId) || all.length <= 2) {
+    return all;
+  }
+  return all.slice(0, 2);
 };
 
 const handlePostComment = async (parentId: string | null = null) => {
@@ -226,8 +270,8 @@ const MAX_CHAR_LIMIT = 200;
 
 <template>
   <div class="mt-12 pt-8 border-t border-[#26292d]/80 w-full max-w-full">
-    <!-- Header with Counter Badge -->
-    <div class="flex items-center justify-between mb-6">
+    <!-- Header with Counter Badge & Sort Controls -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-3">
         <div class="p-2 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 text-cyan-400">
           <IconRenderer name="MessageSquare" size="20" />
@@ -241,6 +285,28 @@ const MAX_CHAR_LIMIT = 200;
           </h3>
           <p class="text-xs text-dark-muted">Вопросы, советы и ответы от читателей и авторов</p>
         </div>
+      </div>
+
+      <!-- Sorting Switcher -->
+      <div v-if="comments.length > 1" class="flex items-center gap-1 p-1 rounded-xl bg-[#121416] border border-[#26292d] self-start sm:self-auto">
+        <button 
+          @click="sortBy = 'newest'"
+          :class="[
+            'px-3 py-1 text-xs font-bold rounded-lg transition-all',
+            sortBy === 'newest' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-sm' : 'text-dark-muted hover:text-white'
+          ]"
+        >
+          Сначала новые
+        </button>
+        <button 
+          @click="sortBy = 'popular'"
+          :class="[
+            'px-3 py-1 text-xs font-bold rounded-lg transition-all',
+            sortBy === 'popular' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-sm' : 'text-dark-muted hover:text-white'
+          ]"
+        >
+          Популярные
+        </button>
       </div>
     </div>
 
@@ -313,7 +379,7 @@ const MAX_CHAR_LIMIT = 200;
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="rootComments.length === 0" class="text-center py-12 px-4 rounded-2xl border border-dashed border-[#26292d] bg-[#121417]/50 text-dark-muted text-xs flex flex-col items-center gap-2">
+    <div v-else-if="sortedRootComments.length === 0" class="text-center py-12 px-4 rounded-2xl border border-dashed border-[#26292d] bg-[#121417]/50 text-dark-muted text-xs flex flex-col items-center gap-2">
       <IconRenderer name="MessageSquare" size="28" class="text-dark-muted/50 mb-1" />
       <span class="font-bold text-slate-300">Комментариев пока нет</span>
       <span>Будьте первым, кто задаст вопрос или оставит отзыв к этому гайду!</span>
@@ -321,7 +387,7 @@ const MAX_CHAR_LIMIT = 200;
 
     <!-- Comments List -->
     <div v-else class="space-y-4">
-      <div v-for="comment in rootComments" :key="comment.id" class="flex flex-col gap-2">
+      <div v-for="comment in visibleRootComments" :key="comment.id" class="flex flex-col gap-2">
         <!-- Root Comment Card -->
         <div class="p-4 sm:p-5 rounded-2xl border border-[#26292d] bg-[#16181a] shadow-lg transition-all hover:border-[#32363e] group/card">
           <!-- Top Row: Author & Badges & Actions -->
@@ -485,7 +551,7 @@ const MAX_CHAR_LIMIT = 200;
         <!-- Nested Replies Thread -->
         <div v-if="getReplies(comment.id).length > 0" class="ml-4 sm:ml-10 pl-3 sm:pl-4 border-l-2 border-cyan-500/30 space-y-3 mt-1">
           <div 
-            v-for="reply in getReplies(comment.id)" 
+            v-for="reply in getVisibleReplies(comment.id)" 
             :key="reply.id" 
             class="p-3.5 sm:p-4 rounded-xl border border-[#26292d] bg-[#121416] shadow-sm hover:border-[#32363e] transition-all"
           >
@@ -562,7 +628,30 @@ const MAX_CHAR_LIMIT = 200;
               </button>
             </div>
           </div>
+
+          <!-- Thread Expansion Toggle Button for >2 replies -->
+          <div v-if="getReplies(comment.id).length > 2" class="pt-1">
+            <button 
+              @click="toggleThreadExpansion(comment.id)"
+              class="flex items-center gap-1.5 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-all py-1 px-2.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/25"
+            >
+              <IconRenderer :name="expandedThreadIds.has(comment.id) ? 'ChevronUp' : 'ChevronDown'" size="13" />
+              <span v-if="expandedThreadIds.has(comment.id)">Свернуть ответы</span>
+              <span v-else>Показать еще {{ getReplies(comment.id).length - 2 }} {{ (getReplies(comment.id).length - 2) === 1 ? 'ответ' : 'ответа' }}</span>
+            </button>
+          </div>
         </div>
+      </div>
+
+      <!-- Load More Root Comments Pagination Button -->
+      <div v-if="remainingCommentsCount > 0" class="pt-6 flex justify-center">
+        <button 
+          @click="loadMoreComments"
+          class="flex items-center gap-2 px-6 py-2.5 text-xs font-bold rounded-xl bg-[#141619] hover:bg-[#1c1f24] border border-cyan-500/40 text-cyan-400 hover:text-cyan-300 transition-all shadow-lg hover:shadow-cyan-950/40"
+        >
+          <IconRenderer name="ChevronDown" size="15" />
+          <span>Показать еще комментарии (осталось {{ remainingCommentsCount }})</span>
+        </button>
       </div>
     </div>
   </div>
