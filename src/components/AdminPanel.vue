@@ -118,15 +118,29 @@ const handleApproveGuide = async (guide: any) => {
   }
 };
 
-const handleRejectGuide = async (guide: any) => {
+const isRejectModalOpen = ref(false);
+const pendingRejectGuide = ref<any>(null);
+const rejectionReasonText = ref('');
+
+const openRejectModal = (guide: any) => {
+  pendingRejectGuide.value = guide;
+  rejectionReasonText.value = '';
+  isRejectModalOpen.value = true;
+};
+
+const confirmRejectGuide = async () => {
+  if (!pendingRejectGuide.value) return;
   adminMessage.value = '';
+  const guide = pendingRejectGuide.value;
+  const reason = rejectionReasonText.value.trim() || 'Не указана';
   const updated = {
     ...guide,
     meta: {
       ...guide.meta,
       published: false,
       isVisible: false,
-      status: 'rejected'
+      status: 'rejected',
+      rejectionReason: reason
     }
   };
 
@@ -141,7 +155,9 @@ const handleRejectGuide = async (guide: any) => {
     });
 
     if (res.ok) {
-      adminMessage.value = `Гайд "${guide.meta.title}" отправлен на доработку автору! ❌`;
+      adminMessage.value = `Гайд "${guide.meta.title}" отклонен и отправлен автору с причиной: "${reason}" ❌`;
+      isRejectModalOpen.value = false;
+      pendingRejectGuide.value = null;
       fetchPendingGuides();
     } else {
       adminMessage.value = 'Ошибка отклонения гайда';
@@ -868,7 +884,7 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
             
             <div class="flex items-center gap-2">
               <button
-                @click="handleRejectGuide(guide)"
+                @click="openRejectModal(guide)"
                 class="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
               >
                 <IconRenderer name="X" size="14" />

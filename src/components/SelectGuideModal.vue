@@ -114,11 +114,22 @@ const handleCreateNew = () => {
                 v-for="guide in draftGuides" 
                 :key="guide.meta.id"
                 @click="handleSelect(guide)"
-                class="p-4 rounded-2xl bg-[#181a1e] hover:bg-[#202329] border border-[#2b2f36] hover:border-amber-500/50 transition-all cursor-pointer group flex flex-col justify-between space-y-3 shadow-md"
+                :class="[
+                  'p-4 rounded-2xl bg-[#181a1e] hover:bg-[#202329] border transition-all cursor-pointer group flex flex-col justify-between space-y-3 shadow-md',
+                  guide.meta.status === 'rejected' ? 'border-rose-500/50 hover:border-rose-500' : 
+                  guide.meta.status === 'pending_moderation' ? 'border-cyan-500/50 hover:border-cyan-500' : 
+                  'border-[#2b2f36] hover:border-amber-500/50'
+                ]"
               >
                 <div>
                   <div class="flex items-center justify-between gap-2 mb-1.5">
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    <span v-if="guide.meta.status === 'rejected'" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                      Отклонен (Доработать)
+                    </span>
+                    <span v-else-if="guide.meta.status === 'pending_moderation'" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                      На модерации
+                    </span>
+                    <span v-else class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
                       Черновик
                     </span>
                     <span v-if="guide.meta.server" class="text-[10px] font-semibold text-emerald-400">
@@ -128,6 +139,15 @@ const handleCreateNew = () => {
                   <h4 class="text-xs font-extrabold text-white group-hover:text-amber-300 transition-colors line-clamp-2">
                     {{ guide.meta.title || 'Без названия' }}
                   </h4>
+
+                  <!-- Rejection Reason Banner for Author -->
+                  <div v-if="guide.meta.status === 'rejected' && guide.meta.rejectionReason" class="mt-2 p-2 rounded-xl bg-rose-950/40 border border-rose-500/30 text-[11px] text-rose-200 space-y-0.5">
+                    <div class="font-extrabold text-rose-400 flex items-center gap-1">
+                      <IconRenderer name="AlertTriangle" size="12" />
+                      <span>Замечания администрации:</span>
+                    </div>
+                    <p class="leading-tight line-clamp-2 text-rose-300/90 font-medium">{{ guide.meta.rejectionReason }}</p>
+                  </div>
                 </div>
 
                 <div class="flex items-center justify-between text-[10px] text-dark-muted border-t border-[#292d34] pt-2">
