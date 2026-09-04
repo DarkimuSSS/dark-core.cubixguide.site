@@ -479,7 +479,7 @@ const handleBannerFileUpload = (e: Event) => {
 </script>
 
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fadeIn">
+  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 animate-fadeIn" @click.self="emit('close')">
     
     <!-- CUSTOM DARK THEME CONFIRMATION MODAL -->
     <ConfirmModal
@@ -496,8 +496,8 @@ const handleBannerFileUpload = (e: Event) => {
     <!-- Outer Relative Card Wrapper for Precise Floating Action Dock -->
     <div class="relative w-full max-w-2xl">
       
-      <!-- FLOATING VERTICAL ACTION DOCK -->
-      <div class="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 z-50 flex flex-col gap-2.5 items-center">
+      <!-- FLOATING ACTION DOCK (flex-row on mobile, flex-col on sm) -->
+      <div class="absolute top-2 right-2 sm:-top-4 sm:-right-4 z-50 flex flex-row sm:flex-col gap-2 items-center">
         
         <!-- 1. Close Modal Button -->
         <div class="relative group/tool">
