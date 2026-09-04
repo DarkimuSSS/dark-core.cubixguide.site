@@ -195,13 +195,13 @@ const MAX_CHAR_LIMIT = 200;
 
       <div v-if="currentUsername" class="flex flex-col gap-3 relative z-10">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-cyan-500/30">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full shrink-0 bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-cyan-500/30">
               {{ currentUsername.charAt(0).toUpperCase() }}
             </div>
             <div class="flex flex-col">
-              <span class="text-xs font-bold text-slate-200">{{ currentUsername }}</span>
-              <span class="text-[10px] text-cyan-400/80 font-mono">Оставить комментарий</span>
+              <span class="text-xs font-bold text-white tracking-tight">{{ currentUsername }}</span>
+              <span class="text-[11px] text-cyan-400 font-medium">Оставить комментарий</span>
             </div>
           </div>
         </div>
@@ -269,9 +269,9 @@ const MAX_CHAR_LIMIT = 200;
               <img 
                 v-if="comment.authorAvatar" 
                 :src="comment.authorAvatar" 
-                class="w-8 h-8 rounded-xl object-cover border border-[#26292d] shadow-sm" 
+                class="w-8 h-8 rounded-full shrink-0 object-cover border border-[#26292d] shadow-sm" 
               />
-              <div v-else class="w-8 h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-800 border border-[#26292d] flex items-center justify-center text-white text-xs font-bold shadow-sm">
+              <div v-else class="w-8 h-8 rounded-full shrink-0 bg-gradient-to-tr from-slate-700 to-slate-800 border border-[#26292d] flex items-center justify-center text-white text-xs font-bold shadow-sm">
                 {{ comment.author.charAt(0).toUpperCase() }}
               </div>
 
@@ -432,9 +432,9 @@ const MAX_CHAR_LIMIT = 200;
                 <img 
                   v-if="reply.authorAvatar" 
                   :src="reply.authorAvatar" 
-                  class="w-6 h-6 rounded-lg object-cover border border-[#26292d]" 
+                  class="w-6 h-6 rounded-full shrink-0 object-cover border border-[#26292d]" 
                 />
-                <div v-else class="w-6 h-6 rounded-lg bg-slate-700 flex items-center justify-center text-white text-[10px] font-bold">
+                <div v-else class="w-6 h-6 rounded-full shrink-0 bg-slate-700 flex items-center justify-center text-white text-[10px] font-bold">
                   {{ reply.author.charAt(0).toUpperCase() }}
                 </div>
 
