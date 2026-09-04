@@ -20,7 +20,7 @@ export const SYSTEM_PERMISSIONS: { key: UserPermission; label: string; descripti
 export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
   super_admin: {
     role: 'super_admin',
-    name: 'Главный Администратор',
+    name: 'dark-core team',
     description: 'Полный неограниченный доступ ко всем системам и правам',
     badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
     priority: 0,
