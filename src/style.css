@@ -30,6 +30,19 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Global Text Word-Break & Smart Line Wrapping */
+p, span, h1, h2, h3, h4, h5, h6, input, textarea, blockquote, div {
+  overflow-wrap: break-word;
+}
+
+pre, code {
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 /* Global Light Theme Complete Overrides (Soft Eye-Friendly Slate & Cream) */

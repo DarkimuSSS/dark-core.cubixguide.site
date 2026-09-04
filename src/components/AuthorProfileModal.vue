@@ -836,11 +836,17 @@ const handleBannerFileUpload = (e: Event) => {
                 </div>
               </div>
 
-              <div>
-                <label class="block text-[11px] text-dark-muted mb-1 font-medium">О себе (Био)</label>
+              <div class="relative">
+                <div class="flex justify-between items-center mb-1">
+                  <label class="block text-[11px] text-dark-muted font-medium">О себе (Био)</label>
+                  <span :class="['text-[10px] font-mono font-bold transition-colors', (profile.bio || '').length >= 270 ? 'text-amber-400' : 'text-dark-muted/60']">
+                    {{ (profile.bio || '').length }}/300
+                  </span>
+                </div>
                 <textarea
                   v-model="profile.bio"
                   rows="3"
+                  maxlength="300"
                   placeholder="Расскажите игрокам о себе, вашем опыте и модах..."
                   class="w-full bg-[#16181a] border border-[#26292d] text-slate-200 text-xs rounded-xl p-3 focus:outline-none focus:border-emerald-accent resize-y"
                 ></textarea>

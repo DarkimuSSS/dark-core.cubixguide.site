@@ -1683,20 +1683,33 @@ const stopOutlineDrag = () => {
 
       <!-- Always visible: Title & Summary -->
       <div class="p-6 space-y-4">
-        <input
-          type="text"
-          :value="guide.meta.title"
-          @input="updateTitle(($event.target as HTMLInputElement).value)"
-          placeholder="Название гайда..."
-          class="w-full bg-transparent text-white text-2xl sm:text-3xl font-bold focus:outline-none placeholder:text-dark-muted/40 border-b border-transparent focus:border-[#26292d] transition-all pb-1"
-        />
-        <textarea
-          :value="guide.meta.summary || ''"
-          @input="updateSummary(($event.target as HTMLTextAreaElement).value)"
-          placeholder="Краткое описание для главной страницы..."
-          rows="2"
-          class="w-full bg-transparent text-slate-400 text-sm focus:outline-none placeholder:text-dark-muted/40 resize-none"
-        ></textarea>
+        <div class="relative">
+          <input
+            type="text"
+            :value="guide.meta.title"
+            @input="updateTitle(($event.target as HTMLInputElement).value)"
+            placeholder="Название гайда..."
+            maxlength="100"
+            class="w-full bg-transparent text-white text-2xl sm:text-3xl font-bold focus:outline-none placeholder:text-dark-muted/40 border-b border-transparent focus:border-[#26292d] transition-all pb-1 pr-14"
+          />
+          <span :class="['absolute right-1 bottom-2 text-[10px] font-mono font-bold transition-colors', guide.meta.title.length >= 90 ? 'text-amber-400' : 'text-dark-muted/40']">
+            {{ guide.meta.title.length }}/100
+          </span>
+        </div>
+
+        <div class="relative">
+          <textarea
+            :value="guide.meta.summary || ''"
+            @input="updateSummary(($event.target as HTMLTextAreaElement).value)"
+            placeholder="Краткое описание для главной страницы..."
+            rows="2"
+            maxlength="250"
+            class="w-full bg-transparent text-slate-400 text-sm focus:outline-none placeholder:text-dark-muted/40 resize-none pb-4"
+          ></textarea>
+          <span :class="['absolute right-1 bottom-0 text-[10px] font-mono font-bold transition-colors', (guide.meta.summary || '').length >= 220 ? 'text-amber-400' : 'text-dark-muted/40']">
+            {{ (guide.meta.summary || '').length }}/250
+          </span>
+        </div>
       </div>
 
       <!-- Toggle button -->

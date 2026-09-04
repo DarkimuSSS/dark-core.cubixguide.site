@@ -201,6 +201,7 @@ const updateText = (val: string) => {
             :value="block.calloutTitle" 
             @input="updateTitle(($event.target as HTMLInputElement).value)"
             placeholder="Заголовок (например: Совет по настройке)..."
+            maxlength="120"
             class="w-full bg-dark-bg/80 border border-dark-border text-white text-sm font-semibold rounded-md px-3 py-1.5 focus:outline-none focus:border-emerald-accent/60 mb-2"
           />
           <textarea 
@@ -208,6 +209,7 @@ const updateText = (val: string) => {
             @input="updateText(($event.target as HTMLTextAreaElement).value)"
             placeholder="Опишите важные детали или правила безопасности..."
             rows="2"
+            maxlength="1000"
             class="w-full bg-dark-bg/80 border border-dark-border text-dark-muted focus:text-white text-xs rounded-md px-3 py-2 focus:outline-none focus:border-emerald-accent/60 resize-y"
           ></textarea>
         </div>

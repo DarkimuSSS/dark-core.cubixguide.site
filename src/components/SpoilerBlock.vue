@@ -53,6 +53,7 @@ const isExpanded = ref(props.block.isExpandedByDefault ?? false);
         @input="emit('update', { ...block, spoilerContent: ($event.target as HTMLTextAreaElement).value })"
         placeholder="Содержимое спойлера (подробности, конфиг, длинный список)..."
         rows="4"
+        maxlength="2000"
         class="w-full bg-[#121416] border border-[#26292d] text-slate-200 text-xs p-3 rounded-lg focus:outline-none resize-y"
       ></textarea>
     </div>
