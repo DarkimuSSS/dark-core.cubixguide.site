@@ -548,6 +548,23 @@ html.theme-crimson .bg-cyan-500\/15 {
   color: #fda4af !important;
 }
 
+/* Gradient CTA Buttons in Velvet Crimson Theme */
+html.theme-crimson .from-emerald-600,
+html.theme-crimson .from-emerald-500,
+html.theme-crimson .from-cyan-600,
+html.theme-crimson .from-cyan-500 {
+  --tw-gradient-from: #e11d48 !important;
+  --tw-gradient-to: #be123c !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+html.theme-crimson .via-teal-600,
+html.theme-crimson .to-cyan-600,
+html.theme-crimson .to-cyan-500,
+html.theme-crimson .to-teal-600 {
+  --tw-gradient-to: #9f1239 !important;
+}
+
 
 
 /* Custom scrollbar styling */
