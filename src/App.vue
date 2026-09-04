@@ -960,7 +960,7 @@ const handleViewAllAuthorGuides = (username: string) => {
           <div
             v-if="isHeaderNavMenuOpen"
             @click.stop
-            class="fixed inset-x-3 top-16 max-h-[85vh] overflow-y-auto z-50 sm:absolute sm:inset-auto sm:top-full sm:left-0 sm:mt-3 w-[calc(100vw-1.5rem)] md:w-[720px] lg:w-[840px] max-w-[calc(100vw-1.5rem)] lg:max-w-[840px] sm:max-h-[80vh] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in-95 duration-200 custom-scrollbar"
+            class="fixed inset-x-3 top-16 max-h-[85vh] overflow-y-auto z-50 sm:absolute sm:inset-auto sm:top-full sm:left-0 sm:mt-3 w-[calc(100vw-1.5rem)] sm:w-[calc(100vw-140px)] lg:w-[840px] max-w-[calc(100vw-1.5rem)] sm:max-w-[calc(100vw-140px)] lg:max-w-[840px] sm:max-h-[80vh] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in-95 duration-200 custom-scrollbar"
           >
             <!-- Mobile Header with Close X button -->
             <div class="flex items-center justify-between pb-2 border-b border-[#262a30] sm:hidden">
