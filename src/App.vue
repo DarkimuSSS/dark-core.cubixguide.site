@@ -14,6 +14,7 @@ import SettingsModal from './components/SettingsModal.vue';
 import TelemetryPage from './components/TelemetryPage.vue';
 import AdminPanel from './components/AdminPanel.vue';
 import TeamPage from './components/TeamPage.vue';
+import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
 import { hasPermission } from './data/roles';
 import type { Guide, AuthorProfile, UserRole, UserPermission } from './types/guide';
@@ -188,6 +189,37 @@ const fetchAuthorProfiles = async () => {
       }
     } catch (e) {}
   }
+};
+
+// External link redirect warning modal state
+const isExternalLinkModalOpen = ref(false);
+const pendingExternalUrl = ref('');
+
+const handleDocumentClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement;
+  const linkEl = target.closest('a[data-external-link]') as HTMLAnchorElement | null;
+  if (linkEl) {
+    const rawUrl = linkEl.getAttribute('data-external-link') || linkEl.href;
+    if (rawUrl) {
+      e.preventDefault();
+      e.stopPropagation();
+      const targetUrl = rawUrl.startsWith('http://') || rawUrl.startsWith('https://') ? rawUrl : `https://${rawUrl}`;
+      if (isInternalUrl(targetUrl)) {
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        pendingExternalUrl.value = targetUrl;
+        isExternalLinkModalOpen.value = true;
+      }
+    }
+  }
+};
+
+const confirmExternalRedirect = () => {
+  if (pendingExternalUrl.value) {
+    window.open(pendingExternalUrl.value, '_blank', 'noopener,noreferrer');
+  }
+  isExternalLinkModalOpen.value = false;
+  pendingExternalUrl.value = '';
 };
 
 watch(guides, () => {
@@ -382,11 +414,13 @@ onMounted(() => {
   syncFromUrlPath();
   window.addEventListener('beforeunload', handleBeforeUnload);
   window.addEventListener('popstate', handlePopState);
+  document.addEventListener('click', handleDocumentClick, true);
 });
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
   window.removeEventListener('popstate', handlePopState);
+  document.removeEventListener('click', handleDocumentClick, true);
 });
 
 const handlePopState = () => {
@@ -1592,6 +1626,18 @@ const handleViewAllAuthorGuides = (username: string) => {
         type="danger"
         @confirm="pendingDeleteGuideId ? confirmDeleteGuideById() : confirmDeleteGuide()"
         @cancel="isDeleteGuideConfirmOpen = false"
+      />
+
+      <!-- EXTERNAL LINK WARNING MODAL -->
+      <ConfirmModal
+        :is-open="isExternalLinkModalOpen"
+        title="Переход на сторонний сайт"
+        :message="`Вы покидаете наш сайт и переходите на внешнюю ссылку:\n\n${pendingExternalUrl}\n\nНаш проект не несёт ответственности за содержимое сторонних ресурсов. Вы уверены, что хотите продолжить?`"
+        confirm-text="Перейти на сайт"
+        cancel-text="Остаться на сайте"
+        type="warning"
+        @confirm="confirmExternalRedirect"
+        @cancel="isExternalLinkModalOpen = false; pendingExternalUrl = '';"
       />
     </main>
 

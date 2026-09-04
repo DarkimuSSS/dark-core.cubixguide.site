@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import type { GuideBlock } from '../types/guide';
+import { parseMarkdownLinks } from '../utils/linkParser';
 
 const props = defineProps<{
   block: GuideBlock;
@@ -218,8 +219,7 @@ const updateText = (val: string) => {
           <h4 v-if="block.calloutTitle" :class="['text-sm font-semibold mb-1', calloutConfig.text]">
             {{ block.calloutTitle }}
           </h4>
-          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-            {{ block.calloutText || 'Описание отсутствует.' }}
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal whitespace-pre-line" v-html="parseMarkdownLinks(block.calloutText || 'Описание отсутствует.')">
           </p>
         </div>
       </div>

@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import type { GuideBlock } from '../types/guide';
 import IconRenderer from './IconRenderer.vue';
+import { parseMarkdownLinks } from '../utils/linkParser';
 
 const props = defineProps<{
   block: GuideBlock;
@@ -44,8 +45,7 @@ const isExpanded = ref(props.block.isExpandedByDefault ?? false);
 
     <!-- Content area -->
     <div v-if="isExpanded || isEditing" class="p-4 bg-[#0c0d0e] border-t border-[#26292d]/50">
-      <div v-if="!isEditing" class="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
-        {{ block.spoilerContent || 'Содержимое спойлера пусто.' }}
+      <div v-if="!isEditing" class="text-xs text-slate-300 leading-relaxed whitespace-pre-line" v-html="parseMarkdownLinks(block.spoilerContent || 'Содержимое спойлера пусто.')">
       </div>
       <textarea
         v-else

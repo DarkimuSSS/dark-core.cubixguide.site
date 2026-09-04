@@ -385,7 +385,7 @@ const onSubBlockDragEnd = () => {
 };
 
 // FLOATING TEXT FORMATTING HANDLER
-const handleTextFormatSyntax = (syntax: 'bold' | 'italic' | 'code' | 'link' | 'highlight' | 'h1' | 'h2') => {
+const handleTextFormatSyntax = (syntax: 'bold' | 'italic' | 'code' | 'link' | 'highlight' | 'h1' | 'h2', linkUrl?: string, linkText?: string) => {
   const activeEl = document.activeElement as HTMLInputElement | HTMLTextAreaElement;
   if (!activeEl || (activeEl.tagName !== 'TEXTAREA' && activeEl.tagName !== 'INPUT')) return;
 
@@ -406,7 +406,7 @@ const handleTextFormatSyntax = (syntax: 'bold' | 'italic' | 'code' | 'link' | 'h
       replacement = `\`${selectedText || 'код'}\``;
       break;
     case 'link':
-      replacement = `[${selectedText || 'текст ссылки'}](https://)`;
+      replacement = `[${linkText || selectedText || 'текст ссылки'}](${linkUrl || 'https://'})`;
       break;
     case 'highlight':
       replacement = `<mark class="bg-amber-500/30 text-amber-200 px-1 rounded">${selectedText || 'выделение'}</mark>`;

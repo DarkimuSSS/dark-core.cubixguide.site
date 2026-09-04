@@ -5,6 +5,7 @@ import CalloutBlock from './CalloutBlock.vue';
 import LayerPainter from './LayerPainter.vue';
 import SpoilerBlock from './SpoilerBlock.vue';
 import BeforeAfterSlider from './BeforeAfterSlider.vue';
+import { parseMarkdownLinks } from '../utils/linkParser';
 import type { Guide, BlockSpan, BlockVariant, AuthorProfile } from '../types/guide';
 
 const props = defineProps<{
@@ -760,7 +761,7 @@ const getVariantClass = (variant?: BlockVariant) => {
                 block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left'
               ]"
             >
-              <p class="whitespace-pre-line">{{ block.textContent }}</p>
+              <p class="whitespace-pre-line" v-html="parseMarkdownLinks(block.textContent || '')"></p>
             </div>
 
             <!-- Standalone Image Block -->
