@@ -45,12 +45,23 @@ pre, code {
   word-break: break-all;
 }
 
-/* Global Light Theme Complete Overrides (Soft Eye-Friendly Slate & Cream) */
-html.theme-light body {
-  background-color: #f1f3f5;
-  color: #1e293b;
+html.theme-light {
+  color-scheme: light;
+  --bg-primary: #ffffff;
+  --bg-card: #f8f9fa;
+  --bg-secondary: #f1f3f5;
+  --border-color: #f1f3f5;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
 }
 
+/* Global Light Theme Complete Overrides (Clean Modern White & Neutral Gray) */
+html.theme-light body {
+  background-color: #ffffff;
+  color: #212529;
+}
+
+/* Main background overrides */
 html.theme-light .bg-\[\#0c0d0e\],
 html.theme-light .bg-\[\#0c0d0e\]\/80,
 html.theme-light .bg-\[\#0c0d0e\]\/85,
@@ -59,114 +70,168 @@ html.theme-light .bg-\[\#0c0d0e\]\/95,
 html.theme-light .from-\[\#0c0d0e\],
 html.theme-light .to-\[\#0c0d0e\],
 html.theme-light footer {
-  background-color: #f1f3f5 !important;
+  background-color: #ffffff !important;
   background-image: none !important;
-  color: #1e293b !important;
+  color: #212529 !important;
 }
 
+/* Cards, Sidebars, Panels (#F8F9FA) */
 html.theme-light .bg-\[\#16181a\],
 html.theme-light .bg-\[\#16181a\]\/80,
 html.theme-light .bg-\[\#16181a\]\/90,
 html.theme-light .bg-\[\#16181a\]\/95,
+html.theme-light .bg-\[\#141618\],
 html.theme-light .bg-\[\#121416\],
 html.theme-light .bg-\[\#181a1d\],
 html.theme-light .bg-\[\#101214\],
+html.theme-light .bg-\[\#121417\],
+html.theme-light .bg-\[\#121417\]\/95,
 html.theme-light .from-\[\#16181a\],
 html.theme-light .to-\[\#101214\] {
-  background-color: #ffffff !important;
-  color: #1e293b !important;
+  background-color: #f8f9fa !important;
+  color: #212529 !important;
 }
 
+/* Secondary Backgrounds & Hover Surfaces (#F1F3F5) */
 html.theme-light .bg-\[\#121416\]\/80,
 html.theme-light .bg-\[\#121416\]\/90,
 html.theme-light .bg-\[\#1f2328\],
-html.theme-light .bg-\[\#212429\] {
-  background-color: #e9ecef !important;
-  color: #1e293b !important;
+html.theme-light .bg-\[\#212429\],
+html.theme-light .bg-\[\#090a0c\],
+html.theme-light .bg-\[\#181b20\],
+html.theme-light .bg-\[\#1a1d22\],
+html.theme-light .bg-emerald-950\/30 {
+  background-color: #f1f3f5 !important;
+  color: #212529 !important;
 }
 
+/* Borders & Dividers (#F1F3F5 & slightly darker for visibility #e9ecef) */
 html.theme-light .border-\[\#26292d\],
 html.theme-light .border-\[\#26292d\]\/80,
-html.theme-light .border-\[\#26292d\]\/50 {
-  border-color: #dbe0e5 !important;
+html.theme-light .border-\[\#26292d\]\/50,
+html.theme-light .border-\[\#262a30\],
+html.theme-light .border-white\/10,
+html.theme-light .border-white\/5 {
+  border-color: #e9ecef !important;
 }
 
+/* Main Text (#212529) */
 html.theme-light .text-white,
 html.theme-light .text-slate-100,
 html.theme-light .text-slate-200 {
-  color: #1e293b !important;
+  color: #212529 !important;
 }
 
+/* Secondary Text & Icons (#6C757D) */
 html.theme-light .text-slate-300,
 html.theme-light .text-slate-400,
+html.theme-light .text-slate-500,
 html.theme-light .text-dark-muted {
-  color: #475569 !important;
+  color: #6c757d !important;
 }
 
+/* Inputs & Form Elements */
 html.theme-light input,
 html.theme-light textarea,
 html.theme-light select {
-  color: #1e293b !important;
+  color: #212529 !important;
   background-color: #ffffff !important;
-  border-color: #dbe0e5 !important;
+  border-color: #dee2e6 !important;
 }
 
-/* Light Theme Overrides for Special Components & Modals */
-html.theme-light .bg-slate-500\/20 {
-  background-color: #e2e8f0 !important;
-  color: #1e293b !important;
-  border-color: #94a3b8 !important;
-  font-weight: 800 !important;
+html.theme-light input::placeholder,
+html.theme-light textarea::placeholder {
+  color: #adb5bd !important;
 }
 
-html.theme-light .card-banner-shadow {
-  background-image: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.35), rgba(0, 0, 0, 0.2)) !important;
-}
-
-html.theme-light .profile-modal-banner-overlay {
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.45), rgba(241, 243, 245, 0.95)) !important;
-}
-
-html.theme-light .profile-modal-banner-img {
-  opacity: 0.55 !important;
-}
-
+/* Badge & Link Backgrounds (#E7F5FF) */
 html.theme-light .bg-emerald-500\/10,
-html.theme-light .bg-emerald-500\/15 {
-  background-color: #e6f4ea !important;
-}
-
+html.theme-light .bg-emerald-500\/15,
 html.theme-light .bg-cyan-500\/10,
-html.theme-light .bg-cyan-500\/15 {
-  background-color: #e0f2fe !important;
-}
-
+html.theme-light .bg-cyan-500\/15,
 html.theme-light .bg-purple-500\/10,
-html.theme-light .bg-purple-500\/15 {
-  background-color: #f3e8ff !important;
+html.theme-light .bg-purple-500\/15,
+html.theme-light .bg-indigo-500\/10,
+html.theme-light .bg-blue-500\/10 {
+  background-color: #e7f5ff !important;
+  color: #1c7ed6 !important;
 }
 
-/* TOC Items in Light Mode */
-html.theme-light .bg-emerald-950\/30 {
-  background-color: #ffffff !important;
-  color: #1e293b !important;
+/* Success Alerts & Badges (#D3F9D8) */
+html.theme-light .bg-emerald-500\/20,
+html.theme-light .bg-emerald-950\/80,
+html.theme-light .bg-emerald-900\/50 {
+  background-color: #d3f9d8 !important;
+  color: #2b8a3e !important;
+  border-color: #b2f2bb !important;
 }
 
-html.theme-light .bg-\[\#121417\],
-html.theme-light .bg-\[\#121417\]\/95 {
-  background-color: #f8fafc !important;
-  color: #1e293b !important;
+/* Warning Alerts & Badges (#FFF3BF) */
+html.theme-light .bg-amber-500\/10,
+html.theme-light .bg-amber-500\/20,
+html.theme-light .bg-amber-950\/80,
+html.theme-light .bg-amber-900\/50 {
+  background-color: #fff3bf !important;
+  color: #e67700 !important;
+  border-color: #ffec99 !important;
 }
 
-html.theme-light .bg-\[\#090a0c\],
-html.theme-light .bg-\[\#181b20\],
-html.theme-light .bg-\[\#1a1d22\] {
-  background-color: #e2e8f0 !important;
-  color: #1e293b !important;
+/* Danger / Error Alerts (#FFE3E3) */
+html.theme-light .bg-rose-500\/10,
+html.theme-light .bg-rose-500\/20,
+html.theme-light .bg-rose-950\/80,
+html.theme-light .bg-rose-900\/50,
+html.theme-light .bg-red-500\/10,
+html.theme-light .bg-red-500\/20 {
+  background-color: #ffe3e3 !important;
+  color: #e03131 !important;
+  border-color: #ffc9c9 !important;
 }
 
-html.theme-light .border-\[\#262a30\] {
-  border-color: #cbd5e1 !important;
+/* CTA Buttons (#1C7ED6) */
+html.theme-light .bg-emerald-500,
+html.theme-light .bg-emerald-600,
+html.theme-light .bg-cyan-500,
+html.theme-light .bg-cyan-600,
+html.theme-light .bg-indigo-600,
+html.theme-light .bg-blue-600 {
+  background-color: #1c7ed6 !important;
+  color: #ffffff !important;
+}
+
+html.theme-light .bg-emerald-500:hover,
+html.theme-light .bg-emerald-600:hover,
+html.theme-light .bg-cyan-500:hover,
+html.theme-light .bg-cyan-600:hover,
+html.theme-light .bg-indigo-600:hover,
+html.theme-light .bg-blue-600:hover {
+  background-color: #1971c2 !important;
+}
+
+/* Light Theme Scrollbars */
+html.theme-light ::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+html.theme-light ::-webkit-scrollbar-thumb {
+  background: #dee2e6;
+  border-radius: 4px;
+}
+
+html.theme-light ::-webkit-scrollbar-thumb:hover {
+  background: #ced4da;
+}
+
+/* Minecraft slots in Light Mode */
+html.theme-light .mc-slot {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+}
+
+html.theme-light .mc-slot:hover {
+  border-color: #1c7ed6;
+  background-color: #e7f5ff;
 }
 
 /* Emerald Theme Override */
