@@ -85,12 +85,12 @@ export function hasPermission(
   if (!userRole) return false;
   if (userRole === 'super_admin') return true;
 
-  // Если заданы точечные кастомные права, проверяем их
-  if (Array.isArray(customPermissions) && customPermissions.length > 0) {
-    return customPermissions.includes(permission);
+  // 1. Проверяем точечные персональные права пользователя (если они выданы)
+  if (Array.isArray(customPermissions) && customPermissions.includes(permission)) {
+    return true;
   }
 
-  // Иначе берем дефолтный набор прав роли
+  // 2. Проверяем базовые права назначенной роли
   const roleDef = DEFAULT_SYSTEM_ROLES[userRole];
   return roleDef ? roleDef.permissions.includes(permission) : false;
 }

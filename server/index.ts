@@ -457,10 +457,18 @@ app.post('/api/guides', (req, res) => {
 // Helper to check author permission on guide modification
 function canUserModifyGuide(requestingUsername: string | undefined, guideId: string): boolean {
   if (!requestingUsername) return true; // If unspecified in dev mode, allow; if present, check strictly
-  const userRow = db.prepare('SELECT is_admin, can_edit_others FROM users WHERE LOWER(username) = LOWER(?)').get(requestingUsername) as any;
+  const userRow = db.prepare('SELECT is_admin, can_edit_others, role, custom_permissions FROM users WHERE LOWER(username) = LOWER(?)').get(requestingUsername) as any;
   if (!userRow) return false;
 
-  if (userRow.is_admin || userRow.can_edit_others) return true;
+  const role = userRow.role || (userRow.is_admin ? 'super_admin' : 'author');
+  if (role === 'super_admin' || userRow.is_admin || userRow.can_edit_others) return true;
+
+  let customPerms: string[] = [];
+  try {
+    if (userRow.custom_permissions) customPerms = JSON.parse(userRow.custom_permissions);
+  } catch (e) {}
+
+  if (customPerms.includes('edit_other_guide')) return true;
 
   const existingGuide = db.prepare('SELECT author, co_authors FROM guides WHERE id = ?').get(guideId) as any;
   if (!existingGuide) return true;
