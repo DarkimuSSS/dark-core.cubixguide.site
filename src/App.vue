@@ -14,6 +14,7 @@ import SettingsModal from './components/SettingsModal.vue';
 import TelemetryPage from './components/TelemetryPage.vue';
 import AdminPanel from './components/AdminPanel.vue';
 import TeamPage from './components/TeamPage.vue';
+import SelectGuideModal from './components/SelectGuideModal.vue';
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
 import { hasPermission } from './data/roles';
@@ -22,6 +23,7 @@ import type { Guide, AuthorProfile, UserRole, UserPermission } from './types/gui
 const isTermsOpen = ref(false);
 const isRulesOpen = ref(false);
 const isSettingsOpen = ref(false);
+const isSelectGuideModalOpen = ref(false);
 
 const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
@@ -1253,30 +1255,18 @@ const handleViewAllAuthorGuides = (username: string) => {
           </button>
         </div>
 
-        <!-- Quick Create Guide Button -->
-        <button
-          v-if="isAuthenticated"
-          type="button"
-          @click="createNewGuide"
-          class="px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md group cursor-pointer"
-          title="Создать новый гайд"
-        >
-          <IconRenderer name="Plus" size="15" class="group-hover:rotate-90 transition-transform duration-300" />
-          <span class="hidden sm:inline">Новый гайд</span>
-        </button>
-
         <!-- Editor Mode Switcher Button -->
         <button
           v-if="isAuthenticated"
           type="button"
-          @click="mode = 'editor'"
+          @click="isSelectGuideModalOpen = true"
           :class="[
             'px-2.5 sm:px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all duration-300 shadow-md cursor-pointer shrink-0',
             mode === 'editor' 
               ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-950/60 ring-2 ring-emerald-500/50' 
               : 'bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/40'
           ]"
-          title="Конструктор гайдов"
+          title="Выбрать гайд для редактирования в Конструкторе"
         >
           <IconRenderer name="Edit3" size="15" />
           <span class="hidden sm:inline">Конструктор</span>
@@ -1659,6 +1649,17 @@ const handleViewAllAuthorGuides = (username: string) => {
       :is-open="isAuthModalOpen"
       @close="isAuthModalOpen = false"
       @authenticate="handleAuthentication"
+    />
+
+    <!-- Select Guide / Constructor Selection Modal -->
+    <SelectGuideModal
+      :is-open="isSelectGuideModalOpen"
+      :guides="guides"
+      :current-username="currentUsername"
+      :is-admin="currentUserIsAdmin"
+      @close="isSelectGuideModalOpen = false"
+      @select="selectGuide($event.meta.id); mode = 'editor';"
+      @create="createNewGuide()"
     />
 
     <!-- Notification Toast Stack Container -->
