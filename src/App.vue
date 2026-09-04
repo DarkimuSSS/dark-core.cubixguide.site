@@ -105,6 +105,8 @@ const isProfileModalOpen = ref(false);
 const profileUsername = ref('DarkimuSSS');
 const currentUsername = ref<string | null>(null);
 const currentUserIsAdmin = ref<boolean>(false);
+const currentUserCanEditOthers = ref<boolean>(false);
+const currentUserCanCreateGuides = ref<boolean>(true);
 const currentAuthorProfile = ref<AuthorProfile | null>(null);
 
 // Auth & Protection State
@@ -402,6 +404,8 @@ const logoutAuthor = () => {
   isAuthenticated.value = false;
   currentUsername.value = null;
   currentUserIsAdmin.value = false;
+  currentUserCanEditOthers.value = false;
+  currentUserCanCreateGuides.value = true;
   currentAuthorProfile.value = null;
   localStorage.removeItem('cubix_logged_username');
   localStorage.removeItem('cubix_logged_is_admin');
