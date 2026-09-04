@@ -699,8 +699,15 @@ if (adminCount.count === 0) {
 
 // Helper to get or create profile
 export function getAuthorProfile(username: string): AuthorProfile {
-  const userRow = db.prepare('SELECT is_verified FROM users WHERE LOWER(username) = LOWER(?)').get(username) as any;
+  const userRow = db.prepare('SELECT is_verified, role, custom_permissions, assigned_servers FROM users WHERE LOWER(username) = LOWER(?)').get(username) as any;
   const isVerified = userRow ? Boolean(userRow.is_verified) : (username.toLowerCase() === 'darkimusss');
+
+  let customPermissions = undefined;
+  let assignedServers = undefined;
+  try {
+    if (userRow?.custom_permissions) customPermissions = JSON.parse(userRow.custom_permissions);
+    if (userRow?.assigned_servers) assignedServers = JSON.parse(userRow.assigned_servers);
+  } catch (e) {}
 
   const row = db.prepare('SELECT * FROM profiles WHERE LOWER(username) = LOWER(?)').get(username) as any;
   if (row) {
@@ -721,7 +728,10 @@ export function getAuthorProfile(username: string): AuthorProfile {
       customLinks: customLinks,
       badges: JSON.parse(row.badges || '[]'),
       pinnedGuideId: row.pinned_guide_id || '',
-      updatedAt: row.updated_at || ''
+      updatedAt: row.updated_at || '',
+      role: userRow?.role || undefined,
+      customPermissions,
+      assignedServers
     };
   }
 
@@ -740,7 +750,10 @@ export function getAuthorProfile(username: string): AuthorProfile {
     ],
     badges: ['Автор Гайдов'],
     pinnedGuideId: '',
-    updatedAt: new Date().toISOString().split('T')[0]
+    updatedAt: new Date().toISOString().split('T')[0],
+    role: userRow?.role || undefined,
+    customPermissions,
+    assignedServers
   };
 }
 
