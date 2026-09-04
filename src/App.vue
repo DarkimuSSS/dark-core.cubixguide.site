@@ -1131,136 +1131,166 @@ const handleViewAllAuthorGuides = (username: string) => {
                 <IconRenderer name="X" size="18" />
               </button>
             </div>
-            <!-- Navigation Modes -->
-            <div>
-              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1">Основные разделы:</div>
-              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                <button
-                  @click="mode = 'home'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'home' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
-                >
-                  <IconRenderer name="Home" size="18" class="text-emerald-400 shrink-0" />
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold truncate">Каталог</div>
-                    <div class="text-[10px] text-dark-muted truncate">Все гайды</div>
-                  </div>
-                </button>
+            <!-- Structured Navigation Sections -->
+            <div class="space-y-4">
+              
+              <!-- 1. GENERAL PLAYER NAVIGATION -->
+              <div>
+                <div class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 mb-2 px-1 flex items-center gap-1.5">
+                  <IconRenderer name="Compass" size="13" />
+                  <span>Основная Навигация</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                  <button
+                    @click="mode = 'home'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'home' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
+                  >
+                    <IconRenderer name="Home" size="17" class="text-emerald-400 shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold truncate">Главная / Каталог</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Все публикации</div>
+                    </div>
+                  </button>
 
-                <button
-                  v-if="activeGuide"
-                  @click="mode = 'reader'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'reader' ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-cyan-500/40']"
-                >
-                  <IconRenderer name="BookOpen" size="18" class="text-cyan-400 shrink-0" />
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold truncate">Вики Статья</div>
-                    <div class="text-[10px] text-dark-muted truncate">Текущая статья</div>
-                  </div>
-                </button>
+                  <button
+                    v-if="activeGuide"
+                    @click="mode = 'reader'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'reader' ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-cyan-500/40']"
+                  >
+                    <IconRenderer name="BookOpen" size="17" class="text-cyan-400 shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold truncate">Вики Статья</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Текущее чтение</div>
+                    </div>
+                  </button>
 
-                <button
-                  @click="mode = 'favorites'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'favorites' ? 'bg-amber-500/15 border-amber-500/50 text-amber-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-amber-500/40']"
-                >
-                  <IconRenderer name="Star" size="18" class="text-amber-400 shrink-0" />
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold truncate">Закладки</div>
-                    <div class="text-[10px] text-dark-muted truncate">{{ favoriteGuideIds.length }} сохранено</div>
-                  </div>
-                </button>
+                  <button
+                    @click="mode = 'favorites'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'favorites' ? 'bg-amber-500/15 border-amber-500/50 text-amber-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-amber-500/40']"
+                  >
+                    <IconRenderer name="Star" size="17" class="text-amber-400 shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold truncate">Мои Закладки</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">{{ favoriteGuideIds.length }} сохранено</div>
+                    </div>
+                  </button>
 
-                <button
-                  v-if="isAuthenticated"
-                  @click="isAuthorDashboardOpen = true; isHeaderNavMenuOpen = false"
-                  class="p-3 rounded-2xl bg-[#090a0c] border border-cyan-500/30 hover:border-cyan-400 text-left transition-all flex items-center gap-2 cursor-pointer group shadow-sm"
-                >
-                  <IconRenderer name="TrendingUp" size="18" class="text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold text-cyan-300 truncate">Кабинет Автора</div>
-                    <div class="text-[10px] text-dark-muted truncate">Аналитика просмотров</div>
-                  </div>
-                </button>
+                  <button
+                    @click="mode = 'team'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'team' ? 'bg-amber-500/15 border-amber-500/50 text-amber-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-amber-500/40']"
+                  >
+                    <IconRenderer name="Shield" size="17" class="text-amber-400 shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold truncate">Команда</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Персонал серверов</div>
+                    </div>
+                  </button>
 
-                <button
-                  v-if="isAuthenticated"
-                  @click="mode = 'drafts'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'drafts' ? 'bg-purple-500/15 border-purple-500/50 text-purple-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-purple-500/40']"
-                >
-                  <IconRenderer name="FileText" size="18" class="text-purple-400 shrink-0" />
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold truncate">Черновики</div>
-                    <div class="text-[10px] text-dark-muted truncate">{{ myDraftsList.length }} неопубликовано</div>
-                  </div>
-                </button>
+                  <button
+                    @click="mode = 'rules'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'rules' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
+                  >
+                    <IconRenderer name="ShieldCheck" size="17" class="text-emerald-400 shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold truncate">Правила</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Свод правил проекта</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
 
-                <button
-                  v-if="currentUserIsAdmin"
-                  @click="mode = 'admin'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'admin' ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-cyan-500/40']"
-                >
-                  <IconRenderer name="Users" size="18" class="text-cyan-400 shrink-0" />
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold truncate">Панель Авторов</div>
-                    <div class="text-[10px] text-dark-muted truncate">Управление доступом</div>
-                  </div>
-                </button>
+              <!-- 2. AUTHOR STUDIO & DRAFTS (FOR AUTHENTICATED AUTHORS) -->
+              <div v-if="isAuthenticated">
+                <div class="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400 mb-2 px-1 flex items-center gap-1.5">
+                  <IconRenderer name="Edit3" size="13" />
+                  <span>Кабинет и Студия Автора</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <button
+                    @click="isAuthorDashboardOpen = true; isHeaderNavMenuOpen = false"
+                    class="p-2.5 rounded-2xl bg-[#090a0c] border border-cyan-500/30 hover:border-cyan-400 text-left transition-all flex items-center gap-2 cursor-pointer group shadow-sm"
+                  >
+                    <IconRenderer name="TrendingUp" size="17" class="text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold text-cyan-300 truncate">Кабинет Автора</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Аналитика просмотров</div>
+                    </div>
+                  </button>
 
-                <button
-                  v-if="currentUserIsAdmin"
-                  @click="mode = 'telemetry'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'telemetry' ? 'bg-purple-500/15 border-purple-500/50 text-purple-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-purple-500/40']"
-                >
-                  <IconRenderer name="BarChart2" size="18" class="text-purple-400 shrink-0" />
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold truncate">Телеметрия</div>
-                    <div class="text-[10px] text-dark-muted truncate">Аналитика сайта</div>
-                  </div>
-                </button>
+                  <button
+                    @click="isSelectGuideModalOpen = true; isHeaderNavMenuOpen = false"
+                    class="p-2.5 rounded-2xl bg-[#090a0c] border border-emerald-500/30 hover:border-emerald-400 text-left transition-all flex items-center gap-2 cursor-pointer group shadow-sm"
+                  >
+                    <IconRenderer name="Edit3" size="17" class="text-emerald-400 group-hover:scale-110 transition-transform shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold text-emerald-300 truncate">Конструктор Гайдов</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Создать / Изменить</div>
+                    </div>
+                  </button>
 
-                <button
-                  @click="mode = 'team'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'team' ? 'bg-amber-500/15 border-amber-500/50 text-amber-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-amber-500/40']"
-                >
-                  <IconRenderer name="Shield" size="18" class="text-amber-400 shrink-0" />
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold truncate">Команда Проекта</div>
-                    <div class="text-[10px] text-dark-muted truncate">Состав серверов</div>
-                  </div>
-                </button>
+                  <button
+                    @click="mode = 'drafts'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'drafts' ? 'bg-purple-500/15 border-purple-500/50 text-purple-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-purple-500/40']"
+                  >
+                    <IconRenderer name="FileText" size="17" class="text-purple-400 shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold truncate">Мои Черновики</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">{{ myDraftsList.length }} неопубликовано</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
 
-                <button
-                  @click="mode = 'rules'; isHeaderNavMenuOpen = false"
-                  :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'rules' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
-                >
-                  <IconRenderer name="ShieldCheck" size="18" class="text-emerald-400 shrink-0" />
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold truncate">Правила</div>
-                    <div class="text-[10px] text-dark-muted truncate">Свод правил проекта</div>
-                  </div>
-                </button>
+              <!-- 3. ADMINISTRATION (FOR ADMINS) -->
+              <div v-if="currentUserIsAdmin">
+                <div class="text-[10px] font-extrabold uppercase tracking-wider text-purple-400 mb-2 px-1 flex items-center gap-1.5">
+                  <IconRenderer name="Sliders" size="13" />
+                  <span>Управление и Администрация</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-2 gap-2">
+                  <button
+                    @click="mode = 'admin'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'admin' ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-cyan-500/40']"
+                  >
+                    <IconRenderer name="Users" size="17" class="text-cyan-400 shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold truncate">Панель Авторов & Доступа</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Управление ролями и модерация</div>
+                    </div>
+                  </button>
 
+                  <button
+                    @click="mode = 'telemetry'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'telemetry' ? 'bg-purple-500/15 border-purple-500/50 text-purple-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-purple-500/40']"
+                  >
+                    <IconRenderer name="BarChart2" size="17" class="text-purple-400 shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold truncate">Телеметрия и Логи</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Сквозная аналитика проекта</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 4. UTILITY ACTIONS -->
+              <div class="flex items-center gap-2 pt-1 border-t border-[#26292d]/60">
                 <button
                   @click="openRandomGuide(); isHeaderNavMenuOpen = false"
-                  class="p-3 rounded-2xl bg-[#090a0c] border border-[#26292d] hover:border-purple-500/40 text-left transition-all flex items-center gap-2 cursor-pointer group"
+                  class="p-2 sm:px-3 py-1.5 rounded-xl bg-[#090a0c] border border-[#26292d] hover:border-purple-500/40 text-left transition-all flex items-center gap-2 cursor-pointer group"
                 >
-                  <IconRenderer name="Sparkles" size="18" class="text-purple-400 group-hover:scale-110 transition-transform shrink-0" />
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold text-purple-300 truncate">Случайный</div>
-                    <div class="text-[10px] text-dark-muted truncate">Случайный гайд</div>
-                  </div>
+                  <IconRenderer name="Sparkles" size="14" class="text-purple-400 group-hover:scale-110 transition-transform shrink-0" />
+                  <span class="text-xs font-bold text-purple-300">Случайный гайд</span>
                 </button>
 
                 <button
                   @click="isSettingsOpen = true; isHeaderNavMenuOpen = false"
-                  class="p-3 rounded-2xl bg-[#090a0c] border border-[#26292d] hover:border-cyan-500/40 text-left transition-all flex items-center gap-2 cursor-pointer group"
+                  class="p-2 sm:px-3 py-1.5 rounded-xl bg-[#090a0c] border border-[#26292d] hover:border-cyan-500/40 text-left transition-all flex items-center gap-2 cursor-pointer group"
                 >
-                  <IconRenderer name="Settings" size="18" class="text-cyan-400 group-hover:rotate-90 transition-transform shrink-0" />
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold text-cyan-300 truncate">Настройки</div>
-                    <div class="text-[10px] text-dark-muted truncate">Темы и параметры</div>
-                  </div>
+                  <IconRenderer name="Settings" size="14" class="text-cyan-400 group-hover:rotate-90 transition-transform shrink-0" />
+                  <span class="text-xs font-bold text-cyan-300">Темы и параметры</span>
                 </button>
               </div>
+
             </div>
 
             <!-- Rich Interactive Categories Hub (4 COLUMNS GRID) -->
