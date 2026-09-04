@@ -1119,7 +1119,7 @@ const handleViewAllAuthorGuides = (username: string) => {
           <div
             v-if="isHeaderNavMenuOpen"
             @click.stop
-            class="fixed inset-x-3 top-16 max-h-[85vh] overflow-y-auto z-50 sm:absolute sm:inset-auto sm:top-full sm:left-0 sm:mt-3 w-[calc(100vw-1.5rem)] sm:w-[calc(100vw-140px)] lg:w-[840px] max-w-[calc(100vw-1.5rem)] sm:max-w-[calc(100vw-140px)] lg:max-w-[840px] sm:max-h-[80vh] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in-95 duration-200 custom-scrollbar"
+            class="fixed inset-x-3 top-16 max-h-[85vh] overflow-y-auto z-50 sm:absolute sm:inset-auto sm:top-full sm:left-0 sm:mt-3 w-[calc(100vw-1.5rem)] sm:w-[calc(100vw-140px)] lg:w-[860px] max-w-[calc(100vw-1.5rem)] sm:max-w-[calc(100vw-140px)] lg:max-w-[860px] sm:max-h-[80vh] bg-[#121417]/98 backdrop-blur-2xl border border-emerald-500/20 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in-95 duration-200 custom-scrollbar ring-1 ring-white/5"
           >
             <!-- Mobile Header with Close X button -->
             <div class="flex items-center justify-between pb-2 border-b border-[#262a30] sm:hidden">
@@ -1143,57 +1143,67 @@ const handleViewAllAuthorGuides = (username: string) => {
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                   <button
                     @click="mode = 'home'; isHeaderNavMenuOpen = false"
-                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'home' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center gap-2.5 cursor-pointer group', mode === 'home' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300 shadow-lg shadow-emerald-950/30' : 'bg-[#090a0c]/80 border-[#262a30] text-slate-300 hover:border-emerald-500/40 hover:bg-[#15181e]']"
                   >
-                    <IconRenderer name="Home" size="17" class="text-emerald-400 shrink-0" />
+                    <div class="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform shrink-0">
+                      <IconRenderer name="Home" size="16" />
+                    </div>
                     <div class="min-w-0">
-                      <div class="text-xs font-bold truncate">Главная / Каталог</div>
-                      <div class="text-[9.5px] text-dark-muted truncate">Все публикации</div>
+                      <div class="text-xs font-bold truncate">Каталог</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Все гайды</div>
                     </div>
                   </button>
 
                   <button
                     v-if="activeGuide"
                     @click="mode = 'reader'; isHeaderNavMenuOpen = false"
-                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'reader' ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-cyan-500/40']"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center gap-2.5 cursor-pointer group', mode === 'reader' ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300 shadow-lg shadow-cyan-950/30' : 'bg-[#090a0c]/80 border-[#262a30] text-slate-300 hover:border-cyan-500/40 hover:bg-[#15181e]']"
                   >
-                    <IconRenderer name="BookOpen" size="17" class="text-cyan-400 shrink-0" />
+                    <div class="p-1.5 rounded-xl bg-cyan-500/10 text-cyan-400 group-hover:scale-110 transition-transform shrink-0">
+                      <IconRenderer name="BookOpen" size="16" />
+                    </div>
                     <div class="min-w-0">
-                      <div class="text-xs font-bold truncate">Вики Статья</div>
-                      <div class="text-[9.5px] text-dark-muted truncate">Текущее чтение</div>
+                      <div class="text-xs font-bold truncate">Чтение Вики</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Текущая статья</div>
                     </div>
                   </button>
 
                   <button
                     @click="mode = 'favorites'; isHeaderNavMenuOpen = false"
-                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'favorites' ? 'bg-amber-500/15 border-amber-500/50 text-amber-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-amber-500/40']"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center gap-2.5 cursor-pointer group', mode === 'favorites' ? 'bg-amber-500/15 border-amber-500/50 text-amber-300 shadow-lg shadow-amber-950/30' : 'bg-[#090a0c]/80 border-[#262a30] text-slate-300 hover:border-amber-500/40 hover:bg-[#15181e]']"
                   >
-                    <IconRenderer name="Star" size="17" class="text-amber-400 shrink-0" />
+                    <div class="p-1.5 rounded-xl bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform shrink-0">
+                      <IconRenderer name="Star" size="16" />
+                    </div>
                     <div class="min-w-0">
-                      <div class="text-xs font-bold truncate">Мои Закладки</div>
+                      <div class="text-xs font-bold truncate">Закладки</div>
                       <div class="text-[9.5px] text-dark-muted truncate">{{ favoriteGuideIds.length }} сохранено</div>
                     </div>
                   </button>
 
                   <button
                     @click="mode = 'team'; isHeaderNavMenuOpen = false"
-                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'team' ? 'bg-amber-500/15 border-amber-500/50 text-amber-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-amber-500/40']"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center gap-2.5 cursor-pointer group', mode === 'team' ? 'bg-blue-500/15 border-blue-500/50 text-blue-300 shadow-lg shadow-blue-950/30' : 'bg-[#090a0c]/80 border-[#262a30] text-slate-300 hover:border-blue-500/40 hover:bg-[#15181e]']"
                   >
-                    <IconRenderer name="Shield" size="17" class="text-amber-400 shrink-0" />
+                    <div class="p-1.5 rounded-xl bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform shrink-0">
+                      <IconRenderer name="Shield" size="16" />
+                    </div>
                     <div class="min-w-0">
                       <div class="text-xs font-bold truncate">Команда</div>
-                      <div class="text-[9.5px] text-dark-muted truncate">Персонал серверов</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Состав проекта</div>
                     </div>
                   </button>
 
                   <button
                     @click="mode = 'rules'; isHeaderNavMenuOpen = false"
-                    :class="['p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'rules' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center gap-2.5 cursor-pointer group', mode === 'rules' ? 'bg-indigo-500/15 border-indigo-500/50 text-indigo-300 shadow-lg shadow-indigo-950/30' : 'bg-[#090a0c]/80 border-[#262a30] text-slate-300 hover:border-indigo-500/40 hover:bg-[#15181e]']"
                   >
-                    <IconRenderer name="ShieldCheck" size="17" class="text-emerald-400 shrink-0" />
+                    <div class="p-1.5 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform shrink-0">
+                      <IconRenderer name="ShieldCheck" size="16" />
+                    </div>
                     <div class="min-w-0">
                       <div class="text-xs font-bold truncate">Правила</div>
-                      <div class="text-[9.5px] text-dark-muted truncate">Свод правил проекта</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Свод правил</div>
                     </div>
                   </button>
                 </div>
