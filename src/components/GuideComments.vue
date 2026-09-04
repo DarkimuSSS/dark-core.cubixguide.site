@@ -62,6 +62,24 @@ onUnmounted(() => {
   if (cooldownInterval) clearInterval(cooldownInterval);
 });
 
+const currentUserAvatar = ref<string | null>(null);
+
+const fetchCurrentUserAvatar = async () => {
+  if (!props.currentUsername) {
+    currentUserAvatar.value = null;
+    return;
+  }
+  try {
+    const res = await fetch(`/api/profiles/${encodeURIComponent(props.currentUsername)}`);
+    if (res.ok) {
+      const data = await res.json();
+      currentUserAvatar.value = data.avatar_url || null;
+    }
+  } catch (e) {
+    console.error('Ошибка загрузки аватара:', e);
+  }
+};
+
 const fetchComments = async (silent: boolean = false) => {
   if (!props.guideId) return;
   if (!silent) isLoading.value = true;
@@ -80,10 +98,12 @@ const fetchComments = async (silent: boolean = false) => {
 
 onMounted(() => {
   fetchComments();
+  fetchCurrentUserAvatar();
 });
 
 watch(() => [props.guideId, props.currentUsername], () => {
   fetchComments();
+  fetchCurrentUserAvatar();
 });
 
 const sortBy = ref<'newest' | 'popular'>('newest');
@@ -317,7 +337,15 @@ const MAX_CHAR_LIMIT = 200;
       <div v-if="currentUsername" class="flex flex-col gap-3 relative z-10">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-xl shrink-0 bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-cyan-500/30">
+            <img 
+              v-if="currentUserAvatar" 
+              :src="currentUserAvatar" 
+              class="w-8 h-8 rounded-xl shrink-0 object-cover border border-[#26292d] shadow-sm ring-2 ring-cyan-500/30" 
+            />
+            <div 
+              v-else 
+              class="w-8 h-8 rounded-xl shrink-0 bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-cyan-500/30"
+            >
               {{ currentUsername.charAt(0).toUpperCase() }}
             </div>
             <div class="flex flex-col">
