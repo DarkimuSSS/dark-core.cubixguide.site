@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction } from './db';
 import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
@@ -416,6 +416,65 @@ app.get('/api/guides/:id', (req, res) => {
       userAgent: req.headers['user-agent']
     });
     res.json(formatted);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------------------------------
+// Comments API Endpoints
+// ----------------------------------------------------
+
+// 1. Get comments for a guide
+app.get('/api/guides/:id/comments', (req, res) => {
+  try {
+    const currentUsername = req.query.username as string | undefined;
+    const comments = getGuideComments(req.params.id, currentUsername);
+    res.json(comments);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2. Add a comment or reply
+app.post('/api/guides/:id/comments', (req, res) => {
+  try {
+    const { author, authorRole, content, parentId } = req.body;
+    if (!author || !content || !content.trim()) {
+      return res.status(400).json({ error: 'Имя автора и текст комментария обязательны' });
+    }
+    const newComment = addGuideComment({
+      guideId: req.params.id,
+      parentId,
+      author,
+      authorRole,
+      content: content.trim()
+    });
+    res.json(newComment);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. Delete a comment
+app.delete('/api/comments/:commentId', (req, res) => {
+  try {
+    const result = deleteGuideComment(req.params.commentId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. Toggle 3-tier reaction (good, neutral, bad)
+app.post('/api/comments/:commentId/react', (req, res) => {
+  try {
+    const { username, reactionType } = req.body;
+    if (!username || !['good', 'neutral', 'bad'].includes(reactionType)) {
+      return res.status(400).json({ error: 'Неверные параметры реакции' });
+    }
+    const result = toggleCommentReaction(req.params.commentId, username, reactionType);
+    res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

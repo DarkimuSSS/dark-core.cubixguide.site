@@ -58,6 +58,23 @@ db.exec(`
     updated_at TEXT
   );
 
+  CREATE TABLE IF NOT EXISTS guide_comments (
+    id TEXT PRIMARY KEY,
+    guide_id TEXT NOT NULL,
+    parent_id TEXT,
+    author TEXT NOT NULL,
+    author_role TEXT,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS comment_reactions (
+    comment_id TEXT NOT NULL,
+    username TEXT NOT NULL,
+    reaction_type TEXT NOT NULL,
+    PRIMARY KEY (comment_id, username)
+  );
+
   CREATE TABLE IF NOT EXISTS telemetry_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     event_type TEXT NOT NULL,
@@ -850,6 +867,96 @@ if (guideCount.count === 0) {
     }
   } catch (e) {
     console.error('Error seeding initial guides:', e);
+  }
+}
+
+// ----------------------------------------------------
+// Comments Helper Functions
+// ----------------------------------------------------
+export function getGuideComments(guideId: string, currentUsername?: string) {
+  const rows = db.prepare('SELECT * FROM guide_comments WHERE guide_id = ? ORDER BY created_at ASC').all(guideId) as any[];
+  
+  // Get reactions breakdown
+  const reactionsRows = db.prepare(`
+    SELECT comment_id, reaction_type, username 
+    FROM comment_reactions 
+    WHERE comment_id IN (SELECT id FROM guide_comments WHERE guide_id = ?)
+  `).all(guideId) as any[];
+
+  const reactionsMap: Record<string, { good: number; neutral: number; bad: number; userReaction?: string }> = {};
+
+  reactionsRows.forEach(r => {
+    if (!reactionsMap[r.comment_id]) {
+      reactionsMap[r.comment_id] = { good: 0, neutral: 0, bad: 0 };
+    }
+    if (r.reaction_type === 'good' || r.reaction_type === 'neutral' || r.reaction_type === 'bad') {
+      reactionsMap[r.comment_id][r.reaction_type as 'good' | 'neutral' | 'bad']++;
+    }
+    if (currentUsername && r.username.toLowerCase() === currentUsername.toLowerCase()) {
+      reactionsMap[r.comment_id].userReaction = r.reaction_type;
+    }
+  });
+
+  // Get author avatars & details
+  const authorNames = Array.from(new Set(rows.map(r => r.author)));
+  const profilesMap: Record<string, any> = {};
+  if (authorNames.length > 0) {
+    const placeholders = authorNames.map(() => '?').join(',');
+    const profiles = db.prepare(`SELECT username, avatar_url FROM profiles WHERE LOWER(username) IN (${placeholders})`).all(...authorNames.map(a => a.toLowerCase())) as any[];
+    profiles.forEach(p => {
+      profilesMap[p.username.toLowerCase()] = p;
+    });
+  }
+
+  return rows.map(r => ({
+    id: r.id,
+    guideId: r.guide_id,
+    parentId: r.parent_id || null,
+    author: r.author,
+    authorAvatar: profilesMap[r.author.toLowerCase()]?.avatar_url || null,
+    authorRole: r.author_role || null,
+    content: r.content,
+    createdAt: r.created_at,
+    reactions: reactionsMap[r.id] || { good: 0, neutral: 0, bad: 0 },
+    userReaction: reactionsMap[r.id]?.userReaction || null
+  }));
+}
+
+export function addGuideComment(data: { guideId: string; parentId?: string; author: string; authorRole?: string; content: string }) {
+  const commentId = 'cm_' + crypto.randomBytes(8).toString('hex');
+  const createdAt = new Date().toISOString();
+  db.prepare(`
+    INSERT INTO guide_comments (id, guide_id, parent_id, author, author_role, content, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(commentId, data.guideId, data.parentId || null, data.author, data.authorRole || null, data.content, createdAt);
+
+  return { id: commentId, guideId: data.guideId, parentId: data.parentId || null, author: data.author, authorRole: data.authorRole || null, content: data.content, createdAt };
+}
+
+export function deleteGuideComment(commentId: string) {
+  // Delete comment & any replies & reactions
+  db.prepare('DELETE FROM comment_reactions WHERE comment_id = ?').run(commentId);
+  db.prepare('DELETE FROM guide_comments WHERE id = ? OR parent_id = ?').run(commentId, commentId);
+  return { success: true };
+}
+
+export function toggleCommentReaction(commentId: string, username: string, reactionType: 'good' | 'neutral' | 'bad') {
+  const existing = db.prepare('SELECT reaction_type FROM comment_reactions WHERE comment_id = ? AND username = ?').get(commentId, username) as any;
+  
+  if (existing) {
+    if (existing.reaction_type === reactionType) {
+      // Remove reaction if clicked same
+      db.prepare('DELETE FROM comment_reactions WHERE comment_id = ? AND username = ?').run(commentId, username);
+      return { action: 'removed' };
+    } else {
+      // Update reaction
+      db.prepare('UPDATE comment_reactions SET reaction_type = ? WHERE comment_id = ? AND username = ?').run(reactionType, commentId, username);
+      return { action: 'updated', reactionType };
+    }
+  } else {
+    // Insert new reaction
+    db.prepare('INSERT INTO comment_reactions (comment_id, username, reaction_type) VALUES (?, ?, ?)').run(commentId, username, reactionType);
+    return { action: 'added', reactionType };
   }
 }
 

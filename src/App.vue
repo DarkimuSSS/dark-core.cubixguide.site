@@ -1752,11 +1752,15 @@ const handleViewAllAuthorGuides = (username: string) => {
               :all-guides="guides"
               :is-favorited="favoriteGuideIds.includes(activeGuide.meta.id)"
               :is-preview-mode="isPreviewActive"
+              :current-username="currentUsername"
+              :current-user-role="currentUserRole"
+              :is-admin="currentUserIsAdmin"
               @select-guide="selectGuide"
               @toggle-bookmark="toggleBookmarkGuide"
               @edit-mode="openEditorProtection"
               @open-author="openAuthorProfile"
               @exit-preview="handleExitPreview"
+              @require-auth="isAuthModalOpen = true"
             />
           </div>
 

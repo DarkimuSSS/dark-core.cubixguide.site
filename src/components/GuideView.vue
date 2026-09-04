@@ -5,6 +5,7 @@ import CalloutBlock from './CalloutBlock.vue';
 import LayerPainter from './LayerPainter.vue';
 import SpoilerBlock from './SpoilerBlock.vue';
 import BeforeAfterSlider from './BeforeAfterSlider.vue';
+import GuideComments from './GuideComments.vue';
 import { parseMarkdownLinks } from '../utils/linkParser';
 import type { Guide, BlockSpan, BlockVariant, AuthorProfile } from '../types/guide';
 
@@ -13,6 +14,9 @@ const props = defineProps<{
   allGuides: Guide[];
   isFavorited?: boolean;
   isPreviewMode?: boolean;
+  currentUsername?: string | null;
+  currentUserRole?: string | null;
+  isAdmin?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -21,6 +25,7 @@ const emit = defineEmits<{
   (e: 'edit-mode'): void;
   (e: 'open-author', username: string): void;
   (e: 'exit-preview'): void;
+  (e: 'require-auth'): void;
 }>();
 
 const isMobileNavOpen = ref(false);
@@ -910,6 +915,16 @@ const getVariantClass = (variant?: BlockVariant) => {
               </div>
             </div>
           </div>
+
+          <!-- Guide Comments Section -->
+          <GuideComments
+            :guide-id="guide.meta.id"
+            :guide-author="guide.meta.author"
+            :current-username="currentUsername || null"
+            :current-user-role="currentUserRole || null"
+            :is-admin="isAdmin"
+            @require-auth="emit('require-auth')"
+          />
         </div>
       </main>
 
