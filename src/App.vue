@@ -955,8 +955,8 @@ const handleViewAllAuthorGuides = (username: string) => {
             <IconRenderer name="ChevronDown" size="14" :class="['text-slate-400 transition-transform duration-300', isHeaderNavMenuOpen ? 'rotate-180 text-white' : '']" />
           </button>
 
-          <!-- Backdrop overlay for mobile & closing on backdrop click -->
-          <div v-if="isHeaderNavMenuOpen" @click="isHeaderNavMenuOpen = false" class="fixed inset-0 bg-black/65 backdrop-blur-sm z-40"></div>
+          <!-- Backdrop overlay for closing on click outside (no header blur) -->
+          <div v-if="isHeaderNavMenuOpen" @click="isHeaderNavMenuOpen = false" class="fixed inset-0 bg-black/50 sm:bg-transparent z-40"></div>
 
           <!-- Rich Interactive Mega-Menu Dropdown Panel -->
           <div
