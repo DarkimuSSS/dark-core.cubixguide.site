@@ -1663,22 +1663,9 @@ const stopOutlineDrag = () => {
           </button>
         </div>
 
-        <!-- Save / Submit Moderation Action Button (for unpublished/draft guides) -->
+        <!-- Submit Moderation Action Button (for unpublished/draft guides) -->
         <div v-else class="relative group/tool w-full flex justify-center">
-          <!-- SUPER ADMIN / ADMIN: Publish Directly -->
           <button
-            v-if="props.canApprove && (props.userRole === 'super_admin' || props.userRole === 'admin')"
-            type="button"
-            @click="emit('publish')"
-            :class="['rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center transition-all shadow-lg shadow-emerald-950/50 cursor-pointer', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']"
-          >
-            <IconRenderer name="CheckCircle2" size="18" class="shrink-0 text-emerald-200" />
-            <span v-if="isToolbarExpanded" class="text-xs font-bold truncate">Опубликовать</span>
-          </button>
-
-          <!-- AUTHORS, EDITORS & MANAGERS: Always Send for Moderation -->
-          <button
-            v-else
             type="button"
             @click="emit('submit-moderation')"
             :class="['rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white flex items-center transition-all shadow-lg shadow-amber-950/50 cursor-pointer', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']"
@@ -1689,7 +1676,7 @@ const stopOutlineDrag = () => {
 
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
             <div class="bg-[#0c0d0e] border border-amber-500/50 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
-              {{ (props.canApprove && (props.userRole === 'super_admin' || props.userRole === 'admin')) ? 'Опубликовать гайд напрямую' : 'Отправить гайд на модерацию Администрации' }}
+              Отправить гайд на модерацию
             </div>
           </div>
         </div>
