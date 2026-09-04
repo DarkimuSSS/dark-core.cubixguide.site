@@ -1720,6 +1720,7 @@ const handleViewAllAuthorGuides = (username: string) => {
               :guide="activeGuide"
               :can-approve="userHasPerm('publish_guide') || currentUserIsAdmin"
               :can-direct-unpublish="canUserDirectUnpublish"
+              :user-role="currentUserRole"
               :assigned-servers="currentUserAssignedServers"
               @update:guide="updateActiveGuide"
               @toggle-preview="handleTogglePreview"
