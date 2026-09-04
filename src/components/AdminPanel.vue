@@ -27,6 +27,8 @@ const adminMessage = ref('');
 const searchQuery = ref('');
 const roleFilter = ref<string>('all');
 const editingAssignedServersAuthor = ref<string | null>(null);
+const editingRoleAuthor = ref<string | null>(null);
+const isRoleFilterOpen = ref(false);
 
 const availableServersList = ref<string[]>([
   "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
@@ -546,18 +548,54 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
           <IconRenderer name="Search" size="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" />
         </div>
 
-        <!-- Role Filter Selector -->
-        <div class="flex items-center gap-2">
+        <!-- Role Filter Custom Dropdown -->
+        <div class="flex items-center gap-2 relative">
           <span class="text-xs text-dark-muted font-bold whitespace-nowrap">Фильтр роли:</span>
-          <select
-            v-model="roleFilter"
-            class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-cyan-500 cursor-pointer"
-          >
-            <option value="all">Все роли ({{ registeredAuthorsList.length }})</option>
-            <option v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)" :key="r.role" :value="r.role">
-              {{ r.name }}
-            </option>
-          </select>
+          <div class="relative">
+            <button
+              type="button"
+              @click="isRoleFilterOpen = !isRoleFilterOpen"
+              class="bg-[#0c0d0e] border border-[#26292d] hover:border-cyan-500/60 text-white text-xs font-extrabold rounded-xl px-3.5 py-2 flex items-center gap-2 transition-all cursor-pointer shadow-md"
+            >
+              <span v-if="roleFilter === 'all'" class="text-slate-300">Все роли ({{ registeredAuthorsList.length }})</span>
+              <span v-else :class="['px-2 py-0.5 rounded-full text-[10px] uppercase font-bold border', DEFAULT_SYSTEM_ROLES[roleFilter as UserRole]?.badgeColor]">
+                {{ DEFAULT_SYSTEM_ROLES[roleFilter as UserRole]?.name }}
+              </span>
+              <IconRenderer name="ChevronDown" size="13" :class="['text-dark-muted transition-transform duration-200', isRoleFilterOpen ? 'rotate-180' : '']" />
+            </button>
+
+            <!-- Custom Filter Dropdown Menu -->
+            <div
+              v-if="isRoleFilterOpen"
+              class="absolute right-0 top-full mt-2 w-56 p-1.5 rounded-2xl bg-[#0e1013]/95 border border-cyan-500/40 shadow-2xl backdrop-blur-xl z-40 space-y-1 animate-in fade-in zoom-in-95 duration-150"
+            >
+              <button
+                @click="roleFilter = 'all'; isRoleFilterOpen = false;"
+                :class="[
+                  'w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer',
+                  roleFilter === 'all' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'hover:bg-[#16181b] text-slate-300'
+                ]"
+              >
+                <span>Все роли ({{ registeredAuthorsList.length }})</span>
+                <IconRenderer v-if="roleFilter === 'all'" name="Check" size="13" class="text-cyan-400" />
+              </button>
+
+              <button
+                v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)"
+                :key="r.role"
+                @click="roleFilter = r.role; isRoleFilterOpen = false;"
+                :class="[
+                  'w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer',
+                  roleFilter === r.role ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'hover:bg-[#16181b] text-slate-300'
+                ]"
+              >
+                <span :class="['px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold border', r.badgeColor]">
+                  {{ r.name }}
+                </span>
+                <IconRenderer v-if="roleFilter === r.role" name="Check" size="13" class="text-cyan-400" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -621,28 +659,54 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
           <!-- CARD CONTROLS: ROLE SELECTOR & SERVERS -->
           <div class="space-y-2.5 pt-3 border-t border-[#26292d]">
             <!-- Role Selector Row -->
-            <div class="flex items-center justify-between gap-2 text-xs">
+            <div class="flex items-center justify-between gap-2 text-xs relative">
               <span class="text-dark-muted font-bold text-[11px]">Роль:</span>
 
               <span v-if="!canManageTargetRole(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest'), author.role || 'author')" class="text-[10px] text-amber-400 font-bold bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-lg">
                 Защищено рангом
               </span>
 
-              <select
-                v-else
-                :value="author.role || 'author'"
-                @change="handleAdminChangeUserRole(author, ($event.target as HTMLSelectElement).value as UserRole)"
-                class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-bold rounded-xl px-2.5 py-1 focus:outline-none focus:border-purple-500 cursor-pointer"
-              >
-                <option
-                  v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)"
-                  :key="r.role"
-                  :value="r.role"
-                  :disabled="getRolePriority(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest')) >= r.priority && props.currentRole !== 'super_admin'"
+              <!-- Custom Styled Role Dropdown Trigger Button -->
+              <div v-else class="relative">
+                <button
+                  type="button"
+                  @click="editingRoleAuthor = editingRoleAuthor === author.username ? null : author.username; editingAssignedServersAuthor = null;"
+                  :class="['px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 border transition-all cursor-pointer shadow-md', DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.badgeColor || 'bg-[#0c0d0e] text-white border-[#26292d]']"
                 >
-                  {{ r.name }}
-                </option>
-              </select>
+                  <span>{{ DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.name }}</span>
+                  <IconRenderer name="ChevronDown" size="12" :class="['transition-transform duration-200', editingRoleAuthor === author.username ? 'rotate-180' : '']" />
+                </button>
+
+                <!-- Custom Role Selector Dropdown Menu -->
+                <div
+                  v-if="editingRoleAuthor === author.username"
+                  class="absolute right-0 top-full mt-2 w-56 p-1.5 rounded-2xl bg-[#0e1013]/95 border border-purple-500/40 shadow-2xl backdrop-blur-xl z-40 space-y-1 animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <div class="text-[10px] font-extrabold text-purple-300 px-2.5 py-1 border-b border-[#26292d] uppercase tracking-wider flex justify-between items-center">
+                    <span>Выбор системной роли:</span>
+                    <button @click="editingRoleAuthor = null" class="text-slate-400 hover:text-white">
+                      <IconRenderer name="X" size="12" />
+                    </button>
+                  </div>
+
+                  <button
+                    v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)"
+                    :key="r.role"
+                    :disabled="getRolePriority(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest')) >= r.priority && props.currentRole !== 'super_admin'"
+                    @click="handleAdminChangeUserRole(author, r.role); editingRoleAuthor = null;"
+                    :class="[
+                      'w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer border',
+                      author.role === r.role ? 'bg-purple-500/20 border-purple-500/40 text-purple-200' : 'hover:bg-[#16181b] border-transparent text-slate-300',
+                      (getRolePriority(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest')) >= r.priority && props.currentRole !== 'super_admin') ? 'opacity-40 cursor-not-allowed' : ''
+                    ]"
+                  >
+                    <span :class="['px-2 py-0.5 rounded-full text-[10px] uppercase font-bold border', r.badgeColor]">
+                      {{ r.name }}
+                    </span>
+                    <IconRenderer v-if="author.role === r.role" name="Check" size="13" class="text-purple-400" />
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- Assigned Servers Row -->
