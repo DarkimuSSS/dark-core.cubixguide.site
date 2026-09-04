@@ -74,6 +74,7 @@ const confirmRequestUnpublish = () => {
 };
 const isTemplateModalOpen = ref(false);
 const isHelpModalOpen = ref(false);
+const isGuideSettingsModalOpen = ref(false);
 const isTreeModalOpen = ref(false);
 const isCategoryDropdownOpen = ref(false);
 const isGradientDropdownOpen = ref(false);
