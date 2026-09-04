@@ -1426,7 +1426,10 @@ const handleViewAllAuthorGuides = (username: string) => {
           </div>
           <span class="hidden sm:flex items-center gap-1.5 font-extrabold text-slate-200 group-hover:text-purple-300 transition-colors">
             <span>{{ currentUsername }}</span>
-            <span v-if="currentUserIsAdmin" class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-400/30 px-1.5 py-0.2 rounded-md font-mono">Админ</span>
+            <span v-if="currentUserRole && DEFAULT_SYSTEM_ROLES[currentUserRole]" :class="['text-[9px] px-1.5 py-0.2 rounded-md font-extrabold border shadow-sm', DEFAULT_SYSTEM_ROLES[currentUserRole].badgeColor]">
+              {{ DEFAULT_SYSTEM_ROLES[currentUserRole].name }}
+            </span>
+            <span v-else-if="currentUserIsAdmin" class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-400/30 px-1.5 py-0.2 rounded-md font-extrabold">dark-core team</span>
           </span>
         </button>
 
