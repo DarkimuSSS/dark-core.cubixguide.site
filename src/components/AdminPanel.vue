@@ -762,7 +762,6 @@ const isAuthorHasPermission = (author: any, perm: UserPermission): boolean => {
                 </div>
               </div>
             </div>
-            </div>
 
           </div>
         </div>
