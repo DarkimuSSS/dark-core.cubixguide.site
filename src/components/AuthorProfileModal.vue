@@ -50,6 +50,31 @@ const authorToDelete = ref<string | null>(null);
 const resetTargetUsername = ref<string | null>(null);
 const resetNewPassword = ref('');
 const isPinnedDropdownOpen = ref(false);
+const isProfileServerDropdownOpen = ref(false);
+
+const CUBIX_SERVERS_LIST = [
+  "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
+  "OneBlock-Mobile", "Pixelmon_1211", "HiTech", "TechnoMagic", "UltraSky", 
+  "HiTech-Mobile", "Cobblemon_1211", "TechnoMagic-Mobile", "OceanBlock_1165", 
+  "Industrial", "GregTech", "Pixelmon_1165", "Pixelmon", "TechnomagicTest", 
+  "SkyTech", "MagicalTech"
+];
+
+const selectedProfileServers = computed<string[]>(() => {
+  if (!profile.value.server) return [];
+  return profile.value.server.split(',').map(s => s.trim()).filter(Boolean);
+});
+
+const toggleProfileServer = (serverName: string) => {
+  let current = [...selectedProfileServers.value];
+  if (current.includes(serverName)) {
+    current = current.filter(s => s !== serverName);
+  } else {
+    if (current.length >= 3) return; // Limit up to 3 servers
+    current.push(serverName);
+  }
+  profile.value.server = current.join(', ');
+};
 
 const profile = ref<AuthorProfile>({
   username: props.username,
@@ -627,9 +652,15 @@ const handleBannerFileUpload = (e: Event) => {
                         </div>
                       </div>
 
-                      <span v-if="profile.server" class="text-xs font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-2.5 py-0.5 rounded-lg shadow-md backdrop-blur-md">
-                        🎮 {{ profile.server }}
-                      </span>
+                      <div v-if="selectedProfileServers.length > 0" class="flex flex-wrap items-center gap-1.5">
+                        <span
+                          v-for="s in selectedProfileServers"
+                          :key="s"
+                          class="text-xs font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-2.5 py-0.5 rounded-lg shadow-md backdrop-blur-md"
+                        >
+                          🎮 {{ s }}
+                        </span>
+                      </div>
                     </h2>
                     <p class="text-xs text-slate-300 font-medium pt-0.5 drop-shadow">Автор {{ authorGuides.length }} опубликованных гайдов</p>
                   </div>
@@ -814,14 +845,69 @@ const handleBannerFileUpload = (e: Event) => {
                   />
                 </div>
 
-                <div>
-                  <label class="block text-[11px] text-dark-muted mb-1 font-medium">Основной Сервер CubixWorld</label>
-                  <input
-                    type="text"
-                    v-model="profile.server"
-                    placeholder="MagicRPG, HiTech, OneBlock..."
-                    class="w-full bg-[#16181a] border border-[#26292d] text-cyan-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-accent"
-                  />
+                <!-- Multi-select Servers Dropdown (Up to 3) -->
+                <div class="relative z-40">
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="block text-[11px] text-dark-muted font-medium">Сервера CubixWorld (До 3-х)</label>
+                    <span :class="['text-[10px] font-mono font-bold', selectedProfileServers.length >= 3 ? 'text-amber-400' : 'text-cyan-400']">
+                      {{ selectedProfileServers.length }}/3
+                    </span>
+                  </div>
+
+                  <div class="relative">
+                    <button
+                      type="button"
+                      @click.stop="isProfileServerDropdownOpen = !isProfileServerDropdownOpen; isPinnedDropdownOpen = false;"
+                      class="w-full bg-[#16181a] border border-[#26292d] hover:border-cyan-500/50 text-xs font-bold rounded-xl px-3 py-2 flex items-center justify-between transition-all cursor-pointer shadow-sm"
+                    >
+                      <div class="flex flex-wrap gap-1 items-center truncate min-w-0">
+                        <template v-if="selectedProfileServers.length > 0">
+                          <span
+                            v-for="s in selectedProfileServers"
+                            :key="s"
+                            class="px-2 py-0.5 rounded-lg bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 text-[10.5px] font-extrabold flex items-center gap-1"
+                          >
+                            <span>🎮 {{ s }}</span>
+                          </span>
+                        </template>
+                        <span v-else class="text-dark-muted font-normal">(Сервера не выбраны)</span>
+                      </div>
+                      <IconRenderer name="ChevronDown" size="14" :class="['text-cyan-400 shrink-0 transition-transform duration-200 ml-2', isProfileServerDropdownOpen ? 'rotate-180' : '']" />
+                    </button>
+
+                    <!-- Dropdown Popover Grid -->
+                    <div
+                      v-if="isProfileServerDropdownOpen"
+                      @click.stop
+                      class="absolute top-full left-0 mt-1.5 bg-[#0e1013]/95 border border-cyan-500/40 rounded-2xl shadow-2xl p-2 z-[100] space-y-1.5 w-full backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
+                    >
+                      <div class="text-[10.5px] font-bold text-cyan-300 px-1 flex justify-between items-center border-b border-[#26292d] pb-1">
+                        <span>Выберите до 3 серверов:</span>
+                        <button type="button" @click="profile.server = '';" class="text-dark-muted hover:text-rose-400 text-[10px]">Очистить</button>
+                      </div>
+
+                      <div class="grid grid-cols-2 gap-1 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                        <button
+                          v-for="srv in CUBIX_SERVERS_LIST"
+                          :key="srv"
+                          type="button"
+                          @click="toggleProfileServer(srv)"
+                          :disabled="!selectedProfileServers.includes(srv) && selectedProfileServers.length >= 3"
+                          :class="[
+                            'text-left px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center justify-between truncate',
+                            selectedProfileServers.includes(srv)
+                              ? 'bg-cyan-500/20 text-cyan-200 border-cyan-500/40 shadow-sm'
+                              : selectedProfileServers.length >= 3
+                                ? 'bg-[#121416]/50 text-dark-muted/40 border-transparent cursor-not-allowed'
+                                : 'bg-[#121416] text-slate-300 hover:bg-[#1f2328] hover:text-white border-transparent'
+                          ]"
+                        >
+                          <span class="truncate">{{ srv }}</span>
+                          <IconRenderer v-if="selectedProfileServers.includes(srv)" name="Check" size="13" class="text-cyan-400 shrink-0" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="relative z-30">
