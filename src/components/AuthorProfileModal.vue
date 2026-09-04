@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import IconRenderer from './IconRenderer.vue';
 import { DEFAULT_SYSTEM_ROLES } from '../data/roles';
 import type { AuthorProfile, Guide, UserRole } from '../types/guide';
 
