@@ -79,6 +79,68 @@ const isGuideSettingsModalOpen = ref(false);
 const isTreeModalOpen = ref(false);
 const isCategoryDropdownOpen = ref(false);
 const isGradientDropdownOpen = ref(false);
+const isCoAuthorDropdownOpen = ref(false);
+const coAuthorSearchInput = ref('');
+const registeredAuthorsList = ref<{ username: string; role?: string; is_verified?: boolean }[]>([]);
+
+const fetchRegisteredAuthors = async () => {
+  try {
+    const res = await fetch('/api/authors');
+    if (res.ok) {
+      registeredAuthorsList.value = await res.json();
+    }
+  } catch (e) {
+    console.error('Ошибка загрузки авторов:', e);
+  }
+};
+
+onMounted(() => {
+  fetchRegisteredAuthors();
+});
+
+const filteredCoAuthorsToPick = computed(() => {
+  const currentMainAuthor = (props.guide.meta.author || '').toLowerCase().trim();
+  const currentCoAuthors = (props.guide.meta.coAuthors || []).map(ca => ca.toLowerCase().trim());
+  const query = coAuthorSearchInput.value.toLowerCase().trim();
+
+  return registeredAuthorsList.value.filter(a => {
+    const uname = a.username.toLowerCase().trim();
+    if (uname === currentMainAuthor) return false; // нельзя добавить основного автора в соавторы
+    if (currentCoAuthors.includes(uname)) return false; // уже добавлен
+    if (!query) return true;
+    return uname.includes(query);
+  });
+});
+
+const addCoAuthor = (username: string) => {
+  const current = props.guide.meta.coAuthors || [];
+  if (!current.some(c => c.toLowerCase().trim() === username.toLowerCase().trim())) {
+    const updated = {
+      ...props.guide,
+      meta: {
+        ...props.guide.meta,
+        coAuthors: [...current, username]
+      }
+    };
+    emit('update:guide', updated);
+    pushHistoryState(updated);
+  }
+  coAuthorSearchInput.value = '';
+  isCoAuthorDropdownOpen.value = false;
+};
+
+const removeCoAuthor = (username: string) => {
+  const current = props.guide.meta.coAuthors || [];
+  const updated = {
+    ...props.guide,
+    meta: {
+      ...props.guide.meta,
+      coAuthors: current.filter(c => c.toLowerCase().trim() !== username.toLowerCase().trim())
+    }
+  };
+  emit('update:guide', updated);
+  pushHistoryState(updated);
+};
 const isMetaExpanded = ref(false);
 const activeBlockMenuId = ref<string | null>(null);
 const activeSubBlockMenuId = ref<string | null>(null);
@@ -1856,10 +1918,83 @@ const stopOutlineDrag = () => {
             <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Основной Автор</label>
             <input type="text" :value="guide.meta.author" @input="updateAuthor(($event.target as HTMLInputElement).value)" placeholder="Ваш никнейм..." class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-accent" />
           </div>
-          <!-- Co-authors -->
-          <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5">Соавторы</label>
-            <input type="text" :value="(guide.meta.coAuthors || []).join(', ')" @input="updateCoAuthors(($event.target as HTMLInputElement).value)" placeholder="через запятую..." class="w-full bg-[#0c0d0e] border border-[#26292d] text-cyan-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500" />
+          <!-- Co-authors (Interactive Pick From Real Registered Authors) -->
+          <div class="relative z-30">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5 flex items-center justify-between">
+              <span>Соавторы</span>
+              <span class="text-[10px] text-dark-muted font-normal">Только зарегистрированные авторы</span>
+            </label>
+
+            <!-- Active Co-author Chips & Add Button -->
+            <div class="min-h-[42px] p-2 rounded-xl bg-[#0c0d0e] border border-[#26292d] focus-within:border-cyan-500 transition-all flex flex-wrap items-center gap-1.5">
+              <!-- Chip list -->
+              <div 
+                v-for="coAuthor in (guide.meta.coAuthors || [])" 
+                :key="coAuthor"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-bold shadow-sm"
+              >
+                <span>{{ coAuthor }}</span>
+                <button 
+                  type="button" 
+                  @click="removeCoAuthor(coAuthor)"
+                  class="text-cyan-400 hover:text-white transition-colors cursor-pointer"
+                  title="Удалить соавтора"
+                >
+                  <IconRenderer name="X" size="12" />
+                </button>
+              </div>
+
+              <!-- Open Autocomplete Picker Button -->
+              <button
+                type="button"
+                @click.stop="isCoAuthorDropdownOpen = !isCoAuthorDropdownOpen; isCategoryDropdownOpen = false; isGradientDropdownOpen = false; isEditorServerDropdownOpen = false;"
+                class="px-2.5 py-1 rounded-lg bg-[#141618] hover:bg-[#202329] text-cyan-400 border border-cyan-500/40 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0"
+              >
+                <IconRenderer name="UserPlus" size="13" />
+                <span>Добавить</span>
+              </button>
+            </div>
+
+            <!-- Autocomplete Popover Dropdown -->
+            <div 
+              v-if="isCoAuthorDropdownOpen" 
+              @click.stop 
+              class="absolute top-full left-0 mt-1.5 bg-[#0e1013]/98 border border-cyan-500/40 rounded-2xl shadow-2xl p-2.5 z-[100] w-full backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 space-y-2"
+            >
+              <!-- Search Input -->
+              <div class="relative">
+                <input
+                  type="text"
+                  v-model="coAuthorSearchInput"
+                  placeholder="Поиск по авторам..."
+                  class="w-full bg-[#141619] border border-[#26292d] text-white text-xs rounded-xl pl-8 pr-3 py-1.5 focus:outline-none focus:border-cyan-500/60"
+                />
+                <IconRenderer name="Search" size="13" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-muted" />
+              </div>
+
+              <!-- List of available real authors -->
+              <div class="max-h-40 overflow-y-auto space-y-1 custom-scrollbar pr-0.5">
+                <div v-if="filteredCoAuthorsToPick.length === 0" class="p-3 text-center text-xs text-dark-muted">
+                  {{ registeredAuthorsList.length === 0 ? 'Загрузка списка авторов...' : 'Подходящих зарегистрированных авторов не найдено' }}
+                </div>
+
+                <button
+                  v-for="author in filteredCoAuthorsToPick"
+                  :key="author.username"
+                  type="button"
+                  @click="addCoAuthor(author.username)"
+                  class="w-full text-left px-3 py-1.5 rounded-xl hover:bg-cyan-500/15 text-xs text-slate-200 hover:text-cyan-300 transition-colors flex items-center justify-between cursor-pointer group"
+                >
+                  <div class="flex items-center gap-2">
+                    <IconRenderer name="User" size="14" class="text-cyan-400 group-hover:scale-110 transition-transform" />
+                    <span class="font-bold">{{ author.username }}</span>
+                  </div>
+                  <span v-if="author.is_verified" class="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Подтвержден
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
           <!-- Category (Custom Glass Popover) -->
           <div class="relative z-35">

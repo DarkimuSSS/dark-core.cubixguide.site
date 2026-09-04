@@ -363,6 +363,16 @@ app.post('/api/profiles/:username', (req, res) => {
   }
 });
 
+// Get List of All Registered Author Usernames for Autocomplete / Pickers
+app.get('/api/authors', (req, res) => {
+  try {
+    const rows = db.prepare('SELECT username, role, is_verified FROM users ORDER BY username ASC').all();
+    res.json(rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 1. Get all guides
 app.get('/api/guides', (req, res) => {
   try {
