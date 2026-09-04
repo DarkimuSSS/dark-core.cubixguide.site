@@ -641,7 +641,7 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
 const fetchGuides = async (silent: boolean = false) => {
   try {
     if (!silent) isLoading.value = true;
-    const includeDrafts = mode.value === 'editor' || currentUser.value !== null;
+    const includeDrafts = mode.value === 'editor' || currentUsername.value !== null;
     const res = await fetch(`/api/guides${includeDrafts ? '?includeDrafts=true' : ''}`);
     if (!res.ok) {
       const errText = await res.text();
