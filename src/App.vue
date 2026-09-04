@@ -1462,10 +1462,15 @@ const handleViewAllAuthorGuides = (username: string) => {
                 @click="selectGuide(guide.meta.id); mode = 'editor';"
                 class="group bg-[#16181a] hover:bg-[#1c1f22] border border-purple-500/30 hover:border-purple-400 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl hover:shadow-purple-950/30 hover:-translate-y-1 overflow-hidden relative"
               >
-                <!-- DRAFT BADGE TOP LEFT -->
-                <div class="absolute top-2.5 left-2.5 z-20 bg-purple-500/20 text-purple-300 border border-purple-500/40 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold backdrop-blur-md shadow-md flex items-center gap-1">
-                  <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
-                  <span>Черновик</span>
+                <!-- DRAFT / PENDING MODERATION BADGE TOP LEFT -->
+                <div :class="[
+                  'absolute top-2.5 left-2.5 z-20 border px-2.5 py-0.5 rounded-full text-[10px] font-extrabold backdrop-blur-md shadow-md flex items-center gap-1.5',
+                  guide.meta.status === 'pending_moderation'
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                    : 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                ]">
+                  <span :class="['w-1.5 h-1.5 rounded-full animate-pulse', guide.meta.status === 'pending_moderation' ? 'bg-amber-400' : 'bg-purple-400']"></span>
+                  <span>{{ guide.meta.status === 'pending_moderation' ? 'На модерации 📩' : 'Черновик' }}</span>
                 </div>
 
                 <!-- COVER BANNER -->
