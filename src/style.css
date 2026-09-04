@@ -88,8 +88,26 @@ html.theme-light .bg-\[\#121417\],
 html.theme-light .bg-\[\#121417\]\/95,
 html.theme-light .bg-\[\#121417\]\/98,
 html.theme-light .from-\[\#16181a\],
-html.theme-light .to-\[\#101214\] {
+html.theme-light .via-\[\#121416\],
+html.theme-light .to-\[\#101214\],
+html.theme-light .to-\[\#0c0d0e\],
+html.theme-light .from-slate-900,
+html.theme-light .from-purple-950,
+html.theme-light .via-slate-800,
+html.theme-light .via-slate-900 {
   background-color: #f8f9fa !important;
+  color: #212529 !important;
+}
+
+/* Force bg-gradient containers to light background in Light Mode */
+html.theme-light .bg-gradient-to-br.from-\[\#16181a\],
+html.theme-light .bg-gradient-to-b.from-\[\#16181a\],
+html.theme-light .bg-gradient-to-r.from-slate-900,
+html.theme-light .bg-gradient-to-r.from-purple-950,
+html.theme-light .bg-gradient-to-r.from-slate-800,
+html.theme-light .bg-gradient-to-tr.from-emerald-950,
+html.theme-light .bg-gradient-to-r.from-emerald-950 {
+  background: #f8f9fa !important;
   color: #212529 !important;
 }
 
@@ -103,7 +121,12 @@ html.theme-light .bg-\[\#090a0c\]\/80,
 html.theme-light .bg-\[\#181b20\],
 html.theme-light .bg-\[\#1a1d22\],
 html.theme-light .bg-\[\#1c1f24\],
-html.theme-light .bg-emerald-950\/30 {
+html.theme-light .bg-emerald-950\/30,
+html.theme-light .bg-emerald-950\/40,
+html.theme-light .bg-cyan-950\/30,
+html.theme-light .bg-cyan-950\/40,
+html.theme-light .bg-purple-950\/30,
+html.theme-light .bg-purple-950\/40 {
   background-color: #f1f3f5 !important;
   color: #212529 !important;
 }
@@ -113,13 +136,13 @@ html.theme-light .card-banner-shadow {
   background: linear-gradient(to top, #f8f9fa 0%, rgba(248, 249, 250, 0.4) 40%, rgba(0, 0, 0, 0.1) 100%) !important;
 }
 
-/* Fix Profile Modal Banner Overlay in Light Mode */
+/* Fix Profile Modal Banner Overlay in Light Mode so text is non-glare and crisp */
 html.theme-light .profile-modal-banner-overlay {
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.6) 40%, #f8f9fa 100%) !important;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(248, 249, 250, 0.85) 45%, #f8f9fa 100%) !important;
 }
 
 html.theme-light .profile-modal-banner-img {
-  opacity: 0.65 !important;
+  opacity: 0.45 !important;
 }
 
 /* Navigation Dropdown Panel Light Mode Fix */
