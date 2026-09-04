@@ -317,6 +317,100 @@ html.theme-light .mc-slot:hover {
   background-color: #e7f5ff;
 }
 
+/* Rich Luxury Emerald Cyber Theme Override */
+html.theme-emerald {
+  color-scheme: dark;
+  --bg-primary: #05130f;
+  --bg-card: #0c201a;
+  --bg-secondary: #081a14;
+  --border-color: #154a3a;
+  --text-primary: #ecfdf5;
+  --text-secondary: #6ee7b7;
+}
+
+html.theme-emerald body {
+  background-color: #05130f;
+  color: #ecfdf5;
+}
+
+html.theme-emerald .bg-\[\#0c0d0e\],
+html.theme-emerald .bg-\[\#0c0d0e\]\/80,
+html.theme-emerald .bg-\[\#0c0d0e\]\/85,
+html.theme-emerald .bg-\[\#0c0d0e\]\/90,
+html.theme-emerald .bg-\[\#0c0d0e\]\/95,
+html.theme-emerald .from-\[\#0c0d0e\],
+html.theme-emerald .to-\[\#0c0d0e\],
+html.theme-emerald footer {
+  background-color: #05130f !important;
+  color: #ecfdf5 !important;
+}
+
+html.theme-emerald .bg-\[\#16181a\],
+html.theme-emerald .bg-\[\#16181a\]\/80,
+html.theme-emerald .bg-\[\#16181a\]\/90,
+html.theme-emerald .bg-\[\#16181a\]\/95,
+html.theme-emerald .bg-\[\#141618\],
+html.theme-emerald .bg-\[\#121416\],
+html.theme-emerald .bg-\[\#181a1d\],
+html.theme-emerald .bg-\[\#101214\],
+html.theme-emerald .bg-\[\#121417\],
+html.theme-emerald .bg-\[\#121417\]\/95,
+html.theme-emerald .bg-\[\#121417\]\/98,
+html.theme-emerald .from-\[\#16181a\],
+html.theme-emerald .to-\[\#101214\] {
+  background-color: #0c201a !important;
+  color: #ecfdf5 !important;
+}
+
+html.theme-emerald .bg-\[\#121416\]\/80,
+html.theme-emerald .bg-\[\#121416\]\/90,
+html.theme-emerald .bg-\[\#1f2328\],
+html.theme-emerald .bg-\[\#212429\],
+html.theme-emerald .bg-\[\#090a0c\],
+html.theme-emerald .bg-\[\#090a0c\]\/80,
+html.theme-emerald .bg-\[\#181b20\],
+html.theme-emerald .bg-\[\#1a1d22\],
+html.theme-emerald .bg-\[\#1c1f24\] {
+  background-color: #081a14 !important;
+  color: #a7f3d0 !important;
+}
+
+html.theme-emerald .border-\[\#26292d\],
+html.theme-emerald .border-\[\#26292d\]\/80,
+html.theme-emerald .border-\[\#26292d\]\/50,
+html.theme-emerald .border-\[\#26292d\]\/60,
+html.theme-emerald .border-\[\#262a30\] {
+  border-color: #154a3a !important;
+}
+
+html.theme-emerald .text-slate-300,
+html.theme-emerald .text-slate-400,
+html.theme-emerald .text-slate-500,
+html.theme-emerald .text-dark-muted {
+  color: #6ee7b7 !important;
+}
+
+html.theme-emerald .card-banner-shadow {
+  background: linear-gradient(to top, #0c201a 0%, rgba(12, 32, 26, 0.4) 40%, rgba(0, 0, 0, 0.3) 100%) !important;
+}
+
+html.theme-emerald .profile-modal-banner-overlay {
+  background: linear-gradient(to bottom, rgba(5, 19, 15, 0.5) 0%, rgba(12, 32, 26, 0.85) 45%, #0c201a 100%) !important;
+}
+
+html.theme-emerald ::-webkit-scrollbar-track {
+  background: #05130f;
+}
+
+html.theme-emerald ::-webkit-scrollbar-thumb {
+  background: #154a3a;
+  border-radius: 4px;
+}
+
+html.theme-emerald ::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
+
 
 
 /* Custom scrollbar styling */

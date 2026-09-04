@@ -85,20 +85,20 @@ const handleClearDrafts = () => {
 // Bookmarked / Favorited guide IDs in LocalStorage
 const favoriteGuideIds = ref<string[]>([]);
 
-// Theme Switcher State: 'dark' | 'light'
-type ThemeMode = 'dark' | 'light';
+// Theme Switcher State: 'dark' | 'light' | 'emerald'
+type ThemeMode = 'dark' | 'light' | 'emerald';
 const currentTheme = ref<ThemeMode>('dark');
 
 const applyTheme = (theme: ThemeMode) => {
   currentTheme.value = theme;
   localStorage.setItem('cubix_theme', theme);
   const html = document.documentElement;
-  html.classList.remove('theme-dark', 'theme-light');
+  html.classList.remove('theme-dark', 'theme-light', 'theme-emerald');
   html.classList.add(`theme-${theme}`);
 };
 
 const toggleTheme = () => {
-  const themes: ThemeMode[] = ['dark', 'light'];
+  const themes: ThemeMode[] = ['dark', 'light', 'emerald'];
   const cur = currentTheme.value || 'dark';
   const idx = themes.indexOf(cur);
   const nextIdx = (idx >= 0 ? idx + 1 : 0) % themes.length;
