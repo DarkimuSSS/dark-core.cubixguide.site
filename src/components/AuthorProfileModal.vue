@@ -56,7 +56,7 @@ const profile = ref<AuthorProfile>({
   avatarUrl: '',
   bannerUrl: '',
   bio: '',
-  server: 'MagicRPG',
+  server: '',
   socialVk: '',
   socialTg: '',
   socialDs: '',

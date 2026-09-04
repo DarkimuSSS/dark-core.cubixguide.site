@@ -251,7 +251,7 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
     username: cleanUsername,
     avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${cleanUsername}`,
     bio: '',
-    server: 'MagicRPG',
+    server: '',
     badges: ['Автор Гайдов'],
     updatedAt: createdAt
   });
@@ -727,7 +727,7 @@ export function getAuthorProfile(username: string): AuthorProfile {
     avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`,
     bannerUrl: '/default_banner.jpg',
     bio: `Автор руководств и сборщиков на серверах CubixWorld.`,
-    server: 'MagicRPG',
+    server: '',
     socialVk: '',
     socialTg: '',
     socialDs: '',
