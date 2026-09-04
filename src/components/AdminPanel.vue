@@ -555,7 +555,7 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
           >
             <option value="all">Все роли ({{ registeredAuthorsList.length }})</option>
             <option v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)" :key="r.role" :value="r.role">
-              {{ r.name }} (Приоритет: {{ r.priority }})
+              {{ r.name }}
             </option>
           </select>
         </div>
@@ -930,7 +930,7 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
               :value="r.role"
               :disabled="getRolePriority(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest')) >= r.priority && props.currentRole !== 'super_admin'"
             >
-              {{ r.name }} (Приоритет: {{ r.priority }})
+              {{ r.name }}
             </option>
           </select>
         </div>
