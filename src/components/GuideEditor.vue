@@ -1640,9 +1640,9 @@ const stopOutlineDrag = () => {
 
         <!-- Unpublish / Hide Action Button for Published Guides -->
         <div v-if="props.guide.meta.published && props.guide.meta.isVisible" class="relative group/tool w-full flex justify-center">
-          <!-- MANAGER / ADMIN: Direct Unpublish -->
+          <!-- MANAGER / ADMIN (super_admin / admin / manager with unpublish perm): Direct Unpublish -->
           <button
-            v-if="props.canDirectUnpublish"
+            v-if="props.canDirectUnpublish && (props.userRole === 'super_admin' || props.userRole === 'admin' || props.userRole === 'manager')"
             type="button"
             @click="emit('direct-unpublish')"
             :class="['rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center transition-all shadow-lg shadow-purple-950/50 cursor-pointer', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']"
@@ -1651,16 +1651,22 @@ const stopOutlineDrag = () => {
             <span v-if="isToolbarExpanded" class="text-xs font-bold truncate">Снять с публикации</span>
           </button>
 
-          <!-- AUTHOR / EDITOR: Request Unpublish -->
+          <!-- AUTHORS & EDITORS: Always Request Unpublish (Open Reason Modal) -->
           <button
             v-else
             type="button"
             @click="openUnpublishReasonModal"
-            :class="['rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40 flex items-center transition-all cursor-pointer', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']"
+            :class="['rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center transition-all shadow-lg shadow-purple-950/50 cursor-pointer', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']"
           >
-            <IconRenderer name="EyeOff" size="18" class="shrink-0 text-amber-400" />
+            <IconRenderer name="EyeOff" size="18" class="shrink-0 text-purple-200" />
             <span v-if="isToolbarExpanded" class="text-xs font-extrabold truncate">Запросить снятие</span>
           </button>
+
+          <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
+            <div class="bg-[#0c0d0e] border border-purple-500/50 text-purple-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
+              {{ (props.canDirectUnpublish && (props.userRole === 'super_admin' || props.userRole === 'admin' || props.userRole === 'manager')) ? 'Снять с публикации (Скрыть)' : 'Запросить снятие с публикации у Управляющего' }}
+            </div>
+          </div>
         </div>
 
         <!-- Submit Moderation Action Button (for unpublished/draft guides) -->
