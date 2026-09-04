@@ -1171,6 +1171,18 @@ const handleViewAllAuthorGuides = (username: string) => {
 
                 <button
                   v-if="isAuthenticated"
+                  @click="isAuthorDashboardOpen = true; isHeaderNavMenuOpen = false"
+                  class="p-3 rounded-2xl bg-[#090a0c] border border-cyan-500/30 hover:border-cyan-400 text-left transition-all flex items-center gap-2 cursor-pointer group shadow-sm"
+                >
+                  <IconRenderer name="TrendingUp" size="18" class="text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-cyan-300 truncate">Кабинет Автора</div>
+                    <div class="text-[10px] text-dark-muted truncate">Аналитика просмотров</div>
+                  </div>
+                </button>
+
+                <button
+                  v-if="isAuthenticated"
                   @click="mode = 'drafts'; isHeaderNavMenuOpen = false"
                   :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'drafts' ? 'bg-purple-500/15 border-purple-500/50 text-purple-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-purple-500/40']"
                 >
@@ -1335,18 +1347,6 @@ const handleViewAllAuthorGuides = (username: string) => {
             ✕
           </button>
         </div>
-
-        <!-- Author Personal Cabinet & Analytics Button -->
-        <button
-          v-if="isAuthenticated"
-          type="button"
-          @click="isAuthorDashboardOpen = true"
-          class="px-2.5 sm:px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md cursor-pointer shrink-0"
-          title="Кабинет автора и Аналитика просмотров"
-        >
-          <IconRenderer name="TrendingUp" size="15" />
-          <span class="hidden sm:inline">Кабинет</span>
-        </button>
 
         <!-- Editor Mode Switcher Button -->
         <button
