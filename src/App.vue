@@ -960,7 +960,7 @@ const handleViewAllAuthorGuides = (username: string) => {
           <div
             v-if="isHeaderNavMenuOpen"
             @click.stop
-            class="fixed inset-x-3 top-16 max-h-[85vh] overflow-y-auto z-50 sm:absolute sm:inset-auto sm:top-full sm:left-0 sm:mt-3 sm:w-[840px] sm:max-h-[80vh] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in-95 duration-200 custom-scrollbar"
+            class="fixed inset-x-3 top-16 max-h-[85vh] overflow-y-auto z-50 sm:absolute sm:inset-auto sm:top-full sm:left-0 sm:mt-3 w-[calc(100vw-1.5rem)] md:w-[720px] lg:w-[840px] max-w-[calc(100vw-1.5rem)] lg:max-w-[840px] sm:max-h-[80vh] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in-95 duration-200 custom-scrollbar"
           >
             <!-- Mobile Header with Close X button -->
             <div class="flex items-center justify-between pb-2 border-b border-[#262a30] sm:hidden">
@@ -975,7 +975,7 @@ const handleViewAllAuthorGuides = (username: string) => {
             <!-- Navigation Modes -->
             <div>
               <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1">Основные разделы:</div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                 <button
                   @click="mode = 'home'; isHeaderNavMenuOpen = false"
                   :class="['p-3 rounded-2xl border text-left transition-all flex items-center gap-2 cursor-pointer', mode === 'home' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-[#090a0c] border-[#262a30] text-slate-300 hover:border-emerald-500/40']"
@@ -1099,7 +1099,7 @@ const handleViewAllAuthorGuides = (username: string) => {
                 <span class="text-[10px] text-emerald-400 font-bold">10 направлений</span>
               </div>
 
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-72 overflow-y-auto pr-1">
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-72 overflow-y-auto pr-1">
                 <button
                   v-for="cat in [
                     { name: 'ХайТек', icon: 'Cpu', color: 'from-cyan-500/20 to-blue-500/10 border-cyan-500/40 text-cyan-300', desc: 'Автоматизация & Энергия' },
