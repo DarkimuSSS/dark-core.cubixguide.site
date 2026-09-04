@@ -317,53 +317,7 @@ html.theme-light .mc-slot:hover {
   background-color: #e7f5ff;
 }
 
-/* Emerald Theme Override */
-html.theme-emerald body {
-  background-color: #061410;
-  color: #e2e8f0;
-}
-html.theme-emerald .bg-\[\#0c0d0e\], html.theme-emerald .bg-\[\#090a0c\] { background-color: #061410 !important; }
-html.theme-emerald .bg-\[\#16181a\], html.theme-emerald .bg-\[\#121417\], html.theme-emerald .bg-\[\#121417\]\/95 { background-color: #0c201a !important; }
-html.theme-emerald .bg-\[\#121416\], html.theme-emerald .bg-\[\#181b20\], html.theme-emerald .bg-\[\#1a1d22\] { background-color: #091a15 !important; }
-html.theme-emerald .border-\[\#26292d\], html.theme-emerald .border-\[\#262a30\] { border-color: #153e33 !important; }
 
-/* Cyberpunk Theme Override */
-html.theme-cyberpunk body {
-  background-color: #120917;
-  color: #f5d0fe;
-}
-html.theme-cyberpunk .bg-\[\#0c0d0e\], html.theme-cyberpunk .bg-\[\#090a0c\] { background-color: #120917 !important; }
-html.theme-cyberpunk .bg-\[\#16181a\], html.theme-cyberpunk .bg-\[\#121417\], html.theme-cyberpunk .bg-\[\#121417\]\/95 { background-color: #1f0f29 !important; }
-html.theme-cyberpunk .bg-\[\#121416\], html.theme-cyberpunk .bg-\[\#181b20\], html.theme-cyberpunk .bg-\[\#1a1d22\] { background-color: #180b21 !important; }
-html.theme-cyberpunk .border-\[\#26292d\], html.theme-cyberpunk .border-\[\#262a30\] { border-color: #3b184c !important; }
-
-/* Midnight Theme Override */
-html.theme-midnight body { background-color: #070b14; color: #cbd5e1; }
-html.theme-midnight .bg-\[\#0c0d0e\], html.theme-midnight .bg-\[\#090a0c\] { background-color: #070b14 !important; }
-html.theme-midnight .bg-\[\#16181a\], html.theme-midnight .bg-\[\#121417\], html.theme-midnight .bg-\[\#121417\]\/95 { background-color: #0d1527 !important; }
-html.theme-midnight .bg-\[\#121416\], html.theme-midnight .bg-\[\#181b20\], html.theme-midnight .bg-\[\#1a1d22\] { background-color: #09101f !important; }
-html.theme-midnight .border-\[\#26292d\], html.theme-midnight .border-\[\#262a30\] { border-color: #14223b !important; }
-
-/* Sapphire Theme Override */
-html.theme-sapphire body { background-color: #06101e; color: #bae6fd; }
-html.theme-sapphire .bg-\[\#0c0d0e\], html.theme-sapphire .bg-\[\#090a0c\] { background-color: #06101e !important; }
-html.theme-sapphire .bg-\[\#16181a\], html.theme-sapphire .bg-\[\#121417\], html.theme-sapphire .bg-\[\#121417\]\/95 { background-color: #0c1d36 !important; }
-html.theme-sapphire .bg-\[\#121416\], html.theme-sapphire .bg-\[\#181b20\], html.theme-sapphire .bg-\[\#1a1d22\] { background-color: #08162b !important; }
-html.theme-sapphire .border-\[\#26292d\], html.theme-sapphire .border-\[\#262a30\] { border-color: #133256 !important; }
-
-/* Sunset Theme Override */
-html.theme-sunset body { background-color: #140b08; color: #ffedd5; }
-html.theme-sunset .bg-\[\#0c0d0e\], html.theme-sunset .bg-\[\#090a0c\] { background-color: #140b08 !important; }
-html.theme-sunset .bg-\[\#16181a\], html.theme-sunset .bg-\[\#121417\], html.theme-sunset .bg-\[\#121417\]\/95 { background-color: #24130d !important; }
-html.theme-sunset .bg-\[\#121416\], html.theme-sunset .bg-\[\#181b20\], html.theme-sunset .bg-\[\#1a1d22\] { background-color: #1c0f0a !important; }
-html.theme-sunset .border-\[\#26292d\], html.theme-sunset .border-\[\#262a30\] { border-color: #3d1e12 !important; }
-
-/* Dracula Theme Override */
-html.theme-dracula body { background-color: #100a1c; color: #e9d5ff; }
-html.theme-dracula .bg-\[\#0c0d0e\], html.theme-dracula .bg-\[\#090a0c\] { background-color: #100a1c !important; }
-html.theme-dracula .bg-\[\#16181a\], html.theme-dracula .bg-\[\#121417\], html.theme-dracula .bg-\[\#121417\]\/95 { background-color: #1c1130 !important; }
-html.theme-dracula .bg-\[\#121416\], html.theme-dracula .bg-\[\#181b20\], html.theme-dracula .bg-\[\#1a1d22\] { background-color: #150c26 !important; }
-html.theme-dracula .border-\[\#26292d\], html.theme-dracula .border-\[\#262a30\] { border-color: #2e1c4e !important; }
 
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {
