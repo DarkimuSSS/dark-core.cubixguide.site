@@ -70,7 +70,8 @@ const toggleSmoothScroll = () => {
 const themesList: { id: ThemeMode; name: string; icon: string; color: string; desc: string; previewBg: string }[] = [
   { id: 'dark', name: 'Тёмная (Dark Core)', icon: 'Moon', color: 'text-cyan-400', desc: 'Фирменный тёмный стеклянный стиль', previewBg: 'bg-[#0c0d0e] border-[#26292d]' },
   { id: 'light', name: 'Светлая (Daylight)', icon: 'Sun', color: 'text-amber-400', desc: 'Контрастный дневной белый интерфейс', previewBg: 'bg-slate-100 border-slate-300' },
-  { id: 'emerald', name: 'Изумрудная (Emerald Cyber)', icon: 'Sparkles', color: 'text-emerald-400', desc: 'Глубокий богатый изумрудно-неоновый стиль', previewBg: 'bg-[#05130f] border-[#0e3b2e]' }
+  { id: 'emerald', name: 'Изумрудная (Emerald Cyber)', icon: 'Sparkles', color: 'text-emerald-400', desc: 'Глубокий богатый изумрудно-неоновый стиль', previewBg: 'bg-[#05130f] border-[#0e3b2e]' },
+  { id: 'crimson', name: 'Бархатно-красная (Velvet Crimson)', icon: 'Flame', color: 'text-rose-400', desc: 'Роскошный глубокий бархатно-алый стиль', previewBg: 'bg-[#140608] border-[#4a1219]' }
 ];
 
 const fileInput = ref<HTMLInputElement | null>(null);

@@ -411,6 +411,100 @@ html.theme-emerald ::-webkit-scrollbar-thumb:hover {
   background: #10b981;
 }
 
+/* Luxury Velvet Crimson Theme Override */
+html.theme-crimson {
+  color-scheme: dark;
+  --bg-primary: #140608;
+  --bg-card: #20090d;
+  --bg-secondary: #1a070a;
+  --border-color: #4a1219;
+  --text-primary: #fff1f2;
+  --text-secondary: #fecdd3;
+}
+
+html.theme-crimson body {
+  background-color: #140608;
+  color: #fff1f2;
+}
+
+html.theme-crimson .bg-\[\#0c0d0e\],
+html.theme-crimson .bg-\[\#0c0d0e\]\/80,
+html.theme-crimson .bg-\[\#0c0d0e\]\/85,
+html.theme-crimson .bg-\[\#0c0d0e\]\/90,
+html.theme-crimson .bg-\[\#0c0d0e\]\/95,
+html.theme-crimson .from-\[\#0c0d0e\],
+html.theme-crimson .to-\[\#0c0d0e\],
+html.theme-crimson footer {
+  background-color: #140608 !important;
+  color: #fff1f2 !important;
+}
+
+html.theme-crimson .bg-\[\#16181a\],
+html.theme-crimson .bg-\[\#16181a\]\/80,
+html.theme-crimson .bg-\[\#16181a\]\/90,
+html.theme-crimson .bg-\[\#16181a\]\/95,
+html.theme-crimson .bg-\[\#141618\],
+html.theme-crimson .bg-\[\#121416\],
+html.theme-crimson .bg-\[\#181a1d\],
+html.theme-crimson .bg-\[\#101214\],
+html.theme-crimson .bg-\[\#121417\],
+html.theme-crimson .bg-\[\#121417\]\/95,
+html.theme-crimson .bg-\[\#121417\]\/98,
+html.theme-crimson .from-\[\#16181a\],
+html.theme-crimson .to-\[\#101214\] {
+  background-color: #20090d !important;
+  color: #fff1f2 !important;
+}
+
+html.theme-crimson .bg-\[\#121416\]\/80,
+html.theme-crimson .bg-\[\#121416\]\/90,
+html.theme-crimson .bg-\[\#1f2328\],
+html.theme-crimson .bg-\[\#212429\],
+html.theme-crimson .bg-\[\#090a0c\],
+html.theme-crimson .bg-\[\#090a0c\]\/80,
+html.theme-crimson .bg-\[\#181b20\],
+html.theme-crimson .bg-\[\#1a1d22\],
+html.theme-crimson .bg-\[\#1c1f24\] {
+  background-color: #1a070a !important;
+  color: #fecdd3 !important;
+}
+
+html.theme-crimson .border-\[\#26292d\],
+html.theme-crimson .border-\[\#26292d\]\/80,
+html.theme-crimson .border-\[\#26292d\]\/50,
+html.theme-crimson .border-\[\#26292d\]\/60,
+html.theme-crimson .border-\[\#262a30\] {
+  border-color: #4a1219 !important;
+}
+
+html.theme-crimson .text-slate-300,
+html.theme-crimson .text-slate-400,
+html.theme-crimson .text-slate-500,
+html.theme-crimson .text-dark-muted {
+  color: #fda4af !important;
+}
+
+html.theme-crimson .card-banner-shadow {
+  background: linear-gradient(to top, #20090d 0%, rgba(32, 9, 13, 0.4) 40%, rgba(0, 0, 0, 0.3) 100%) !important;
+}
+
+html.theme-crimson .profile-modal-banner-overlay {
+  background: linear-gradient(to bottom, rgba(20, 6, 8, 0.5) 0%, rgba(32, 9, 13, 0.85) 45%, #20090d 100%) !important;
+}
+
+html.theme-crimson ::-webkit-scrollbar-track {
+  background: #140608;
+}
+
+html.theme-crimson ::-webkit-scrollbar-thumb {
+  background: #4a1219;
+  border-radius: 4px;
+}
+
+html.theme-crimson ::-webkit-scrollbar-thumb:hover {
+  background: #f43f5e;
+}
+
 
 
 /* Custom scrollbar styling */
