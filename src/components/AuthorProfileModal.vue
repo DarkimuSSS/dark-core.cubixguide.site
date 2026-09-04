@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import IconRenderer from './IconRenderer.vue';
-import ConfirmModal from './ConfirmModal.vue';
-import type { AuthorProfile, Guide } from '../types/guide';
+import { DEFAULT_SYSTEM_ROLES } from '../data/roles';
+import type { AuthorProfile, Guide, UserRole } from '../types/guide';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -631,6 +629,14 @@ const handleBannerFileUpload = (e: Event) => {
                   <div class="min-w-0">
                     <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2.5 flex-wrap drop-shadow-md">
                       <span>{{ profile.username }}</span>
+
+                      <!-- System Role Badge -->
+                      <span
+                        v-if="profile.role && DEFAULT_SYSTEM_ROLES[profile.role]"
+                        :class="['text-xs font-extrabold px-2.5 py-0.5 rounded-full border shadow-md inline-flex items-center gap-1', DEFAULT_SYSTEM_ROLES[profile.role].badgeColor]"
+                      >
+                        {{ DEFAULT_SYSTEM_ROLES[profile.role].name }}
+                      </span>
 
                       <!-- CRISP VERIFIED CHECKMARK BADGE WITH HOVER TOOLTIP "Проверенный Автор" -->
                       <div v-if="isAuthorVerified" class="relative group/vtool inline-flex items-center">
