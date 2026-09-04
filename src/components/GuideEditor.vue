@@ -2043,15 +2043,15 @@ const stopOutlineDrag = () => {
                 </div>
               </div>
 
-              <div :id="`section-container-${block.id}`" class="flex items-stretch w-full">
+              <div :id="`section-container-${block.id}`" class="flex flex-wrap md:flex-nowrap gap-3 items-stretch w-full">
                 <template v-for="(col, colIdx) in (block.columns || [])" :key="col.id">
                   <div
-                    :style="{ width: `calc(${col.customWidth || 50}% - 0.5rem)` }"
+                    :style="{ '--col-w': `calc(${col.customWidth || 50}% - 0.5rem)` }"
                     @dragover="draggedColIndex?.blockId === block.id ? onColDragOver($event, block, colIdx) : onSubBlockDragOver($event, block, col.id, col.blocks.length)"
                     @drop="draggedColIndex?.blockId === block.id ? onColDrop($event, block, colIdx) : onSubBlockDrop($event, block, col.id, col.blocks.length)"
                     @dragend="onColDragEnd"
                     :class="[
-                      'flex flex-col gap-3 bg-[#16181a] border p-3 rounded-xl shadow-sm relative min-h-[140px] transition-all',
+                      'w-full md:w-[var(--col-w)] flex flex-col gap-3 bg-[#16181a] border p-3 rounded-xl shadow-sm relative min-h-[140px] transition-all min-w-0',
                       draggedColIndex?.blockId === block.id && draggedColIndex?.colIdx === colIdx ? 'opacity-40 border-dashed border-cyan-500' :
                       dragOverColIndex?.blockId === block.id && dragOverColIndex?.colIdx === colIdx ? 'border-cyan-400 bg-cyan-500/10' :
                       'border-[#26292d]'

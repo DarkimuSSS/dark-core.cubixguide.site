@@ -592,11 +592,11 @@ const getVariantClass = (variant?: BlockVariant) => {
                 <div 
                   v-for="col in (block.columns || [])" 
                   :key="col.id"
-                  :style="{ width: col.customWidth ? `calc(${col.customWidth}% - 0.75rem)` : undefined }"
+                  :style="col.customWidth ? { '--col-w': `calc(${col.customWidth}% - 0.75rem)` } : undefined"
                   :class="[
-                    !col.customWidth ? getGridSpanClass(col.span) : '',
+                    col.customWidth ? 'w-full md:w-[var(--col-w)]' : getGridSpanClass(col.span),
                     block.sectionStyle === 'transparent' ? 'bg-[#16181a] border border-[#26292d] p-6 rounded-2xl shadow-xl' : '',
-                    'flex flex-col justify-start gap-4 h-full'
+                    'flex flex-col justify-start gap-4 h-full min-w-0'
                   ]"
                 >
                   <!-- Stacked Sub-blocks inside Unified Column Card (Top-Aligned) -->

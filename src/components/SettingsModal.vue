@@ -100,11 +100,11 @@ const handleFileUpload = (e: Event) => {
 </script>
 
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md transition-all">
-    <div class="bg-[#16181a] border border-[#26292d] w-full max-w-xl rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md transition-all" @click.self="emit('close')">
+    <div class="bg-[#16181a] border border-[#26292d] w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl p-5 sm:p-8 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
       
       <!-- Top Header -->
-      <div class="flex items-center justify-between pb-4 border-b border-[#26292d]">
+      <div class="flex items-center justify-between pb-4 mb-4 border-b border-[#26292d] shrink-0">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-sm">
             <IconRenderer name="Settings" size="20" />
@@ -117,17 +117,18 @@ const handleFileUpload = (e: Event) => {
 
         <button 
           @click="emit('close')"
-          class="w-9 h-9 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-dark-muted hover:text-white flex items-center justify-center transition-all"
+          class="w-9 h-9 rounded-xl bg-[#121416] hover:bg-[#212429] border border-[#26292d] text-dark-muted hover:text-white flex items-center justify-center transition-all cursor-pointer"
+          title="Закрыть"
         >
           <IconRenderer name="X" size="18" />
         </button>
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="flex items-center gap-2 p-1 bg-[#0c0d0e] border border-[#26292d] rounded-2xl">
+      <div class="flex items-center gap-2 p-1 mb-4 bg-[#0c0d0e] border border-[#26292d] rounded-2xl shrink-0">
         <button
           @click="selectedTab = 'appearance'"
-          :class="['flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all', selectedTab === 'appearance' ? 'bg-[#16181a] text-cyan-400 shadow-md border border-[#26292d]' : 'text-dark-muted hover:text-white']"
+          :class="['flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer', selectedTab === 'appearance' ? 'bg-[#16181a] text-cyan-400 shadow-md border border-[#26292d]' : 'text-dark-muted hover:text-white']"
         >
           <IconRenderer name="Sun" size="14" />
           <span>Оформление</span>
@@ -136,7 +137,7 @@ const handleFileUpload = (e: Event) => {
         <button
           v-if="isAdmin"
           @click="selectedTab = 'data'"
-          :class="['flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all', selectedTab === 'data' ? 'bg-[#16181a] text-emerald-400 shadow-md border border-[#26292d]' : 'text-dark-muted hover:text-white']"
+          :class="['flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer', selectedTab === 'data' ? 'bg-[#16181a] text-emerald-400 shadow-md border border-[#26292d]' : 'text-dark-muted hover:text-white']"
         >
           <IconRenderer name="Database" size="14" />
           <span>Данные и Бэкапы</span>
@@ -145,15 +146,17 @@ const handleFileUpload = (e: Event) => {
         <button
           v-if="isAdmin"
           @click="selectedTab = 'telemetry'"
-          :class="['flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all', selectedTab === 'telemetry' ? 'bg-[#16181a] text-purple-400 shadow-md border border-[#26292d]' : 'text-dark-muted hover:text-white']"
+          :class="['flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer', selectedTab === 'telemetry' ? 'bg-[#16181a] text-purple-400 shadow-md border border-[#26292d]' : 'text-dark-muted hover:text-white']"
         >
           <IconRenderer name="BarChart2" size="14" />
           <span>Телеметрия</span>
         </button>
       </div>
 
-      <!-- TAB 1: APPEARANCE -->
-      <div v-if="selectedTab === 'appearance'" class="space-y-4">
+      <!-- SCROLLABLE BODY -->
+      <div class="overflow-y-auto custom-scrollbar flex-1 space-y-4 pr-1">
+        <!-- TAB 1: APPEARANCE -->
+        <div v-if="selectedTab === 'appearance'" class="space-y-4">
         <div class="text-xs font-bold text-slate-300 uppercase tracking-wider">Выберите тему оформления:</div>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -357,6 +360,18 @@ const handleFileUpload = (e: Event) => {
             </div>
           </div>
         </div>
+      </div>
+      </div>
+
+      <!-- Bottom Footer Action Bar -->
+      <div class="pt-3 mt-3 border-t border-[#26292d] flex items-center justify-end shrink-0">
+        <button
+          @click="emit('close')"
+          class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <IconRenderer name="Check" size="16" />
+          <span>Закрыть настройки</span>
+        </button>
       </div>
 
     </div>

@@ -290,9 +290,10 @@ const getDifficultyBadge = (diff: string) => {
         </button>
 
         <!-- Wide multi-column dropdown -->
+        <div v-if="isServerDropdownOpen" @click="isServerDropdownOpen = false" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 sm:hidden"></div>
         <div
           v-if="isServerDropdownOpen"
-          class="absolute top-full right-0 mt-2 bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-3 z-50 space-y-3 animate-fadeIn w-[480px]"
+          class="absolute top-full right-0 mt-2 bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-3 z-50 space-y-3 animate-fadeIn w-[480px] max-w-[calc(100vw-1.5rem)]"
         >
           <!-- Search inside dropdown -->
           <div class="relative">

@@ -955,12 +955,25 @@ const handleViewAllAuthorGuides = (username: string) => {
             <IconRenderer name="ChevronDown" size="14" :class="['text-slate-400 transition-transform duration-300', isHeaderNavMenuOpen ? 'rotate-180 text-white' : '']" />
           </button>
 
+          <!-- Backdrop overlay for mobile & closing on backdrop click -->
+          <div v-if="isHeaderNavMenuOpen" @click="isHeaderNavMenuOpen = false" class="fixed inset-0 bg-black/65 backdrop-blur-sm z-40"></div>
+
           <!-- Rich Interactive Mega-Menu Dropdown Panel -->
           <div
             v-if="isHeaderNavMenuOpen"
             @click.stop
-            class="absolute top-full left-0 mt-3 w-[560px] sm:w-[840px] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 sm:p-5 z-50 space-y-4 animate-in fade-in zoom-in-95 duration-200"
+            class="fixed inset-x-3 top-16 max-h-[85vh] overflow-y-auto z-50 sm:absolute sm:inset-auto sm:top-full sm:left-0 sm:mt-3 sm:w-[840px] sm:max-h-[80vh] bg-[#121417] border border-[#262a30] rounded-3xl shadow-2xl p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in-95 duration-200 custom-scrollbar"
           >
+            <!-- Mobile Header with Close X button -->
+            <div class="flex items-center justify-between pb-2 border-b border-[#262a30] sm:hidden">
+              <div class="flex items-center gap-2 text-xs font-black text-white">
+                <IconRenderer name="Menu" size="16" class="text-emerald-400" />
+                <span>Навигация по сайту</span>
+              </div>
+              <button @click="isHeaderNavMenuOpen = false" class="p-1.5 rounded-xl bg-[#1c1f24] text-slate-300 hover:text-white cursor-pointer" title="Закрыть">
+                <IconRenderer name="X" size="18" />
+              </button>
+            </div>
             <!-- Navigation Modes -->
             <div>
               <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1">Основные разделы:</div>
