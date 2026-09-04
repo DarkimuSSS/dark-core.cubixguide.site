@@ -88,7 +88,7 @@ const fetchProfile = async () => {
       profile.value = {
         username: props.username,
         avatarUrl: `https://cubixworld.net/api/account.load.avatar?login=${encodeURIComponent(props.username)}`,
-        bannerUrl: '',
+        bannerUrl: '/default_banner.jpg',
         bio: 'Участник проекта CubixWorld.',
         server: '',
         socialVk: '',

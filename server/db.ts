@@ -708,7 +708,7 @@ export function getAuthorProfile(username: string): AuthorProfile {
     return {
       username: row.username,
       avatarUrl: row.avatar_url || '',
-      bannerUrl: row.banner_url || '',
+      bannerUrl: row.banner_url || '/default_banner.jpg',
       bio: row.bio || '',
       server: row.server || '',
       socialVk: row.social_vk || '',
@@ -725,7 +725,7 @@ export function getAuthorProfile(username: string): AuthorProfile {
   return {
     username,
     avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`,
-    bannerUrl: '',
+    bannerUrl: '/default_banner.jpg',
     bio: `Автор руководств и сборщиков на серверах CubixWorld.`,
     server: 'MagicRPG',
     socialVk: '',
@@ -782,7 +782,7 @@ if (profileCount.count === 0) {
   saveAuthorProfile({
     username: 'DarkimuSSS',
     avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=DarkimuSSS',
-    bannerUrl: '',
+    bannerUrl: '/default_banner.jpg',
     bio: 'Главный Администратор базы знаний CubixGuide. Создаю схемы алтарей драконов, гайды по Магия RPG и Автоматизации!',
     server: 'MagicRPG',
     socialVk: '',
