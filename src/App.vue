@@ -654,12 +654,14 @@ const fetchGuides = async (silent: boolean = false) => {
       if (!activeGuideId.value || !data.some(g => g.meta.id === activeGuideId.value)) {
         activeGuideId.value = data[0].meta.id;
       }
-      const draft = checkDraftInLocalStorage(activeGuideId.value);
-      if (draft && isAuthenticated.value) {
-        activeGuide.value = draft;
-      } else {
-        const current = data.find(g => g.meta.id === activeGuideId.value);
-        if (current) activeGuide.value = JSON.parse(JSON.stringify(current));
+      const current = data.find(g => g.meta.id === activeGuideId.value);
+      if (current) {
+        if (mode.value === 'editor') {
+          const draft = checkDraftInLocalStorage(activeGuideId.value);
+          activeGuide.value = draft && isAuthenticated.value ? draft : JSON.parse(JSON.stringify(current));
+        } else {
+          activeGuide.value = JSON.parse(JSON.stringify(current));
+        }
       }
     } else {
       activeGuide.value = null;
@@ -674,15 +676,12 @@ const fetchGuides = async (silent: boolean = false) => {
 
 const selectGuide = (guideId: string) => {
   activeGuideId.value = guideId;
-  const draft = checkDraftInLocalStorage(guideId);
-  if (draft && isAuthenticated.value) {
-    activeGuide.value = draft;
-    showToast(`Загружен черновик (${draftSavedTime.value})`);
-  } else {
-    const found = guides.value.find(g => g.meta.id === guideId);
-    if (found) {
-      activeGuide.value = JSON.parse(JSON.stringify(found));
-    }
+  const found = guides.value.find(g => g.meta.id === guideId);
+  if (found) {
+    activeGuide.value = JSON.parse(JSON.stringify(found));
+  }
+  if (isAuthenticated.value) {
+    checkDraftInLocalStorage(guideId);
   }
   mode.value = 'reader';
 
