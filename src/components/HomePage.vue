@@ -202,7 +202,7 @@ const getDifficultyBadge = (diff: string) => {
       <div class="text-center space-y-6 relative z-10">
         <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold shadow-inner">
           <IconRenderer name="Sparkles" size="14" class="animate-pulse" />
-          <span>Официальный Портал Руководств CubixWorld</span>
+          <span>НЕ Официальный Портал Руководств CubixWorld</span>
         </div>
 
         <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">

@@ -178,32 +178,32 @@ const updateUrlRoute = () => {
   const params = new URLSearchParams();
 
   if (isProfileModalOpen.value && profileUsername.value) {
-    params.set('tab', 'Профиль');
+    params.set('tab', 'profile');
     params.set('author', profileUsername.value);
   } else if (mode.value === 'home') {
-    params.set('tab', 'Главная');
+    params.set('tab', 'home');
   } else if (mode.value === 'reader') {
-    params.set('tab', 'Вики');
+    params.set('tab', 'wiki');
     if (activeGuideId.value) params.set('guide', activeGuideId.value);
   } else if (mode.value === 'editor') {
-    params.set('tab', 'Конструктор');
+    params.set('tab', 'editor');
     if (activeGuideId.value) params.set('guide', activeGuideId.value);
   } else if (mode.value === 'favorites') {
-    params.set('tab', 'Закладки');
+    params.set('tab', 'favorites');
   } else if (mode.value === 'drafts') {
-    params.set('tab', 'Черновики');
+    params.set('tab', 'drafts');
   } else if (mode.value === 'telemetry') {
-    params.set('tab', 'Телеметрия');
+    params.set('tab', 'telemetry');
   } else if (mode.value === 'admin') {
-    params.set('tab', 'АдминПанель');
+    params.set('tab', 'admin');
   } else if (mode.value === 'team') {
-    params.set('tab', 'Команда');
+    params.set('tab', 'team');
   } else if (mode.value === 'rules') {
     if (initialRulesTab.value === 'server') {
-      params.set('tab', 'Внутриигровые');
+      params.set('tab', 'server_rules');
       if (initialRulesServer.value) params.set('server', initialRulesServer.value);
     } else {
-      params.set('tab', 'Правила');
+      params.set('tab', 'rules');
     }
   }
 
@@ -220,7 +220,7 @@ const syncFromUrlPath = () => {
   const authorParam = params.get('author');
   const serverParam = params.get('server');
 
-  if (authorParam && tab === 'Профиль') {
+  if (authorParam && (tab === 'profile' || tab === 'Профиль')) {
     profileUsername.value = authorParam;
     isProfileModalOpen.value = true;
   }
@@ -235,27 +235,29 @@ const syncFromUrlPath = () => {
     if (found) activeGuide.value = JSON.parse(JSON.stringify(found));
   }
 
-  if (tab === 'Правила' || tab === 'rules' || tab === 'Общие') {
+  if (tab === 'rules' || tab === 'Правила' || tab === 'Общие') {
     initialRulesTab.value = 'general';
     mode.value = 'rules';
-  } else if (tab === 'Внутриигровые' || tab === 'server_rules' || tab === 'Серверные') {
+  } else if (tab === 'server_rules' || tab === 'Внутриигровые' || tab === 'Серверные') {
     initialRulesTab.value = 'server';
     mode.value = 'rules';
-  } else if (tab === 'Телеметрия' || tab === 'telemetry' || tab === 'Аналитика') {
+  } else if (tab === 'telemetry' || tab === 'Телеметрия' || tab === 'Аналитика') {
     mode.value = 'telemetry';
-  } else if (tab === 'АдминПанель' || tab === 'admin' || tab === 'Авторы') {
+  } else if (tab === 'admin' || tab === 'АдминПанель' || tab === 'Авторы') {
     mode.value = 'admin';
-  } else if (tab === 'Команда' || tab === 'team' || tab === 'Персонал') {
+  } else if (tab === 'team' || tab === 'Команда' || tab === 'Персонал') {
     mode.value = 'team';
-  } else if (tab === 'Вики' || tab === 'reader') {
+  } else if (tab === 'wiki' || tab === 'reader' || tab === 'Вики') {
     mode.value = 'reader';
-  } else if (tab === 'Конструктор' || tab === 'editor') {
+  } else if (tab === 'editor' || tab === 'Конструктор') {
     mode.value = isAuthenticated.value ? 'editor' : 'reader';
-  } else if (tab === 'Закладки' || tab === 'favorites') {
+  } else if (tab === 'favorites' || tab === 'Закладки') {
     mode.value = 'favorites';
-  } else if (tab === 'Черновики' || tab === 'drafts') {
+  } else if (tab === 'drafts' || tab === 'Черновики') {
     mode.value = isAuthenticated.value ? 'drafts' : 'home';
-  } else if (tab !== 'Профиль') {
+  } else if (tab === 'profile' || tab === 'Профиль') {
+    // profile modal state handled above
+  } else if (tab === 'home' || tab === 'Главная') {
     mode.value = 'home';
   }
 };
@@ -277,24 +279,66 @@ watch([mode, activeGuideId, isProfileModalOpen, profileUsername], () => {
 });
 
 // Check Session Auth Status & Favorites & Saved Theme
+const verifyAndRefreshSession = async (username: string) => {
+  try {
+    const res = await fetch(`/api/auth/me?username=${encodeURIComponent(username)}`);
+    if (res.ok) {
+      const data = await res.json();
+      isAuthenticated.value = true;
+      currentUsername.value = data.username;
+      currentUserIsAdmin.value = Boolean(data.isAdmin);
+      currentUserCanEditOthers.value = Boolean(data.canEditOthers);
+      currentUserCanCreateGuides.value = Boolean(data.canCreateGuides);
+      currentUserRole.value = data.role || (data.isAdmin ? 'super_admin' : 'author');
+      currentUserCustomPermissions.value = data.customPermissions || [];
+      currentUserAssignedServers.value = data.assignedServers || [];
+
+      localStorage.setItem('cubix_logged_username', data.username);
+      localStorage.setItem('cubix_logged_is_admin', data.isAdmin ? 'true' : 'false');
+      localStorage.setItem('cubix_logged_role', currentUserRole.value);
+      localStorage.setItem('cubix_logged_can_edit_others', currentUserCanEditOthers.value ? 'true' : 'false');
+      localStorage.setItem('cubix_logged_can_create_guides', currentUserCanCreateGuides.value ? 'true' : 'false');
+      localStorage.setItem('cubix_logged_custom_perms', JSON.stringify(currentUserCustomPermissions.value));
+      localStorage.setItem('cubix_logged_assigned_servers', JSON.stringify(currentUserAssignedServers.value));
+      fetchCurrentAuthorProfile(data.username);
+    } else if (res.status === 404 || res.status === 401) {
+      logoutAuthor();
+    }
+  } catch (err) {
+    console.error('Error refreshing auth session:', err);
+  }
+};
+
 onMounted(() => {
   const savedTheme = (localStorage.getItem('cubix_theme') as ThemeMode) || 'dark';
   applyTheme(savedTheme);
 
   const savedUser = localStorage.getItem('cubix_logged_username');
-  const savedAdmin = localStorage.getItem('cubix_logged_is_admin');
   if (savedUser) {
     isAuthenticated.value = true;
     currentUsername.value = savedUser;
-    currentUserIsAdmin.value = savedAdmin === 'true';
+    currentUserIsAdmin.value = localStorage.getItem('cubix_logged_is_admin') === 'true';
+    currentUserRole.value = (localStorage.getItem('cubix_logged_role') as UserRole) || (currentUserIsAdmin.value ? 'super_admin' : 'author');
+    currentUserCanEditOthers.value = localStorage.getItem('cubix_logged_can_edit_others') === 'true';
+    currentUserCanCreateGuides.value = localStorage.getItem('cubix_logged_can_create_guides') !== 'false';
+    try {
+      const perms = localStorage.getItem('cubix_logged_custom_perms');
+      if (perms) currentUserCustomPermissions.value = JSON.parse(perms);
+      const srvs = localStorage.getItem('cubix_logged_assigned_servers');
+      if (srvs) currentUserAssignedServers.value = JSON.parse(srvs);
+    } catch (e) {}
+
     fetchCurrentAuthorProfile(savedUser);
+    verifyAndRefreshSession(savedUser);
   }
+
   try {
     const rawFavs = localStorage.getItem('cubix_favorite_guides');
     if (rawFavs) favoriteGuideIds.value = JSON.parse(rawFavs);
   } catch (e) {}
 
   fetchGuides();
+  syncFromUrlPath();
   window.addEventListener('beforeunload', handleBeforeUnload);
   window.addEventListener('popstate', handlePopState);
 });
@@ -388,6 +432,11 @@ const handleAuthentication = (payload: { username: string; isAdmin: boolean; can
   localStorage.setItem('cubix_logged_username', payload.username);
   localStorage.setItem('cubix_logged_is_admin', payload.isAdmin ? 'true' : 'false');
   localStorage.setItem('cubix_logged_role', currentUserRole.value);
+  localStorage.setItem('cubix_logged_can_edit_others', currentUserCanEditOthers.value ? 'true' : 'false');
+  localStorage.setItem('cubix_logged_can_create_guides', currentUserCanCreateGuides.value ? 'true' : 'false');
+  localStorage.setItem('cubix_logged_custom_perms', JSON.stringify(currentUserCustomPermissions.value));
+  localStorage.setItem('cubix_logged_assigned_servers', JSON.stringify(currentUserAssignedServers.value));
+
   isAuthModalOpen.value = false;
   fetchCurrentAuthorProfile(payload.username);
   showToast(`Добро пожаловать, ${payload.username}!`);
@@ -406,9 +455,17 @@ const logoutAuthor = () => {
   currentUserIsAdmin.value = false;
   currentUserCanEditOthers.value = false;
   currentUserCanCreateGuides.value = true;
+  currentUserRole.value = 'guest';
+  currentUserCustomPermissions.value = [];
+  currentUserAssignedServers.value = [];
   currentAuthorProfile.value = null;
   localStorage.removeItem('cubix_logged_username');
   localStorage.removeItem('cubix_logged_is_admin');
+  localStorage.removeItem('cubix_logged_role');
+  localStorage.removeItem('cubix_logged_can_edit_others');
+  localStorage.removeItem('cubix_logged_can_create_guides');
+  localStorage.removeItem('cubix_logged_custom_perms');
+  localStorage.removeItem('cubix_logged_assigned_servers');
   mode.value = 'home';
   showToast('Вы вышли из аккаунта');
 };

@@ -378,6 +378,36 @@ export function loginUser(username: string, password: string) {
   };
 }
 
+export function getAuthorUserByUsername(username: string) {
+  const cleanUsername = username.trim();
+  const user = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername) as any;
+  if (!user) return null;
+
+  let customPerms = [];
+  try {
+    if (user.custom_permissions) customPerms = JSON.parse(user.custom_permissions);
+  } catch (e) {}
+
+  let assignedSrvs = [];
+  try {
+    if (user.assigned_servers) assignedSrvs = JSON.parse(user.assigned_servers);
+  } catch (e) {}
+
+  const role = user.role || (user.is_admin ? 'super_admin' : 'author');
+
+  return {
+    username: user.username,
+    isAdmin: Boolean(user.is_admin) || role === 'super_admin' || role === 'admin',
+    canEditOthers: Boolean(user.can_edit_others),
+    canCreateGuides: Boolean(user.can_create_guides),
+    isVerified: Boolean(user.is_verified),
+    role: role,
+    customPermissions: customPerms,
+    assignedServers: assignedSrvs,
+    createdAt: user.created_at
+  };
+}
+
 // Cache & Sync for https://cubixworld.net/api/team
 let teamApiCache: { timestamp: number; data: any } | null = null;
 
