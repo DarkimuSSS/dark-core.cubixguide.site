@@ -32,7 +32,7 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
   },
   admin: {
     role: 'admin',
-    name: 'Администратор',
+    name: 'dark-core junior team',
     description: 'Управление статьями, модерацией, авторами, правилами и аналитикой',
     badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
     priority: 10,
