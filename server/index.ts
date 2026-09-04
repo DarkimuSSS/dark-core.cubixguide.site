@@ -374,9 +374,10 @@ app.get('/api/authors', (req, res) => {
   }
 });
 
-// 1. Get all guides
+// 1. Get all guides (public catalog shows published guides only, unless includeDrafts=true or status=all for admin/author)
 app.get('/api/guides', (req, res) => {
   try {
+    const includeDrafts = req.query.includeDrafts === 'true' || req.query.status === 'all';
     const rows = db.prepare('SELECT * FROM guides ORDER BY updated_at DESC').all();
     const viewsRows = db.prepare(`
       SELECT guide_id, COUNT(*) as count 
@@ -388,7 +389,12 @@ app.get('/api/guides', (req, res) => {
     const viewsMap: Record<string, number> = {};
     viewsRows.forEach(r => { viewsMap[r.guide_id] = r.count; });
 
-    const guides = rows.map(r => formatGuideRow(r, viewsMap));
+    let guides = rows.map(r => formatGuideRow(r, viewsMap));
+    
+    if (!includeDrafts) {
+      guides = guides.filter(g => g.meta && (g.meta.published === true || g.meta.status === 'published'));
+    }
+    
     res.json(guides);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

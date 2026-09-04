@@ -641,7 +641,8 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
 const fetchGuides = async (silent: boolean = false) => {
   try {
     if (!silent) isLoading.value = true;
-    const res = await fetch('/api/guides');
+    const includeDrafts = mode.value === 'editor' || currentUser.value !== null;
+    const res = await fetch(`/api/guides${includeDrafts ? '?includeDrafts=true' : ''}`);
     if (!res.ok) {
       const errText = await res.text();
       throw new Error(`Ошибка загрузки данных (${res.status}): ${errText.substring(0, 100)}`);

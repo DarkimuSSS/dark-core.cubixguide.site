@@ -73,7 +73,7 @@ const roleStatsMap = computed(() => {
 const fetchPendingGuides = async () => {
   isModerationLoading.value = true;
   try {
-    const res = await fetch('/api/guides');
+    const res = await fetch('/api/guides?includeDrafts=true');
     if (res.ok) {
       const all = await res.json();
       // Фильтруем все статьи, требующие внимания администрации:
