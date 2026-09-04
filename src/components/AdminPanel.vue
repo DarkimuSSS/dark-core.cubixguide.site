@@ -615,7 +615,7 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
         <div
           v-for="author in filteredAuthors"
           :key="author.username"
-          class="p-5 rounded-2xl bg-[#141618]/90 border border-[#26292d] hover:border-cyan-500/50 transition-all duration-300 space-y-4 shadow-xl hover:shadow-cyan-950/20 group relative overflow-hidden"
+          class="p-5 rounded-2xl bg-[#141618]/90 border border-[#26292d] hover:border-cyan-500/50 transition-all duration-300 space-y-4 shadow-xl hover:shadow-cyan-950/20 group relative"
         >
           <!-- TOP CARD HEADER: AVATAR & USERNAME -->
           <div class="flex items-start justify-between gap-3">
