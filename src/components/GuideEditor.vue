@@ -497,6 +497,7 @@ const handleGlobalHotkeys = (e: KeyboardEvent) => {
 };
 
 const categories: Category[] = [
+  'Категория не выбрана',
   'ХайТек',
   'Магия RPG',
   'СкайБлок',
@@ -1856,15 +1857,15 @@ const stopOutlineDrag = () => {
           <div class="relative z-30">
             <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Сервер CubixWorld</label>
             <div class="relative">
-              <button type="button" @click.stop="isEditorServerDropdownOpen = !isEditorServerDropdownOpen" class="w-full bg-[#0c0d0e] border border-[#26292d] hover:border-emerald-500/50 text-xs font-bold rounded-lg px-3 py-2 flex items-center justify-between transition-all">
-                <span :class="guide.meta.server ? 'text-cyan-300' : 'text-dark-muted'">{{ guide.meta.server || '(Все сервера)' }}</span>
+              <button type="button" @click.stop="isEditorServerDropdownOpen = !isEditorServerDropdownOpen" class="w-full bg-[#0c0d0e] border border-[#26292d] hover:border-emerald-500/50 text-xs font-bold rounded-xl px-3 py-2.5 flex items-center justify-between transition-all">
+                <span :class="guide.meta.server ? 'text-cyan-300' : 'text-dark-muted'">{{ guide.meta.server || '(Сервер не выбран)' }}</span>
                 <IconRenderer name="ChevronDown" size="14" :class="['text-dark-muted transition-transform', isEditorServerDropdownOpen ? 'rotate-180' : '']" />
               </button>
-              <div v-if="isEditorServerDropdownOpen" class="absolute top-full left-0 mt-1 bg-[#16181a] border border-[#26292d] rounded-xl shadow-2xl p-2 z-[100] space-y-1 w-full">
-                <input type="text" v-model="editorServerSearch" placeholder="Поиск..." class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-lg px-3 py-1.5 mb-1 focus:outline-none" />
+              <div v-if="isEditorServerDropdownOpen" class="absolute top-full left-0 mt-1 bg-[#16181a] border border-[#26292d] rounded-xl shadow-2xl p-2 z-[100] space-y-1 w-full backdrop-blur-xl">
+                <input type="text" v-model="editorServerSearch" placeholder="Поиск сервера..." class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-lg px-3 py-1.5 mb-1 focus:outline-none" />
                 <div class="grid grid-cols-2 gap-1 max-h-48 overflow-y-auto custom-scrollbar">
-                  <button @click="updateServerTag(''); isEditorServerDropdownOpen = false" class="text-left px-2 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:bg-[#212429] border border-[#26292d]">(Все)</button>
-                  <button v-for="srv in filteredEditorServers" :key="srv" @click="updateServerTag(srv); isEditorServerDropdownOpen = false" :class="['text-left px-2 py-1.5 rounded-lg text-xs font-semibold truncate', guide.meta.server === srv ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-[#212429] border border-[#26292d]']">{{ srv }}</button>
+                  <button @click="updateServerTag(''); isEditorServerDropdownOpen = false" :class="['text-left px-2 py-1.5 rounded-lg text-xs font-semibold border transition-all', !guide.meta.server ? 'bg-emerald-600 text-white border-emerald-400' : 'text-slate-300 hover:bg-[#212429] border-[#26292d]']">(Сервер не выбран)</button>
+                  <button v-for="srv in filteredEditorServers" :key="srv" @click="updateServerTag(srv); isEditorServerDropdownOpen = false" :class="['text-left px-2 py-1.5 rounded-lg text-xs font-semibold truncate border transition-all', guide.meta.server === srv ? 'bg-emerald-600 text-white border-emerald-400' : 'text-slate-300 hover:bg-[#212429] border-[#26292d]']">{{ srv }}</button>
                 </div>
               </div>
             </div>

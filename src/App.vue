@@ -666,7 +666,8 @@ const createNewGuide = async () => {
     meta: {
       id: `guide_${Date.now()}`,
       title: '',
-      category: 'ХайТек',
+      category: 'Категория не выбрана',
+      server: '',
       author: authorName,
       difficulty: 'Новичок',
       summary: '',

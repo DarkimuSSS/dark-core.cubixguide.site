@@ -14,6 +14,7 @@ export type BlockType =
   | 'spreadsheet';
 
 export type Category = 
+  | 'Категория не выбрана'
   | 'ХайТек' 
   | 'Магия RPG' 
   | 'СкайБлок' 
