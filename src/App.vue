@@ -466,17 +466,17 @@ const userHasPerm = (permission: UserPermission): boolean => {
   return hasPermission(currentUserRole.value, currentUserCustomPermissions.value, permission);
 };
 
-const isManagerOrAdmin = computed(() => {
+const canUserDirectUnpublish = computed(() => {
   if (!isAuthenticated.value) return false;
-  return currentUserIsAdmin.value || ['super_admin', 'admin', 'manager'].includes(currentUserRole.value);
+  return userHasPerm('unpublish_guide') || currentUserIsAdmin.value;
 });
 
 const canUserEditActiveGuide = computed(() => {
   if (!isAuthenticated.value || !currentUsername.value || !activeGuide.value) return false;
   
-  // Rule: Published & Visible guides CANNOT be edited directly unless hidden/unpublished first (or edited by Manager/Admin)
+  // Rule: Published & Visible guides CANNOT be edited directly unless hidden/unpublished first (or user has unpublish_guide permission)
   const isPublishedAndVisible = activeGuide.value.meta.published && activeGuide.value.meta.isVisible;
-  if (isPublishedAndVisible && !isManagerOrAdmin.value) {
+  if (isPublishedAndVisible && !canUserDirectUnpublish.value) {
     return false;
   }
 
@@ -501,7 +501,7 @@ const openEditorProtection = () => {
   }
   
   const isPublishedAndVisible = activeGuide.value?.meta?.published && activeGuide.value?.meta?.isVisible;
-  if (isPublishedAndVisible && !isManagerOrAdmin.value) {
+  if (isPublishedAndVisible && !canUserDirectUnpublish.value) {
     showToast('Опубликованные гайды нельзя редактировать напрямую! Запросите снятие с публикации у Управляющего.', 'error');
     return;
   }
@@ -841,8 +841,8 @@ const handleRequestUnpublish = async (reason: string) => {
 
 const handleDirectUnpublish = async () => {
   if (!activeGuide.value) return;
-  if (!isManagerOrAdmin.value) {
-    showToast('Снять гайд с публикации может только Управляющий или Администратор', 'error');
+  if (!canUserDirectUnpublish.value) {
+    showToast('У вас нет права на прямое снятие гайда с публикации', 'error');
     return;
   }
 
@@ -1650,7 +1650,7 @@ const handleViewAllAuthorGuides = (username: string) => {
             <GuideEditor
               :guide="activeGuide"
               :can-approve="userHasPerm('publish_guide') || currentUserIsAdmin"
-              :can-direct-unpublish="isManagerOrAdmin"
+              :can-direct-unpublish="canUserDirectUnpublish"
               :assigned-servers="currentUserAssignedServers"
               @update:guide="updateActiveGuide"
               @toggle-preview="handleTogglePreview"

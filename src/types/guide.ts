@@ -186,18 +186,20 @@ export interface CustomAuthorLink {
 }
 
 export type UserPermission =
-  | 'create_guide'       // Создание собственных гайдов
-  | 'edit_own_guide'     // Редактирование своих гайдов
-  | 'edit_other_guide'   // Редактирование чужих гайдов
-  | 'delete_own_guide'   // Удаление своих гайдов
-  | 'delete_other_guide' // Удаление чужих гайдов
-  | 'publish_guide'      // Публикация / Скрытие гайдов
-  | 'approve_guide'      // Одобрение или отклонение модерации гайдов
-  | 'manage_authors'     // Регистрация, сброс паролей и удаление авторов
-  | 'manage_roles'       // Назначение ролей и кастомных прав
-  | 'view_telemetry'     // Доступ к телеметрии и логам действий
-  | 'view_rules'         // Просмотр страницы правил (Общие + Внутриигровые)
-  | 'manage_rules';      // Управление и редактирование правил серверов
+  | 'create_guide'           // Создание собственных гайдов
+  | 'edit_own_guide'         // Редактирование своих гайдов
+  | 'edit_other_guide'       // Редактирование чужих гайдов
+  | 'delete_own_guide'       // Удаление своих гайдов
+  | 'delete_other_guide'     // Удаление чужих гайдов
+  | 'publish_guide'          // Прямая публикация гайдов
+  | 'unpublish_guide'        // Прямое снятие гайдов с публикации
+  | 'request_unpublish'      // Отправка запроса на снятие гайда с публикации
+  | 'approve_guide'          // Одобрение или отклонение модерации гайдов
+  | 'manage_authors'         // Регистрация, сброс паролей и удаление авторов
+  | 'manage_roles'           // Назначение ролей и кастомных прав
+  | 'view_telemetry'         // Доступ к телеметрии и логам действий
+  | 'view_rules'             // Просмотр страницы правил (Общие + Внутриигровые)
+  | 'manage_rules';          // Управление и редактирование правил серверов
 
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'editor' | 'author' | 'helper' | 'guest';
 

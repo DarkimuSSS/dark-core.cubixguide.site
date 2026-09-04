@@ -6,7 +6,9 @@ export const SYSTEM_PERMISSIONS: { key: UserPermission; label: string; descripti
   { key: 'edit_other_guide', label: 'Правка чужих гайдов', description: 'Разрешает вносить изменения в статьи других авторов' },
   { key: 'delete_own_guide', label: 'Удаление своих гайдов', description: 'Разрешает безвозвратно удалять свои статьи' },
   { key: 'delete_other_guide', label: 'Удаление чужих гайдов', description: 'Разрешает удалять статьи других авторов' },
-  { key: 'publish_guide', label: 'Публикация гайдов', description: 'Разрешает публиковать статьи в открытый доступ' },
+  { key: 'publish_guide', label: 'Прямая публикация гайдов', description: 'Разрешает публикувать статьи напрямую без модерации' },
+  { key: 'unpublish_guide', label: 'Прямое снятие с публикации', description: 'Разрешает сразу снимать опубликованные гайды с публикации' },
+  { key: 'request_unpublish', label: 'Запрос снятия с публикации', description: 'Разрешает отправлять запросы Управляющим на снятие гайда с публикации' },
   { key: 'approve_guide', label: 'Модерация & Одобрение', description: 'Одобрение гайдов авторов и модерация статей' },
   { key: 'manage_authors', label: 'Управление авторами', description: 'Разрешает регистрировать авторов и сбрасывать им пароли' },
   { key: 'manage_roles', label: 'Управление ролями и правами', description: 'Разрешает изменять роли и точечные права пользователей' },
@@ -24,7 +26,7 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
     priority: 0,
     permissions: [
       'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide',
-      'delete_other_guide', 'publish_guide', 'approve_guide', 'manage_authors', 'manage_roles',
+      'delete_other_guide', 'publish_guide', 'unpublish_guide', 'request_unpublish', 'approve_guide', 'manage_authors', 'manage_roles',
       'view_telemetry', 'view_rules', 'manage_rules'
     ]
   },
@@ -36,38 +38,38 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
     priority: 10,
     permissions: [
       'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide',
-      'delete_other_guide', 'publish_guide', 'approve_guide', 'manage_authors', 'view_telemetry', 'view_rules', 'manage_rules'
+      'delete_other_guide', 'publish_guide', 'unpublish_guide', 'request_unpublish', 'approve_guide', 'manage_authors', 'view_telemetry', 'view_rules', 'manage_rules'
     ]
   },
   manager: {
     role: 'manager',
     name: 'Управляющий',
-    description: 'Управление закрепленными серверами, ролями участников (до редактора), публикация и модерация статей',
+    description: 'Управление закрепленными серверами, ролями участников, прямая публикация, снятие и модерация статей',
     badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
     priority: 15,
     permissions: [
       'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide',
-      'delete_other_guide', 'publish_guide', 'approve_guide', 'manage_roles', 'view_telemetry', 'view_rules', 'manage_rules'
+      'delete_other_guide', 'publish_guide', 'unpublish_guide', 'request_unpublish', 'approve_guide', 'manage_roles', 'view_telemetry', 'view_rules', 'manage_rules'
     ]
   },
   editor: {
     role: 'editor',
     name: 'Редактор',
-    description: 'Проверка, вычитка и редактирование статей без права прямой публикации',
+    description: 'Проверка, вычитка и редактирование статей без права прямой публикации/снятия',
     badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
     priority: 20,
     permissions: [
-      'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide', 'approve_guide', 'view_rules'
+      'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide', 'request_unpublish', 'approve_guide', 'view_rules'
     ]
   },
   author: {
     role: 'author',
     name: 'Автор статей',
-    description: 'Создание и редактирование собственных вики-гайдов (отправка на модерацию)',
+    description: 'Создание и редактирование собственных вики-гайдов (отправка на модерацию и запрос снятия)',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     priority: 30,
     permissions: [
-      'create_guide', 'edit_own_guide', 'delete_own_guide', 'view_rules'
+      'create_guide', 'edit_own_guide', 'delete_own_guide', 'request_unpublish', 'view_rules'
     ]
   },
   helper: {
