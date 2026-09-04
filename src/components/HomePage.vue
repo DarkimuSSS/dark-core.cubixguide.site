@@ -324,8 +324,8 @@ const getDifficultyBadge = (diff: string) => {
             <IconRenderer v-if="selectedServer === 'Все'" name="Check" size="14" />
           </button>
 
-          <!-- Grid of servers: 3 columns -->
-          <div class="grid grid-cols-3 gap-1.5 max-h-64 overflow-y-auto custom-scrollbar pr-1">
+          <!-- Grid of servers: 2 columns on mobile, 3 on desktop -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-64 overflow-y-auto custom-scrollbar pr-1">
             <button
               v-for="srv in filteredServers"
               :key="srv"

@@ -918,41 +918,39 @@ const handleViewAllAuthorGuides = (username: string) => {
     <header class="bg-[#121417]/95 backdrop-blur-xl border-b border-[#262a30] h-16 shrink-0 px-4 sm:px-6 flex items-center justify-between z-40 shadow-2xl transition-all select-none gap-4">
       
       <!-- Left: Logo & Navigation Dock -->
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-1.5 sm:gap-4 shrink-0">
         <!-- Logo Brand Button -->
         <button 
           @click="mode = 'home'"
-          class="flex items-center gap-2.5 group text-left transition-all hover:opacity-90 cursor-pointer shrink-0"
+          class="flex items-center gap-2 group text-left transition-all hover:opacity-90 cursor-pointer shrink-0"
         >
-          <div class="relative w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 p-0.5 shadow-md shadow-emerald-950/40 group-hover:scale-105 transition-all duration-300 overflow-hidden">
+          <div class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 p-0.5 shadow-md shadow-emerald-950/40 group-hover:scale-105 transition-all duration-300 overflow-hidden shrink-0">
             <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center text-emerald-400 overflow-hidden">
               <img src="/logo.jpg" alt="CubixGuide Logo" class="w-full h-full object-cover" />
             </div>
           </div>
-          <span class="text-base font-black text-white tracking-tight group-hover:text-emerald-400 transition-colors">
+          <span class="hidden min-[390px]:inline text-sm sm:text-base font-black text-white tracking-tight group-hover:text-emerald-400 transition-colors">
             CubixGuide
           </span>
         </button>
 
         <div class="h-6 w-px bg-[#262a30] hidden lg:block"></div>
 
-
-
         <!-- Expandable Mega-Menu Trigger Button -->
-        <div class="relative">
+        <div class="relative shrink-0">
           <button
             type="button"
             @click="isHeaderNavMenuOpen = !isHeaderNavMenuOpen"
             :class="[
-              'px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-300 shadow-md cursor-pointer border',
+              'px-2 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-extrabold flex items-center gap-1 sm:gap-2 transition-all duration-300 shadow-md cursor-pointer border',
               isHeaderNavMenuOpen
                 ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-950/60 ring-2 ring-emerald-500/40'
                 : 'bg-[#090a0c] text-slate-200 border-[#262a30] hover:border-emerald-500/40 hover:text-white'
             ]"
           >
-            <IconRenderer name="Menu" size="16" class="text-emerald-400" />
-            <span>Навигация & Разделы</span>
-            <IconRenderer name="ChevronDown" size="14" :class="['text-slate-400 transition-transform duration-300', isHeaderNavMenuOpen ? 'rotate-180 text-white' : '']" />
+            <IconRenderer name="Menu" size="16" class="text-emerald-400 shrink-0" />
+            <span class="hidden min-[360px]:inline text-[11px] sm:text-xs">Навигация</span>
+            <IconRenderer name="ChevronDown" size="14" :class="['text-slate-400 transition-transform duration-300 shrink-0', isHeaderNavMenuOpen ? 'rotate-180 text-white' : '']" />
           </button>
 
           <!-- Backdrop overlay for closing on click outside (no header blur) -->

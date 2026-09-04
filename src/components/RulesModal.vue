@@ -779,7 +779,7 @@ const handleAutoParseRules = async () => {
                   class="absolute top-full right-0 mt-2 w-[480px] max-w-[90vw] bg-[#121416] border border-[#26292d] rounded-2xl shadow-2xl p-3 z-50 space-y-2 backdrop-blur-xl"
                 >
                   <div class="text-[10px] font-black text-cyan-400 uppercase tracking-wider px-1">Выберите сервер:</div>
-                  <div class="grid grid-cols-3 gap-1.5 max-h-[300px] overflow-y-auto custom-scrollbar">
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-[300px] overflow-y-auto custom-scrollbar">
                     <button
                       v-for="srv in availableServers"
                       :key="srv.id"
