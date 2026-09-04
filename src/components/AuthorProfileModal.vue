@@ -49,7 +49,7 @@ const authorToDelete = ref<string | null>(null);
 // Admin Password Reset Modal State
 const resetTargetUsername = ref<string | null>(null);
 const resetNewPassword = ref('');
-const showResetPasswordToggle = ref(false);
+const isPinnedDropdownOpen = ref(false);
 
 const profile = ref<AuthorProfile>({
   username: props.username,
@@ -824,15 +824,48 @@ const handleBannerFileUpload = (e: Event) => {
                   />
                 </div>
 
-                <div>
+                <div class="relative z-30">
                   <label class="block text-[11px] text-dark-muted mb-1 font-medium">Прикрепленный Гайд</label>
-                  <select
-                    v-model="profile.pinnedGuideId"
-                    class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-accent"
-                  >
-                    <option value="">(Без прикрепленного гайда)</option>
-                    <option v-for="g in authorGuides" :key="g.meta.id" :value="g.meta.id">{{ g.meta.title }}</option>
-                  </select>
+                  <div class="relative">
+                    <button
+                      type="button"
+                      @click.stop="isPinnedDropdownOpen = !isPinnedDropdownOpen"
+                      class="w-full bg-[#16181a] border border-[#26292d] hover:border-emerald-500/50 text-xs font-bold rounded-xl px-3 py-2 flex items-center justify-between transition-all cursor-pointer shadow-sm text-white"
+                    >
+                      <span class="truncate">
+                        {{ authorGuides.find(g => g.meta.id === profile.pinnedGuideId)?.meta.title || '(Без прикрепленного гайда)' }}
+                      </span>
+                      <IconRenderer name="ChevronDown" size="14" :class="['text-emerald-400 shrink-0 transition-transform duration-200', isPinnedDropdownOpen ? 'rotate-180' : '']" />
+                    </button>
+
+                    <div v-if="isPinnedDropdownOpen" @click.stop class="absolute top-full left-0 mt-1.5 bg-[#0e1013]/95 border border-emerald-500/40 rounded-2xl shadow-2xl p-1.5 z-[100] space-y-1 w-full backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 max-h-48 overflow-y-auto custom-scrollbar">
+                      <button
+                        type="button"
+                        @click="profile.pinnedGuideId = ''; isPinnedDropdownOpen = false;"
+                        :class="[
+                          'w-full text-left text-xs font-extrabold px-3 py-2 rounded-xl flex items-center justify-between transition-all',
+                          !profile.pinnedGuideId ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/30' : 'text-slate-300 hover:bg-[#1a1d22] hover:text-white border border-transparent'
+                        ]"
+                      >
+                        <span>(Без прикрепленного гайда)</span>
+                        <IconRenderer v-if="!profile.pinnedGuideId" name="Check" size="13" class="text-emerald-400" />
+                      </button>
+
+                      <button
+                        v-for="g in authorGuides"
+                        :key="g.meta.id"
+                        type="button"
+                        @click="profile.pinnedGuideId = g.meta.id; isPinnedDropdownOpen = false;"
+                        :class="[
+                          'w-full text-left text-xs font-extrabold px-3 py-2 rounded-xl flex items-center justify-between transition-all truncate',
+                          profile.pinnedGuideId === g.meta.id ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/30' : 'text-slate-300 hover:bg-[#1a1d22] hover:text-white border border-transparent'
+                        ]"
+                      >
+                        <span class="truncate">{{ g.meta.title }}</span>
+                        <IconRenderer v-if="profile.pinnedGuideId === g.meta.id" name="Check" size="13" class="text-emerald-400 shrink-0" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 

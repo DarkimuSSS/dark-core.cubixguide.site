@@ -57,9 +57,11 @@ const isImportExportOpen = ref(false);
 const isTemplateModalOpen = ref(false);
 const isHelpModalOpen = ref(false);
 const isTreeModalOpen = ref(false);
-const isGuideSettingsModalOpen = ref(false);
+const isCategoryDropdownOpen = ref(false);
+const isGradientDropdownOpen = ref(false);
 const isMetaExpanded = ref(false);
 const activeBlockMenuId = ref<string | null>(null);
+const activeSubBlockMenuId = ref<string | null>(null);
 const addBlockMenuAfterIndex = ref<number | null>(null);
 const toolbarAddBlockOpen = ref(false);
 
@@ -506,7 +508,24 @@ const categories: Category[] = [
   'ПВП & Боссы',
   'Общий'
 ];
-const difficulties: Difficulty[] = ['Новичок', 'Опытный', 'Мастер'];
+const getBlockTypeName = (type: BlockType): string => {
+  switch (type) {
+    case 'heading': return 'Заголовок';
+    case 'text': return 'Текст';
+    case 'callout': return 'Совет';
+    case 'checklist': return 'Чек-лист';
+    case 'spoiler': return 'Спойлер';
+    case 'before_after': return 'До/После';
+    case 'image': return 'Картинка';
+    case 'youtube': return 'YouTube';
+    case 'embed': return 'Embed';
+    case 'spreadsheet': return 'Таблица';
+    case 'section': return 'Секция';
+    case 'multiblock': return 'Схема';
+    case 'divider': return 'Разделитель';
+    default: return type;
+  }
+};
 
 // Meta Updates
 const updateTitle = (val: string) => {
@@ -1749,16 +1768,49 @@ const stopOutlineDrag = () => {
             <label class="block text-[11px] font-bold uppercase tracking-wider text-purple-300 mb-1.5">Баннер-обложка (URL)</label>
             <input type="text" :value="guide.meta.coverUrl || ''" @input="updateCoverUrl(($event.target as HTMLInputElement).value)" placeholder="https://..." class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-purple-400" />
           </div>
-          <!-- Cover gradient -->
-          <div>
+          <!-- Cover gradient (Custom Glass Popover) -->
+          <div class="relative z-40">
             <label class="block text-[11px] font-bold uppercase tracking-wider text-purple-300 mb-1.5">Или Градиент Обложки</label>
-            <select :value="guide.meta.coverGradient || ''" @change="updateCoverGradient(($event.target as HTMLSelectElement).value)" class="w-full bg-[#0c0d0e] border border-[#26292d] text-purple-200 text-xs font-semibold rounded-lg px-3 py-2 focus:outline-none focus:border-purple-400">
-              <option value="">(Без пресет-градиента)</option>
-              <option value="from-emerald-600 via-teal-700 to-cyan-900">Изумрудная Магия</option>
-              <option value="from-purple-700 via-indigo-800 to-slate-950">Космическая Бездна</option>
-              <option value="from-rose-600 via-orange-600 to-amber-700">Пламя Дракона</option>
-              <option value="from-cyan-600 via-blue-700 to-indigo-950">Арканический Лёд</option>
-            </select>
+            <div class="relative">
+              <button
+                type="button"
+                @click.stop="isGradientDropdownOpen = !isGradientDropdownOpen; isCategoryDropdownOpen = false; isEditorServerDropdownOpen = false;"
+                class="w-full bg-[#0c0d0e] border border-[#26292d] hover:border-purple-500/50 text-xs font-semibold rounded-xl px-3 py-2.5 flex items-center justify-between transition-all cursor-pointer shadow-sm"
+              >
+                <span class="text-purple-200">
+                  {{
+                    guide.meta.coverGradient === 'from-emerald-600 via-teal-700 to-cyan-900' ? 'Изумрудная Магия' :
+                    guide.meta.coverGradient === 'from-purple-700 via-indigo-800 to-slate-950' ? 'Космическая Бездна' :
+                    guide.meta.coverGradient === 'from-rose-600 via-orange-600 to-amber-700' ? 'Пламя Дракона' :
+                    guide.meta.coverGradient === 'from-cyan-600 via-blue-700 to-indigo-950' ? 'Арканический Лёд' :
+                    '(Без пресет-градиента)'
+                  }}
+                </span>
+                <IconRenderer name="ChevronDown" size="14" :class="['text-purple-400 transition-transform duration-200', isGradientDropdownOpen ? 'rotate-180' : '']" />
+              </button>
+
+              <div v-if="isGradientDropdownOpen" @click.stop class="absolute top-full left-0 mt-1.5 bg-[#0e1013]/95 border border-purple-500/40 rounded-2xl shadow-2xl p-1.5 z-[100] space-y-1 w-full backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+                <button
+                  v-for="grad in [
+                    { value: '', label: '(Без пресет-градиента)' },
+                    { value: 'from-emerald-600 via-teal-700 to-cyan-900', label: 'Изумрудная Магия' },
+                    { value: 'from-purple-700 via-indigo-800 to-slate-950', label: 'Космическая Бездна' },
+                    { value: 'from-rose-600 via-orange-600 to-amber-700', label: 'Пламя Дракона' },
+                    { value: 'from-cyan-600 via-blue-700 to-indigo-950', label: 'Арканический Лёд' }
+                  ]"
+                  :key="grad.value"
+                  type="button"
+                  @click="updateCoverGradient(grad.value); isGradientDropdownOpen = false;"
+                  :class="[
+                    'w-full text-left text-xs font-extrabold px-3 py-2 rounded-xl flex items-center justify-between transition-all',
+                    (guide.meta.coverGradient || '') === grad.value ? 'bg-purple-500/20 text-purple-200 border border-purple-500/30' : 'text-slate-300 hover:bg-[#1a1d22] hover:text-white border border-transparent'
+                  ]"
+                >
+                  <span>{{ grad.label }}</span>
+                  <IconRenderer v-if="(guide.meta.coverGradient || '') === grad.value" name="Check" size="13" class="text-purple-400" />
+                </button>
+              </div>
+            </div>
           </div>
           <!-- Author -->
           <div>
@@ -1770,12 +1822,35 @@ const stopOutlineDrag = () => {
             <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5">Соавторы</label>
             <input type="text" :value="(guide.meta.coAuthors || []).join(', ')" @input="updateCoAuthors(($event.target as HTMLInputElement).value)" placeholder="через запятую..." class="w-full bg-[#0c0d0e] border border-[#26292d] text-cyan-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500" />
           </div>
-          <!-- Category -->
-          <div>
+          <!-- Category (Custom Glass Popover) -->
+          <div class="relative z-35">
             <label class="block text-[11px] font-bold uppercase tracking-wider text-dark-muted mb-1.5">Категория</label>
-            <select :value="guide.meta.category" @change="updateCategory(($event.target as HTMLSelectElement).value as Category)" class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-accent">
-              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-            </select>
+            <div class="relative">
+              <button
+                type="button"
+                @click.stop="isCategoryDropdownOpen = !isCategoryDropdownOpen; isGradientDropdownOpen = false; isEditorServerDropdownOpen = false;"
+                class="w-full bg-[#0c0d0e] border border-[#26292d] hover:border-emerald-500/50 text-xs font-bold rounded-xl px-3 py-2.5 flex items-center justify-between transition-all cursor-pointer shadow-sm text-white"
+              >
+                <span>{{ guide.meta.category }}</span>
+                <IconRenderer name="ChevronDown" size="14" :class="['text-emerald-400 transition-transform duration-200', isCategoryDropdownOpen ? 'rotate-180' : '']" />
+              </button>
+
+              <div v-if="isCategoryDropdownOpen" @click.stop class="absolute top-full left-0 mt-1.5 bg-[#0e1013]/95 border border-emerald-500/40 rounded-2xl shadow-2xl p-1.5 z-[100] grid grid-cols-2 gap-1 w-full backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+                <button
+                  v-for="cat in categories"
+                  :key="cat"
+                  type="button"
+                  @click="updateCategory(cat); isCategoryDropdownOpen = false;"
+                  :class="[
+                    'text-left text-xs font-bold px-3 py-2 rounded-xl flex items-center justify-between transition-all',
+                    guide.meta.category === cat ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/30' : 'text-slate-300 hover:bg-[#1a1d22] hover:text-white border border-transparent'
+                  ]"
+                >
+                  <span>{{ cat }}</span>
+                  <IconRenderer v-if="guide.meta.category === cat" name="Check" size="13" class="text-emerald-400" />
+                </button>
+              </div>
+            </div>
           </div>
           <!-- Server -->
           <div class="relative z-30">
@@ -2107,23 +2182,49 @@ const stopOutlineDrag = () => {
                             >
                               <IconRenderer name="GripVertical" size="12" />
                             </div>
-                            <!-- Quick Sub-block Type Switcher -->
-                            <select
-                              :value="sub.type"
-                              @change="changeSubBlockType(block, col.id, sub, ($event.target as HTMLSelectElement).value as BlockType)"
-                              class="bg-[#121416] border border-[#26292d] hover:border-cyan-500/50 text-cyan-300 font-bold uppercase text-[9px] rounded px-1.5 py-0.5 focus:outline-none cursor-pointer"
-                            >
-                              <option value="heading">Заголовок</option>
-                              <option value="text">Текст</option>
-                              <option value="callout">Совет / Callout</option>
-                              <option value="checklist">Чек-лист</option>
-                              <option value="spoiler">Спойлер</option>
-                              <option value="before_after">До / После</option>
-                              <option value="image">Картинка</option>
-                              <option value="youtube">YouTube</option>
-                              <option value="embed">Embed</option>
-                              <option value="spreadsheet">Таблица</option>
-                            </select>
+                            <!-- Quick Sub-block Type Switcher (Custom Glass Popover) -->
+                            <div class="relative">
+                              <button
+                                type="button"
+                                @click.stop="activeSubBlockMenuId = activeSubBlockMenuId === sub.id ? null : sub.id"
+                                class="bg-[#121416] border border-[#26292d] hover:border-cyan-500/50 text-cyan-300 font-extrabold uppercase text-[9px] rounded-lg px-2 py-1 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                              >
+                                <span>{{ getBlockTypeName(sub.type) }}</span>
+                                <IconRenderer name="ChevronDown" size="10" :class="['transition-transform duration-200', activeSubBlockMenuId === sub.id ? 'rotate-180' : '']" />
+                              </button>
+
+                              <!-- Custom Glass Dropdown Menu -->
+                              <div
+                                v-if="activeSubBlockMenuId === sub.id"
+                                @click.stop
+                                class="absolute left-0 top-full mt-1.5 w-44 p-1 rounded-xl bg-[#0e1013]/95 border border-cyan-500/40 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
+                              >
+                                <button
+                                  v-for="st in [
+                                    { type: 'heading', label: 'Заголовок', icon: 'FileText', color: 'text-cyan-400' },
+                                    { type: 'text', label: 'Текст', icon: 'Edit3', color: 'text-emerald-400' },
+                                    { type: 'callout', label: 'Совет / Callout', icon: 'Lightbulb', color: 'text-amber-400' },
+                                    { type: 'checklist', label: 'Чек-лист', icon: 'CheckCircle2', color: 'text-emerald-400' },
+                                    { type: 'spoiler', label: 'Спойлер', icon: 'HelpCircle', color: 'text-cyan-400' },
+                                    { type: 'before_after', label: 'До / После', icon: 'Maximize2', color: 'text-emerald-400' },
+                                    { type: 'image', label: 'Картинка', icon: 'Image', color: 'text-pink-400' },
+                                    { type: 'youtube', label: 'YouTube', icon: 'Video', color: 'text-rose-400' },
+                                    { type: 'embed', label: 'Embed', icon: 'Code', color: 'text-purple-400' },
+                                    { type: 'spreadsheet', label: 'Таблица', icon: 'Table', color: 'text-cyan-400' }
+                                  ]"
+                                  :key="st.type"
+                                  type="button"
+                                  @click="changeSubBlockType(block, col.id, sub, st.type as BlockType); activeSubBlockMenuId = null;"
+                                  :class="[
+                                    'w-full text-left text-xs font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-2 transition-all',
+                                    sub.type === st.type ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30' : 'text-slate-300 hover:bg-[#1f2328] hover:text-white border border-transparent'
+                                  ]"
+                                >
+                                  <IconRenderer :name="st.icon" size="13" :class="st.color" />
+                                  <span>{{ st.label }}</span>
+                                </button>
+                              </div>
+                            </div>
                           </div>
                           <div class="flex items-center gap-1">
                             <button
