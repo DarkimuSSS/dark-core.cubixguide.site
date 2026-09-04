@@ -1063,5 +1063,54 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
       @confirm="confirmDeleteAuthor"
       @cancel="isDeleteConfirmOpen = false"
     />
+
+    <!-- Rejection Reason Modal -->
+    <div
+      v-if="isRejectModalOpen"
+      @click.self="isRejectModalOpen = false"
+      class="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn"
+    >
+      <div @click.stop class="bg-[#141618] border border-rose-500/40 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 relative">
+        <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
+          <div class="flex items-center gap-2.5 text-rose-400">
+            <IconRenderer name="XCircle" size="20" />
+            <h3 class="text-sm font-extrabold text-white">Причина отклонения публикации</h3>
+          </div>
+          <button @click="isRejectModalOpen = false" class="text-dark-muted hover:text-white p-1 rounded-lg">
+            <IconRenderer name="X" size="16" />
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Укажите причину для автора <strong>{{ pendingRejectGuide?.meta?.author }}</strong>. Замечание будет отображено в его Личном Кабинете:
+        </p>
+
+        <textarea
+          v-model="rejectionReasonText"
+          rows="3"
+          placeholder="Например: Недостаточно скриншотов крафта, опечатка в описании или некорректная категория..."
+          class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-rose-500/60 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none custom-scrollbar"
+        ></textarea>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#26292d]">
+          <button
+            type="button"
+            @click="isRejectModalOpen = false"
+            class="px-4 py-2 rounded-xl bg-[#1c1f24] hover:bg-[#262a30] text-slate-300 text-xs font-bold transition-all cursor-pointer"
+          >
+            Отмена
+          </button>
+
+          <button
+            type="button"
+            @click="confirmRejectGuide"
+            class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+          >
+            <IconRenderer name="Send" size="14" />
+            <span>Отклонить гайд</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
