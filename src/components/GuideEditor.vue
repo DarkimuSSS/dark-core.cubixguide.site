@@ -1663,7 +1663,7 @@ const stopOutlineDrag = () => {
 
         <!-- Save / Submit Moderation Action Button (for unpublished/draft guides) -->
         <div v-else class="relative group/tool w-full flex justify-center">
-          <!-- ADMIN / MODERATOR: Publish Directly -->
+          <!-- MANAGER / ADMIN (with publish perm): Publish Directly -->
           <button
             v-if="props.canApprove"
             type="button"
@@ -1674,7 +1674,7 @@ const stopOutlineDrag = () => {
             <span v-if="isToolbarExpanded" class="text-xs font-bold truncate">Опубликовать</span>
           </button>
 
-          <!-- REGULAR AUTHOR: Send for Moderation -->
+          <!-- ALL OTHER AUTHORS & EDITORS: Always Send for Moderation -->
           <button
             v-else
             type="button"
@@ -1687,7 +1687,7 @@ const stopOutlineDrag = () => {
 
           <div v-if="!isToolbarExpanded" class="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover/tool:flex items-center pointer-events-none z-50">
             <div class="bg-[#0c0d0e] border border-amber-500/50 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl">
-              {{ props.canApprove ? 'Опубликовать гайд' : 'Отправить гайд на модерацию' }}
+              {{ props.canApprove ? 'Опубликовать гайд напрямую' : 'Отправить гайд на модерацию Управляющему' }}
             </div>
           </div>
         </div>
@@ -2864,8 +2864,12 @@ const stopOutlineDrag = () => {
     </div>
 
     <!-- GUIDE SETTINGS & UTILITIES MODAL -->
-    <div v-if="isGuideSettingsModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
-      <div class="bg-[#16181a] border border-[#26292d] w-full max-w-xl rounded-2xl p-6 shadow-2xl space-y-5">
+    <div 
+      v-if="isGuideSettingsModalOpen" 
+      @click.self="isGuideSettingsModalOpen = false"
+      class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-150"
+    >
+      <div @click.stop class="bg-[#16181a] border border-[#26292d] w-full max-w-xl rounded-2xl p-6 shadow-2xl space-y-5">
         
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
@@ -2878,7 +2882,14 @@ const stopOutlineDrag = () => {
               <p class="text-[11px] text-dark-muted">Публикация, приватность, импорт и обслуживание</p>
             </div>
           </div>
-          <button @click="isGuideSettingsModalOpen = false" class="text-dark-muted hover:text-white p-1 rounded-lg hover:bg-[#26292d] transition-colors"><IconRenderer name="X" size="18" /></button>
+          <button 
+            type="button" 
+            @click="isGuideSettingsModalOpen = false" 
+            class="text-dark-muted hover:text-white p-1.5 rounded-xl hover:bg-[#26292d] transition-colors cursor-pointer"
+            title="Закрыть (Esc)"
+          >
+            <IconRenderer name="X" size="18" />
+          </button>
         </div>
 
         <!-- Content Options -->
