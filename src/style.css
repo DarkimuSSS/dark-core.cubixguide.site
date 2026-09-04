@@ -257,13 +257,15 @@ html.theme-light .bg-blue-600 {
   color: #ffffff !important;
 }
 
-html.theme-light .bg-emerald-500:hover,
-html.theme-light .bg-emerald-600:hover,
-html.theme-light .bg-cyan-500:hover,
-html.theme-light .bg-cyan-600:hover,
-html.theme-light .bg-indigo-600:hover,
-html.theme-light .bg-blue-600:hover {
-  background-color: #1971c2 !important;
+html.theme-light footer .hover\:bg-\[\#1c1f22\]:hover {
+  background-color: #e9ecef !important;
+  border-color: #1c7ed6 !important;
+  color: #1c7ed6 !important;
+}
+
+html.theme-light .hover\:bg-\[\#1c1f22\]:hover {
+  background-color: #e9ecef !important;
+  border-color: #ced4da !important;
 }
 
 /* Light Theme Scrollbars */

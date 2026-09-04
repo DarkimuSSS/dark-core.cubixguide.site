@@ -71,9 +71,9 @@ const supportLinks = [
             :key="link.mode"
             type="button"
             @click="emit('navigate', link.mode)"
-            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border border-[#26292d] text-slate-400 text-xs font-semibold transition-all bg-[#16181a] hover:bg-[#1c1f22] hover:text-emerald-400 hover:border-emerald-500/50"
+            class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-[#26292d] text-slate-400 text-xs font-semibold transition-all duration-200 bg-[#16181a] hover:bg-[#1c1f22] hover:text-emerald-400 hover:border-emerald-500/50 hover:shadow-md hover:shadow-emerald-950/20 hover:-translate-y-0.5 cursor-pointer group"
           >
-            <IconRenderer :name="link.icon" size="14" />
+            <IconRenderer :name="link.icon" size="14" class="group-hover:scale-110 transition-transform text-slate-400 group-hover:text-emerald-400" />
             {{ link.label }}
           </button>
         </div>
@@ -89,9 +89,9 @@ const supportLinks = [
             :href="link.url"
             target="_blank"
             rel="noopener noreferrer"
-            :class="['flex items-center gap-2.5 px-3 py-2 rounded-xl border border-[#26292d] text-slate-400 text-xs font-semibold transition-all bg-[#16181a] hover:bg-[#1c1f22]', link.color]"
+            :class="['flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-[#26292d] text-slate-400 text-xs font-semibold transition-all duration-200 bg-[#16181a] hover:bg-[#1c1f22] hover:shadow-md hover:-translate-y-0.5 group', link.color]"
           >
-            <IconRenderer :name="link.icon" size="14" />
+            <IconRenderer :name="link.icon" size="14" class="group-hover:scale-110 transition-transform" />
             {{ link.label }}
           </a>
         </div>
@@ -107,9 +107,9 @@ const supportLinks = [
             :href="link.url"
             target="_blank"
             rel="noopener noreferrer"
-            :class="['flex items-center gap-2.5 px-3 py-2 rounded-xl border border-[#26292d] text-slate-400 text-xs font-semibold transition-all bg-[#16181a] hover:bg-[#1c1f22]', link.color]"
+            :class="['flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-[#26292d] text-slate-400 text-xs font-semibold transition-all duration-200 bg-[#16181a] hover:bg-[#1c1f22] hover:shadow-md hover:-translate-y-0.5 group', link.color]"
           >
-            <IconRenderer :name="link.icon" size="14" />
+            <IconRenderer :name="link.icon" size="14" class="group-hover:scale-110 transition-transform" />
             {{ link.label }}
           </a>
         </div>
