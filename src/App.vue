@@ -1415,22 +1415,29 @@ const handleViewAllAuthorGuides = (username: string) => {
           v-if="isAuthenticated && currentUsername"
           type="button"
           @click="openAuthorProfile(currentUsername)"
-          class="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-[#090a0c] hover:bg-[#181b20] text-purple-300 border border-[#262a30] hover:border-purple-500/40 text-xs font-extrabold flex items-center gap-2 transition-all duration-300 shadow-md group cursor-pointer shrink-0"
+          class="p-1.5 sm:px-3 sm:py-1.5 rounded-2xl bg-[#090a0c] hover:bg-[#181b20] text-purple-300 border border-[#262a30] hover:border-purple-500/40 text-xs font-extrabold flex items-center gap-2.5 transition-all duration-300 shadow-md group cursor-pointer shrink-0"
           title="Открыть ваш профиль автора"
         >
-          <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-500 p-0.5 flex-shrink-0 shadow-sm overflow-hidden group-hover:scale-105 transition-transform">
-            <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center font-black text-[11px] text-white overflow-hidden">
+          <!-- User Avatar -->
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-500 p-0.5 flex-shrink-0 shadow-sm overflow-hidden group-hover:scale-105 transition-transform">
+            <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center font-black text-xs text-white overflow-hidden">
               <img v-if="currentAuthorProfile?.avatarUrl" :src="currentAuthorProfile.avatarUrl" class="w-full h-full object-cover" />
               <span v-else>{{ currentUsername.charAt(0).toUpperCase() }}</span>
             </div>
           </div>
-          <span class="hidden sm:flex items-center gap-1.5 font-extrabold text-slate-200 group-hover:text-purple-300 transition-colors">
-            <span>{{ currentUsername }}</span>
-            <span v-if="currentUserRole && DEFAULT_SYSTEM_ROLES[currentUserRole]" :class="['text-[9px] px-1.5 py-0.2 rounded-md font-extrabold border shadow-sm', DEFAULT_SYSTEM_ROLES[currentUserRole].badgeColor]">
-              {{ DEFAULT_SYSTEM_ROLES[currentUserRole].name }}
+
+          <!-- Two-line Nickname & Role Badge Stack -->
+          <div class="hidden sm:flex flex-col items-start text-left leading-tight py-0.5">
+            <span class="font-extrabold text-slate-100 group-hover:text-purple-300 transition-colors text-xs">
+              {{ currentUsername }}
             </span>
-            <span v-else-if="currentUserIsAdmin" class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-400/30 px-1.5 py-0.2 rounded-md font-extrabold">dark-core team</span>
-          </span>
+            <div class="mt-0.5">
+              <span v-if="currentUserRole && DEFAULT_SYSTEM_ROLES[currentUserRole]" :class="['text-[9px] px-1.5 py-0.2 rounded-md font-extrabold border shadow-sm inline-block', DEFAULT_SYSTEM_ROLES[currentUserRole].badgeColor]">
+                {{ DEFAULT_SYSTEM_ROLES[currentUserRole].name }}
+              </span>
+              <span v-else-if="currentUserIsAdmin" class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-400/30 px-1.5 py-0.2 rounded-md font-extrabold inline-block">dark-core team</span>
+            </div>
+          </div>
         </button>
 
         <!-- Global Settings Button -->
