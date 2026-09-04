@@ -165,8 +165,9 @@ export interface GuideMeta {
   updatedAt: string;
   published: boolean; // Опубликован ли гайд (true/false)
   isVisible: boolean; // Виден ли гайд обычным пользователям (true/false)
-  status?: 'draft' | 'pending_moderation' | 'approved' | 'rejected'; // Статус модерации гайда
+  status?: 'draft' | 'pending_moderation' | 'approved' | 'rejected' | 'pending_unpublish'; // Статус модерации гайда
   rejectionReason?: string;
+  unpublishReason?: string;
   server?: string;
   coverUrl?: string;
   coverGradient?: string;

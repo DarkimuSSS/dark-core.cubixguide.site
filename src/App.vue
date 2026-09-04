@@ -466,9 +466,20 @@ const userHasPerm = (permission: UserPermission): boolean => {
   return hasPermission(currentUserRole.value, currentUserCustomPermissions.value, permission);
 };
 
+const isManagerOrAdmin = computed(() => {
+  if (!isAuthenticated.value) return false;
+  return currentUserIsAdmin.value || ['super_admin', 'admin', 'manager'].includes(currentUserRole.value);
+});
+
 const canUserEditActiveGuide = computed(() => {
   if (!isAuthenticated.value || !currentUsername.value || !activeGuide.value) return false;
   
+  // Rule: Published & Visible guides CANNOT be edited directly unless hidden/unpublished first (or edited by Manager/Admin)
+  const isPublishedAndVisible = activeGuide.value.meta.published && activeGuide.value.meta.isVisible;
+  if (isPublishedAndVisible && !isManagerOrAdmin.value) {
+    return false;
+  }
+
   // Super Admin or role/custom permission to edit all guides
   if (userHasPerm('edit_other_guide') || currentUserIsAdmin.value) return true;
   
@@ -489,6 +500,12 @@ const openEditorProtection = () => {
     return;
   }
   
+  const isPublishedAndVisible = activeGuide.value?.meta?.published && activeGuide.value?.meta?.isVisible;
+  if (isPublishedAndVisible && !isManagerOrAdmin.value) {
+    showToast('Опубликованные гайды нельзя редактировать напрямую! Запросите снятие с публикации у Управляющего.', 'error');
+    return;
+  }
+
   if (canUserEditActiveGuide.value) {
     mode.value = 'editor';
   } else {
@@ -789,6 +806,68 @@ const handleSubmitModeration = async () => {
   } catch (err) {
     console.error('Ошибка отправки на модерацию:', err);
     showToast('Ошибка обращения к серверу');
+  }
+};
+
+const handleRequestUnpublish = async (reason: string) => {
+  if (!activeGuide.value) return;
+  
+  activeGuide.value.meta.status = 'pending_unpublish';
+  activeGuide.value.meta.unpublishReason = reason || 'Запрос снятия с публикации от автора/редактора';
+  activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
+
+  try {
+    const authorUser = currentUsername.value || '';
+    const res = await fetch(`/api/guides/${activeGuide.value.meta.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-author-username': authorUser
+      },
+      body: JSON.stringify(activeGuide.value)
+    });
+
+    if (res.ok) {
+      showToast('Запрос на снятие гайда с публикации отправлен Управляющему! 📩');
+      mode.value = 'home';
+      await fetchGuides();
+    } else {
+      showToast('Ошибка отправки запроса', 'error');
+    }
+  } catch (err) {
+    showToast('Ошибка соединения с сервером', 'error');
+  }
+};
+
+const handleDirectUnpublish = async () => {
+  if (!activeGuide.value) return;
+  if (!isManagerOrAdmin.value) {
+    showToast('Снять гайд с публикации может только Управляющий или Администратор', 'error');
+    return;
+  }
+
+  activeGuide.value.meta.published = false;
+  activeGuide.value.meta.isVisible = false;
+  activeGuide.value.meta.status = 'draft';
+  activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
+
+  try {
+    const authorUser = currentUsername.value || '';
+    const res = await fetch(`/api/guides/${activeGuide.value.meta.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-author-username': authorUser
+      },
+      body: JSON.stringify(activeGuide.value)
+    });
+
+    if (res.ok) {
+      showToast('Гайд успешно скрыт и переведён в черновики! Теперь его можно редактировать.');
+      await fetchGuides();
+    }
+  } catch (err) {
+    showToast('Ошибка обращения к серверу', 'error');
   }
 };
 
@@ -1571,11 +1650,14 @@ const handleViewAllAuthorGuides = (username: string) => {
             <GuideEditor
               :guide="activeGuide"
               :can-approve="userHasPerm('publish_guide') || currentUserIsAdmin"
+              :can-direct-unpublish="isManagerOrAdmin"
               :assigned-servers="currentUserAssignedServers"
               @update:guide="updateActiveGuide"
               @toggle-preview="handleTogglePreview"
               @publish="handlePublish"
               @submit-moderation="handleSubmitModeration"
+              @request-unpublish="handleRequestUnpublish"
+              @direct-unpublish="handleDirectUnpublish"
               @delete="requestDeleteGuide"
             />
           </div>

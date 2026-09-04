@@ -193,7 +193,7 @@ const handleCreateNew = () => {
                 <div class="flex items-center justify-between text-[10px] text-dark-muted border-t border-[#292d34] pt-2">
                   <span>Просмотров: {{ guide.meta.viewsCount || 0 }}</span>
                   <span class="text-emerald-400 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                    Редактировать <IconRenderer name="ArrowRight" size="12" />
+                    Открыть / Управление <IconRenderer name="ArrowRight" size="12" />
                   </span>
                 </div>
               </div>

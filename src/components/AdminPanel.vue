@@ -76,7 +76,7 @@ const fetchPendingGuides = async () => {
     const res = await fetch('/api/guides');
     if (res.ok) {
       const all = await res.json();
-      pendingGuidesList.value = all.filter((g: any) => g.meta.status === 'pending_moderation');
+      pendingGuidesList.value = all.filter((g: any) => g.meta.status === 'pending_moderation' || g.meta.status === 'pending_unpublish');
     }
   } catch (e) {
     console.error('Ошибка загрузки гайдов на модерации:', e);
@@ -872,18 +872,36 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
                 <span>Сервер: {{ guide.meta.server || 'Все' }}</span>
               </div>
             </div>
-            <span class="text-[9.5px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">
+            <span v-if="guide.meta.status === 'pending_unpublish'" class="text-[9.5px] font-black px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 uppercase">
+              Запрос снятия
+            </span>
+            <span v-else class="text-[9.5px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">
               На модерации
             </span>
           </div>
 
           <p class="text-xs text-dark-muted line-clamp-2 leading-relaxed">{{ guide.meta.summary || 'Описание отсутствует' }}</p>
+          
+          <div v-if="guide.meta.status === 'pending_unpublish'" class="p-2 rounded-xl bg-purple-950/40 border border-purple-500/30 text-xs text-purple-200 space-y-0.5">
+            <span class="font-bold text-purple-300">Причина запроса снятия:</span>
+            <p class="italic text-[11px] text-purple-200/90">{{ guide.meta.unpublishReason || 'Без указания причины' }}</p>
+          </div>
 
           <div class="flex items-center justify-between pt-3 border-t border-[#26292d]">
             <span class="text-[10px] text-dark-muted">Обновлен: {{ guide.meta.updatedAt }}</span>
             
             <div class="flex items-center gap-2">
               <button
+                v-if="guide.meta.status === 'pending_unpublish'"
+                @click="handleRejectGuide(guide)"
+                class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <IconRenderer name="EyeOff" size="14" />
+                <span>Снять с публикации (Одобрить)</span>
+              </button>
+
+              <button
+                v-else
                 @click="openRejectModal(guide)"
                 class="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
               >

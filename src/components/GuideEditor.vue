@@ -13,6 +13,8 @@ import type { Guide, GuideBlock, Category, Difficulty, BlockType, BlockSpan, Blo
 const props = defineProps<{
   guide: Guide;
   canApprove?: boolean;
+  canDirectUnpublish?: boolean;
+  isLockedForEdit?: boolean;
   isAuthorRole?: boolean;
   assignedServers?: string[];
 }>();
@@ -22,6 +24,8 @@ const emit = defineEmits<{
   (e: 'toggle-preview'): void;
   (e: 'publish'): void;
   (e: 'submit-moderation'): void;
+  (e: 'request-unpublish', reason: string): void;
+  (e: 'direct-unpublish'): void;
   (e: 'approve'): void;
   (e: 'reject', reason: string): void;
   (e: 'delete'): void;
@@ -54,6 +58,20 @@ const filteredEditorServers = computed(() => {
 });
 
 const isImportExportOpen = ref(false);
+const isTemplateLibraryOpen = ref(false);
+const isUnpublishModalOpen = ref(false);
+const userUnpublishReason = ref('');
+
+const openUnpublishReasonModal = () => {
+  userUnpublishReason.value = '';
+  isUnpublishModalOpen.value = true;
+};
+
+const confirmRequestUnpublish = () => {
+  const reason = userUnpublishReason.value.trim() || 'Снять с публикации по запросу автора/редактора';
+  emit('request-unpublish', reason);
+  isUnpublishModalOpen.value = false;
+};
 const isTemplateModalOpen = ref(false);
 const isHelpModalOpen = ref(false);
 const isTreeModalOpen = ref(false);
@@ -1618,8 +1636,33 @@ const stopOutlineDrag = () => {
           </div>
         </div>
 
-        <!-- Save / Submit Moderation Action Button -->
-        <div class="relative group/tool w-full flex justify-center">
+        <!-- Unpublish / Hide Action Button for Published Guides -->
+        <div v-if="props.guide.meta.published && props.guide.meta.isVisible" class="relative group/tool w-full flex justify-center">
+          <!-- MANAGER / ADMIN: Direct Unpublish -->
+          <button
+            v-if="props.canDirectUnpublish"
+            type="button"
+            @click="emit('direct-unpublish')"
+            :class="['rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center transition-all shadow-lg shadow-purple-950/50 cursor-pointer', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']"
+          >
+            <IconRenderer name="EyeOff" size="18" class="shrink-0 text-purple-200" />
+            <span v-if="isToolbarExpanded" class="text-xs font-bold truncate">Снять с публикации</span>
+          </button>
+
+          <!-- AUTHOR / EDITOR: Request Unpublish -->
+          <button
+            v-else
+            type="button"
+            @click="openUnpublishReasonModal"
+            :class="['rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40 flex items-center transition-all cursor-pointer', isToolbarExpanded ? 'h-10 px-3 gap-2.5 justify-start font-bold w-full' : 'w-10 h-10 justify-center shrink-0']"
+          >
+            <IconRenderer name="EyeOff" size="18" class="shrink-0 text-amber-400" />
+            <span v-if="isToolbarExpanded" class="text-xs font-extrabold truncate">Запросить снятие</span>
+          </button>
+        </div>
+
+        <!-- Save / Submit Moderation Action Button (for unpublished/draft guides) -->
+        <div v-else class="relative group/tool w-full flex justify-center">
           <!-- ADMIN / MODERATOR: Publish Directly -->
           <button
             v-if="props.canApprove"
