@@ -18,7 +18,7 @@ import SelectGuideModal from './components/SelectGuideModal.vue';
 import AuthorDashboardModal from './components/AuthorDashboardModal.vue';
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
-import { hasPermission } from './data/roles';
+import { DEFAULT_SYSTEM_ROLES, hasPermission } from './data/roles';
 import type { Guide, AuthorProfile, UserRole, UserPermission } from './types/guide';
 
 const isTermsOpen = ref(false);
