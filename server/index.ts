@@ -436,6 +436,9 @@ app.get('/api/guides/:id/comments', (req, res) => {
   }
 });
 
+const userLastCommentTimeMap: Record<string, number> = {};
+const COMMENT_COOLDOWN_MS = 60 * 1000; // 60 seconds
+
 // 2. Add a comment or reply
 app.post('/api/guides/:id/comments', (req, res) => {
   try {
@@ -446,6 +449,17 @@ app.post('/api/guides/:id/comments', (req, res) => {
     if (content.trim().length > 200) {
       return res.status(400).json({ error: 'Длина комментария не может превышать 200 символов' });
     }
+
+    const authorLower = String(author).toLowerCase().trim();
+    const now = Date.now();
+    const lastTime = userLastCommentTimeMap[authorLower] || 0;
+    const elapsedMs = now - lastTime;
+
+    if (elapsedMs < COMMENT_COOLDOWN_MS) {
+      const remainingSec = Math.ceil((COMMENT_COOLDOWN_MS - elapsedMs) / 1000);
+      return res.status(429).json({ error: `Подождите ${remainingSec} сек. перед отправкой следующего комментария` });
+    }
+
     const newComment = addGuideComment({
       guideId: req.params.id,
       parentId,
@@ -453,6 +467,8 @@ app.post('/api/guides/:id/comments', (req, res) => {
       authorRole,
       content: content.trim()
     });
+
+    userLastCommentTimeMap[authorLower] = now;
     res.json(newComment);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

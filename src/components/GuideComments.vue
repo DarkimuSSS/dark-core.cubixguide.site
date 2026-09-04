@@ -40,6 +40,27 @@ const newCommentText = ref<string>('');
 const replyingToId = ref<string | null>(null);
 const replyText = ref<string>('');
 const isSubmitting = ref<boolean>(false);
+const cooldownSeconds = ref<number>(0);
+const cooldownErrorMsg = ref<string | null>(null);
+let cooldownInterval: any = null;
+
+const startCooldownTimer = (seconds: number = 60) => {
+  cooldownSeconds.value = seconds;
+  if (cooldownInterval) clearInterval(cooldownInterval);
+  cooldownInterval = setInterval(() => {
+    if (cooldownSeconds.value > 0) {
+      cooldownSeconds.value--;
+    } else {
+      clearInterval(cooldownInterval);
+      cooldownInterval = null;
+      cooldownErrorMsg.value = null;
+    }
+  }, 1000);
+};
+
+onUnmounted(() => {
+  if (cooldownInterval) clearInterval(cooldownInterval);
+});
 
 const fetchComments = async () => {
   if (!props.guideId) return;
@@ -79,6 +100,8 @@ const handlePostComment = async (parentId: string | null = null) => {
     return;
   }
 
+  if (cooldownSeconds.value > 0) return;
+
   const text = parentId ? replyText.value.trim() : newCommentText.value.trim();
   if (!text) return;
 
@@ -102,7 +125,15 @@ const handlePostComment = async (parentId: string | null = null) => {
       } else {
         newCommentText.value = '';
       }
+      startCooldownTimer(60);
+      cooldownErrorMsg.value = null;
       await fetchComments();
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      cooldownErrorMsg.value = errData.error || 'Подождите перед отправкой следующего комментария';
+      if (res.status === 429) {
+        startCooldownTimer(60);
+      }
     }
   } catch (err) {
     console.error('Ошибка отправки комментария:', err);
@@ -206,6 +237,11 @@ const MAX_CHAR_LIMIT = 200;
           </div>
         </div>
 
+        <div v-if="cooldownErrorMsg || cooldownSeconds > 0" class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs flex items-center gap-2">
+          <IconRenderer name="Clock" size="14" class="shrink-0" />
+          <span>{{ cooldownErrorMsg || `Задержка между комментариями. Подождите еще ${cooldownSeconds} сек.` }}</span>
+        </div>
+
         <textarea 
           v-model="newCommentText"
           :maxlength="MAX_CHAR_LIMIT"
@@ -220,11 +256,13 @@ const MAX_CHAR_LIMIT = 200;
           </span>
           <button 
             @click="handlePostComment(null)"
-            :disabled="!newCommentText.trim() || newCommentText.length > MAX_CHAR_LIMIT || isSubmitting"
+            :disabled="!newCommentText.trim() || newCommentText.length > MAX_CHAR_LIMIT || isSubmitting || cooldownSeconds > 0"
             class="flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-cyan-950/50"
           >
-            <IconRenderer name="Send" size="14" />
-            <span>Опубликовать</span>
+            <IconRenderer v-if="cooldownSeconds === 0" name="Send" size="14" />
+            <IconRenderer v-else name="Clock" size="14" class="animate-spin" />
+            <span v-if="cooldownSeconds > 0">КД ({{ cooldownSeconds }} сек)</span>
+            <span v-else>Опубликовать</span>
           </button>
         </div>
       </div>
@@ -408,11 +446,13 @@ const MAX_CHAR_LIMIT = 200;
               </button>
               <button 
                 @click="handlePostComment(comment.id)"
-                :disabled="!replyText.trim() || replyText.length > MAX_CHAR_LIMIT || isSubmitting"
+                :disabled="!replyText.trim() || replyText.length > MAX_CHAR_LIMIT || isSubmitting || cooldownSeconds > 0"
                 class="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all disabled:opacity-40"
               >
-                <IconRenderer name="Send" size="12" />
-                <span>Отправить ответ</span>
+                <IconRenderer v-if="cooldownSeconds === 0" name="Send" size="12" />
+                <IconRenderer v-else name="Clock" size="12" class="animate-spin" />
+                <span v-if="cooldownSeconds > 0">КД ({{ cooldownSeconds }}s)</span>
+                <span v-else>Отправить ответ</span>
               </button>
             </div>
           </div>
