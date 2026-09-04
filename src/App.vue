@@ -1491,6 +1491,7 @@ const handleViewAllAuthorGuides = (username: string) => {
               :current-username="currentUsername || ''"
               :current-role="currentUserRole"
               @go-home="mode = 'home'"
+              @open-profile="openAuthorProfile"
             />
           </div>
 
