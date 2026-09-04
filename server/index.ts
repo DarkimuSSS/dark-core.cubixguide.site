@@ -19,7 +19,7 @@ const DEFAULT_CUBIX_SERVERS = [
 ];
 
 // Helper to format DB row to Guide object
-function formatGuideRow(row: any): Guide {
+function formatGuideRow(row: any, viewsMap: Record<string, number> = {}): Guide {
   let coAuthors: string[] = [];
   try {
     if (row.co_authors) {
@@ -52,7 +52,8 @@ function formatGuideRow(row: any): Guide {
       rejectionReason: row.rejection_reason || undefined,
       server: row.server || undefined,
       coverUrl: row.cover_url || undefined,
-      coverGradient: row.cover_gradient || undefined
+      coverGradient: row.cover_gradient || undefined,
+      views: viewsMap[row.id] || 0
     },
     blocks: JSON.parse(row.blocks || '[]')
   };
@@ -377,7 +378,17 @@ app.get('/api/authors', (req, res) => {
 app.get('/api/guides', (req, res) => {
   try {
     const rows = db.prepare('SELECT * FROM guides ORDER BY updated_at DESC').all();
-    const guides = rows.map(formatGuideRow);
+    const viewsRows = db.prepare(`
+      SELECT guide_id, COUNT(*) as count 
+      FROM telemetry_logs 
+      WHERE event_type = 'guide_view' AND guide_id IS NOT NULL 
+      GROUP BY guide_id
+    `).all() as any[];
+    
+    const viewsMap: Record<string, number> = {};
+    viewsRows.forEach(r => { viewsMap[r.guide_id] = r.count; });
+
+    const guides = rows.map(r => formatGuideRow(r, viewsMap));
     res.json(guides);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -580,8 +591,8 @@ function canUserModifyGuide(requestingUsername: string | undefined, guideId: str
   const userRow = db.prepare('SELECT is_admin, can_edit_others, role, custom_permissions FROM users WHERE LOWER(username) = LOWER(?)').get(requestingUsername) as any;
   if (!userRow) return false;
 
-  const role = userRow.role || (userRow.is_admin ? 'super_admin' : 'author');
-  if (role === 'super_admin' || userRow.is_admin || userRow.can_edit_others) return true;
+  const role = userRow.role || (userRow.is_admin ? 'dark_core_team' : 'author');
+  if (role === 'dark_core_team' || userRow.is_admin || userRow.can_edit_others) return true;
 
   let customPerms: string[] = [];
   try {

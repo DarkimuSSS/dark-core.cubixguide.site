@@ -18,8 +18,8 @@ export const SYSTEM_PERMISSIONS: { key: UserPermission; label: string; descripti
 ];
 
 export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
-  super_admin: {
-    role: 'super_admin',
+  dark_core_team: {
+    role: 'dark_core_team',
     name: 'dark-core team',
     description: 'Полный неограниченный доступ ко всем системам и правам',
     badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
@@ -30,8 +30,8 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
       'view_telemetry', 'view_rules', 'manage_rules'
     ]
   },
-  admin: {
-    role: 'admin',
+  dark_core_junior_team: {
+    role: 'dark_core_junior_team',
     name: 'dark-core junior team',
     description: 'Управление статьями, модерацией, авторами, правилами и аналитикой',
     badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
@@ -103,11 +103,11 @@ export function getRolePriority(role: UserRole | undefined): number {
 /**
  * Проверяет, может ли пользователь с ролью callerRole управлять пользователем/целью targetRole.
  * Управление разрешено ТОЛЬКО если у вызвавшего приоритет строго выше (число меньше),
- * либо если оба super_admin.
+ * либо если оба dark_core_team.
  */
 export function canManageTargetRole(callerRole: UserRole | undefined, targetRole: UserRole | undefined): boolean {
   if (!callerRole) return false;
-  if (callerRole === 'super_admin') return true;
+  if (callerRole === 'dark_core_team') return true;
   
   const callerPriority = getRolePriority(callerRole);
   const targetPriority = getRolePriority(targetRole);
@@ -125,7 +125,7 @@ export function hasPermission(
   permission: UserPermission
 ): boolean {
   if (!userRole) return false;
-  if (userRole === 'super_admin') return true;
+  if (userRole === 'dark_core_team') return true;
 
   const roleDef = DEFAULT_SYSTEM_ROLES[userRole];
   return roleDef ? roleDef.permissions.includes(permission) : false;

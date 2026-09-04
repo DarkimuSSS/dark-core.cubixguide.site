@@ -687,7 +687,7 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
             <div class="flex items-center justify-between gap-2 text-xs relative">
               <span class="text-dark-muted font-bold text-[11px]">Роль:</span>
 
-              <span v-if="!canManageTargetRole(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest'), author.role || 'author')" class="text-[10px] text-amber-400 font-bold bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-lg">
+              <span v-if="!canManageTargetRole(props.currentRole || (props.isAdmin ? 'dark_core_team' : 'guest'), author.role || 'author')" class="text-[10px] text-amber-400 font-bold bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-lg">
                 Защищено рангом
               </span>
 
@@ -784,7 +784,7 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
               <span>Профиль</span>
             </button>
 
-            <div v-if="canManageTargetRole(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest'), author.role || 'author')" class="flex items-center gap-1.5">
+            <div v-if="canManageTargetRole(props.currentRole || (props.isAdmin ? 'dark_core_team' : 'guest'), author.role || 'author')" class="flex items-center gap-1.5">
               <button
                 @click="resetTargetUsername = (resetTargetUsername === author.username ? null : author.username); resetNewPassword = '';"
                 class="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10.5px] font-bold transition-all cursor-pointer flex items-center gap-1"
@@ -1035,7 +1035,7 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
               v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)"
               :key="r.role"
               :value="r.role"
-              :disabled="getRolePriority(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest')) >= r.priority && props.currentRole !== 'super_admin'"
+              :disabled="getRolePriority(props.currentRole || (props.isAdmin ? 'dark_core_team' : 'guest')) >= r.priority && props.currentRole !== 'dark_core_team'"
             >
               {{ r.name }}
             </option>

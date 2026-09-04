@@ -259,9 +259,13 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
   return { username: cleanUsername, createdAt };
 }
 
+// Automatic DB migration: Convert legacy role strings 'super_admin' -> 'dark_core_team' & 'admin' -> 'dark_core_junior_team'
+try { db.exec(`UPDATE users SET role = 'dark_core_team' WHERE role = 'super_admin';`); } catch (e) {}
+try { db.exec(`UPDATE users SET role = 'dark_core_junior_team' WHERE role = 'admin';`); } catch (e) {}
+
 const ROLE_PRIORITIES: Record<string, number> = {
-  super_admin: 0,
-  admin: 10,
+  dark_core_team: 0,
+  dark_core_junior_team: 10,
   manager: 15,
   editor: 20,
   author: 30,
@@ -283,16 +287,16 @@ function checkHierarchyPermission(callerUsername: string, targetUsername: string
     throw new Error('Пользователь, выполняющий действие, не найден в системе');
   }
 
-  const callerRole = callerRow.role || (callerRow.is_admin ? 'super_admin' : 'author');
+  const callerRole = callerRow.role || (callerRow.is_admin ? 'dark_core_team' : 'author');
   const targetRow = db.prepare('SELECT is_admin, role FROM users WHERE LOWER(username) = LOWER(?)').get(cleanTarget) as any;
   
   if (!targetRow) {
     throw new Error('Целевой пользователь не найден в системе');
   }
 
-  const targetRole = targetRow.role || (targetRow.is_admin ? 'super_admin' : 'author');
+  const targetRole = targetRow.role || (targetRow.is_admin ? 'dark_core_team' : 'author');
 
-  if (callerRole === 'super_admin') {
+  if (callerRole === 'dark_core_team') {
     return { callerRole, targetRole };
   }
 
@@ -400,11 +404,11 @@ export function loginUser(username: string, password: string) {
     if (user.assigned_servers) assignedSrvs = JSON.parse(user.assigned_servers);
   } catch (e) {}
 
-  const role = user.role || (user.is_admin ? 'super_admin' : 'author');
+  const role = user.role || (user.is_admin ? 'dark_core_team' : 'author');
 
   return {
     username: user.username,
-    isAdmin: Boolean(user.is_admin) || role === 'super_admin' || role === 'admin',
+    isAdmin: Boolean(user.is_admin) || role === 'dark_core_team' || role === 'dark_core_junior_team',
     canEditOthers: Boolean(user.can_edit_others),
     canCreateGuides: Boolean(user.can_create_guides),
     isVerified: Boolean(user.is_verified),
@@ -430,11 +434,11 @@ export function getAuthorUserByUsername(username: string) {
     if (user.assigned_servers) assignedSrvs = JSON.parse(user.assigned_servers);
   } catch (e) {}
 
-  const role = user.role || (user.is_admin ? 'super_admin' : 'author');
+  const role = user.role || (user.is_admin ? 'dark_core_team' : 'author');
 
   return {
     username: user.username,
-    isAdmin: Boolean(user.is_admin) || role === 'super_admin' || role === 'admin',
+    isAdmin: Boolean(user.is_admin) || role === 'dark_core_team' || role === 'dark_core_junior_team',
     canEditOthers: Boolean(user.can_edit_others),
     canCreateGuides: Boolean(user.can_create_guides),
     isVerified: Boolean(user.is_verified),
@@ -541,9 +545,9 @@ export async function syncAuthorWithCubixTeam(cleanUsername: string) {
 
       const mergedServers = Array.from(new Set([...existingAssigned, ...seniorAdminServers]));
       
-      // Upgrade role to manager if confirmed "Управляющий" and not already super_admin / admin
+      // Upgrade role to manager if confirmed "Управляющий" and not already dark_core_team / dark_core_junior_team
       let targetRole = user.role;
-      if (isManager && user.role !== 'super_admin' && user.role !== 'admin') {
+      if (isManager && user.role !== 'dark_core_team' && user.role !== 'dark_core_junior_team') {
         targetRole = 'manager';
       }
 
@@ -624,8 +628,8 @@ export function updateAuthorRoleByAdmin(
   const cleanTarget = targetUsername.trim();
   const { callerRole } = checkHierarchyPermission(adminUsername, cleanTarget, 'изменять роль');
 
-  // Verify that caller cannot assign a role equal to or higher than caller's own role (unless super_admin)
-  if (callerRole !== 'super_admin') {
+  // Verify that caller cannot assign a role equal to or higher than caller's own role (unless dark_core_team)
+  if (callerRole !== 'dark_core_team') {
     const callerPriority = getPriorityForRole(callerRole);
     const newRolePriority = getPriorityForRole(role);
     if (callerPriority >= newRolePriority) {
@@ -635,7 +639,7 @@ export function updateAuthorRoleByAdmin(
 
   const customPermsJson = customPermissions && customPermissions.length > 0 ? JSON.stringify(customPermissions) : null;
   const assignedServersJson = assignedServers && assignedServers.length > 0 ? JSON.stringify(assignedServers) : null;
-  const isAdminFlag = role === 'super_admin' || role === 'admin' ? 1 : 0;
+  const isAdminFlag = role === 'dark_core_team' || role === 'dark_core_junior_team' ? 1 : 0;
   
   const stmt = db.prepare('UPDATE users SET role = ?, custom_permissions = ?, assigned_servers = ?, is_admin = ? WHERE LOWER(username) = LOWER(?)');
   stmt.run(role, customPermsJson, assignedServersJson, isAdminFlag, cleanTarget);
@@ -656,11 +660,11 @@ export function listAllAuthors() {
       if (r.assigned_servers) assignedSrvs = JSON.parse(r.assigned_servers);
     } catch (e) {}
 
-    const role = r.role || (r.is_admin ? 'super_admin' : 'author');
+    const role = r.role || (r.is_admin ? 'dark_core_team' : 'author');
 
     return {
       username: r.username,
-      isAdmin: Boolean(r.is_admin) || role === 'super_admin' || role === 'admin',
+      isAdmin: Boolean(r.is_admin) || role === 'dark_core_team' || role === 'dark_core_junior_team',
       canEditOthers: Boolean(r.can_edit_others),
       canCreateGuides: Boolean(r.can_create_guides),
       isVerified: Boolean(r.is_verified),

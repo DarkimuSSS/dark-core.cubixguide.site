@@ -370,7 +370,7 @@ const verifyAndRefreshSession = async (username: string) => {
       currentUserIsAdmin.value = Boolean(data.isAdmin);
       currentUserCanEditOthers.value = Boolean(data.canEditOthers);
       currentUserCanCreateGuides.value = Boolean(data.canCreateGuides);
-      currentUserRole.value = data.role || (data.isAdmin ? 'super_admin' : 'author');
+      currentUserRole.value = data.role || (data.isAdmin ? 'dark_core_team' : 'author');
       currentUserCustomPermissions.value = data.customPermissions || [];
       currentUserAssignedServers.value = data.assignedServers || [];
 
@@ -399,7 +399,7 @@ onMounted(() => {
     isAuthenticated.value = true;
     currentUsername.value = savedUser;
     currentUserIsAdmin.value = localStorage.getItem('cubix_logged_is_admin') === 'true';
-    currentUserRole.value = (localStorage.getItem('cubix_logged_role') as UserRole) || (currentUserIsAdmin.value ? 'super_admin' : 'author');
+    currentUserRole.value = (localStorage.getItem('cubix_logged_role') as UserRole) || (currentUserIsAdmin.value ? 'dark_core_team' : 'author');
     currentUserCanEditOthers.value = localStorage.getItem('cubix_logged_can_edit_others') === 'true';
     currentUserCanCreateGuides.value = localStorage.getItem('cubix_logged_can_create_guides') !== 'false';
     try {
@@ -525,7 +525,7 @@ const handleAuthentication = (payload: { username: string; isAdmin: boolean; can
   currentUserIsAdmin.value = payload.isAdmin;
   currentUserCanEditOthers.value = Boolean(payload.canEditOthers);
   currentUserCanCreateGuides.value = payload.canCreateGuides !== undefined ? Boolean(payload.canCreateGuides) : true;
-  currentUserRole.value = payload.role || (payload.isAdmin ? 'super_admin' : 'author');
+  currentUserRole.value = payload.role || (payload.isAdmin ? 'dark_core_team' : 'author');
   currentUserCustomPermissions.value = payload.customPermissions || [];
   currentUserAssignedServers.value = payload.assignedServers || [];
 

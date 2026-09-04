@@ -172,6 +172,7 @@ export interface GuideMeta {
   coverUrl?: string;
   coverGradient?: string;
   variant?: BlockVariant;
+  views?: number;
 }
 
 export interface Guide {
@@ -201,14 +202,14 @@ export type UserPermission =
   | 'view_rules'             // Просмотр страницы правил (Общие + Внутриигровые)
   | 'manage_rules';          // Управление и редактирование правил серверов
 
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'editor' | 'author' | 'helper' | 'guest';
+export type UserRole = 'dark_core_team' | 'dark_core_junior_team' | 'manager' | 'editor' | 'author' | 'helper' | 'guest';
 
 export interface SystemRoleDefinition {
   role: UserRole;
   name: string;
   description: string;
   badgeColor: string;
-  priority: number; // 0 = Высший приоритет (Главный Администратор), 999 = Низший (Читатель)
+  priority: number; // 0 = Высший приоритет (dark-core team), 999 = Низший (Читатель)
   permissions: UserPermission[];
 }
 
