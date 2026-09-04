@@ -166,7 +166,7 @@ const canDelete = (comment: CommentItem) => {
   if (props.currentUsername.toLowerCase() === comment.author.toLowerCase()) return true;
   return false;
 };
-const MAX_CHAR_LIMIT = 1000;
+const MAX_CHAR_LIMIT = 200;
 </script>
 
 <template>
