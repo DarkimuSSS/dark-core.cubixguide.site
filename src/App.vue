@@ -1,21 +1,24 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch, nextTick, defineAsyncComponent } from 'vue';
 import HomePage from './components/HomePage.vue';
-import GuideEditor from './components/GuideEditor.vue';
 import GuideView from './components/GuideView.vue';
-import AuthorProfileModal from './components/AuthorProfileModal.vue';
 import ConfirmModal from './components/ConfirmModal.vue';
 import IconRenderer from './components/IconRenderer.vue';
 import AuthModal from './components/AuthModal.vue';
 import SiteFooter from './components/SiteFooter.vue';
-import TermsModal from './components/TermsModal.vue';
-import RulesModal from './components/RulesModal.vue';
 import SettingsModal from './components/SettingsModal.vue';
-import TelemetryPage from './components/TelemetryPage.vue';
-import AdminPanel from './components/AdminPanel.vue';
 import TeamPage from './components/TeamPage.vue';
 import SelectGuideModal from './components/SelectGuideModal.vue';
-import AuthorDashboardModal from './components/AuthorDashboardModal.vue';
+
+// Dynamic Async Components for Code-Splitting
+const GuideEditor = defineAsyncComponent(() => import('./components/GuideEditor.vue'));
+const AuthorProfileModal = defineAsyncComponent(() => import('./components/AuthorProfileModal.vue'));
+const AuthorDashboardModal = defineAsyncComponent(() => import('./components/AuthorDashboardModal.vue'));
+const AdminPanel = defineAsyncComponent(() => import('./components/AdminPanel.vue'));
+const TelemetryPage = defineAsyncComponent(() => import('./components/TelemetryPage.vue'));
+const RulesModal = defineAsyncComponent(() => import('./components/RulesModal.vue'));
+const TermsModal = defineAsyncComponent(() => import('./components/TermsModal.vue'));
+
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
 import { DEFAULT_SYSTEM_ROLES, hasPermission } from './data/roles';
