@@ -1485,9 +1485,9 @@ const handleViewAllAuthorGuides = (username: string) => {
           </div>
 
           <!-- DEDICATED ADMIN PANEL FULL PAGE VIEW -->
-          <div v-else-if="mode === 'admin' && currentUserIsAdmin" class="px-3 sm:px-6 pt-4">
+          <div v-else-if="mode === 'admin' && (currentUserIsAdmin || userHasPerm('manage_roles'))" class="px-3 sm:px-6 pt-4">
             <AdminPanel
-              :is-admin="currentUserIsAdmin"
+              :is-admin="currentUserIsAdmin || userHasPerm('manage_roles')"
               :current-username="currentUsername || ''"
               :current-role="currentUserRole"
               @go-home="mode = 'home'"
