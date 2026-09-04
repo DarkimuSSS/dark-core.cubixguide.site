@@ -529,7 +529,7 @@ app.post('/api/guides', (req, res) => {
     });
 
     const isPublished = Boolean(guide.meta.published);
-    const isVisible = isPublished ? Boolean(guide.meta.isVisible) : false;
+    const isVisible = isPublished ? (guide.meta.isVisible !== undefined ? Boolean(guide.meta.isVisible) : true) : false;
     const guideStatus = guide.meta.status || (isPublished ? 'approved' : 'draft');
     const rejectionReason = guide.meta.rejectionReason || null;
 
@@ -617,7 +617,7 @@ app.put('/api/guides/:id', (req, res) => {
     const existingRow = db.prepare('SELECT * FROM guides WHERE id = ?').get(guideId);
     
     const isPublished = Boolean(guide.meta.published);
-    const isVisible = isPublished ? Boolean(guide.meta.isVisible) : false;
+    const isVisible = isPublished ? (guide.meta.isVisible !== undefined ? Boolean(guide.meta.isVisible) : true) : false;
     const guideStatus = guide.meta.status || (isPublished ? 'approved' : 'draft');
     const rejectionReason = guide.meta.rejectionReason || null;
 

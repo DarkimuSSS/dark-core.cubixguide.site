@@ -884,6 +884,7 @@ const handlePublish = async () => {
     return;
   }
   activeGuide.value.meta.published = true;
+  activeGuide.value.meta.isVisible = true;
   activeGuide.value.meta.status = 'approved';
   activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
 
