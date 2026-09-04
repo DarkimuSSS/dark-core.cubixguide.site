@@ -76,7 +76,16 @@ const fetchPendingGuides = async () => {
     const res = await fetch('/api/guides');
     if (res.ok) {
       const all = await res.json();
-      pendingGuidesList.value = all.filter((g: any) => g.meta.status === 'pending_moderation' || g.meta.status === 'pending_unpublish');
+      // Фильтруем все статьи, требующие внимания администрации:
+      // 1. Прямой статус pending_moderation или pending_unpublish
+      // 2. Статьи, у которых статус не approved/rejected, либо которые не опубликованы/скрыты авторами
+      pendingGuidesList.value = all.filter((g: any) => {
+        const st = g.meta?.status;
+        const isPendingMod = st === 'pending_moderation';
+        const isPendingUnpub = st === 'pending_unpublish';
+        const isUnpublishedDraft = !g.meta?.published && st !== 'approved' && st !== 'rejected';
+        return isPendingMod || isPendingUnpub || isUnpublishedDraft;
+      });
     }
   } catch (e) {
     console.error('Ошибка загрузки гайдов на модерации:', e);

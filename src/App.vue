@@ -31,8 +31,8 @@ const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
 const activeGuide = ref<Guide | null>(null);
 
-// MODE: 'home' (Главная) | 'reader' (Вики Гайда) | 'editor' (Конструктор) | 'favorites' (Избранное) | 'drafts' (Мои Черновики) | 'rules' (Правила проекта)
-const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules'>('home');
+// MODE: 'home' (Главная) | 'reader' (Вики Гайда) | 'editor' (Конструктор) | 'favorites' (Избранное) | 'drafts' (Мои Черновики) | 'rules' (Правила проекта) | 'author_dashboard' (Кабинет Автора) | 'admin' | 'telemetry' | 'team'
+const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team'>('home');
 const isLoading = ref<boolean>(true);
 
 const handleExportData = () => {
@@ -269,6 +269,8 @@ const updateUrlRoute = () => {
     params.set('tab', 'favorites');
   } else if (mode.value === 'drafts') {
     params.set('tab', 'drafts');
+  } else if (mode.value === 'author_dashboard') {
+    params.set('tab', 'author_dashboard');
   } else if (mode.value === 'telemetry') {
     params.set('tab', 'telemetry');
   } else if (mode.value === 'admin') {
@@ -318,6 +320,8 @@ const syncFromUrlPath = () => {
   } else if (tab === 'server_rules' || tab === 'Внутриигровые' || tab === 'Серверные') {
     initialRulesTab.value = 'server';
     mode.value = 'rules';
+  } else if (tab === 'author_dashboard' || tab === 'Кабинет' || tab === 'АналитикаАвтора') {
+    mode.value = isAuthenticated.value ? 'author_dashboard' : 'home';
   } else if (tab === 'telemetry' || tab === 'Телеметрия' || tab === 'Аналитика') {
     mode.value = 'telemetry';
   } else if (tab === 'admin' || tab === 'АдминПанель' || tab === 'Авторы') {
@@ -1217,8 +1221,8 @@ const handleViewAllAuthorGuides = (username: string) => {
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <button
-                    @click="isAuthorDashboardOpen = true; isHeaderNavMenuOpen = false"
-                    class="p-2.5 rounded-2xl bg-[#090a0c] border border-cyan-500/30 hover:border-cyan-400 text-left transition-all flex items-center gap-2 cursor-pointer group shadow-sm"
+                    @click="mode = 'author_dashboard'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center gap-2 cursor-pointer group shadow-sm', mode === 'author_dashboard' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300' : 'bg-[#090a0c] border-cyan-500/30 hover:border-cyan-400']"
                   >
                     <IconRenderer name="TrendingUp" size="17" class="text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
                     <div class="min-w-0">
@@ -1677,6 +1681,16 @@ const handleViewAllAuthorGuides = (username: string) => {
               :is-admin="currentUserIsAdmin"
               @go-home="mode = 'home'"
               @select-guide="selectGuide"
+            />
+          </div>
+
+          <!-- AUTHOR DASHBOARD ANALYTICS FULL PAGE TAB -->
+          <div v-else-if="mode === 'author_dashboard' && isAuthenticated" class="px-3 sm:px-6 pt-4">
+            <AuthorDashboardModal
+              :is-full-page="true"
+              :username="currentUsername || ''"
+              @go-home="mode = 'home'"
+              @select-guide="(id) => { selectGuide(id); mode = 'reader'; }"
             />
           </div>
 
