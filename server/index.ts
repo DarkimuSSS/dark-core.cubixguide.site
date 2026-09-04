@@ -431,6 +431,86 @@ app.get('/api/telemetry/stats', (req, res) => {
   }
 });
 
+// Author Personal Analytics & Telemetry Dashboard Endpoint
+app.get('/api/author/analytics', (req, res) => {
+  try {
+    const username = (req.headers['x-author-username'] as string) || (req.query.username as string);
+    if (!username) {
+      return res.status(400).json({ error: 'Не указан логин автора' });
+    }
+
+    // Fetch author guides
+    const allGuides = db.prepare('SELECT * FROM guides').all().map(formatGuideRow);
+    const authorLower = username.toLowerCase().trim();
+    const userGuides = allGuides.filter(g => {
+      const isMain = (g.meta.author || '').toLowerCase().trim() === authorLower;
+      const isCo = (g.meta.coAuthors || []).some((ca: string) => ca.toLowerCase().trim() === authorLower);
+      return isMain || isCo;
+    });
+
+    const guideIds = userGuides.map(g => g.meta.id);
+    const publishedCount = userGuides.filter(g => g.meta.published && g.meta.isVisible).length;
+    const pendingCount = userGuides.filter(g => g.meta.status === 'pending_moderation').length;
+    const draftCount = userGuides.filter(g => !g.meta.published && g.meta.status !== 'pending_moderation').length;
+
+    // Total views across author's guides
+    let totalViews = 0;
+    const guideViewsMap: Record<string, number> = {};
+
+    if (guideIds.length > 0) {
+      const placeholders = guideIds.map(() => '?').join(',');
+      const rows = db.prepare(`
+        SELECT guide_id, COUNT(*) as count 
+        FROM telemetry_logs 
+        WHERE event_type = 'guide_view' AND guide_id IN (${placeholders}) 
+        GROUP BY guide_id
+      `).all(...guideIds) as any[];
+
+      rows.forEach(r => {
+        guideViewsMap[r.guide_id] = r.count;
+        totalViews += r.count;
+      });
+    }
+
+    // Top performing guides of this author
+    const guideStatsList = userGuides.map(g => ({
+      id: g.meta.id,
+      title: g.meta.title || 'Без названия',
+      server: g.meta.server || 'Все серверы',
+      category: g.meta.category,
+      published: g.meta.published,
+      isVisible: g.meta.isVisible,
+      status: g.meta.status || 'draft',
+      views: guideViewsMap[g.meta.id] || g.meta.viewsCount || 0,
+      updatedAt: g.meta.updatedAt
+    })).sort((a, b) => b.views - a.views);
+
+    // Recent activity log for this author's guides
+    let recentLogs: any[] = [];
+    if (guideIds.length > 0) {
+      const placeholders = guideIds.map(() => '?').join(',');
+      recentLogs = db.prepare(`
+        SELECT * FROM telemetry_logs 
+        WHERE guide_id IN (${placeholders}) OR LOWER(username) = LOWER(?)
+        ORDER BY id DESC LIMIT 20
+      `).all(...guideIds, username);
+    }
+
+    res.json({
+      author: username,
+      totalGuides: userGuides.length,
+      publishedCount,
+      pendingCount,
+      draftCount,
+      totalViews,
+      guides: guideStatsList,
+      recentLogs
+    });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // 3. Create new guide
 app.post('/api/guides', (req, res) => {
   try {

@@ -15,6 +15,7 @@ import TelemetryPage from './components/TelemetryPage.vue';
 import AdminPanel from './components/AdminPanel.vue';
 import TeamPage from './components/TeamPage.vue';
 import SelectGuideModal from './components/SelectGuideModal.vue';
+import AuthorDashboardModal from './components/AuthorDashboardModal.vue';
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
 import { hasPermission } from './data/roles';
@@ -24,6 +25,7 @@ const isTermsOpen = ref(false);
 const isRulesOpen = ref(false);
 const isSettingsOpen = ref(false);
 const isSelectGuideModalOpen = ref(false);
+const isAuthorDashboardOpen = ref(false);
 
 const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
@@ -1334,6 +1336,18 @@ const handleViewAllAuthorGuides = (username: string) => {
           </button>
         </div>
 
+        <!-- Author Personal Cabinet & Analytics Button -->
+        <button
+          v-if="isAuthenticated"
+          type="button"
+          @click="isAuthorDashboardOpen = true"
+          class="px-2.5 sm:px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md cursor-pointer shrink-0"
+          title="Кабинет автора и Аналитика просмотров"
+        >
+          <IconRenderer name="TrendingUp" size="15" />
+          <span class="hidden sm:inline">Кабинет</span>
+        </button>
+
         <!-- Editor Mode Switcher Button -->
         <button
           v-if="isAuthenticated"
@@ -1742,6 +1756,14 @@ const handleViewAllAuthorGuides = (username: string) => {
       @close="isSelectGuideModalOpen = false"
       @select="selectGuide($event.meta.id); mode = 'editor';"
       @create="createNewGuide()"
+    />
+
+    <!-- Author Personal Analytics & Telemetry Cabinet Modal -->
+    <AuthorDashboardModal
+      :is-open="isAuthorDashboardOpen"
+      :username="currentUsername"
+      @close="isAuthorDashboardOpen = false"
+      @select-guide="selectGuide($event); mode = 'reader';"
     />
 
     <!-- Notification Toast Stack Container -->
