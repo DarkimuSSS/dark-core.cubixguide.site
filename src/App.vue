@@ -116,18 +116,42 @@ const isAuthenticated = ref(false);
 const hasUnsavedDraft = ref<boolean>(false);
 const draftSavedTime = ref<string>('');
 
-// Notification Toast
-const toastMessage = ref('');
-const toastType = ref<'success' | 'error' | 'info'>('success');
-let toastTimer: any = null;
+// Notification Toast Stack System
+interface ToastNotification {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'info';
+  copied?: boolean;
+}
+
+const toasts = ref<ToastNotification[]>([]);
+
+const removeToast = (id: string) => {
+  toasts.value = toasts.value.filter(t => t.id !== id);
+};
+
+const copyToastText = (toast: ToastNotification) => {
+  navigator.clipboard.writeText(toast.message);
+  toast.copied = true;
+  setTimeout(() => {
+    toast.copied = false;
+  }, 2000);
+};
 
 const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'success') => {
-  toastMessage.value = msg;
-  toastType.value = type;
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toastMessage.value = '';
-  }, 3500);
+  const id = Date.now().toString() + Math.random().toString(36).substring(2, 6);
+  const newToast: ToastNotification = { id, message: msg, type };
+  
+  // Add to stack, keep max 5 items (oldest dropped if > 5)
+  toasts.value.push(newToast);
+  if (toasts.value.length > 5) {
+    toasts.value.shift();
+  }
+
+  // Auto remove after 4.5 seconds
+  setTimeout(() => {
+    removeToast(id);
+  }, 4500);
 };
 
 const authorProfilesMap = ref<Record<string, { avatarUrl?: string; isVerified?: boolean }>>({});
@@ -1585,27 +1609,65 @@ const handleViewAllAuthorGuides = (username: string) => {
       @authenticate="handleAuthentication"
     />
 
-    <!-- Notification Toast -->
-    <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 translate-y-4 scale-95" enter-to-class="opacity-100 translate-y-0 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 translate-y-0 scale-100" leave-to-class="opacity-0 translate-y-4 scale-95">
-      <div v-if="toastMessage" class="fixed bottom-6 right-6 z-[9999]">
-        <div :class="[
-          'px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-xl border flex items-center gap-3 text-xs font-bold text-white transition-all duration-300',
-          toastType === 'error' ? 'bg-[#1a0e10]/95 border-rose-500/50 shadow-rose-950/40 text-rose-200' :
-          toastType === 'info' ? 'bg-[#0e161c]/95 border-cyan-500/50 shadow-cyan-950/40 text-cyan-200' :
-          'bg-[#0e1c14]/95 border-emerald-500/50 shadow-emerald-950/40 text-emerald-200'
-        ]">
-          <div :class="[
-            'w-6 h-6 rounded-xl flex items-center justify-center shrink-0 shadow-inner',
-            toastType === 'error' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
-            toastType === 'info' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' :
-            'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-          ]">
-            <IconRenderer :name="toastType === 'error' ? 'AlertCircle' : toastType === 'info' ? 'Info' : 'Check'" size="14" />
+    <!-- Notification Toast Stack Container -->
+    <div class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2.5 max-w-sm sm:max-w-md w-full pointer-events-none items-end">
+      <TransitionGroup
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0 translate-y-4 scale-90"
+        enter-to-class="opacity-100 translate-y-0 scale-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100 translate-y-0 scale-100"
+        leave-to-class="opacity-0 translate-y-2 scale-95"
+      >
+        <div
+          v-for="t in toasts"
+          :key="t.id"
+          :class="[
+            'pointer-events-auto px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-xl border flex items-center justify-between gap-3 text-xs font-bold text-white transition-all duration-300 w-full sm:w-auto min-w-[280px]',
+            t.type === 'error' ? 'bg-[#1e0e11]/95 border-rose-500/50 shadow-rose-950/40 text-rose-200' :
+            t.type === 'info' ? 'bg-[#0e1720]/95 border-cyan-500/50 shadow-cyan-950/40 text-cyan-200' :
+            'bg-[#0e1e15]/95 border-emerald-500/50 shadow-emerald-950/40 text-emerald-200'
+          ]"
+        >
+          <!-- Left Icon & Message Body -->
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div :class="[
+              'w-7 h-7 rounded-xl flex items-center justify-center shrink-0 shadow-inner',
+              t.type === 'error' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+              t.type === 'info' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' :
+              'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+            ]">
+              <IconRenderer :name="t.type === 'error' ? 'AlertCircle' : t.type === 'info' ? 'Info' : 'Check'" size="15" />
+            </div>
+            <span class="tracking-wide leading-relaxed break-words line-clamp-3 select-text">{{ t.message }}</span>
           </div>
-          <span class="tracking-wide leading-relaxed">{{ toastMessage }}</span>
+
+          <!-- Action Buttons: Copy & Close -->
+          <div class="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              @click="copyToastText(t)"
+              :title="t.copied ? 'Скопировано!' : 'Скопировать текст'"
+              :class="[
+                'p-1.5 rounded-lg transition-colors border',
+                t.copied ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border-transparent'
+              ]"
+            >
+              <IconRenderer :name="t.copied ? 'Check' : 'Copy'" size="13" />
+            </button>
+
+            <button
+              type="button"
+              @click="removeToast(t.id)"
+              title="Закрыть уведомление"
+              class="p-1.5 rounded-lg bg-white/5 hover:bg-rose-500/20 text-white/60 hover:text-rose-300 transition-colors border border-transparent hover:border-rose-500/30"
+            >
+              <IconRenderer name="X" size="13" />
+            </button>
+          </div>
         </div>
-      </div>
-    </Transition>
+      </TransitionGroup>
+    </div>
 
     <!-- Settings Modal -->
     <SettingsModal
