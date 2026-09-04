@@ -62,9 +62,9 @@ onUnmounted(() => {
   if (cooldownInterval) clearInterval(cooldownInterval);
 });
 
-const fetchComments = async () => {
+const fetchComments = async (silent: boolean = false) => {
   if (!props.guideId) return;
-  isLoading.value = true;
+  if (!silent) isLoading.value = true;
   try {
     const url = `/api/guides/${props.guideId}/comments${props.currentUsername ? `?username=${encodeURIComponent(props.currentUsername)}` : ''}`;
     const res = await fetch(url);
@@ -74,7 +74,7 @@ const fetchComments = async () => {
   } catch (err) {
     console.error('Ошибка загрузки комментариев:', err);
   } finally {
-    isLoading.value = false;
+    if (!silent) isLoading.value = false;
   }
 };
 
@@ -127,7 +127,7 @@ const handlePostComment = async (parentId: string | null = null) => {
       }
       startCooldownTimer(60);
       cooldownErrorMsg.value = null;
-      await fetchComments();
+      await fetchComments(true);
     } else {
       const errData = await res.json().catch(() => ({}));
       cooldownErrorMsg.value = errData.error || 'Подождите перед отправкой следующего комментария';
@@ -148,6 +148,27 @@ const handleReaction = async (commentId: string, reactionType: 'good' | 'neutral
     return;
   }
 
+  // Optimistic UI update so count & active state toggle instantly without flickering
+  const target = comments.value.find(c => c.id === commentId);
+  if (target) {
+    if (!target.reactions) {
+      target.reactions = { good: 0, neutral: 0, bad: 0 };
+    }
+    const prev = target.userReaction;
+    if (prev === reactionType) {
+      target.userReaction = null;
+      if (target.reactions[reactionType] > 0) {
+        target.reactions[reactionType]--;
+      }
+    } else {
+      if (prev && target.reactions[prev] > 0) {
+        target.reactions[prev]--;
+      }
+      target.userReaction = reactionType;
+      target.reactions[reactionType] = (target.reactions[reactionType] || 0) + 1;
+    }
+  }
+
   try {
     const res = await fetch(`/api/comments/${commentId}/react`, {
       method: 'POST',
@@ -159,10 +180,13 @@ const handleReaction = async (commentId: string, reactionType: 'good' | 'neutral
     });
 
     if (res.ok) {
-      await fetchComments();
+      await fetchComments(true);
+    } else {
+      await fetchComments(true);
     }
   } catch (err) {
     console.error('Ошибка реакции:', err);
+    await fetchComments(true);
   }
 };
 
@@ -174,7 +198,7 @@ const handleDeleteComment = async (commentId: string) => {
       method: 'DELETE'
     });
     if (res.ok) {
-      await fetchComments();
+      await fetchComments(true);
     }
   } catch (err) {
     console.error('Ошибка удаления комментария:', err);
