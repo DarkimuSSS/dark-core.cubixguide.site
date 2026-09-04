@@ -53,21 +53,21 @@ export const DEFAULT_SYSTEM_ROLES: Record<UserRole, SystemRoleDefinition> = {
   editor: {
     role: 'editor',
     name: 'Редактор',
-    description: 'Проверка, редактирование, модерация и публикация статей',
+    description: 'Проверка, вычитка и редактирование статей без права прямой публикации',
     badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
     priority: 20,
     permissions: [
-      'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide', 'publish_guide', 'approve_guide', 'view_rules'
+      'create_guide', 'edit_own_guide', 'edit_other_guide', 'delete_own_guide', 'approve_guide', 'view_rules'
     ]
   },
   author: {
     role: 'author',
     name: 'Автор статей',
-    description: 'Создание и редактирование собственных вики-гайдов',
+    description: 'Создание и редактирование собственных вики-гайдов (отправка на модерацию)',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     priority: 30,
     permissions: [
-      'create_guide', 'edit_own_guide', 'delete_own_guide', 'publish_guide', 'view_rules'
+      'create_guide', 'edit_own_guide', 'delete_own_guide', 'view_rules'
     ]
   },
   helper: {

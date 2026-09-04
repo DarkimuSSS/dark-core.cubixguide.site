@@ -1570,7 +1570,7 @@ const handleViewAllAuthorGuides = (username: string) => {
           <div v-else-if="mode === 'editor' && isAuthenticated && activeGuide" class="px-3 sm:px-6 pt-4">
             <GuideEditor
               :guide="activeGuide"
-              :can-approve="userHasPerm('approve_guide') || currentUserIsAdmin"
+              :can-approve="userHasPerm('publish_guide') || currentUserIsAdmin"
               :assigned-servers="currentUserAssignedServers"
               @update:guide="updateActiveGuide"
               @toggle-preview="handleTogglePreview"
