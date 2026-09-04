@@ -166,6 +166,7 @@ const canDelete = (comment: CommentItem) => {
   if (props.currentUsername.toLowerCase() === comment.author.toLowerCase()) return true;
   return false;
 };
+const MAX_CHAR_LIMIT = 1000;
 </script>
 
 <template>
@@ -207,16 +208,19 @@ const canDelete = (comment: CommentItem) => {
 
         <textarea 
           v-model="newCommentText"
+          :maxlength="MAX_CHAR_LIMIT"
           placeholder="Напишите ваш комментарий, задайте вопрос или поделитесь советом..."
           rows="3"
           class="w-full p-3.5 text-xs sm:text-sm rounded-xl bg-[#0c0d0e] border border-[#26292d] text-white placeholder-dark-muted focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 transition-all resize-y"
         ></textarea>
 
         <div class="flex items-center justify-between">
-          <span class="text-[10px] text-dark-muted">Поддерживается вежливое общение</span>
+          <span :class="['text-[11px] font-mono transition-colors', newCommentText.length >= MAX_CHAR_LIMIT ? 'text-rose-400 font-bold' : 'text-dark-muted']">
+            {{ newCommentText.length }} / {{ MAX_CHAR_LIMIT }} символов
+          </span>
           <button 
             @click="handlePostComment(null)"
-            :disabled="!newCommentText.trim() || isSubmitting"
+            :disabled="!newCommentText.trim() || newCommentText.length > MAX_CHAR_LIMIT || isSubmitting"
             class="flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-cyan-950/50"
           >
             <IconRenderer name="Send" size="14" />
@@ -386,25 +390,31 @@ const canDelete = (comment: CommentItem) => {
           </div>
           <textarea 
             v-model="replyText"
+            :maxlength="MAX_CHAR_LIMIT"
             placeholder="Напишите ответ..."
             rows="2"
             class="w-full p-3 text-xs sm:text-sm rounded-lg bg-[#0c0d0e] border border-[#26292d] text-white placeholder-dark-muted focus:outline-none focus:border-cyan-500/60 transition-all resize-y mb-3"
           ></textarea>
-          <div class="flex items-center justify-end gap-2">
-            <button 
-              @click="replyingToId = null" 
-              class="px-3 py-1.5 text-xs font-medium text-dark-muted hover:text-white transition-all"
-            >
-              Отмена
-            </button>
-            <button 
-              @click="handlePostComment(comment.id)"
-              :disabled="!replyText.trim() || isSubmitting"
-              class="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all disabled:opacity-40"
-            >
-              <IconRenderer name="Send" size="12" />
-              <span>Отправить ответ</span>
-            </button>
+          <div class="flex items-center justify-between">
+            <span :class="['text-[11px] font-mono transition-colors', replyText.length >= MAX_CHAR_LIMIT ? 'text-rose-400 font-bold' : 'text-dark-muted']">
+              {{ replyText.length }} / {{ MAX_CHAR_LIMIT }} символов
+            </span>
+            <div class="flex items-center gap-2">
+              <button 
+                @click="replyingToId = null" 
+                class="px-3 py-1.5 text-xs font-medium text-dark-muted hover:text-white transition-all"
+              >
+                Отмена
+              </button>
+              <button 
+                @click="handlePostComment(comment.id)"
+                :disabled="!replyText.trim() || replyText.length > MAX_CHAR_LIMIT || isSubmitting"
+                class="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all disabled:opacity-40"
+              >
+                <IconRenderer name="Send" size="12" />
+                <span>Отправить ответ</span>
+              </button>
+            </div>
           </div>
         </div>
 

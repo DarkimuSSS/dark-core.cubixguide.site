@@ -443,6 +443,9 @@ app.post('/api/guides/:id/comments', (req, res) => {
     if (!author || !content || !content.trim()) {
       return res.status(400).json({ error: 'Имя автора и текст комментария обязательны' });
     }
+    if (content.trim().length > 1000) {
+      return res.status(400).json({ error: 'Длина комментария не может превышать 1000 символов' });
+    }
     const newComment = addGuideComment({
       guideId: req.params.id,
       parentId,
