@@ -2,12 +2,13 @@
 import { ref, computed, onMounted } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import ConfirmModal from './ConfirmModal.vue';
-import { SYSTEM_PERMISSIONS, DEFAULT_SYSTEM_ROLES, hasPermission } from '../data/roles';
+import { SYSTEM_PERMISSIONS, DEFAULT_SYSTEM_ROLES, hasPermission, canManageTargetRole, getRolePriority } from '../data/roles';
 import type { UserRole, UserPermission } from '../types/guide';
 
 const props = defineProps<{
   isAdmin: boolean;
   currentUsername: string;
+  currentRole?: UserRole;
 }>();
 
 const emit = defineEmits<{
@@ -630,7 +631,7 @@ const isAuthorHasPermission = (author: any, perm: UserPermission): boolean => {
               </div>
 
               <!-- Quick Password Reset / Delete Actions -->
-              <div class="flex items-center gap-2 self-end sm:self-center">
+              <div v-if="canManageTargetRole(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest'), author.role || 'author')" class="flex items-center gap-2 self-end sm:self-center">
                 <button
                   @click="resetTargetUsername = (resetTargetUsername === author.username ? null : author.username); resetNewPassword = '';"
                   class="px-2.5 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
@@ -699,99 +700,68 @@ const isAuthorHasPermission = (author: any, perm: UserPermission): boolean => {
                   <IconRenderer name="Shield" size="16" class="text-purple-400" />
                   <div>
                     <div class="text-xs font-extrabold text-white">Системная Роль Пользователя:</div>
-                    <div class="text-[10px] text-dark-muted">{{ DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.description || 'Определяет дефолтные права в системе' }}</div>
+                    <div class="text-[10px] text-dark-muted">{{ DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.description || 'Определяет права в системе' }}</div>
                   </div>
                 </div>
 
+                <div v-if="!canManageTargetRole(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest'), author.role || 'author')" class="text-[11px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl">
+                  Нельзя изменить (равный/старший ранг)
+                </div>
+
                 <select
+                  v-else
                   :value="author.role || 'author'"
                   @change="handleAdminChangeUserRole(author, ($event.target as HTMLSelectElement).value as UserRole)"
                   class="bg-[#0c0d0e] border border-[#26292d] text-white text-xs font-bold rounded-xl px-3 py-1.5 focus:outline-none focus:border-purple-500 cursor-pointer"
                 >
-                  <option v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)" :key="r.role" :value="r.role">
-                    {{ r.name }}
+                  <option
+                    v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)"
+                    :key="r.role"
+                    :value="r.role"
+                    :disabled="getRolePriority(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest')) >= r.priority && props.currentRole !== 'super_admin'"
+                  >
+                    {{ r.name }} (Приоритет: {{ r.priority }})
                   </option>
                 </select>
               </div>
 
-              <!-- Granular Permissions Matrix Toggle Drawer -->
-              <div class="space-y-2">
+              <!-- Assigned Servers Selection Drawer -->
+              <div class="pt-2">
                 <div class="flex items-center justify-between">
                   <button
-                    @click="editingCustomPermsAuthor = editingCustomPermsAuthor === author.username ? null : author.username"
-                    class="text-[11px] font-bold text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    @click="editingAssignedServersAuthor = editingAssignedServersAuthor === author.username ? null : author.username"
+                    class="text-[11px] font-bold text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
                   >
-                    <IconRenderer name="Sliders" size="13" />
-                    <span>{{ editingCustomPermsAuthor === author.username ? 'Скрыть матрицу 10 точечных прав' : 'Настроить 10 точечных прав (Override)' }}</span>
+                    <IconRenderer name="Box" size="13" />
+                    <span>{{ editingAssignedServersAuthor === author.username ? 'Свернуть выбор серверов' : 'Закрепить автора за серверами CubixWorld' }}</span>
                   </button>
 
-                  <span v-if="author.customPermissions && author.customPermissions.length > 0" class="text-[9.5px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono">
-                    Индивидуальные права ({{ author.customPermissions.length }})
+                  <span class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                    {{ (author.assignedServers && author.assignedServers.length > 0) ? `Закреплено: ${author.assignedServers.length}` : 'Все сервера' }}
                   </span>
                 </div>
 
-                <!-- Expanded Granular Permissions Grid (10 items) -->
-                <div v-if="editingCustomPermsAuthor === author.username" class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 rounded-2xl bg-[#090a0c] border border-cyan-500/30 animate-in fade-in duration-200">
-                  <div
-                    v-for="p in SYSTEM_PERMISSIONS"
-                    :key="p.key"
-                    @click="handleAdminToggleGranularPermission(author, p.key)"
-                    :class="[
-                      'p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2',
-                      isAuthorHasPermission(author, p.key)
-                        ? 'bg-cyan-950/40 border-cyan-500/50 text-cyan-200'
-                        : 'bg-[#121416] border-[#26292d] text-slate-400 hover:border-slate-600'
-                    ]"
-                  >
-                    <div class="min-w-0">
-                      <div class="text-xs font-bold flex items-center gap-1.5">
-                        <span>{{ p.label }}</span>
-                      </div>
-                      <div class="text-[9.5px] text-dark-muted leading-tight truncate">{{ p.description }}</div>
-                    </div>
-                    <div :class="['w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors', isAuthorHasPermission(author, p.key) ? 'bg-cyan-500 border-cyan-400 text-black font-extrabold' : 'border-slate-700 bg-slate-800']">
-                      <IconRenderer v-if="isAuthorHasPermission(author, p.key)" name="Check" size="10" />
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Assigned Servers Selection Drawer -->
-                <div class="pt-2">
-                  <div class="flex items-center justify-between">
+                <div v-if="editingAssignedServersAuthor === author.username" class="mt-2 p-3 rounded-2xl bg-[#090a0c] border border-emerald-500/30 space-y-2 animate-in fade-in duration-200">
+                  <div class="text-[10px] text-dark-muted">Выберите сервера, на которые автор может писать гайды (если не выбран ни один — разрешено создание на всех серверах):</div>
+                  <div class="flex flex-wrap gap-1.5">
                     <button
-                      @click="editingAssignedServersAuthor = editingAssignedServersAuthor === author.username ? null : author.username"
-                      class="text-[11px] font-bold text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      v-for="srv in availableServersList"
+                      :key="srv"
+                      @click="handleAdminToggleAssignedServer(author, srv)"
+                      :class="[
+                        'px-2.5 py-1 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1',
+                        (author.assignedServers || []).includes(srv)
+                          ? 'bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-950/40'
+                          : 'bg-[#121416] text-slate-400 border-[#26292d] hover:border-slate-600 hover:text-white'
+                      ]"
                     >
-                      <IconRenderer name="Box" size="13" />
-                      <span>{{ editingAssignedServersAuthor === author.username ? 'Свернуть выбор серверов' : 'Закрепить автора за серверами CubixWorld' }}</span>
+                      <IconRenderer v-if="(author.assignedServers || []).includes(srv)" name="Check" size="12" />
+                      <span>{{ srv }}</span>
                     </button>
-
-                    <span class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
-                      {{ (author.assignedServers && author.assignedServers.length > 0) ? `Закреплено: ${author.assignedServers.length}` : 'Все сервера' }}
-                    </span>
-                  </div>
-
-                  <div v-if="editingAssignedServersAuthor === author.username" class="mt-2 p-3 rounded-2xl bg-[#090a0c] border border-emerald-500/30 space-y-2 animate-in fade-in duration-200">
-                    <div class="text-[10px] text-dark-muted">Выберите сервера, на которые автор может писать гайды (если не выбран ни один — разрешено создание на всех серверах):</div>
-                    <div class="flex flex-wrap gap-1.5">
-                      <button
-                        v-for="srv in availableServersList"
-                        :key="srv"
-                        @click="handleAdminToggleAssignedServer(author, srv)"
-                        :class="[
-                          'px-2.5 py-1 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1',
-                          (author.assignedServers || []).includes(srv)
-                            ? 'bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-950/40'
-                            : 'bg-[#121416] text-slate-400 border-[#26292d] hover:border-slate-600 hover:text-white'
-                        ]"
-                      >
-                        <IconRenderer v-if="(author.assignedServers || []).includes(srv)" name="Check" size="12" />
-                        <span>{{ srv }}</span>
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
+            </div>
             </div>
 
           </div>

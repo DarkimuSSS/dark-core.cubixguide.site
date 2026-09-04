@@ -204,6 +204,7 @@ export interface SystemRoleDefinition {
   name: string;
   description: string;
   badgeColor: string;
+  priority: number; // 0 = Высший приоритет (Главный Администратор), 999 = Низший (Читатель)
   permissions: UserPermission[];
 }
 

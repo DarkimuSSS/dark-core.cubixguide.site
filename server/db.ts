@@ -259,14 +259,56 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
   return { username: cleanUsername, createdAt };
 }
 
+const ROLE_PRIORITIES: Record<string, number> = {
+  super_admin: 0,
+  admin: 10,
+  editor: 20,
+  author: 30,
+  helper: 40,
+  guest: 999
+};
+
+function getPriorityForRole(role: string | undefined, isAdmin?: boolean): number {
+  if (!role) return isAdmin ? 0 : 999;
+  return ROLE_PRIORITIES[role] ?? 999;
+}
+
+function checkHierarchyPermission(callerUsername: string, targetUsername: string, actionName: string): { callerRole: string; targetRole: string } {
+  const cleanCaller = callerUsername.trim();
+  const cleanTarget = targetUsername.trim();
+
+  const callerRow = db.prepare('SELECT is_admin, role FROM users WHERE LOWER(username) = LOWER(?)').get(cleanCaller) as any;
+  if (!callerRow) {
+    throw new Error('Пользователь, выполняющий действие, не найден в системе');
+  }
+
+  const callerRole = callerRow.role || (callerRow.is_admin ? 'super_admin' : 'author');
+  const targetRow = db.prepare('SELECT is_admin, role FROM users WHERE LOWER(username) = LOWER(?)').get(cleanTarget) as any;
+  
+  if (!targetRow) {
+    throw new Error('Целевой пользователь не найден в системе');
+  }
+
+  const targetRole = targetRow.role || (targetRow.is_admin ? 'super_admin' : 'author');
+
+  if (callerRole === 'super_admin') {
+    return { callerRole, targetRole };
+  }
+
+  const callerPriority = getPriorityForRole(callerRole, Boolean(callerRow.is_admin));
+  const targetPriority = getPriorityForRole(targetRole, Boolean(targetRow.is_admin));
+
+  if (callerPriority >= targetPriority) {
+    throw new Error(`Отказано в доступе: Вы не можете ${actionName} пользователя с равной или более высокой ролью (${targetRole})`);
+  }
+
+  return { callerRole, targetRole };
+}
+
 // Update Author Permissions (Admin)
 export function updateAuthorPermissionsByAdmin(targetUsername: string, canEditOthers: boolean, canCreateGuides: boolean, isVerified: boolean, adminUsername: string) {
   const cleanTarget = targetUsername.trim();
-
-  const adminRow = db.prepare('SELECT is_admin FROM users WHERE LOWER(username) = LOWER(?)').get(adminUsername) as any;
-  if (!adminRow || !adminRow.is_admin) {
-    throw new Error('Только Главный Администратор может изменять права и верификацию авторов');
-  }
+  checkHierarchyPermission(adminUsername, cleanTarget, 'редактировать права');
 
   const stmt = db.prepare('UPDATE users SET can_edit_others = ?, can_create_guides = ?, is_verified = ? WHERE LOWER(username) = LOWER(?)');
   stmt.run(canEditOthers ? 1 : 0, canCreateGuides ? 1 : 0, isVerified ? 1 : 0, cleanTarget);
@@ -281,10 +323,7 @@ export function resetAuthorPasswordByAdmin(targetUsername: string, newPassword: 
     throw new Error('Новый пароль должен содержать минимум 4 символа');
   }
 
-  const adminRow = db.prepare('SELECT is_admin FROM users WHERE LOWER(username) = LOWER(?)').get(adminUsername) as any;
-  if (!adminRow || !adminRow.is_admin) {
-    throw new Error('Только Главный Администратор может сбрасывать пароли авторов');
-  }
+  checkHierarchyPermission(adminUsername, cleanTarget, 'сбрасывать пароль');
 
   const pwdHash = hashPassword(newPassword);
   const stmt = db.prepare('UPDATE users SET password_hash = ? WHERE LOWER(username) = LOWER(?)');
@@ -306,10 +345,7 @@ export function deleteAuthorByAdmin(targetUsername: string, adminUsername: strin
     throw new Error('Нельзя удалить Главного Администратора DarkimuSSS');
   }
 
-  const adminRow = db.prepare('SELECT is_admin FROM users WHERE LOWER(username) = LOWER(?)').get(adminUsername) as any;
-  if (!adminRow || !adminRow.is_admin) {
-    throw new Error('Только Главный Администратор может удалять авторов');
-  }
+  checkHierarchyPermission(adminUsername, cleanTarget, 'удалять');
 
   db.prepare('DELETE FROM users WHERE LOWER(username) = LOWER(?)').run(cleanTarget);
   db.prepare('DELETE FROM profiles WHERE LOWER(username) = LOWER(?)').run(cleanTarget);
@@ -549,9 +585,15 @@ export function updateAuthorRoleByAdmin(
   adminUsername: string
 ) {
   const cleanTarget = targetUsername.trim();
-  const adminRow = db.prepare('SELECT is_admin, role FROM users WHERE LOWER(username) = LOWER(?)').get(adminUsername) as any;
-  if (!adminRow || (!adminRow.is_admin && adminRow.role !== 'super_admin' && adminRow.role !== 'admin')) {
-    throw new Error('Только Администратор может изменять роли и права авторов');
+  const { callerRole } = checkHierarchyPermission(adminUsername, cleanTarget, 'изменять роль');
+
+  // Verify that caller cannot assign a role equal to or higher than caller's own role (unless super_admin)
+  if (callerRole !== 'super_admin') {
+    const callerPriority = getPriorityForRole(callerRole);
+    const newRolePriority = getPriorityForRole(role);
+    if (callerPriority >= newRolePriority) {
+      throw new Error(`Отказано в доступе: Вы не можете назначить роль (${role}), равную или превышающую вашу собственную.`);
+    }
   }
 
   const customPermsJson = customPermissions && customPermissions.length > 0 ? JSON.stringify(customPermissions) : null;

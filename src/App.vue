@@ -1489,6 +1489,7 @@ const handleViewAllAuthorGuides = (username: string) => {
             <AdminPanel
               :is-admin="currentUserIsAdmin"
               :current-username="currentUsername || ''"
+              :current-role="currentUserRole"
               @go-home="mode = 'home'"
             />
           </div>
