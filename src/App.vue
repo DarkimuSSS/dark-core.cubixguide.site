@@ -60,7 +60,7 @@ const handleImportData = async (jsonString: string) => {
     isSettingsOpen.value = false;
     showToast(`Успешно импортировано ${importedCount} гайдов!`);
   } catch (e: any) {
-    showToast(`Ошибка импорта: ${e.message}`);
+    showToast(`Ошибка импорта: ${e.message}`, 'error');
   }
 };
 
@@ -118,11 +118,16 @@ const draftSavedTime = ref<string>('');
 
 // Notification Toast
 const toastMessage = ref('');
-const showToast = (msg: string) => {
+const toastType = ref<'success' | 'error' | 'info'>('success');
+let toastTimer: any = null;
+
+const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'success') => {
   toastMessage.value = msg;
-  setTimeout(() => {
+  toastType.value = type;
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
     toastMessage.value = '';
-  }, 3000);
+  }, 3500);
 };
 
 const authorProfilesMap = ref<Record<string, { avatarUrl?: string; isVerified?: boolean }>>({});
@@ -165,9 +170,21 @@ watch(guides, () => {
   fetchAuthorProfiles();
 }, { deep: true });
 
-const openAuthorProfile = (username?: string) => {
-  profileUsername.value = username || currentUsername.value || activeGuide.value?.meta.author || 'DarkimuSSS';
-  isProfileModalOpen.value = true;
+const openAuthorProfile = async (username?: string) => {
+  const targetUser = username || currentUsername.value || activeGuide.value?.meta.author || 'DarkimuSSS';
+  try {
+    const res = await fetch(`/api/profiles/${encodeURIComponent(targetUser)}`);
+    if (res.ok) {
+      profileUsername.value = targetUser;
+      isProfileModalOpen.value = true;
+    } else {
+      const data = await res.json().catch(() => ({}));
+      const errorMsg = data.error || `Пользователь ${targetUser} не является зарегистрированным автором`;
+      showToast(errorMsg, 'error');
+    }
+  } catch (e) {
+    showToast(`Не удалось проверить профиль ${targetUser}`, 'error');
+  }
 };
 
 // URL Query Parameters Sync (tab=...&guide=...)
@@ -415,7 +432,7 @@ const openEditorProtection = () => {
   if (canUserEditActiveGuide.value) {
     mode.value = 'editor';
   } else {
-    showToast(`У вас нет прав на редактирование чужого гайда (Автор: ${activeGuide.value?.meta.author})`);
+    showToast(`У вас нет прав на редактирование чужого гайда (Автор: ${activeGuide.value?.meta.author})`, 'error');
   }
 };
 
@@ -1569,14 +1586,26 @@ const handleViewAllAuthorGuides = (username: string) => {
     />
 
     <!-- Notification Toast -->
-    <div v-if="toastMessage" class="fixed bottom-6 right-6 z-50 animate-bounce">
-      <div class="bg-[#16181a] border border-emerald-500/50 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5">
-        <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-          <IconRenderer name="Check" size="12" />
+    <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 translate-y-4 scale-95" enter-to-class="opacity-100 translate-y-0 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 translate-y-0 scale-100" leave-to-class="opacity-0 translate-y-4 scale-95">
+      <div v-if="toastMessage" class="fixed bottom-6 right-6 z-[9999]">
+        <div :class="[
+          'px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-xl border flex items-center gap-3 text-xs font-bold text-white transition-all duration-300',
+          toastType === 'error' ? 'bg-[#1a0e10]/95 border-rose-500/50 shadow-rose-950/40 text-rose-200' :
+          toastType === 'info' ? 'bg-[#0e161c]/95 border-cyan-500/50 shadow-cyan-950/40 text-cyan-200' :
+          'bg-[#0e1c14]/95 border-emerald-500/50 shadow-emerald-950/40 text-emerald-200'
+        ]">
+          <div :class="[
+            'w-6 h-6 rounded-xl flex items-center justify-center shrink-0 shadow-inner',
+            toastType === 'error' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+            toastType === 'info' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' :
+            'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+          ]">
+            <IconRenderer :name="toastType === 'error' ? 'AlertCircle' : toastType === 'info' ? 'Info' : 'Check'" size="14" />
+          </div>
+          <span class="tracking-wide leading-relaxed">{{ toastMessage }}</span>
         </div>
-        <span>{{ toastMessage }}</span>
       </div>
-    </div>
+    </Transition>
 
     <!-- Settings Modal -->
     <SettingsModal
