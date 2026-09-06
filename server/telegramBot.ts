@@ -193,7 +193,15 @@ export async function sendApplicationToAdmin(appData: {
         body: JSON.stringify({
           chat_id: adminChat,
           text: messageText,
-          parse_mode: 'Markdown'
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '✅ Одобрить и создать аккаунт', callback_data: `approve_app_${callbackPayload}` },
+                { text: '❌ Отклонить', callback_data: `reject_app_${callbackPayload}` }
+              ]
+            ]
+          }
         })
       });
     } catch (e: any) {
