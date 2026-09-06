@@ -431,7 +431,7 @@ const selectAspect = (asp: ThaumcraftAspect) => {
                     :key="step.result + step.stepNumber"
                     class="p-2 rounded-xl bg-[#16181a] border border-[#26292d] flex items-center justify-between gap-2 text-xs"
                   >
-                    <span class="text-[10px] font-mono font-bold text-purple-400 shrink-0">#{ step.stepNumber }</span>
+                    <span class="text-[10px] font-mono font-bold text-purple-400 shrink-0">#{{ step.stepNumber }}</span>
 
                     <!-- Craft Formula -->
                     <div class="flex items-center gap-1.5 min-w-0">
