@@ -123,10 +123,8 @@ const selectAspect = (asp: ThaumcraftAspect) => {
                   <div class="w-5 h-5 rounded-md overflow-hidden relative flex-shrink-0 flex items-center justify-center bg-black/40">
                     <img 
                       :src="`/aspects/${aspId}.png`" 
-                      class="w-full h-full object-contain p-0.5 z-10"
-                      @error="(e: any) => { e.target.style.display = 'none'; }"
+                      class="w-full h-full object-contain p-0.5"
                     />
-                    <span class="w-2 h-2 rounded-full absolute z-0" :style="{ backgroundColor: THAUMCRAFT_ASPECTS[aspId]?.color }"></span>
                   </div>
                   <span class="text-xs font-bold text-white">{{ THAUMCRAFT_ASPECTS[aspId]?.nameRu }}</span>
                   <span class="text-[10px] text-slate-400">({{ THAUMCRAFT_ASPECTS[aspId]?.nameLat }})</span>
@@ -201,21 +199,16 @@ const selectAspect = (asp: ThaumcraftAspect) => {
                 selectedAspect?.id === asp.id ? 'ring-2 ring-purple-400 bg-purple-950/40 border-purple-500' : 'bg-[#121417]/90 border-[#26292d] hover:border-slate-600 hover:bg-[#16191e]'
               ]"
             >
-              <!-- Aspect Icon Image or Color Badge -->
+              <!-- Aspect Icon Image -->
               <div
                 class="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform overflow-hidden relative border border-white/5"
-                :style="{ backgroundColor: asp.color + '22' }"
+                :style="{ backgroundColor: asp.color + '15' }"
               >
                 <img 
                   :src="`/aspects/${asp.id}.png`" 
                   :alt="asp.nameLat"
-                  class="w-full h-full object-contain p-0.5 z-10"
-                  @error="(e: any) => { e.target.style.display = 'none'; }"
+                  class="w-full h-full object-contain p-0.5"
                 />
-                <div
-                  class="w-3.5 h-3.5 rounded-full absolute z-0"
-                  :style="{ backgroundColor: asp.color }"
-                ></div>
               </div>
               <div class="min-w-0 flex-1">
                 <div class="text-xs font-extrabold text-white truncate group-hover:text-purple-300 transition-colors">
@@ -239,15 +232,13 @@ const selectAspect = (asp: ThaumcraftAspect) => {
               <div class="flex items-center gap-4 border-b border-[#26292d] pb-4">
                 <div
                   class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl ring-2 ring-white/10 overflow-hidden relative"
-                  :style="{ backgroundColor: selectedAspect.color + '33' }"
+                  :style="{ backgroundColor: selectedAspect.color + '22' }"
                 >
                   <img 
                     :src="`/aspects/${selectedAspect.id}.png`" 
                     :alt="selectedAspect.nameLat"
-                    class="w-full h-full object-contain p-1 z-10"
-                    @error="(e: any) => { e.target.style.display = 'none'; }"
+                    class="w-full h-full object-contain p-1"
                   />
-                  <span class="text-2xl font-black text-white z-0 absolute">{{ selectedAspect.nameRu.charAt(0) }}</span>
                 </div>
                 <div>
                   <h3 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
@@ -287,10 +278,8 @@ const selectAspect = (asp: ThaumcraftAspect) => {
                     <div class="w-7 h-7 rounded-xl overflow-hidden relative flex-shrink-0 flex items-center justify-center bg-black/40">
                       <img 
                         :src="`/aspects/${selectedAspect.components[0]}.png`" 
-                        class="w-full h-full object-contain p-0.5 z-10"
-                        @error="(e: any) => { e.target.style.display = 'none'; }"
+                        class="w-full h-full object-contain p-0.5"
                       />
-                      <span class="w-3 h-3 rounded-full absolute z-0" :style="{ backgroundColor: getAspect(selectedAspect.components[0])?.color }"></span>
                     </div>
                     <div class="min-w-0">
                       <div class="text-xs font-bold text-white group-hover:text-purple-300 transition-colors truncate">
@@ -311,10 +300,8 @@ const selectAspect = (asp: ThaumcraftAspect) => {
                     <div class="w-7 h-7 rounded-xl overflow-hidden relative flex-shrink-0 flex items-center justify-center bg-black/40">
                       <img 
                         :src="`/aspects/${selectedAspect.components[1]}.png`" 
-                        class="w-full h-full object-contain p-0.5 z-10"
-                        @error="(e: any) => { e.target.style.display = 'none'; }"
+                        class="w-full h-full object-contain p-0.5"
                       />
-                      <span class="w-3 h-3 rounded-full absolute z-0" :style="{ backgroundColor: getAspect(selectedAspect.components[1])?.color }"></span>
                     </div>
                     <div class="min-w-0">
                       <div class="text-xs font-bold text-white group-hover:text-purple-300 transition-colors truncate">
