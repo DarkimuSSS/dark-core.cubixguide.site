@@ -263,8 +263,8 @@ const selectAspect = (asp: ThaumcraftAspect) => {
       <!-- MAIN WORKSPACE: ASPECT EXPLORER & DETAIL CARD (2 COLS) -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         
-        <!-- Left Sub-column: Aspect Grid & Filters (7 cols) -->
-        <div class="lg:col-span-7 space-y-3">
+        <!-- Left Sub-column: Aspect Grid & Filters (7 cols, order-2 on mobile) -->
+        <div class="lg:col-span-7 space-y-3 order-2 lg:order-1">
           
           <!-- Search & Filter Controls -->
           <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
@@ -340,8 +340,8 @@ const selectAspect = (asp: ThaumcraftAspect) => {
 
         </div>
 
-        <!-- Right Sub-column: Selected Aspect Detail View (5 cols - Sticky) -->
-        <div class="lg:col-span-5 lg:sticky lg:top-4">
+        <!-- Right Sub-column: Selected Aspect Detail View (5 cols - Sticky, order-1 on mobile) -->
+        <div class="lg:col-span-5 lg:sticky lg:top-4 order-1 lg:order-2">
           <div v-if="selectedAspect" class="bg-[#121417] border border-[#26292d] rounded-2xl p-4 space-y-4 shadow-xl">
             
             <div class="space-y-3">
