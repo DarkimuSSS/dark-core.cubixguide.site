@@ -19,8 +19,8 @@ const isTargetDropdownOpen = ref(false);
 const startSearchQuery = ref('');
 const targetSearchQuery = ref('');
 
-const calculatedBridge = ref<string[]>([]);
 const isBridgeCalculated = ref(false);
+const isGuideHelpOpen = ref(false);
 
 const allAspectsList = computed(() => Object.values(THAUMCRAFT_ASPECTS));
 
@@ -77,18 +77,32 @@ const selectAspect = (asp: ThaumcraftAspect) => {
 
       <!-- RESEARCH TABLE ASPECT BRIDGE FINDER TOOL (COMPACT BANNER) -->
       <div class="bg-gradient-to-r from-purple-950/40 via-[#121417] to-cyan-950/40 border border-purple-500/30 rounded-2xl p-3.5 sm:p-4 space-y-3 shadow-xl">
+        <!-- Tool Header with Quick Explanation & Guide Link -->
         <div class="flex items-center justify-between flex-wrap gap-2">
-          <h3 class="text-xs font-black uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
-            <IconRenderer name="Compass" size="15" class="text-purple-400" />
-            <span>Калькулятор Моста для Стола Исследований</span>
-          </h3>
-          <span class="text-[10px] text-purple-400/80 font-mono">Thaumcraft 4.2</span>
+          <div class="space-y-0.5">
+            <h3 class="text-xs font-black uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+              <IconRenderer name="Compass" size="15" class="text-purple-400" />
+              <span>Помощник Стола Исследований Таумкрафт 4</span>
+            </h3>
+            <p class="text-[11px] text-slate-300">
+              Показывает идеальную цепочку аспектов для соединения двух узлов на столе исследований. 
+              <span class="text-purple-300 font-bold">Правило:</span> аспекты соединяются, если один состоит из другого или они имеют общий элемент!
+            </p>
+          </div>
+          <button
+            type="button"
+            @click="isGuideHelpOpen = true"
+            class="px-2.5 py-1 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+          >
+            <IconRenderer name="BookOpen" size="13" />
+            <span>Как связывать аспекты? (Гайд)</span>
+          </button>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
           <!-- Start Aspect Dropdown (Custom 3-column Grid) -->
           <div class="sm:col-span-5 space-y-1 relative">
-            <label class="block text-[11px] font-bold text-slate-300">Начальный аспект</label>
+            <label class="block text-[11px] font-bold text-slate-300">1. Начальный аспект на столе</label>
             <button
               type="button"
               @click="isStartDropdownOpen = !isStartDropdownOpen; isTargetDropdownOpen = false;"
@@ -140,7 +154,7 @@ const selectAspect = (asp: ThaumcraftAspect) => {
 
           <!-- Target Aspect Dropdown (Custom 3-column Grid) -->
           <div class="sm:col-span-5 space-y-1 relative">
-            <label class="block text-[11px] font-bold text-slate-300">Конечный аспект</label>
+            <label class="block text-[11px] font-bold text-slate-300">2. Конечный аспект, куда тянем</label>
             <button
               type="button"
               @click="isTargetDropdownOpen = !isTargetDropdownOpen; isStartDropdownOpen = false;"
@@ -198,29 +212,30 @@ const selectAspect = (asp: ThaumcraftAspect) => {
               class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs py-2 px-3 rounded-xl shadow-md transition-all hover:scale-102 active:scale-98 cursor-pointer flex items-center justify-center gap-1.5"
             >
               <IconRenderer name="Sparkles" size="14" />
-              <span>Построить</span>
+              <span>Рассчитать</span>
             </button>
           </div>
         </div>
 
         <!-- Calculated Path Display -->
-        <div v-if="isBridgeCalculated" class="pt-2 border-t border-purple-500/20 space-y-1.5">
+        <div v-if="isBridgeCalculated" class="pt-3 border-t border-purple-500/20 space-y-2">
           <div v-if="calculatedBridge.length === 0" class="text-xs text-rose-400 font-bold p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-xl">
             Соединительный мост между выбранными аспектами не найден.
           </div>
 
-          <div v-else class="space-y-1.5">
-            <div class="flex items-center justify-between text-[11px] text-purple-300 font-bold">
-              <span>Цепочка соединения (Шагов: {{ calculatedBridge.length - 1 }}):</span>
+          <div v-else class="space-y-2">
+            <div class="flex items-center justify-between text-xs text-purple-300 font-bold">
+              <span>Выкладывайте эти аспекты подряд в клетки на столе (Шагов: {{ calculatedBridge.length - 1 }}):</span>
             </div>
             
-            <div class="flex flex-wrap items-center gap-1.5 p-2.5 bg-[#0c0d0e] border border-purple-500/30 rounded-xl overflow-x-auto">
+            <div class="flex flex-wrap items-center gap-2 p-3 bg-[#0c0d0e] border border-purple-500/30 rounded-2xl overflow-x-auto">
               <template v-for="(aspId, idx) in calculatedBridge" :key="aspId + idx">
                 <div
                   @click="selectAspect(THAUMCRAFT_ASPECTS[aspId])"
-                  class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border shadow-sm transition-transform hover:scale-105 cursor-pointer"
+                  class="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-sm transition-transform hover:scale-105 cursor-pointer relative group"
                   :style="{ borderColor: THAUMCRAFT_ASPECTS[aspId]?.color + '80', backgroundColor: THAUMCRAFT_ASPECTS[aspId]?.color + '15' }"
                 >
+                  <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-black/60 text-purple-300 font-mono">#{ idx + 1 }</span>
                   <div class="w-4 h-4 rounded-md overflow-hidden relative flex-shrink-0 flex items-center justify-center bg-black/40">
                     <img 
                       :src="`/aspects/${aspId}.png`" 
@@ -228,14 +243,14 @@ const selectAspect = (asp: ThaumcraftAspect) => {
                     />
                   </div>
                   <span class="text-xs font-bold text-white">{{ THAUMCRAFT_ASPECTS[aspId]?.nameRu }}</span>
-                  <span class="text-[9.5px] text-slate-400">({{ THAUMCRAFT_ASPECTS[aspId]?.nameLat }})</span>
+                  <span class="text-[10px] text-slate-400 font-mono">({{ THAUMCRAFT_ASPECTS[aspId]?.nameLat }})</span>
                 </div>
 
                 <!-- Arrow separator -->
                 <IconRenderer
                   v-if="idx < calculatedBridge.length - 1"
                   name="ChevronRight"
-                  size="14"
+                  size="16"
                   class="text-purple-400/80 shrink-0"
                 />
               </template>
@@ -507,6 +522,75 @@ const selectAspect = (asp: ThaumcraftAspect) => {
 
       </div>
 
+    </div>
+  </div>
+
+  <!-- EDUCATIONAL THAUMCRAFT RESEARCH GUIDE MODAL -->
+  <div v-if="isGuideHelpOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fadeIn" @click.self="isGuideHelpOpen = false">
+    <div class="bg-[#16181a] border border-[#26292d] w-full max-w-2xl rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 max-h-[85vh] overflow-y-auto custom-scrollbar relative">
+      <button
+        type="button"
+        @click="isGuideHelpOpen = false"
+        class="absolute top-5 right-5 p-2 rounded-xl bg-[#0c0d0e] border border-[#26292d] hover:border-purple-400 text-slate-300 hover:text-white transition-all cursor-pointer"
+      >
+        <IconRenderer name="X" size="18" />
+      </button>
+
+      <div class="flex items-center gap-3 border-b border-[#26292d] pb-4">
+        <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/40 flex items-center justify-center font-bold text-xl shrink-0">
+          📜
+        </div>
+        <div>
+          <h3 class="text-base font-black text-white tracking-tight">Как соединять аспекты на Столе Исследований?</h3>
+          <p class="text-xs text-purple-300 font-medium">Главные правила и принципы проведения магических дорожек в TC 4.2</p>
+        </div>
+      </div>
+
+      <div class="space-y-4 text-xs text-slate-200 leading-relaxed">
+        <div class="p-3.5 bg-[#0c0d0e] border border-purple-500/30 rounded-2xl space-y-2">
+          <h4 class="font-extrabold text-purple-300 flex items-center gap-2">
+            <span>1. Золотое правило соединения</span>
+          </h4>
+          <p class="text-slate-300">
+            Два соседних аспектов на столе исследования **связываются соединительной нитью**, если соблюдено одно из двух условий:
+          </p>
+          <ul class="list-disc list-inside space-y-1 text-slate-300 pl-1">
+            <li>Один аспект является прямо компонентом другого (например: <strong class="text-white">Victus</strong> состоить из <strong class="text-white">Aqua + Terra</strong>, поэтому Victus соединяется и с Aqua, и с Terra).</li>
+            <li>Два аспекта имеют **общий базовый компонент** (например: <strong class="text-white">Lux (Aer + Ignis)</strong> и <strong class="text-white">Motus (Aer + Ordo)</strong> соединяются, так как у них общий <strong class="text-white">Aer</strong>).</li>
+          </ul>
+        </div>
+
+        <div class="p-3.5 bg-[#0c0d0e] border border-[#26292d] rounded-2xl space-y-2">
+          <h4 class="font-extrabold text-cyan-300 flex items-center gap-2">
+            <span>2. Как пользоваться калькулятором сверху?</span>
+          </h4>
+          <ol class="list-decimal list-inside space-y-1.5 text-slate-300 pl-1">
+            <li>Выберите аспект, с которого у вас выходит иконка в исследовании (напр. <strong>Aqua</strong>).</li>
+            <li>Выберите конечную цель на другом конце записки (напр. <strong>Ignis</strong>).</li>
+            <li>Нажмите <strong>«Рассчитать»</strong> — алгоритм мгновенно построит самый короткий путь!</li>
+            <li>Выкладывайте полученные аспекты по порядку <strong class="text-purple-300">#1, #2, #3...</strong> в клетки на столе между узлами.</li>
+          </ol>
+        </div>
+
+        <div class="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-1.5 text-amber-200">
+          <h4 class="font-extrabold flex items-center gap-2">
+            <span>💡 Совет тауматурга</span>
+          </h4>
+          <p class="text-[11.5px]">
+            Используйте первичные стихии (Aer, Aqua, Ignis, Terra, Ordo, Perditio) как "мосты-переходники", если у вас мало составных аспектов в изученных знаниях!
+          </p>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-[#26292d] flex justify-end">
+        <button
+          type="button"
+          @click="isGuideHelpOpen = false"
+          class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+        >
+          Понятно, к калькулятору!
+        </button>
+      </div>
     </div>
   </div>
 </template>
