@@ -56,19 +56,26 @@ export function initTelegramBot() {
       const chatId = query.message.chat.id;
       const data = query.data;
 
+      try {
+        await bot?.answerCallbackQuery(query.id);
+      } catch (e) {}
+
       if (data === 'apply_author') {
         userStates.set(chatId, { step: 'username' });
         bot?.sendMessage(chatId, `📌 **Шаг 1 из 4:** Укажите ваш игровой никнейм на серверах CubixWorld:`, { parse_mode: 'Markdown' });
       } else if (data === 'support_ticket') {
         bot?.sendMessage(chatId, `💬 Напишите ваш вопрос или описание проблемы ниже, и администрация свяжется с вами!`);
-      } else if (data?.startsWith('approve_app_')) {
-        // Admin approved applicant
-        const appDataEncoded = data.replace('approve_app_', '');
-        try {
-          const [applicantUsername, applicantChatIdStr] = decodeURIComponent(appDataEncoded).split('::');
+      } else if (data?.startsWith('app_')) {
+        // Format: app_appr_username_chatId or app_reje_username_chatId
+        const isApprove = data.startsWith('app_appr_');
+        const payload = data.replace(/^app_(appr|reje)_/, '');
+        const parts = payload.split('_');
+        const applicantUsername = parts[0] || 'Author';
+        const applicantChatIdStr = parts[1] || 'web';
+
+        if (isApprove) {
           const tempPassword = 'dc_' + Math.random().toString(36).substring(2, 8);
           
-          // Register author in SQLite
           try {
             registerAuthorByAdmin({
               username: applicantUsername,
@@ -77,27 +84,24 @@ export function initTelegramBot() {
               canEditOthers: false,
               canCreateGuides: true
             }, 'TelegramBot');
-          } catch (e: any) {
-            // Already exists or registered
-          }
+          } catch (e: any) {}
 
-          bot?.editMessageText(
-            query.message.text + `\n\n✅ **ЗАЯВКА ОДОБРЕНА**\nСоздан аккаунт: \`${applicantUsername}\`\nВременный пароль: \`${tempPassword}\``,
-            { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown' }
+          bot?.sendMessage(
+            chatId,
+            `✅ **ЗАЯВКА ОДОБРЕНА**\nСоздан аккаунт для автора: \`${applicantUsername}\`\nВременный пароль: \`${tempPassword}\``,
+            { parse_mode: 'Markdown' }
           );
 
           if (applicantChatIdStr && applicantChatIdStr !== 'web') {
             bot?.sendMessage(
               Number(applicantChatIdStr),
-              `🎉 **Ваша заявка на авторство одобрена!**\n\nВаши данные для входа на вики (https://wiki.dark-core.ru):\n👤 Логин: \`${applicantUsername}\`\n🔑 Пароль: \`${tempPassword}\`\n\nСмените пароль в настройках профиля после первого входа!`,
+              `🎉 **Ваша заявка на авторство одобрена!**\n\nДанные для входа на вики (https://wiki.dark-core.ru):\n👤 Логин: \`${applicantUsername}\`\n🔑 Пароль: \`${tempPassword}\`\n\nСмените пароль после первого входа!`,
               { parse_mode: 'Markdown' }
             );
           }
-        } catch (err: any) {
-          bot?.sendMessage(chatId, `Ошибка одобрения: ${err.message}`);
+        } else {
+          bot?.sendMessage(chatId, `❌ **ЗАЯВКА ОТКЛОНЕНА** для пользователя: \`${applicantUsername}\``, { parse_mode: 'Markdown' });
         }
-      } else if (data?.startsWith('reject_app_')) {
-        bot?.editMessageText(query.message.text + `\n\n❌ **ЗАЯВКА ОТКЛОНЕНА**`, { chat_id: chatId, message_id: query.message.message_id });
       }
     });
 
@@ -166,7 +170,10 @@ export async function sendApplicationToAdmin(appData: {
     `🔗 **Работы/Ссылки**: ${appData.portfolio}\n\n` +
     `_Выберите решение abaixo:_`;
 
-  const callbackPayload = encodeURIComponent(`${appData.username}::${appData.chatId}`);
+  const safeUsername = appData.username.replace(/[^a-zA-Z0-9_-]/g, '');
+  const safeChatId = String(appData.chatId).replace(/[^a-zA-Z0-9_-]/g, '');
+  const approveData = `app_appr_${safeUsername}_${safeChatId}`;
+  const rejectData = `app_reje_${safeUsername}_${safeChatId}`;
 
   if (bot && adminChat) {
     try {
@@ -175,8 +182,8 @@ export async function sendApplicationToAdmin(appData: {
         reply_markup: {
           inline_keyboard: [
             [
-              { text: '✅ Одобрить и создать аккаунт', callback_data: `approve_app_${callbackPayload}` },
-              { text: '❌ Отклонить', callback_data: `reject_app_${callbackPayload}` }
+              { text: '✅ Одобрить и создать аккаунт', callback_data: approveData },
+              { text: '❌ Отклонить', callback_data: rejectData }
             ]
           ]
         }
@@ -197,8 +204,8 @@ export async function sendApplicationToAdmin(appData: {
           reply_markup: {
             inline_keyboard: [
               [
-                { text: '✅ Одобрить и создать аккаунт', callback_data: `approve_app_${callbackPayload}` },
-                { text: '❌ Отклонить', callback_data: `reject_app_${callbackPayload}` }
+                { text: '✅ Одобрить и создать аккаунт', callback_data: approveData },
+                { text: '❌ Отклонить', callback_data: rejectData }
               ]
             ]
           }
