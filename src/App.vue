@@ -17,7 +17,7 @@ const AuthorDashboardModal = defineAsyncComponent(() => import('./components/Aut
 const AdminPanel = defineAsyncComponent(() => import('./components/AdminPanel.vue'));
 const TelemetryPage = defineAsyncComponent(() => import('./components/TelemetryPage.vue'));
 const RulesModal = defineAsyncComponent(() => import('./components/RulesModal.vue'));
-const TermsModal = defineAsyncComponent(() => import('./components/TermsModal.vue'));
+const ThaumcraftAspectModal = defineAsyncComponent(() => import('./components/ThaumcraftAspectModal.vue'));
 
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
@@ -28,6 +28,7 @@ const isTermsOpen = ref(false);
 const isRulesOpen = ref(false);
 const isSettingsOpen = ref(false);
 const isSelectGuideModalOpen = ref(false);
+const isThaumcraftAspectModalOpen = ref(false);
 const isAuthorDashboardOpen = ref(false);
 
 const guides = ref<Guide[]>([]);
@@ -1214,6 +1215,19 @@ const handleViewAllAuthorGuides = (username: string) => {
                       <div class="text-[9.5px] text-dark-muted truncate">Свод правил</div>
                     </div>
                   </button>
+
+                  <button
+                    @click="isThaumcraftAspectModalOpen = true; isHeaderNavMenuOpen = false"
+                    class="p-2.5 rounded-2xl bg-[#090a0c]/80 border border-purple-500/30 text-left transition-all duration-200 flex items-center gap-2.5 cursor-pointer group hover:border-purple-400 hover:bg-[#15181e]"
+                  >
+                    <div class="p-1.5 rounded-xl bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform shrink-0">
+                      <IconRenderer name="Sparkles" size="16" />
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold text-purple-300 truncate">Граф Аспектов TC4</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Калькулятор и древо</div>
+                    </div>
+                  </button>
                 </div>
               </div>
 
@@ -1937,6 +1951,12 @@ const handleViewAllAuthorGuides = (username: string) => {
       @update-tab="(t) => { initialRulesTab = t; updateUrlRoute(); }"
       @update-server="(s) => { initialRulesServer = s; updateUrlRoute(); }"
       @close="isRulesOpen = false"
+    />
+
+    <!-- Thaumcraft 4 Interactive Aspect Graph Modal -->
+    <ThaumcraftAspectModal
+      :is-open="isThaumcraftAspectModalOpen"
+      @close="isThaumcraftAspectModalOpen = false"
     />
 
     <!-- Cookie Banner -->

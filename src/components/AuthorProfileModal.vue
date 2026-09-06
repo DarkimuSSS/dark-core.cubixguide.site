@@ -629,16 +629,11 @@ const handleBannerFileUpload = (e: Event) => {
               <div class="space-y-3 text-center sm:text-left flex-1 min-w-0 pr-8">
                 <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-3">
                   <div class="min-w-0">
-                    <h2 class="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2.5 flex-wrap drop-shadow-md">
-                      <span>{{ profile.username }}</span>
-
-                      <!-- System Role Badge -->
-                      <span
-                        v-if="profile.role && DEFAULT_SYSTEM_ROLES[profile.role]"
-                        :class="['text-xs font-extrabold px-2.5 py-0.5 rounded-full border shadow-md inline-flex items-center gap-1', DEFAULT_SYSTEM_ROLES[profile.role].badgeColor]"
-                      >
-                        {{ DEFAULT_SYSTEM_ROLES[profile.role].name }}
-                      </span>
+                    <!-- Line 1: Nickname [Verified Checkmark] -->
+                    <div class="flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
+                      <h2 class="text-2xl font-extrabold text-white tracking-tight drop-shadow-md">
+                        {{ profile.username }}
+                      </h2>
 
                       <!-- CRISP VERIFIED CHECKMARK BADGE WITH HOVER TOOLTIP "Проверенный Автор" -->
                       <div v-if="isAuthorVerified" class="relative group/vtool inline-flex items-center">
@@ -659,8 +654,20 @@ const handleBannerFileUpload = (e: Event) => {
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <div v-if="selectedProfileServers.length > 0" class="flex flex-wrap items-center gap-1.5">
+                    <!-- Line 2: Role Badge & Servers -->
+                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                      <!-- System Role Badge -->
+                      <span
+                        v-if="profile.role && DEFAULT_SYSTEM_ROLES[profile.role]"
+                        :class="['text-xs font-extrabold px-2.5 py-0.5 rounded-full border shadow-md inline-flex items-center gap-1', DEFAULT_SYSTEM_ROLES[profile.role].badgeColor]"
+                      >
+                        {{ DEFAULT_SYSTEM_ROLES[profile.role].name }}
+                      </span>
+
+                      <!-- Server Badges -->
+                      <template v-if="selectedProfileServers.length > 0">
                         <span
                           v-for="s in selectedProfileServers"
                           :key="s"
@@ -668,9 +675,10 @@ const handleBannerFileUpload = (e: Event) => {
                         >
                           🎮 {{ s }}
                         </span>
-                      </div>
-                    </h2>
-                    <p class="text-xs text-slate-300 font-medium pt-0.5 drop-shadow">Автор {{ authorGuides.length }} опубликованных гайдов</p>
+                      </template>
+                    </div>
+
+                    <p class="text-xs text-slate-300 font-medium pt-1 drop-shadow">Автор {{ authorGuides.length }} опубликованных гайдов</p>
                   </div>
                 </div>
 

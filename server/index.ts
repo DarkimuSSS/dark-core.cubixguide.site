@@ -134,6 +134,7 @@ app.get('/api/avatar/:username', async (req, res) => {
   // Fallback to DiceBear if CubixWorld avatar fails
   res.redirect(`https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username)}`);
 });
+
 app.get('/api/team', async (req, res) => {
   try {
     const response = await fetch('https://cubixworld.net/api/team', {

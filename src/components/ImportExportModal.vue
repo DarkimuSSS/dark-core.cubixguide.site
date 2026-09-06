@@ -41,7 +41,22 @@ const handleImport = () => {
     if (!parsed || !parsed.meta || !Array.isArray(parsed.blocks)) {
       throw new Error('Неверный формат гайда. Объект должен содержать "meta" и массив "blocks".');
     }
-    emit('import', parsed);
+
+    // Preserve identity metadata of the currently open guide in the editor
+    const importedGuide: Guide = {
+      ...parsed,
+      meta: {
+        ...parsed.meta,
+        id: props.guide?.meta?.id || parsed.meta.id,
+        author: props.guide?.meta?.author || parsed.meta.author || '',
+        published: props.guide?.meta?.published !== undefined ? props.guide.meta.published : Boolean(parsed.meta.published),
+        isVisible: props.guide?.meta?.isVisible !== undefined ? props.guide.meta.isVisible : Boolean(parsed.meta.isVisible),
+        status: props.guide?.meta?.status || parsed.meta.status || 'draft',
+        views: props.guide?.meta?.views !== undefined ? props.guide.meta.views : (parsed.meta.views || 0)
+      }
+    };
+
+    emit('import', importedGuide);
     emit('close');
   } catch (err: any) {
     importError.value = err.message || 'Синтаксическая ошибка в JSON строке.';
