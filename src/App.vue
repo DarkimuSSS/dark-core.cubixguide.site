@@ -17,7 +17,7 @@ const AuthorDashboardModal = defineAsyncComponent(() => import('./components/Aut
 const AdminPanel = defineAsyncComponent(() => import('./components/AdminPanel.vue'));
 const TelemetryPage = defineAsyncComponent(() => import('./components/TelemetryPage.vue'));
 const RulesModal = defineAsyncComponent(() => import('./components/RulesModal.vue'));
-const ThaumcraftAspectModal = defineAsyncComponent(() => import('./components/ThaumcraftAspectModal.vue'));
+const ThaumcraftAspectPage = defineAsyncComponent(() => import('./components/ThaumcraftAspectPage.vue'));
 
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
@@ -28,15 +28,14 @@ const isTermsOpen = ref(false);
 const isRulesOpen = ref(false);
 const isSettingsOpen = ref(false);
 const isSelectGuideModalOpen = ref(false);
-const isThaumcraftAspectModalOpen = ref(false);
 const isAuthorDashboardOpen = ref(false);
 
 const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
 const activeGuide = ref<Guide | null>(null);
 
-// MODE: 'home' (Главная) | 'reader' (Вики Гайда) | 'editor' (Конструктор) | 'favorites' (Избранное) | 'drafts' (Мои Черновики) | 'rules' (Правила проекта) | 'author_dashboard' (Кабинет Автора) | 'admin' | 'telemetry' | 'team'
-const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team'>('home');
+// MODE: 'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft'
+const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft'>('home');
 const isLoading = ref<boolean>(true);
 
 const handleExportData = () => {
@@ -1217,8 +1216,8 @@ const handleViewAllAuthorGuides = (username: string) => {
                   </button>
 
                   <button
-                    @click="isThaumcraftAspectModalOpen = true; isHeaderNavMenuOpen = false"
-                    class="p-2.5 rounded-2xl bg-[#090a0c]/80 border border-purple-500/30 text-left transition-all duration-200 flex items-center gap-2.5 cursor-pointer group hover:border-purple-400 hover:bg-[#15181e]"
+                    @click="mode = 'thaumcraft'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center gap-2.5 cursor-pointer group', mode === 'thaumcraft' ? 'bg-purple-500/15 border-purple-500/50 text-purple-300 shadow-lg shadow-purple-950/30' : 'bg-[#090a0c]/80 border-[#262a30] text-slate-300 hover:border-purple-500/40 hover:bg-[#15181e]']"
                   >
                     <div class="p-1.5 rounded-xl bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform shrink-0">
                       <IconRenderer name="Sparkles" size="16" />
@@ -1722,6 +1721,13 @@ const handleViewAllAuthorGuides = (username: string) => {
             />
           </div>
 
+          <!-- THAUMCRAFT 4 ASPECT GRAPH & RESEARCH CALCULATOR PAGE -->
+          <div v-else-if="mode === 'thaumcraft'">
+            <ThaumcraftAspectPage
+              @back="mode = 'home'"
+            />
+          </div>
+
           <!-- CUBIXWORLD TEAM STAFF FULL PAGE VIEW -->
           <div v-else-if="mode === 'team'" class="px-3 sm:px-6 pt-4">
             <TeamPage
@@ -1951,12 +1957,6 @@ const handleViewAllAuthorGuides = (username: string) => {
       @update-tab="(t) => { initialRulesTab = t; updateUrlRoute(); }"
       @update-server="(s) => { initialRulesServer = s; updateUrlRoute(); }"
       @close="isRulesOpen = false"
-    />
-
-    <!-- Thaumcraft 4 Interactive Aspect Graph Modal -->
-    <ThaumcraftAspectModal
-      :is-open="isThaumcraftAspectModalOpen"
-      @close="isThaumcraftAspectModalOpen = false"
     />
 
     <!-- Cookie Banner -->

@@ -1,0 +1,388 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import IconRenderer from './IconRenderer.vue';
+import { THAUMCRAFT_ASPECTS, findShortestAspectBridge, type ThaumcraftAspect } from '../data/thaumcraftAspects';
+
+const emit = defineEmits<{
+  (e: 'back'): void;
+}>();
+
+const searchQuery = ref('');
+const activeFilter = ref<'all' | 'primal' | 'compound'>('all');
+const selectedAspect = ref<ThaumcraftAspect | null>(THAUMCRAFT_ASPECTS['praecantatio'] || THAUMCRAFT_ASPECTS['aer']);
+
+// Bridge Finder State
+const startAspectId = ref<string>('aqua');
+const targetAspectId = ref<string>('ignis');
+const calculatedBridge = ref<string[]>([]);
+const isBridgeCalculated = ref(false);
+
+const allAspectsList = computed(() => Object.values(THAUMCRAFT_ASPECTS));
+
+const filteredAspects = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim();
+  return allAspectsList.value.filter(asp => {
+    if (activeFilter.value === 'primal' && !asp.isPrimal) return false;
+    if (activeFilter.value === 'compound' && asp.isPrimal) return false;
+
+    if (!query) return true;
+    return (
+      asp.nameRu.toLowerCase().includes(query) ||
+      asp.nameLat.toLowerCase().includes(query) ||
+      asp.id.toLowerCase().includes(query) ||
+      asp.description.toLowerCase().includes(query)
+    );
+  });
+});
+
+const calculateBridge = () => {
+  if (!startAspectId.value || !targetAspectId.value) return;
+  calculatedBridge.value = findShortestAspectBridge(startAspectId.value, targetAspectId.value);
+  isBridgeCalculated.value = true;
+};
+
+const getAspect = (id: string): ThaumcraftAspect | undefined => THAUMCRAFT_ASPECTS[id];
+
+const selectAspect = (asp: ThaumcraftAspect) => {
+  selectedAspect.value = asp;
+};
+</script>
+
+<template>
+  <div class="min-h-screen bg-[#090a0c] text-white py-8 px-4 sm:px-6 lg:px-8 space-y-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+      
+      <!-- Top Navigation & Header Bar -->
+      <div class="flex items-center justify-between gap-4 bg-[#121417]/95 border border-[#26292d] p-4 sm:p-6 rounded-3xl shadow-2xl backdrop-blur-xl">
+        <div class="flex items-center gap-4">
+          <button
+            type="button"
+            @click="emit('back')"
+            class="px-3.5 py-2 rounded-2xl bg-[#1c1f24] hover:bg-purple-950/60 border border-[#262a30] hover:border-purple-400 text-slate-300 hover:text-white flex items-center gap-2 text-xs font-bold transition-all cursor-pointer shadow-md group"
+          >
+            <IconRenderer name="ArrowLeft" size="16" class="group-hover:-translate-x-1 transition-transform" />
+            <span>Вернуться на главную</span>
+          </button>
+
+          <div class="h-8 w-px bg-[#26292d] hidden sm:block"></div>
+
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-400 p-0.5 shadow-xl shadow-purple-950/50 flex-shrink-0">
+              <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center text-purple-400 font-extrabold text-2xl">
+                🔮
+              </div>
+            </div>
+            <div>
+              <h1 class="text-lg sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                <span>Интерактивный Граф Аспектов Thaumcraft 4</span>
+                <span class="text-[10px] sm:text-xs bg-purple-500/20 text-purple-300 border border-purple-500/40 px-2.5 py-0.5 rounded-full font-extrabold uppercase">TC 4.2</span>
+              </h1>
+              <p class="text-xs sm:text-sm text-slate-300 font-medium">Калькулятор моста стола исследований, рецепты скрещивания и справочник стихий</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESEARCH TABLE ASPECT BRIDGE FINDER TOOL (TOP SECTION) -->
+      <div class="bg-gradient-to-r from-purple-950/40 via-[#121416] to-cyan-950/40 border border-purple-500/30 rounded-3xl p-5 sm:p-7 space-y-5 shadow-2xl">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h3 class="text-sm font-black uppercase tracking-wider text-purple-300 flex items-center gap-2">
+            <IconRenderer name="Compass" size="18" class="text-purple-400" />
+            <span>Поиск кратчайшего моста для Стола Исследований</span>
+          </h3>
+          <span class="text-xs text-purple-400/80 font-mono">BFS Pathfinding Engine</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
+          <!-- Start Aspect Dropdown -->
+          <div class="sm:col-span-5 space-y-1.5">
+            <label class="block text-xs font-bold text-slate-300">Начальный аспект</label>
+            <select
+              v-model="startAspectId"
+              class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-purple-400 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none transition-all"
+            >
+              <option v-for="asp in allAspectsList" :key="'start-' + asp.id" :value="asp.id">
+                {{ asp.nameRu }} ({{ asp.nameLat }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Target Aspect Dropdown -->
+          <div class="sm:col-span-5 space-y-1.5">
+            <label class="block text-xs font-bold text-slate-300">Конечный аспект</label>
+            <select
+              v-model="targetAspectId"
+              class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-purple-400 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none transition-all"
+            >
+              <option v-for="asp in allAspectsList" :key="'target-' + asp.id" :value="asp.id">
+                {{ asp.nameRu }} ({{ asp.nameLat }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Calculate Button -->
+          <div class="sm:col-span-2">
+            <button
+              type="button"
+              @click="calculateBridge"
+              class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl shadow-lg shadow-purple-950/50 transition-all hover:scale-102 active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <IconRenderer name="Sparkles" size="16" />
+              <span>Построить</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Calculated Path Display -->
+        <div v-if="isBridgeCalculated" class="pt-3 border-t border-purple-500/20 space-y-2">
+          <div v-if="calculatedBridge.length === 0" class="text-xs text-rose-400 font-bold p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl">
+            Соединительный мост между выбранными аспектами не найден.
+          </div>
+
+          <div v-else class="space-y-2">
+            <div class="flex items-center justify-between text-xs text-purple-300 font-bold">
+              <span>Цепочка соединения (Шагов: {{ calculatedBridge.length - 1 }}):</span>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2 p-4 bg-[#0c0d0e] border border-purple-500/30 rounded-2xl overflow-x-auto">
+              <template v-for="(aspId, idx) in calculatedBridge" :key="aspId + idx">
+                <div
+                  @click="selectAspect(THAUMCRAFT_ASPECTS[aspId])"
+                  class="flex items-center gap-2 px-3 py-2 rounded-xl border shadow-md transition-transform hover:scale-105 cursor-pointer"
+                  :style="{ borderColor: THAUMCRAFT_ASPECTS[aspId]?.color + '80', backgroundColor: THAUMCRAFT_ASPECTS[aspId]?.color + '15' }"
+                >
+                  <div class="w-5 h-5 rounded-md overflow-hidden relative flex-shrink-0 flex items-center justify-center bg-black/40">
+                    <img 
+                      :src="`/aspects/${aspId}.png`" 
+                      class="w-full h-full object-contain p-0.5 z-10"
+                      @error="(e: any) => { e.target.style.display = 'none'; }"
+                    />
+                    <span class="w-2 h-2 rounded-full absolute z-0" :style="{ backgroundColor: THAUMCRAFT_ASPECTS[aspId]?.color }"></span>
+                  </div>
+                  <span class="text-xs font-bold text-white">{{ THAUMCRAFT_ASPECTS[aspId]?.nameRu }}</span>
+                  <span class="text-[10px] text-slate-400">({{ THAUMCRAFT_ASPECTS[aspId]?.nameLat }})</span>
+                </div>
+
+                <!-- Arrow separator -->
+                <IconRenderer
+                  v-if="idx < calculatedBridge.length - 1"
+                  name="ChevronRight"
+                  size="16"
+                  class="text-purple-400/80 shrink-0"
+                />
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN WORKSPACE: ASPECT EXPLORER & DETAIL CARD (2 COLS) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Sub-column: Aspect Grid & Filters (7 cols) -->
+        <div class="lg:col-span-7 space-y-4">
+          
+          <!-- Search & Filter Controls -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <!-- Search Bar -->
+            <div class="relative flex-1 w-full">
+              <input
+                type="text"
+                v-model="searchQuery"
+                placeholder="Поиск аспекта (например: Магия, Aqua, Ignis)..."
+                class="w-full bg-[#121417] border border-[#26292d] focus:border-purple-400 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-400 outline-none transition-all shadow-md"
+              />
+              <IconRenderer name="Search" size="16" class="absolute left-3.5 top-3 text-slate-400" />
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="flex items-center gap-1 bg-[#121417] border border-[#26292d] p-1 rounded-2xl shrink-0 w-full sm:w-auto justify-center">
+              <button
+                type="button"
+                @click="activeFilter = 'all'"
+                :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all', activeFilter === 'all' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white']"
+              >
+                Все ({{ allAspectsList.length }})
+              </button>
+              <button
+                type="button"
+                @click="activeFilter = 'primal'"
+                :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all', activeFilter === 'primal' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white']"
+              >
+                Первичные (6)
+              </button>
+              <button
+                type="button"
+                @click="activeFilter = 'compound'"
+                :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all', activeFilter === 'compound' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white']"
+              >
+                Составные
+              </button>
+            </div>
+          </div>
+
+          <!-- Aspect Badges Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-1">
+            <div
+              v-for="asp in filteredAspects"
+              :key="asp.id"
+              @click="selectAspect(asp)"
+              :class="[
+                'p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 group shadow-md',
+                selectedAspect?.id === asp.id ? 'ring-2 ring-purple-400 bg-purple-950/40 border-purple-500' : 'bg-[#121417]/90 border-[#26292d] hover:border-slate-600 hover:bg-[#16191e]'
+              ]"
+            >
+              <!-- Aspect Icon Image or Color Badge -->
+              <div
+                class="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform overflow-hidden relative border border-white/5"
+                :style="{ backgroundColor: asp.color + '22' }"
+              >
+                <img 
+                  :src="`/aspects/${asp.id}.png`" 
+                  :alt="asp.nameLat"
+                  class="w-full h-full object-contain p-0.5 z-10"
+                  @error="(e: any) => { e.target.style.display = 'none'; }"
+                />
+                <div
+                  class="w-3.5 h-3.5 rounded-full absolute z-0"
+                  :style="{ backgroundColor: asp.color }"
+                ></div>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-xs font-extrabold text-white truncate group-hover:text-purple-300 transition-colors">
+                  {{ asp.nameRu }}
+                </div>
+                <div class="text-[10px] text-slate-400 font-mono truncate">
+                  {{ asp.nameLat }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Sub-column: Selected Aspect Detail View (5 cols) -->
+        <div class="lg:col-span-5">
+          <div v-if="selectedAspect" class="bg-[#121417] border border-[#26292d] rounded-3xl p-6 space-y-6 shadow-2xl h-full flex flex-col justify-between">
+            
+            <div class="space-y-5">
+              <!-- Aspect Header badge -->
+              <div class="flex items-center gap-4 border-b border-[#26292d] pb-4">
+                <div
+                  class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl ring-2 ring-white/10 overflow-hidden relative"
+                  :style="{ backgroundColor: selectedAspect.color + '33' }"
+                >
+                  <img 
+                    :src="`/aspects/${selectedAspect.id}.png`" 
+                    :alt="selectedAspect.nameLat"
+                    class="w-full h-full object-contain p-1 z-10"
+                    @error="(e: any) => { e.target.style.display = 'none'; }"
+                  />
+                  <span class="text-2xl font-black text-white z-0 absolute">{{ selectedAspect.nameRu.charAt(0) }}</span>
+                </div>
+                <div>
+                  <h3 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                    <span>{{ selectedAspect.nameRu }}</span>
+                    <span class="text-xs text-slate-300 font-mono">({{ selectedAspect.nameLat }})</span>
+                  </h3>
+                  <span
+                    :class="['text-[11px] font-extrabold px-3 py-0.5 rounded-full border inline-block mt-1', selectedAspect.isPrimal ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-purple-500/20 text-purple-300 border-purple-500/40']"
+                  >
+                    {{ selectedAspect.isPrimal ? '✨ Первичная Стихия' : '🧪 Составной Аспект' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <p class="text-xs text-slate-300 font-medium leading-relaxed bg-[#16181a] p-4 rounded-2xl border border-[#26292d]">
+                {{ selectedAspect.description }}
+              </p>
+
+              <!-- Aspect Recipe Breakdown (Components) -->
+              <div class="space-y-3">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  {{ selectedAspect.isPrimal ? 'Первичный элемент' : 'Рецепт скрещивания:' }}
+                </h4>
+
+                <div v-if="selectedAspect.isPrimal" class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-xs font-bold text-amber-300">
+                  Базовый аспект (не состоит из других элементов).
+                </div>
+
+                <div v-else-if="selectedAspect.components" class="grid grid-cols-2 gap-3">
+                  <!-- Component 1 -->
+                  <div
+                    v-if="getAspect(selectedAspect.components[0])"
+                    @click="selectAspect(getAspect(selectedAspect.components[0])!)"
+                    class="p-3.5 rounded-2xl bg-[#16181a] border border-[#26292d] hover:border-purple-400/60 transition-all cursor-pointer space-y-1 group flex items-center gap-3"
+                  >
+                    <div class="w-7 h-7 rounded-xl overflow-hidden relative flex-shrink-0 flex items-center justify-center bg-black/40">
+                      <img 
+                        :src="`/aspects/${selectedAspect.components[0]}.png`" 
+                        class="w-full h-full object-contain p-0.5 z-10"
+                        @error="(e: any) => { e.target.style.display = 'none'; }"
+                      />
+                      <span class="w-3 h-3 rounded-full absolute z-0" :style="{ backgroundColor: getAspect(selectedAspect.components[0])?.color }"></span>
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold text-white group-hover:text-purple-300 transition-colors truncate">
+                        {{ getAspect(selectedAspect.components[0])?.nameRu }}
+                      </div>
+                      <div class="text-[10px] text-slate-400 font-mono truncate">
+                        {{ getAspect(selectedAspect.components[0])?.nameLat }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Component 2 -->
+                  <div
+                    v-if="getAspect(selectedAspect.components[1])"
+                    @click="selectAspect(getAspect(selectedAspect.components[1])!)"
+                    class="p-3.5 rounded-2xl bg-[#16181a] border border-[#26292d] hover:border-purple-400/60 transition-all cursor-pointer space-y-1 group flex items-center gap-3"
+                  >
+                    <div class="w-7 h-7 rounded-xl overflow-hidden relative flex-shrink-0 flex items-center justify-center bg-black/40">
+                      <img 
+                        :src="`/aspects/${selectedAspect.components[1]}.png`" 
+                        class="w-full h-full object-contain p-0.5 z-10"
+                        @error="(e: any) => { e.target.style.display = 'none'; }"
+                      />
+                      <span class="w-3 h-3 rounded-full absolute z-0" :style="{ backgroundColor: getAspect(selectedAspect.components[1])?.color }"></span>
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold text-white group-hover:text-purple-300 transition-colors truncate">
+                        {{ getAspect(selectedAspect.components[1])?.nameRu }}
+                      </div>
+                      <div class="text-[10px] text-slate-400 font-mono truncate">
+                        {{ getAspect(selectedAspect.components[1])?.nameLat }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="pt-4 border-t border-[#26292d] flex justify-between gap-3">
+              <button
+                type="button"
+                @click="startAspectId = selectedAspect.id; calculateBridge();"
+                class="flex-1 py-2.5 rounded-xl bg-[#16181a] hover:bg-purple-950/60 border border-purple-500/40 text-purple-300 text-xs font-bold transition-all text-center cursor-pointer"
+              >
+                Как старт
+              </button>
+              <button
+                type="button"
+                @click="targetAspectId = selectedAspect.id; calculateBridge();"
+                class="flex-1 py-2.5 rounded-xl bg-[#16181a] hover:bg-indigo-950/60 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition-all text-center cursor-pointer"
+              >
+                Как цель
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</template>
