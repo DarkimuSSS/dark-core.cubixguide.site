@@ -495,17 +495,21 @@ const userLastCommentTimeMap: Record<string, number> = {};
 const COMMENT_COOLDOWN_MS = 60 * 1000; // 60 seconds
 
 // 2. Add a comment or reply
-app.post('/api/guides/:id/comments', (req, res) => {
+app.post('/api/guides/:id/comments', requireAuth, (req, res) => {
   try {
-    const { author, authorRole, content, parentId } = req.body;
-    if (!author || !content || !content.trim()) {
-      return res.status(400).json({ error: 'Имя автора и текст комментария обязательны' });
+    const authUser = (req as any).authUser;
+    const { content, parentId } = req.body;
+    const author = authUser.username;
+    const authorRole = authUser.role;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'Текст комментария обязателен' });
     }
     if (content.trim().length > 200) {
       return res.status(400).json({ error: 'Длина комментария не может превышать 200 символов' });
     }
 
-    const authorLower = String(author).toLowerCase().trim();
+    const authorLower = author.toLowerCase().trim();
     const now = Date.now();
     const lastTime = userLastCommentTimeMap[authorLower] || 0;
     const elapsedMs = now - lastTime;
@@ -531,7 +535,7 @@ app.post('/api/guides/:id/comments', (req, res) => {
 });
 
 // 3. Delete a comment
-app.delete('/api/comments/:commentId', (req, res) => {
+app.delete('/api/comments/:commentId', requireAuth, (req, res) => {
   try {
     const result = deleteGuideComment(req.params.commentId);
     res.json(result);
@@ -541,13 +545,14 @@ app.delete('/api/comments/:commentId', (req, res) => {
 });
 
 // 4. Toggle 3-tier reaction (good, neutral, bad)
-app.post('/api/comments/:commentId/react', (req, res) => {
+app.post('/api/comments/:commentId/react', requireAuth, (req, res) => {
   try {
-    const { username, reactionType } = req.body;
-    if (!username || !['good', 'neutral', 'bad'].includes(reactionType)) {
+    const authUser = (req as any).authUser;
+    const { reactionType } = req.body;
+    if (!['good', 'neutral', 'bad'].includes(reactionType)) {
       return res.status(400).json({ error: 'Неверные параметры реакции' });
     }
-    const result = toggleCommentReaction(req.params.commentId, username, reactionType);
+    const result = toggleCommentReaction(req.params.commentId, authUser.username, reactionType);
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -575,15 +580,8 @@ app.post('/api/telemetry/track', (req, res) => {
   }
 });
 
-app.get('/api/telemetry/stats', (req, res) => {
+app.get('/api/telemetry/stats', requireAdmin, (req, res) => {
   try {
-    const requestingUser = (req.headers['x-author-username'] as string) || (req.query.requestingUsername as string);
-    if (requestingUser) {
-      const userRow = db.prepare('SELECT is_admin FROM users WHERE LOWER(username) = LOWER(?)').get(requestingUser) as any;
-      if (!userRow || !userRow.is_admin) {
-        return res.status(403).json({ error: 'Доступ разрешен только Администрации' });
-      }
-    }
     const stats = getTelemetryStats();
     res.json(stats);
   } catch (e: any) {
@@ -592,11 +590,13 @@ app.get('/api/telemetry/stats', (req, res) => {
 });
 
 // Author Personal Analytics & Telemetry Dashboard Endpoint
-app.get('/api/author/analytics', (req, res) => {
+app.get('/api/author/analytics', requireAuth, (req, res) => {
   try {
-    const username = (req.headers['x-author-username'] as string) || (req.query.username as string);
-    if (!username) {
-      return res.status(400).json({ error: 'Не указан логин автора' });
+    const authUser = (req as any).authUser;
+    const username = (req.query.username as string) || authUser.username;
+
+    if (username.toLowerCase() !== authUser.username.toLowerCase() && !authUser.isAdmin) {
+      return res.status(403).json({ error: 'Вы не можете просматривать чужую аналитику' });
     }
 
     // Fetch author guides

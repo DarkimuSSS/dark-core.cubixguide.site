@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Конвертер Гайдов С Форума в CubixGuide JSON</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0b0d0f;
+      color: #e2e8f0;
+    }
+    .glass-panel {
+      background: rgba(22, 24, 26, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0b0d0f;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #26292d;
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #10b981;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans custom-scroll">
+
+  <!-- Header Navigation -->
+  <header class="border-b border-[#26292d] bg-[#121416]/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between shadow-2xl">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-cyan-500 p-0.5 shadow-lg shadow-emerald-950/50">
+        <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center text-emerald-400 font-extrabold text-xl">
+          ⚙️
+        </div>
+      </div>
+      <div>
+        <h1 class="text-lg font-black text-white tracking-tight flex items-center gap-2">
+          <span>CubixGuide Forum Converter</span>
+          <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold uppercase">v4.0 URL Loader</span>
+        </h1>
+        <p class="text-xs text-slate-400 font-medium">Конвертация по ссылке форума или сырому API JSON / HTML в 1 клик</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button id="btnConvert" onclick="convertForumContent()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-950/50 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer">
+        <span>⚡ Конвертировать</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Grid Workspace -->
+  <main class="flex-1 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1920px] mx-auto w-full">
+    
+    <!-- Left Column: Input URL/HTML/JSON & Options (5 cols) -->
+    <div class="lg:col-span-5 flex flex-col gap-5">
+
+      <!-- URL Auto-Fetcher Card -->
+      <div class="glass-panel p-5 rounded-2xl space-y-3 shadow-xl border-l-4 border-l-cyan-500">
+        <h2 class="text-xs font-black uppercase tracking-wider text-cyan-400 flex items-center justify-between">
+          <span>🔗 Загрузка темы по ссылке с форума</span>
+          <span id="fetchStatusBadge" class="text-[10px] bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded-full font-bold hidden">Загрузка...</span>
+        </h2>
+        
+        <div class="flex items-center gap-2">
+          <input 
+            type="text" 
+            id="forumUrlInput" 
+            placeholder="Вставьте ссылку https://cubixworld.net/forum/topic/44354-..." 
+            class="flex-1 bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-cyan-500 font-mono"
+            onkeypress="if(event.key==='Enter') fetchTopicFromUrl()"
+          />
+          <button 
+            type="button" 
+            onclick="fetchTopicFromUrl()" 
+            class="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-extrabold transition-all shadow-md flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+          >
+            <span>🚀 Загрузить</span>
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-400">Парсер автоматически извлечет ID темы, запросит API и применит блоки.</p>
+      </div>
+      
+      <!-- Metadata Controls -->
+      <div class="glass-panel p-5 rounded-2xl space-y-4 shadow-xl">
+        <h2 class="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-2 border-b border-[#26292d] pb-2">
+          📝 Метаданные гайда
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Название гайда</label>
+            <input type="text" id="metaTitle" placeholder="Автоопределение или введите..." class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Автор</label>
+            <input type="text" id="metaAuthor" placeholder="Автоопределение из JSON..." class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Категория</label>
+            <select id="metaCategory" class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500">
+              <option value="СкайБлок" selected>СкайБлок</option>
+              <option value="ХайТек">ХайТек</option>
+              <option value="Магия RPG">Магия RPG</option>
+              <option value="Автоматизация">Автоматизация</option>
+              <option value="Крафты & Рецепты">Крафты & Рецепты</option>
+              <option value="Фермы & Заводы">Фермы & Заводы</option>
+              <option value="Покемоны">Покемоны</option>
+              <option value="Общий">Общий</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Сервер</label>
+            <input type="text" id="metaServer" value="OneBlock" class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Сложность</label>
+            <select id="metaDifficulty" class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500">
+              <option value="Новичок" selected>Новичок</option>
+              <option value="Опытный">Опытный</option>
+              <option value="Мастер">Мастер</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">ID Гайда</label>
+            <input type="text" id="metaId" placeholder="Оставьте пустым для автосборки" class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">Краткое описание (Summary)</label>
+          <textarea id="metaSummary" rows="2" placeholder="Автосборка по первой строке текста..." class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl p-3 focus:outline-none focus:border-emerald-500"></textarea>
+        </div>
+
+        <!-- Mode selector -->
+        <div class="border-t border-[#26292d] pt-3 space-y-2">
+          <label class="block text-[11px] font-bold text-emerald-400">Формат структуры блоков:</label>
+          
+          <div class="space-y-2">
+            <label class="flex items-center gap-2.5 text-xs text-slate-200 cursor-pointer">
+              <input type="radio" name="layoutMode" value="standalone" checked class="w-4 h-4 accent-emerald-500 cursor-pointer" />
+              <span><b>Отдельные объекты (1 картинка = 1 блок)</b> — идеально для гайдов-инфографик</span>
+            </label>
+            <label class="flex items-center gap-2.5 text-xs text-slate-200 cursor-pointer">
+              <input type="radio" name="layoutMode" value="sections" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
+              <span><b>Двухколоночные секции (<code class="text-cyan-400">section</code> 55%/45%)</b> — для текстовых статей</span>
+            </label>
+          </div>
+
+          <div class="flex items-center gap-2 pt-2">
+            <input type="checkbox" id="optNumberCaptions" checked class="w-4 h-4 accent-cyan-500 rounded cursor-pointer" />
+            <label for="optNumberCaptions" class="text-xs text-slate-300 cursor-pointer">
+              Нумеровать подписи картинок (<i>Иллюстрация #1, #2...</i>)
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Raw Forum Input -->
+      <div class="glass-panel p-5 rounded-2xl flex-1 flex flex-col shadow-xl min-h-[380px]">
+        <div class="flex items-center justify-between border-b border-[#26292d] pb-2 mb-3">
+          <h2 class="text-xs font-black uppercase tracking-wider text-cyan-400">
+            📋 Вставьте сырой API JSON или HTML с форума
+          </h2>
+          <button onclick="document.getElementById('forumHtmlInput').value=''" class="text-[11px] text-slate-400 hover:text-rose-400 transition-colors font-bold">Очистить</button>
+        </div>
+        <textarea id="forumHtmlInput" placeholder="Вставьте сюда ответ API с форума ({ &quot;messages&quot;: ... }) или чистый HTML код..." class="w-full flex-1 bg-[#0c0d0e] border border-[#26292d] text-xs font-mono text-emerald-300 p-4 rounded-xl focus:outline-none focus:border-cyan-500 resize-none custom-scroll"></textarea>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Resulting CubixGuide JSON & Actions (7 cols) -->
+    <div class="lg:col-span-7 flex flex-col gap-5">
+      
+      <div class="glass-panel p-5 rounded-2xl flex-1 flex flex-col shadow-xl min-h-[600px]">
+        <div class="flex items-center justify-between border-b border-[#26292d] pb-3 mb-3 flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xs font-black uppercase tracking-wider text-emerald-400">
+              💎 Результат CubixGuide JSON
+            </h2>
+            <span id="blockCountBadge" class="text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-500/40 px-2.5 py-0.5 rounded-full font-extrabold hidden">
+              0 блоков
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="copyResultJson()" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+              <span>📋 Скопировать JSON</span>
+            </button>
+            <button onclick="downloadJsonFile()" class="px-3.5 py-1.5 rounded-lg bg-[#26292d] hover:bg-slate-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+              <span>💾 Скачать .json</span>
+            </button>
+          </div>
+        </div>
+
+        <textarea id="jsonOutput" readonly placeholder="Нажмите «⚡ Конвертировать», чтобы сгенерировать валидный CubixGuide JSON..." class="w-full flex-1 bg-[#0c0d0e] border border-[#26292d] text-xs font-mono text-emerald-400 p-4 rounded-xl focus:outline-none focus:border-emerald-500 resize-none custom-scroll"></textarea>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    function cleanHtmlText(htmlStr) {
+      if (!htmlStr) return '';
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlStr;
+      
+      let text = tempDiv.textContent || tempDiv.innerText || '';
+      text = text.replace(/&nbsp;/g, ' ').trim();
+      return text;
+    }
+
+    function formatTextFormatting(el) {
+      if (!el) return '';
+      let clone = el.cloneNode(true);
+      
+      const bolds = clone.querySelectorAll('b, strong');
+      bolds.forEach(b => {
+        const txt = b.textContent.trim();
+        if (txt) b.replaceWith(`**${txt}**`);
+      });
+
+      const italics = clone.querySelectorAll('i, em');
+      italics.forEach(i => {
+        const txt = i.textContent.trim();
+        if (txt) i.replaceWith(`*${txt}*`);
+      });
+
+      let res = clone.textContent || '';
+      res = res.replace(/\s+/g, ' ').replace(/&nbsp;/g, ' ').trim();
+      return res;
+    }
+
+    async function fetchTopicFromUrl() {
+      const urlInput = document.getElementById('forumUrlInput').value.trim();
+      const badge = document.getElementById('fetchStatusBadge');
+      if (!urlInput) {
+        alert('Вставьте ссылку на тему форума или ID темы!');
+        return;
+      }
+
+      // Extract Topic ID from URL or numeric string
+      const match = urlInput.match(/topic\/(\d+)/) || urlInput.match(/topic_id=(\d+)/) || urlInput.match(/(\d+)/);
+      if (!match || !match[1]) {
+        alert('Не удалось определить ID темы в ссылке!');
+        return;
+      }
+
+      const topicId = match[1];
+
+      // Auto-extract slug for title if present (e.g. topic/44354-gayd-po-pchjelam...)
+      const slugMatch = urlInput.match(/topic\/\d+-(.+?)(?:\?|$|\/)/);
+      if (slugMatch && slugMatch[1] && !document.getElementById('metaTitle').value.trim()) {
+        const cleanSlug = slugMatch[1].replace(/-/g, ' ');
+        document.getElementById('metaTitle').value = cleanSlug.charAt(0).toUpperCase() + cleanSlug.slice(1);
+      }
+
+      badge.textContent = `Загрузка ID #${topicId}...`;
+      badge.classList.remove('hidden');
+
+      const targetApiUrl = `https://cubixworld.net/api/forum.topic.messages?topic_id=${topicId}`;
+
+      try {
+        // Try direct fetch or CORS proxy fallback
+        let response = null;
+        try {
+          response = await fetch(targetApiUrl);
+        } catch (e) {
+          // CORS fallback via public proxy
+          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetApiUrl)}`;
+          response = await fetch(proxyUrl);
+        }
+
+        if (response && response.ok) {
+          const data = await response.json();
+          document.getElementById('forumHtmlInput').value = JSON.stringify(data, null, 2);
+          badge.textContent = `Успешно загружено #${topicId}`;
+          badge.className = 'text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-bold';
+          
+          // Auto convert right away
+          convertForumContent();
+        } else {
+          throw new Error('API вернуло статус ' + (response ? response.status : 'ошибка'));
+        }
+      } catch (err) {
+        badge.textContent = ' Ошибка загрузки!';
+        badge.className = 'text-[10px] bg-rose-950 text-rose-300 border border-rose-500/40 px-2.5 py-0.5 rounded-full font-bold';
+        alert('Не удалось загрузить тему автоматически (CORS или сеть). Вставьте вызов API вручную.');
+      }
+    }
+
+    function extractBlocksFromDOMNode(rootNode) {
+      const blocks = [];
+
+      function traverse(node) {
+        if (!node) return;
+
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node;
+
+          // 1. Image
+          if (el.tagName === 'IMG') {
+            if (el.src) {
+              blocks.push({
+                id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                type: 'image',
+                imageUrl: el.src,
+                imageCaption: 'Иллюстрация к руководству'
+              });
+            }
+            return;
+          }
+
+          // 2. Heading
+          if (['H1','H2','H3','H4','H5'].includes(el.tagName)) {
+            const hText = cleanHtmlText(el.innerHTML);
+            if (hText) {
+              blocks.push({
+                id: `h_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                type: 'heading',
+                headingText: hText,
+                headingLevel: 'h2'
+              });
+            }
+            return;
+          }
+
+          // 3. Callout Box
+          const bgStyle = el.getAttribute('style') || '';
+          if (bgStyle.includes('255, 241, 242') || bgStyle.includes('239, 68, 68') || bgStyle.includes('border-left') || bgStyle.includes('red')) {
+            const cText = formatTextFormatting(el);
+            if (cText) {
+              let type = 'warning';
+              if (cText.toLowerCase().includes('внимание') || cText.toLowerCase().includes('ограничение')) {
+                type = 'danger';
+              }
+              blocks.push({
+                id: `call_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                type: 'callout',
+                calloutType: type,
+                calloutTitle: type === 'danger' ? 'Внимание!' : 'Информация',
+                calloutText: cText.replace(/^внимание!?\s*/i, '')
+              });
+              return;
+            }
+          }
+
+          // 4. Container with mixed text and images
+          const hasDirectImgs = el.querySelectorAll('img').length > 0;
+          if (hasDirectImgs) {
+            Array.from(el.childNodes).forEach(childNode => traverse(childNode));
+            return;
+          }
+
+          // Standard text
+          const textContent = formatTextFormatting(el);
+          if (textContent) {
+            if ((bgStyle.includes('text-align: center') || bgStyle.includes('text-align:center')) && textContent.length < 80) {
+              blocks.push({
+                id: `h_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                type: 'heading',
+                headingText: textContent.replace(/\*\*/g, ''),
+                headingLevel: 'h2'
+              });
+            } else {
+              blocks.push({
+                id: `txt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                type: 'text',
+                textContent: textContent
+              });
+            }
+          }
+        } else if (node.nodeType === Node.TEXT_NODE) {
+          const txt = node.textContent ? node.textContent.trim() : '';
+          if (txt && txt.length > 1) {
+            blocks.push({
+              id: `txt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+              type: 'text',
+              textContent: txt
+            });
+          }
+        }
+      }
+
+      Array.from(rootNode.childNodes).forEach(child => traverse(child));
+      return blocks;
+    }
+
+    function convertForumContent() {
+      const inputStr = document.getElementById('forumHtmlInput').value.trim();
+      if (!inputStr) {
+        alert('Пожалуйста, вставьте HTML код или API JSON с форума!');
+        return;
+      }
+
+      let rawHtml = inputStr;
+      let extractedAuthor = '';
+
+      // Auto detect API JSON response vs raw HTML
+      try {
+        const jsonObj = JSON.parse(inputStr);
+        if (jsonObj) {
+          if (jsonObj.messages) {
+            const firstKey = Object.keys(jsonObj.messages)[0];
+            if (firstKey && jsonObj.messages[firstKey]) {
+              const msgObj = jsonObj.messages[firstKey];
+              if (msgObj.text) rawHtml = msgObj.text;
+              if (msgObj.creator_login) extractedAuthor = msgObj.creator_login;
+            }
+          } else if (jsonObj.text) {
+            rawHtml = jsonObj.text;
+            if (jsonObj.creator_login) extractedAuthor = jsonObj.creator_login;
+          }
+        }
+      } catch (e) {
+        // Raw HTML string
+      }
+
+      if (extractedAuthor && !document.getElementById('metaAuthor').value.trim()) {
+        document.getElementById('metaAuthor').value = extractedAuthor;
+      }
+
+      const tempContainer = document.createElement('div');
+      tempContainer.innerHTML = rawHtml;
+
+      // Extract title
+      let autoTitle = '';
+      const h3El = tempContainer.querySelector('h3, h2, h1');
+      if (h3El) {
+        autoTitle = cleanHtmlText(h3El.innerHTML);
+      }
+
+      const metaTitleVal = document.getElementById('metaTitle').value.trim() || autoTitle || 'Гайд по выживанию на OneBlock';
+      const metaAuthorVal = document.getElementById('metaAuthor').value.trim() || extractedAuthor || 'DarkimuSSS';
+      const metaCategoryVal = document.getElementById('metaCategory').value;
+      const metaServerVal = document.getElementById('metaServer').value.trim() || 'OneBlock';
+      const metaDiffVal = document.getElementById('metaDifficulty').value;
+      const metaIdVal = document.getElementById('metaId').value.trim() || `guide_${Date.now()}`;
+      const layoutMode = document.querySelector('input[name="layoutMode"]:checked')?.value || 'standalone';
+      const numberCaptions = document.getElementById('optNumberCaptions').checked;
+
+      // Extract raw blocks from DOM tree
+      const rawBlocks = extractBlocksFromDOMNode(tempContainer);
+
+      let coverUrl = '';
+      let firstTextSummary = '';
+      let imgIndex = 1;
+
+      rawBlocks.forEach(b => {
+        if (b.type === 'image') {
+          if (!coverUrl) coverUrl = b.imageUrl;
+          if (numberCaptions) {
+            b.imageCaption = `Иллюстрация #${imgIndex++}`;
+          }
+        }
+        if (b.type === 'text' && !firstTextSummary) {
+          firstTextSummary = b.textContent;
+        }
+      });
+
+      let finalBlocks = [];
+
+      if (layoutMode === 'sections' && rawBlocks.length > 0) {
+        let currentSection = null;
+        let currentSectionIndex = 1;
+
+        rawBlocks.forEach((block) => {
+          if (block.type === 'heading') {
+            if (currentSection && (currentSection.columns[0].blocks.length > 0 || currentSection.columns[1].blocks.length > 0)) {
+              finalBlocks.push(currentSection);
+            }
+            currentSection = {
+              id: `sec_${Date.now()}_${currentSectionIndex}`,
+              type: 'section',
+              sectionTitle: block.headingText,
+              variant: currentSectionIndex % 2 === 0 ? 'bordered' : 'accent',
+              columns: [
+                { id: `col_left_${currentSectionIndex}`, customWidth: 55, blocks: [] },
+                { id: `col_right_${currentSectionIndex}`, customWidth: 45, blocks: [] }
+              ]
+            };
+            currentSectionIndex++;
+          } else if (currentSection) {
+            if (block.type === 'image') {
+              currentSection.columns[1].blocks.push(block);
+            } else {
+              currentSection.columns[0].blocks.push(block);
+            }
+          } else {
+            if (!currentSection && block.type === 'image') {
+              currentSection = {
+                id: `sec_${Date.now()}_${currentSectionIndex}`,
+                type: 'section',
+                sectionTitle: 'Обзор и иллюстрации',
+                variant: 'accent',
+                columns: [
+                  { id: `col_left_${currentSectionIndex}`, customWidth: 55, blocks: [] },
+                  { id: `col_right_${currentSectionIndex}`, customWidth: 45, blocks: [block] }
+                ]
+              };
+              currentSectionIndex++;
+            } else {
+              finalBlocks.push(block);
+            }
+          }
+        });
+
+        if (currentSection) {
+          finalBlocks.push(currentSection);
+        }
+      } else {
+        // Standalone mode: Every image and text node is an individual standalone block!
+        finalBlocks = rawBlocks;
+      }
+
+      const metaSummaryVal = document.getElementById('metaSummary').value.trim() || firstTextSummary.slice(0, 150) || `Подробное руководство по серверу ${metaServerVal}.`;
+
+      const resultGuide = {
+        meta: {
+          id: metaIdVal,
+          title: metaTitleVal,
+          category: metaCategoryVal,
+          author: metaAuthorVal,
+          coAuthors: [],
+          difficulty: metaDiffVal,
+          summary: metaSummaryVal,
+          updatedAt: new Date().toISOString().split('T')[0],
+          published: true,
+          isVisible: true,
+          status: 'approved',
+          server: metaServerVal,
+          coverUrl: coverUrl || 'https://static.cubixworld.net/forum/1772646592104.jpeg'
+        },
+        blocks: finalBlocks
+      };
+
+      const jsonStr = JSON.stringify(resultGuide, null, 2);
+      document.getElementById('jsonOutput').value = jsonStr;
+
+      const badge = document.getElementById('blockCountBadge');
+      badge.textContent = `${finalBlocks.length} блоков (${rawBlocks.length} элементов)`;
+      badge.classList.remove('hidden');
+    }
+
+    function copyResultJson() {
+      const jsonArea = document.getElementById('jsonOutput');
+      if (!jsonArea.value) return;
+      navigator.clipboard.writeText(jsonArea.value).then(() => {
+        alert('✅ JSON гайда успешно скопирован в буфер обмена!');
+      });
+    }
+
+    function downloadJsonFile() {
+      const jsonArea = document.getElementById('jsonOutput');
+      if (!jsonArea.value) return;
+      const title = document.getElementById('metaTitle').value.trim() || 'guide';
+      const fileName = `${title.toLowerCase().replace(/[^a-z0-9а-яё]/gi, '_')}.json`;
+      
+      const blob = new Blob([jsonArea.value], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

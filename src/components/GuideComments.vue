@@ -62,7 +62,14 @@ onUnmounted(() => {
   if (cooldownInterval) clearInterval(cooldownInterval);
 });
 
-const currentUserAvatar = ref<string | null>(null);
+const getAuthHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const token = localStorage.getItem('cubix_jwt_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
 
 const fetchCurrentUserAvatar = async () => {
   if (!props.currentUsername) {
@@ -85,7 +92,9 @@ const fetchComments = async (silent: boolean = false) => {
   if (!silent) isLoading.value = true;
   try {
     const url = `/api/guides/${props.guideId}/comments${props.currentUsername ? `?username=${encodeURIComponent(props.currentUsername)}` : ''}`;
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: getAuthHeaders()
+    });
     if (res.ok) {
       comments.value = await res.json();
     }
@@ -173,7 +182,7 @@ const handlePostComment = async (parentId: string | null = null) => {
   try {
     const res = await fetch(`/api/guides/${props.guideId}/comments`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         author: props.currentUsername,
         authorRole: props.currentUserRole || 'author',
@@ -236,7 +245,7 @@ const handleReaction = async (commentId: string, reactionType: 'good' | 'neutral
   try {
     const res = await fetch(`/api/comments/${commentId}/react`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         username: props.currentUsername,
         reactionType
@@ -259,8 +268,16 @@ const handleDeleteComment = async (commentId: string) => {
 
   try {
     const res = await fetch(`/api/comments/${commentId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: getAuthHeaders()
     });
+    if (res.ok) {
+      await fetchComments(true);
+    }
+  } catch (err) {
+    console.error('Ошибка удаления комментария:', err);
+  }
+};
     if (res.ok) {
       await fetchComments(true);
     }
