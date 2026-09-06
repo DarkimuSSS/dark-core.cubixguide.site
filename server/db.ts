@@ -482,14 +482,15 @@ export function getAuthorUserByUsername(username: string) {
     if (user.assigned_servers) assignedSrvs = JSON.parse(user.assigned_servers);
   } catch (e) {}
 
-  const role = user.role || (user.is_admin ? 'dark_core_team' : 'author');
+  const isSuperAdmin = cleanUsername.toLowerCase() === superAdminUsername.toLowerCase();
+  const role = isSuperAdmin ? 'dark_core_team' : (user.role || (user.is_admin ? 'dark_core_team' : 'author'));
 
   return {
     username: user.username,
-    isAdmin: Boolean(user.is_admin) || role === 'dark_core_team' || role === 'dark_core_junior_team',
-    canEditOthers: Boolean(user.can_edit_others),
+    isAdmin: isSuperAdmin || Boolean(user.is_admin) || role === 'dark_core_team' || role === 'dark_core_junior_team',
+    canEditOthers: isSuperAdmin || Boolean(user.can_edit_others),
     canCreateGuides: Boolean(user.can_create_guides),
-    isVerified: Boolean(user.is_verified),
+    isVerified: isSuperAdmin || Boolean(user.is_verified),
     role: role,
     customPermissions: customPerms,
     assignedServers: assignedSrvs,
@@ -674,6 +675,10 @@ export function updateAuthorRoleByAdmin(
   adminUsername: string
 ) {
   const cleanTarget = targetUsername.trim();
+  if (cleanTarget.toLowerCase() === superAdminUsername.toLowerCase() && role !== 'dark_core_team') {
+    throw new Error('Роль Главного Администратора проекта DarkimuSSS не может быть изменена или понижена');
+  }
+
   const { callerRole } = checkHierarchyPermission(adminUsername, cleanTarget, 'изменять роль');
 
   // Verify that caller cannot assign a role equal to or higher than caller's own role (unless dark_core_team)
