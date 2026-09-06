@@ -11,13 +11,30 @@ const searchQuery = ref('');
 const activeFilter = ref<'all' | 'primal' | 'compound'>('all');
 const selectedAspect = ref<ThaumcraftAspect | null>(THAUMCRAFT_ASPECTS['praecantatio'] || THAUMCRAFT_ASPECTS['aer']);
 
-// Bridge Finder State
+// Bridge Finder State & Custom Dropdowns
 const startAspectId = ref<string>('aqua');
 const targetAspectId = ref<string>('ignis');
+const isStartDropdownOpen = ref(false);
+const isTargetDropdownOpen = ref(false);
+const startSearchQuery = ref('');
+const targetSearchQuery = ref('');
+
 const calculatedBridge = ref<string[]>([]);
 const isBridgeCalculated = ref(false);
 
 const allAspectsList = computed(() => Object.values(THAUMCRAFT_ASPECTS));
+
+const filteredStartAspects = computed(() => {
+  const q = startSearchQuery.value.toLowerCase().trim();
+  if (!q) return allAspectsList.value;
+  return allAspectsList.value.filter(a => a.nameRu.toLowerCase().includes(q) || a.nameLat.toLowerCase().includes(q) || a.id.toLowerCase().includes(q));
+});
+
+const filteredTargetAspects = computed(() => {
+  const q = targetSearchQuery.value.toLowerCase().trim();
+  if (!q) return allAspectsList.value;
+  return allAspectsList.value.filter(a => a.nameRu.toLowerCase().includes(q) || a.nameLat.toLowerCase().includes(q) || a.id.toLowerCase().includes(q));
+});
 
 // Sequential Synthesis Calculator for selected aspect
 const currentSynthesis = computed(() => {
@@ -68,31 +85,109 @@ const selectAspect = (asp: ThaumcraftAspect) => {
           <span class="text-[10px] text-purple-400/80 font-mono">Thaumcraft 4.2</span>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
-          <!-- Start Aspect Dropdown -->
-          <div class="sm:col-span-5 space-y-1">
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+          <!-- Start Aspect Dropdown (Custom 3-column Grid) -->
+          <div class="sm:col-span-5 space-y-1 relative">
             <label class="block text-[11px] font-bold text-slate-300">Начальный аспект</label>
-            <select
-              v-model="startAspectId"
-              class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-purple-400 rounded-xl px-3 py-1.5 text-xs text-white outline-none transition-all"
+            <button
+              type="button"
+              @click="isStartDropdownOpen = !isStartDropdownOpen; isTargetDropdownOpen = false;"
+              class="w-full bg-[#0c0d0e] hover:bg-[#121416] border border-[#26292d] hover:border-purple-500/50 text-white text-xs font-bold rounded-xl px-3 py-2 flex items-center justify-between transition-all shadow-md cursor-pointer"
             >
-              <option v-for="asp in allAspectsList" :key="'start-' + asp.id" :value="asp.id">
-                {{ asp.nameRu }} ({{ asp.nameLat }})
-              </option>
-            </select>
+              <div class="flex items-center gap-2 truncate">
+                <img :src="`/aspects/${startAspectId}.png`" class="w-4 h-4 object-contain" />
+                <span class="truncate">{{ THAUMCRAFT_ASPECTS[startAspectId]?.nameRu }}</span>
+                <span class="text-[10px] text-slate-400 font-mono">({{ THAUMCRAFT_ASPECTS[startAspectId]?.nameLat }})</span>
+              </div>
+              <IconRenderer name="ChevronDown" size="14" :class="['text-slate-400 transition-transform duration-200 shrink-0', isStartDropdownOpen ? 'rotate-180 text-purple-400' : '']" />
+            </button>
+
+            <!-- Dropdown Popover (3 Columns Grid) -->
+            <div v-if="isStartDropdownOpen" @click="isStartDropdownOpen = false" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 sm:hidden"></div>
+            <div
+              v-if="isStartDropdownOpen"
+              class="absolute top-full left-0 mt-2 bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-3 z-50 space-y-2 animate-fadeIn w-full sm:w-[480px] max-w-[calc(100vw-1.5rem)]"
+            >
+              <div class="relative">
+                <input
+                  type="text"
+                  v-model="startSearchQuery"
+                  placeholder="Поиск аспекта..."
+                  class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-purple-400 text-xs text-white rounded-xl pl-8 pr-3 py-1.5 outline-none"
+                  @click.stop
+                />
+                <IconRenderer name="Search" size="14" class="absolute left-2.5 top-2 text-slate-400" />
+              </div>
+
+              <!-- 3 Column Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5 max-h-56 overflow-y-auto custom-scrollbar p-0.5">
+                <button
+                  v-for="asp in filteredStartAspects"
+                  :key="'start-opt-' + asp.id"
+                  type="button"
+                  @click="startAspectId = asp.id; isStartDropdownOpen = false;"
+                  :class="[
+                    'p-1.5 rounded-lg border text-left text-xs transition-all flex items-center gap-1.5 cursor-pointer',
+                    startAspectId === asp.id ? 'bg-purple-950/60 border-purple-500 text-purple-300 font-bold' : 'bg-[#0c0d0e] border-[#26292d] hover:bg-[#1c1f24] hover:border-slate-600 text-slate-200'
+                  ]"
+                >
+                  <img :src="`/aspects/${asp.id}.png`" class="w-3.5 h-3.5 object-contain shrink-0" />
+                  <span class="truncate text-[11px]">{{ asp.nameRu }}</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <!-- Target Aspect Dropdown -->
-          <div class="sm:col-span-5 space-y-1">
+          <!-- Target Aspect Dropdown (Custom 3-column Grid) -->
+          <div class="sm:col-span-5 space-y-1 relative">
             <label class="block text-[11px] font-bold text-slate-300">Конечный аспект</label>
-            <select
-              v-model="targetAspectId"
-              class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-purple-400 rounded-xl px-3 py-1.5 text-xs text-white outline-none transition-all"
+            <button
+              type="button"
+              @click="isTargetDropdownOpen = !isTargetDropdownOpen; isStartDropdownOpen = false;"
+              class="w-full bg-[#0c0d0e] hover:bg-[#121416] border border-[#26292d] hover:border-purple-500/50 text-white text-xs font-bold rounded-xl px-3 py-2 flex items-center justify-between transition-all shadow-md cursor-pointer"
             >
-              <option v-for="asp in allAspectsList" :key="'target-' + asp.id" :value="asp.id">
-                {{ asp.nameRu }} ({{ asp.nameLat }})
-              </option>
-            </select>
+              <div class="flex items-center gap-2 truncate">
+                <img :src="`/aspects/${targetAspectId}.png`" class="w-4 h-4 object-contain" />
+                <span class="truncate">{{ THAUMCRAFT_ASPECTS[targetAspectId]?.nameRu }}</span>
+                <span class="text-[10px] text-slate-400 font-mono">({{ THAUMCRAFT_ASPECTS[targetAspectId]?.nameLat }})</span>
+              </div>
+              <IconRenderer name="ChevronDown" size="14" :class="['text-slate-400 transition-transform duration-200 shrink-0', isTargetDropdownOpen ? 'rotate-180 text-purple-400' : '']" />
+            </button>
+
+            <!-- Dropdown Popover (3 Columns Grid) -->
+            <div v-if="isTargetDropdownOpen" @click="isTargetDropdownOpen = false" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 sm:hidden"></div>
+            <div
+              v-if="isTargetDropdownOpen"
+              class="absolute top-full right-0 mt-2 bg-[#16181a] border border-[#26292d] rounded-2xl shadow-2xl p-3 z-50 space-y-2 animate-fadeIn w-full sm:w-[480px] max-w-[calc(100vw-1.5rem)]"
+            >
+              <div class="relative">
+                <input
+                  type="text"
+                  v-model="targetSearchQuery"
+                  placeholder="Поиск аспекта..."
+                  class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-purple-400 text-xs text-white rounded-xl pl-8 pr-3 py-1.5 outline-none"
+                  @click.stop
+                />
+                <IconRenderer name="Search" size="14" class="absolute left-2.5 top-2 text-slate-400" />
+              </div>
+
+              <!-- 3 Column Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5 max-h-56 overflow-y-auto custom-scrollbar p-0.5">
+                <button
+                  v-for="asp in filteredTargetAspects"
+                  :key="'target-opt-' + asp.id"
+                  type="button"
+                  @click="targetAspectId = asp.id; isTargetDropdownOpen = false;"
+                  :class="[
+                    'p-1.5 rounded-lg border text-left text-xs transition-all flex items-center gap-1.5 cursor-pointer',
+                    targetAspectId === asp.id ? 'bg-purple-950/60 border-purple-500 text-purple-300 font-bold' : 'bg-[#0c0d0e] border-[#26292d] hover:bg-[#1c1f24] hover:border-slate-600 text-slate-200'
+                  ]"
+                >
+                  <img :src="`/aspects/${asp.id}.png`" class="w-3.5 h-3.5 object-contain shrink-0" />
+                  <span class="truncate text-[11px]">{{ asp.nameRu }}</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Calculate Button -->
@@ -100,7 +195,7 @@ const selectAspect = (asp: ThaumcraftAspect) => {
             <button
               type="button"
               @click="calculateBridge"
-              class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs py-1.5 px-3 rounded-xl shadow-md transition-all hover:scale-102 active:scale-98 cursor-pointer flex items-center justify-center gap-1.5"
+              class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs py-2 px-3 rounded-xl shadow-md transition-all hover:scale-102 active:scale-98 cursor-pointer flex items-center justify-center gap-1.5"
             >
               <IconRenderer name="Sparkles" size="14" />
               <span>Построить</span>
