@@ -4,11 +4,55 @@ import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUs
 import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
+import { signJwt, verifyJwt } from './jwt';
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Security headers middleware
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// Helper to extract authenticated user from Bearer JWT token
+function getAuthUser(req: express.Request): any | null {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    const payload = verifyJwt(token);
+    if (payload && payload.username) {
+      return getAuthorUserByUsername(payload.username);
+    }
+  }
+  return null;
+}
+
+function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Требуется сессионная авторизация в системе' });
+  }
+  (req as any).authUser = user;
+  next();
+}
+
+function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const user = getAuthUser(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Требуется сессионная авторизация администратора' });
+  }
+  if (!user.isAdmin && user.role !== 'dark_core_team') {
+    return res.status(403).json({ error: 'Недостаточно прав администратора' });
+  }
+  (req as any).authUser = user;
+  next();
+}
 
 const DEFAULT_CUBIX_SERVERS = [
   "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
@@ -189,7 +233,8 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(400).json({ error: 'Заполните никнейм и пароль' });
     }
     const user = loginUser(username, password);
-    res.json(user);
+    const token = signJwt({ username: user.username, isAdmin: user.isAdmin, role: user.role });
+    res.json({ ...user, token });
   } catch (err: any) {
     res.status(401).json({ error: err.message });
   }
@@ -198,7 +243,8 @@ app.post('/api/auth/login', (req, res) => {
 // Verify & Refresh Auth Session
 app.get('/api/auth/me', (req, res) => {
   try {
-    const username = req.query.username as string;
+    const authUser = getAuthUser(req);
+    const username = authUser?.username || (req.query.username as string);
     if (!username) {
       return res.status(400).json({ error: 'Имя пользователя не указано' });
     }
@@ -206,7 +252,8 @@ app.get('/api/auth/me', (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
-    res.json(user);
+    const token = signJwt({ username: user.username, isAdmin: user.isAdmin, role: user.role });
+    res.json({ ...user, token });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -227,36 +274,39 @@ app.post('/api/auth/cubix-login', async (req, res) => {
 
     // User authenticated successfully via CubixWorld TCP -> Upsert author profile with accountInfo
     const authorUser = upsertCubixAuthor(authResult.username || username, authResult.accountInfo);
-    res.json(authorUser);
+    const token = signJwt({ username: authorUser.username, isAdmin: authorUser.isAdmin, role: authorUser.role });
+    res.json({ ...authorUser, token });
   } catch (err: any) {
     res.status(500).json({ error: `Ошибка авторизации CubixWorld: ${err.message}` });
   }
 });
 
 // Author Self-Service Password Change Endpoint
-app.post('/api/auth/change-password', (req, res) => {
+app.post('/api/auth/change-password', requireAuth, (req, res) => {
   try {
-    const { username, oldPassword, newPassword } = req.body;
-    if (!username || !oldPassword || !newPassword) {
-      return res.status(400).json({ error: 'Укажите никнейм, текущий пароль и новый пароль' });
+    const authUser = (req as any).authUser;
+    const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ error: 'Укажите текущий пароль и новый пароль' });
     }
-    const result = changeUserPassword(username, oldPassword, newPassword);
+    const result = changeUserPassword(authUser.username, oldPassword, newPassword);
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
 });
 
-// ADMIN-ONLY AUTHOR & PERMISSIONS MANAGEMENT ENDPOINTS
+// ADMIN-ONLY AUTHOR & PERMISSIONS MANAGEMENT ENDPOINTS (PROTECTED BY JWT)
 
 // Register New Author (Only Admin can do this manually)
-app.post('/api/admin/register-author', (req, res) => {
+app.post('/api/admin/register-author', requireAdmin, (req, res) => {
   try {
-    const { username, password, adminUsername } = req.body;
-    if (!username || !password || !adminUsername) {
-      return res.status(400).json({ error: 'Укажите никнейм автора, пароль и аккаунт админа' });
+    const adminUser = (req as any).authUser;
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Укажите никнейм автора и пароль' });
     }
-    const result = registerAuthorByAdmin(username, password, adminUsername);
+    const result = registerAuthorByAdmin(username, password, adminUser.username);
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
@@ -264,13 +314,14 @@ app.post('/api/admin/register-author', (req, res) => {
 });
 
 // Update Author Role & Granular Permissions & Assigned Servers (Admin)
-app.post('/api/admin/roles', (req, res) => {
+app.post('/api/admin/roles', requireAdmin, (req, res) => {
   try {
-    const { targetUsername, role, customPermissions, assignedServers, adminUsername } = req.body;
-    if (!targetUsername || !adminUsername || !role) {
-      return res.status(400).json({ error: 'Не указаны целевой автор, роль или админ' });
+    const adminUser = (req as any).authUser;
+    const { targetUsername, role, customPermissions, assignedServers } = req.body;
+    if (!targetUsername || !role) {
+      return res.status(400).json({ error: 'Не указаны целевой автор или роль' });
     }
-    const result = updateAuthorRoleByAdmin(targetUsername, role, customPermissions, assignedServers, adminUsername);
+    const result = updateAuthorRoleByAdmin(targetUsername, role, customPermissions, assignedServers, adminUser.username);
     res.json(result);
   } catch (err: any) {
     res.status(403).json({ error: err.message });
@@ -278,13 +329,14 @@ app.post('/api/admin/roles', (req, res) => {
 });
 
 // Update Author Permissions & Verification (Admin)
-app.post('/api/admin/update-permissions', (req, res) => {
+app.post('/api/admin/update-permissions', requireAdmin, (req, res) => {
   try {
-    const { targetUsername, canEditOthers, canCreateGuides, isVerified, adminUsername } = req.body;
-    if (!targetUsername || !adminUsername) {
-      return res.status(400).json({ error: 'Не указан целевой автор или админ' });
+    const adminUser = (req as any).authUser;
+    const { targetUsername, canEditOthers, canCreateGuides, isVerified } = req.body;
+    if (!targetUsername) {
+      return res.status(400).json({ error: 'Не указан целевой автор' });
     }
-    const result = updateAuthorPermissionsByAdmin(targetUsername, canEditOthers, canCreateGuides, isVerified, adminUsername);
+    const result = updateAuthorPermissionsByAdmin(targetUsername, canEditOthers, canCreateGuides, isVerified, adminUser.username);
     res.json(result);
   } catch (err: any) {
     res.status(403).json({ error: err.message });
@@ -292,13 +344,14 @@ app.post('/api/admin/update-permissions', (req, res) => {
 });
 
 // Reset Author Password (Admin)
-app.post('/api/admin/reset-password', (req, res) => {
+app.post('/api/admin/reset-password', requireAdmin, (req, res) => {
   try {
-    const { targetUsername, newPassword, adminUsername } = req.body;
-    if (!targetUsername || !newPassword || !adminUsername) {
+    const adminUser = (req as any).authUser;
+    const { targetUsername, newPassword } = req.body;
+    if (!targetUsername || !newPassword) {
       return res.status(400).json({ error: 'Укажите никнейм автора и новый пароль' });
     }
-    const result = resetAuthorPasswordByAdmin(targetUsername, newPassword, adminUsername);
+    const result = resetAuthorPasswordByAdmin(targetUsername, newPassword, adminUser.username);
     res.json(result);
   } catch (err: any) {
     res.status(403).json({ error: err.message });
@@ -306,13 +359,10 @@ app.post('/api/admin/reset-password', (req, res) => {
 });
 
 // Delete Author Account (Admin)
-app.delete('/api/admin/authors/:username', (req, res) => {
+app.delete('/api/admin/authors/:username', requireAdmin, (req, res) => {
   try {
-    const { adminUsername } = req.query;
-    if (!adminUsername) {
-      return res.status(400).json({ error: 'Не указан админ' });
-    }
-    const result = deleteAuthorByAdmin(req.params.username, String(adminUsername));
+    const adminUser = (req as any).authUser;
+    const result = deleteAuthorByAdmin(req.params.username, adminUser.username);
     res.json(result);
   } catch (err: any) {
     res.status(403).json({ error: err.message });
@@ -320,7 +370,7 @@ app.delete('/api/admin/authors/:username', (req, res) => {
 });
 
 // List All Authors (Admin)
-app.get('/api/admin/authors', (req, res) => {
+app.get('/api/admin/authors', requireAdmin, (req, res) => {
   try {
     const authors = listAllAuthors();
     res.json(authors);
@@ -347,8 +397,12 @@ app.get('/api/profiles/:username', (req, res) => {
 });
 
 // Create / Save Author Profile
-app.post('/api/profiles/:username', (req, res) => {
+app.post('/api/profiles/:username', requireAuth, (req, res) => {
   try {
+    const authUser = (req as any).authUser;
+    if (authUser.username.toLowerCase() !== req.params.username.toLowerCase() && !authUser.isAdmin) {
+      return res.status(403).json({ error: 'Вы не можете редактировать чужой профиль' });
+    }
     const profileData: AuthorProfile = req.body;
     if (!profileData || !profileData.username) {
       return res.status(400).json({ error: 'Неверные данные профиля' });
@@ -618,14 +672,15 @@ app.get('/api/author/analytics', (req, res) => {
 });
 
 // 3. Create new guide
-app.post('/api/guides', (req, res) => {
+app.post('/api/guides', requireAuth, (req, res) => {
   try {
+    const authUser = (req as any).authUser;
     const guide: Guide = req.body;
     if (!guide || !guide.meta || !guide.meta.id) {
       return res.status(400).json({ error: 'Неверные данные гайда' });
     }
 
-    const requestingUser = (req.headers['x-author-username'] as string) || guide.meta.author;
+    const requestingUser = authUser.username;
     recordTelemetryEvent(guide.meta.published ? 'guide_publish' : 'guide_create', {
       guideId: guide.meta.id,
       guideTitle: guide.meta.title,
@@ -648,7 +703,7 @@ app.post('/api/guides', (req, res) => {
       guide.meta.id,
       guide.meta.title || '',
       guide.meta.category,
-      guide.meta.author,
+      guide.meta.author || authUser.username,
       JSON.stringify(guide.meta.coAuthors || []),
       guide.meta.difficulty,
       guide.meta.summary || '',
@@ -672,7 +727,7 @@ app.post('/api/guides', (req, res) => {
 
 // Helper to check author permission on guide modification
 function canUserModifyGuide(requestingUsername: string | undefined, guideId: string): boolean {
-  if (!requestingUsername) return true; // If unspecified in dev mode, allow; if present, check strictly
+  if (!requestingUsername) return false;
   const userRow = db.prepare('SELECT is_admin, can_edit_others, role, custom_permissions FROM users WHERE LOWER(username) = LOWER(?)').get(requestingUsername) as any;
   if (!userRow) return false;
 
@@ -702,20 +757,20 @@ function canUserModifyGuide(requestingUsername: string | undefined, guideId: str
 }
 
 // 4. Update existing guide
-app.put('/api/guides/:id', (req, res) => {
+app.put('/api/guides/:id', requireAuth, (req, res) => {
   try {
+    const authUser = (req as any).authUser;
     const guideId = req.params.id;
     const guide: Guide = req.body;
-    const requestingUser = (req.headers['x-author-username'] as string) || (req.query.requestingUsername as string);
 
-    if (requestingUser && !canUserModifyGuide(requestingUser, guideId)) {
+    if (!canUserModifyGuide(authUser.username, guideId)) {
       return res.status(403).json({ error: 'У вас нет прав для редактирования чужого гайда' });
     }
 
     recordTelemetryEvent('guide_edit', {
       guideId: guideId,
       guideTitle: guide?.meta?.title,
-      username: requestingUser,
+      username: authUser.username,
       ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
       userAgent: req.headers['user-agent']
     });
@@ -736,7 +791,7 @@ app.put('/api/guides/:id', (req, res) => {
         guideId,
         guide.meta.title || '',
         guide.meta.category,
-        guide.meta.author,
+        guide.meta.author || authUser.username,
         JSON.stringify(guide.meta.coAuthors || []),
         guide.meta.difficulty,
         guide.meta.summary || '',
@@ -784,18 +839,18 @@ app.put('/api/guides/:id', (req, res) => {
 });
 
 // 5. Delete guide
-app.delete('/api/guides/:id', (req, res) => {
+app.delete('/api/guides/:id', requireAuth, (req, res) => {
   try {
+    const authUser = (req as any).authUser;
     const guideId = req.params.id;
-    const requestingUser = (req.headers['x-author-username'] as string) || (req.query.requestingUsername as string);
 
-    if (requestingUser && !canUserModifyGuide(requestingUser, guideId)) {
+    if (!canUserModifyGuide(authUser.username, guideId)) {
       return res.status(403).json({ error: 'У вас нет прав для удаления чужого гайда' });
     }
 
     recordTelemetryEvent('guide_delete', {
       guideId: guideId,
-      username: requestingUser,
+      username: authUser.username,
       ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
       userAgent: req.headers['user-agent']
     });

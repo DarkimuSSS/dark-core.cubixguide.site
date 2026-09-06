@@ -47,11 +47,15 @@ const handleLogin = async () => {
     }
 
     if (res.ok && data.username) {
+      if (data.token) {
+        localStorage.setItem('cubix_jwt_token', data.token);
+      }
       emit('authenticate', {
         username: data.username,
         isAdmin: Boolean(data.isAdmin),
         canEditOthers: Boolean(data.canEditOthers),
-        canCreateGuides: Boolean(data.canCreateGuides)
+        canCreateGuides: Boolean(data.canCreateGuides),
+        token: data.token
       });
       username.value = '';
       password.value = '';

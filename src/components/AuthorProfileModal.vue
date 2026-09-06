@@ -258,12 +258,21 @@ const pinnedGuide = computed(() => {
   return props.allGuides.find(g => g.meta.id === profile.value.pinnedGuideId);
 });
 
+const getAuthHeaders = (): Record<string, string> => {
+  const token = localStorage.getItem('cubix_jwt_token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 const saveProfile = async () => {
   try {
     isLoading.value = true;
     const res = await fetch(`/api/profiles/${encodeURIComponent(props.username)}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(profile.value)
     });
     if (res.ok) {
@@ -295,9 +304,8 @@ const handleChangePassword = async () => {
   try {
     const res = await fetch('/api/auth/change-password', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
-        username: props.username,
         oldPassword: oldPassword.value,
         newPassword: newPassword.value
       })

@@ -12,6 +12,18 @@ export function isInternalUrl(url: string): boolean {
 }
 
 /**
+ * Helper to check if a string is a safe HTTP/HTTPS URL
+ */
+export function isSafeProtocol(url: string): boolean {
+  if (!url) return false;
+  const trimmed = url.trim().toLowerCase();
+  if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:') || trimmed.startsWith('vbscript:')) {
+    return false;
+  }
+  return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('www.');
+}
+
+/**
  * Handle link clicks with external redirect warning dialog.
  */
 let externalLinkHandler: ((url: string) => void) | null = null;
@@ -23,6 +35,10 @@ export function registerExternalLinkHandler(handler: (url: string) => void) {
 export function handleLinkClick(e: MouseEvent, url: string) {
   e.preventDefault();
   e.stopPropagation();
+
+  if (!isSafeProtocol(url)) {
+    return;
+  }
 
   // Normalize URL
   const targetUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
@@ -41,7 +57,7 @@ export function handleLinkClick(e: MouseEvent, url: string) {
 }
 
 /**
- * Safely parse markdown links [text](url) and raw URLs into formatted HTML strings or structured tokens.
+ * Safely parse markdown links [text](url) and raw URLs into formatted HTML strings.
  */
 export function parseMarkdownLinks(text: string): string {
   if (!text) return '';
@@ -56,7 +72,10 @@ export function parseMarkdownLinks(text: string): string {
   const mdLinkRegex = /\[([^\]]+)\]\(((?:https?:\/\/|www\.)[^\s\)]+)\)/g;
 
   escaped = escaped.replace(mdLinkRegex, (_match, linkText, url) => {
-    const safeUrl = url.replace(/"/g, '&quot;');
+    if (!isSafeProtocol(url)) {
+      return linkText;
+    }
+    const safeUrl = url.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const isInternal = isInternalUrl(safeUrl);
     const internalBadge = isInternal ? '' : '<svg class="w-3 h-3 inline-block ml-0.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>';
     return `<a href="${safeUrl}" data-external-link="${safeUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-0.5 text-cyan-400 hover:text-cyan-300 underline underline-offset-2 font-medium transition-colors cursor-pointer group/link">${linkText}${internalBadge}</a>`;

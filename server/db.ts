@@ -227,13 +227,36 @@ try { db.exec(`ALTER TABLE guides ADD COLUMN cover_gradient TEXT;`); } catch (e)
 try { db.exec(`ALTER TABLE telemetry_logs ADD COLUMN extra_data TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE telemetry_logs ADD COLUMN duration_seconds INTEGER;`); } catch (e) {}
 
-// Password hashing helper (SHA-256 with salt from environment)
+// Password hashing helper (scrypt with per-user salt & backward compatibility for HMAC)
 export function hashPassword(password: string): string {
-  const salt = process.env.SECRET_SALT;
-  if (!salt) {
-    throw new Error('КРИТИЧЕСКАЯ ОШИБКА БЕЗОПАСНОСТИ: В файле .env не задана переменная SECRET_SALT!');
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derivedKey = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `scrypt:${salt}:${derivedKey}`;
+}
+
+export function verifyPassword(password: string, storedHash: string): { valid: boolean; needsRehash: boolean } {
+  if (!storedHash) return { valid: false, needsRehash: false };
+
+  if (storedHash.startsWith('scrypt:')) {
+    const parts = storedHash.split(':');
+    if (parts.length !== 3) return { valid: false, needsRehash: false };
+    const [, salt, expectedHash] = parts;
+    try {
+      const derivedKey = crypto.scryptSync(password, salt, 64).toString('hex');
+      const bufA = Buffer.from(derivedKey, 'hex');
+      const bufB = Buffer.from(expectedHash, 'hex');
+      if (bufA.length !== bufB.length) return { valid: false, needsRehash: false };
+      return { valid: crypto.timingSafeEqual(bufA, bufB), needsRehash: false };
+    } catch (e) {
+      return { valid: false, needsRehash: false };
+    }
+  } else {
+    // Legacy HMAC-SHA256 fallback for existing users
+    const salt = process.env.SECRET_SALT || 'your_custom_secret_salt_here';
+    const legacyHash = crypto.createHmac('sha256', salt).update(password).digest('hex');
+    const valid = legacyHash === storedHash;
+    return { valid, needsRehash: valid };
   }
-  return crypto.createHmac('sha256', salt).update(password).digest('hex');
 }
 
 // Admin-only Author Registration Helper
@@ -387,8 +410,8 @@ export function changeUserPassword(username: string, oldPassword: string, newPas
     throw new Error('Пользователь не найден');
   }
 
-  const oldPwdHash = hashPassword(oldPassword);
-  if (user.password_hash !== oldPwdHash) {
+  const check = verifyPassword(oldPassword, user.password_hash);
+  if (!check.valid) {
     throw new Error('Неверный старый пароль');
   }
 
@@ -406,9 +429,17 @@ export function loginUser(username: string, password: string) {
     throw new Error('Неверный никнейм или пароль');
   }
 
-  const pwdHash = hashPassword(password);
-  if (user.password_hash !== pwdHash) {
+  const check = verifyPassword(password, user.password_hash);
+  if (!check.valid) {
     throw new Error('Неверный никнейм или пароль');
+  }
+
+  // Automatic hash upgrade to scrypt if user was using legacy hash
+  if (check.needsRehash) {
+    try {
+      const newHash = hashPassword(password);
+      db.prepare('UPDATE users SET password_hash = ? WHERE LOWER(username) = LOWER(?)').run(newHash, cleanUsername);
+    } catch (e) {}
   }
 
   let customPerms = [];

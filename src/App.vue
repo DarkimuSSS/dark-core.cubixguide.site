@@ -371,12 +371,27 @@ watch([mode, activeGuideId, isProfileModalOpen, profileUsername], () => {
   updateUrlRoute();
 });
 
+// Helper for API authentication headers
+const getAuthHeaders = (): Record<string, string> => {
+  const token = localStorage.getItem('cubix_jwt_token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 // Check Session Auth Status & Favorites & Saved Theme
 const verifyAndRefreshSession = async (username: string) => {
   try {
-    const res = await fetch(`/api/auth/me?username=${encodeURIComponent(username)}`);
+    const res = await fetch(`/api/auth/me?username=${encodeURIComponent(username)}`, {
+      headers: getAuthHeaders()
+    });
     if (res.ok) {
       const data = await res.json();
+      if (data.token) {
+        localStorage.setItem('cubix_jwt_token', data.token);
+      }
       isAuthenticated.value = true;
       currentUsername.value = data.username;
       currentUserIsAdmin.value = Boolean(data.isAdmin);
@@ -578,6 +593,7 @@ const logoutAuthor = () => {
   localStorage.removeItem('cubix_logged_can_create_guides');
   localStorage.removeItem('cubix_logged_custom_perms');
   localStorage.removeItem('cubix_logged_assigned_servers');
+  localStorage.removeItem('cubix_jwt_token');
   mode.value = 'home';
   showToast('Вы вышли из аккаунта');
 };
@@ -752,7 +768,7 @@ const createNewGuide = async () => {
   try {
     const res = await fetch('/api/guides', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(newGuide)
     });
 
@@ -783,23 +799,16 @@ const handleSubmitModeration = async () => {
   activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
 
   try {
-    const authorUser = currentUsername.value || '';
     let res = await fetch(`/api/guides/${activeGuide.value.meta.id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-author-username': authorUser
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(activeGuide.value)
     });
 
     if (!res.ok) {
       res = await fetch('/api/guides', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-author-username': authorUser
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(activeGuide.value)
       });
     }
@@ -835,13 +844,9 @@ const handleRequestUnpublish = async (reason: string) => {
   activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
 
   try {
-    const authorUser = currentUsername.value || '';
     const res = await fetch(`/api/guides/${activeGuide.value.meta.id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-author-username': authorUser
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(activeGuide.value)
     });
 
@@ -870,13 +875,9 @@ const handleDirectUnpublish = async () => {
   activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
 
   try {
-    const authorUser = currentUsername.value || '';
     const res = await fetch(`/api/guides/${activeGuide.value.meta.id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-author-username': authorUser
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(activeGuide.value)
     });
 
@@ -901,13 +902,9 @@ const handlePublish = async () => {
   activeGuide.value.meta.updatedAt = new Date().toISOString().split('T')[0];
 
   try {
-    const authorUser = currentUsername.value || '';
     let res = await fetch(`/api/guides/${activeGuide.value.meta.id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-author-username': authorUser
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(activeGuide.value)
     });
 
@@ -915,10 +912,7 @@ const handlePublish = async () => {
       // Fallback to POST if guide is not present in SQLite database yet
       res = await fetch('/api/guides', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-author-username': authorUser
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(activeGuide.value)
       });
     }
@@ -958,7 +952,7 @@ const requestDeleteGuide = () => {
 
 // Delete a guide by ID directly from the catalog (admin quick-delete)
 const pendingDeleteGuideId = ref<string>('');
-const requestDeleteGuideById = (guideId: string) => {
+const promptDeleteGuideById = (guideId: string) => {
   if (!currentUserIsAdmin.value) return;
   pendingDeleteGuideId.value = guideId;
   isDeleteGuideConfirmOpen.value = true;
@@ -970,10 +964,9 @@ const confirmDeleteGuideById = async () => {
   if (!guideId) return;
   pendingDeleteGuideId.value = '';
   try {
-    const authorUser = currentUsername.value || '';
-    const res = await fetch(`/api/guides/${guideId}?requestingUsername=${encodeURIComponent(authorUser)}`, {
+    const res = await fetch(`/api/guides/${guideId}`, {
       method: 'DELETE',
-      headers: { 'x-author-username': authorUser }
+      headers: getAuthHeaders()
     });
     if (res.ok) {
       clearDraftLocalStorage(guideId);

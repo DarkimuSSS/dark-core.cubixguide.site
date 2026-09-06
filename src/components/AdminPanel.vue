@@ -176,12 +176,23 @@ const confirmRejectGuide = async () => {
   }
 };
 
+const getAuthHeaders = (): Record<string, string> => {
+  const token = localStorage.getItem('cubix_jwt_token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 const fetchAdminAuthorsList = async () => {
   if (!props.isAdmin) return;
   isLoading.value = true;
   adminMessage.value = '';
   try {
-    const res = await fetch('/api/admin/authors');
+    const res = await fetch('/api/admin/authors', {
+      headers: getAuthHeaders()
+    });
     if (res.ok) {
       const list = await res.json();
       registeredAuthorsList.value = list;
@@ -235,11 +246,10 @@ const handleAdminRegisterAuthor = async () => {
   try {
     const res = await fetch('/api/admin/register-author', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         username: newAuthorUsername.value.trim(),
-        password: newAuthorPassword.value.trim(),
-        adminUsername: props.currentUsername
+        password: newAuthorPassword.value.trim()
       })
     });
     const data = await res.json();
@@ -247,11 +257,10 @@ const handleAdminRegisterAuthor = async () => {
       if (newAuthorRole.value && newAuthorRole.value !== 'author') {
         await fetch('/api/admin/roles', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             targetUsername: data.username,
-            role: newAuthorRole.value,
-            adminUsername: props.currentUsername
+            role: newAuthorRole.value
           })
         });
       }
@@ -279,11 +288,10 @@ const handleAdminResetAuthorPassword = async (targetUser: string) => {
   try {
     const res = await fetch('/api/admin/reset-password', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         targetUsername: targetUser,
-        newPassword: resetNewPassword.value.trim(),
-        adminUsername: props.currentUsername
+        newPassword: resetNewPassword.value.trim()
       })
     });
     const data = await res.json();
@@ -312,8 +320,9 @@ const confirmDeleteAuthor = async () => {
   adminMessage.value = '';
 
   try {
-    const res = await fetch(`/api/admin/authors/${encodeURIComponent(targetUser)}?adminUsername=${encodeURIComponent(props.currentUsername)}`, {
-      method: 'DELETE'
+    const res = await fetch(`/api/admin/authors/${encodeURIComponent(targetUser)}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
     });
     const data = await res.json();
     if (res.ok) {
@@ -332,11 +341,10 @@ const handleAdminChangeUserRole = async (author: any, role: UserRole) => {
   try {
     const res = await fetch('/api/admin/roles', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         targetUsername: author.username,
-        role: role,
-        adminUsername: props.currentUsername
+        role: role
       })
     });
     const data = await res.json();
@@ -365,12 +373,11 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
   try {
     const res = await fetch('/api/admin/roles', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         targetUsername: author.username,
         role: currentRole,
-        assignedServers: currentServers,
-        adminUsername: props.currentUsername
+        assignedServers: currentServers
       })
     });
     const data = await res.json();
