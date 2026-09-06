@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
-import { THAUMCRAFT_ASPECTS, findShortestAspectBridge, type ThaumcraftAspect } from '../data/thaumcraftAspects';
+import { THAUMCRAFT_ASPECTS, findShortestAspectBridge, getAspectSynthesisSteps, type ThaumcraftAspect } from '../data/thaumcraftAspects';
 
 const emit = defineEmits<{
   (e: 'back'): void;
@@ -18,6 +18,12 @@ const calculatedBridge = ref<string[]>([]);
 const isBridgeCalculated = ref(false);
 
 const allAspectsList = computed(() => Object.values(THAUMCRAFT_ASPECTS));
+
+// Sequential Synthesis Calculator for selected aspect
+const currentSynthesis = computed(() => {
+  if (!selectedAspect.value) return { steps: [], primalCosts: {} };
+  return getAspectSynthesisSteps(selectedAspect.value.id);
+});
 
 const filteredAspects = computed(() => {
   const query = searchQuery.value.toLowerCase().trim();
@@ -311,6 +317,73 @@ const selectAspect = (asp: ThaumcraftAspect) => {
                         {{ getAspect(selectedAspect.components[1])?.nameLat }}
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sequential Crafting Steps Tree (Пошаговый крафт) -->
+              <div v-if="!selectedAspect.isPrimal && currentSynthesis.steps.length > 0" class="space-y-2 pt-2 border-t border-[#26292d]">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-[10px] font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1">
+                    <IconRenderer name="Layers" size="12" />
+                    <span>Последовательность Крафта ({{ currentSynthesis.steps.length }} шаг):</span>
+                  </h4>
+                </div>
+
+                <div class="space-y-1.5 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
+                  <div
+                    v-for="step in currentSynthesis.steps"
+                    :key="step.result + step.stepNumber"
+                    class="p-2 rounded-xl bg-[#16181a] border border-[#26292d] flex items-center justify-between gap-2 text-xs"
+                  >
+                    <span class="text-[10px] font-mono font-bold text-purple-400 shrink-0">#{ step.stepNumber }</span>
+
+                    <!-- Craft Formula -->
+                    <div class="flex items-center gap-1.5 min-w-0">
+                      <!-- Component 1 -->
+                      <div @click="selectAspect(THAUMCRAFT_ASPECTS[step.component1])" class="flex items-center gap-1 cursor-pointer hover:opacity-80">
+                        <img :src="`/aspects/${step.component1}.png`" class="w-4 h-4 object-contain" />
+                        <span class="text-[11px] font-bold text-slate-200 truncate max-w-[65px]">{{ THAUMCRAFT_ASPECTS[step.component1]?.nameRu }}</span>
+                      </div>
+
+                      <span class="text-slate-500 text-[10px] font-black">+</span>
+
+                      <!-- Component 2 -->
+                      <div @click="selectAspect(THAUMCRAFT_ASPECTS[step.component2])" class="flex items-center gap-1 cursor-pointer hover:opacity-80">
+                        <img :src="`/aspects/${step.component2}.png`" class="w-4 h-4 object-contain" />
+                        <span class="text-[11px] font-bold text-slate-200 truncate max-w-[65px]">{{ THAUMCRAFT_ASPECTS[step.component2]?.nameRu }}</span>
+                      </div>
+                    </div>
+
+                    <span class="text-slate-500 text-[10px] font-black">➔</span>
+
+                    <!-- Result Aspect -->
+                    <div @click="selectAspect(THAUMCRAFT_ASPECTS[step.result])" class="flex items-center gap-1 cursor-pointer hover:opacity-80 shrink-0">
+                      <img :src="`/aspects/${step.result}.png`" class="w-4 h-4 object-contain" />
+                      <span class="text-[11px] font-extrabold text-purple-300">{{ THAUMCRAFT_ASPECTS[step.result]?.nameRu }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Total Base Primal Aspects Cost -->
+              <div v-if="!selectedAspect.isPrimal" class="pt-2 border-t border-[#26292d] space-y-1.5">
+                <h4 class="text-[10px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                  <IconRenderer name="Zap" size="12" />
+                  <span>Итого базовых стихий:</span>
+                </h4>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <div
+                    v-for="(count, primalId) in currentSynthesis.primalCosts"
+                    :key="primalId"
+                    v-show="count > 0"
+                    class="p-1.5 rounded-lg bg-[#16181a] border border-[#26292d] flex items-center justify-between px-2 text-[11px]"
+                  >
+                    <div class="flex items-center gap-1">
+                      <img :src="`/aspects/${primalId}.png`" class="w-3.5 h-3.5 object-contain" />
+                      <span class="text-slate-300 text-[10px]">{{ THAUMCRAFT_ASPECTS[primalId]?.nameRu }}</span>
+                    </div>
+                    <span class="font-extrabold text-amber-400 text-xs">x{{ count }}</span>
                   </div>
                 </div>
               </div>

@@ -484,3 +484,57 @@ export function findShortestAspectBridge(startId: string, targetId: string): str
 
   return [];
 }
+
+/**
+ * Calculates step-by-step sequential synthesis tree (how to create a target aspect step-by-step from base aspects)
+ */
+export interface SynthesisStep {
+  result: string;
+  component1: string;
+  component2: string;
+  stepNumber: number;
+}
+
+export function getAspectSynthesisSteps(targetId: string): { steps: SynthesisStep[]; primalCosts: Record<string, number> } {
+  const steps: SynthesisStep[] = [];
+  const primalCosts: Record<string, number> = {
+    aer: 0,
+    aqua: 0,
+    ignis: 0,
+    terra: 0,
+    ordo: 0,
+    perditio: 0
+  };
+
+  const synthesized = new Set<string>(['aer', 'aqua', 'ignis', 'terra', 'ordo', 'perditio']);
+
+  function resolve(id: string) {
+    const asp = THAUMCRAFT_ASPECTS[id];
+    if (!asp) return;
+
+    if (asp.isPrimal) {
+      primalCosts[id] = (primalCosts[id] || 0) + 1;
+      return;
+    }
+
+    if (asp.components) {
+      const [c1, c2] = asp.components;
+      resolve(c1);
+      resolve(c2);
+
+      if (!synthesized.has(id)) {
+        synthesized.add(id);
+        steps.push({
+          result: id,
+          component1: c1,
+          component2: c2,
+          stepNumber: steps.length + 1
+        });
+      }
+    }
+  }
+
+  resolve(targetId);
+
+  return { steps, primalCosts };
+}
