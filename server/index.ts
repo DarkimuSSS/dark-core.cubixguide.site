@@ -5,6 +5,8 @@ import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
 import { signJwt, verifyJwt } from './jwt';
+import { authRateLimiter, mutationRateLimiter, globalApiRateLimiter } from './rateLimiter';
+import { LoginSchema, CubixLoginSchema, ChangePasswordSchema, SaveGuideSchema, CreateCommentSchema, CommentReactionSchema, UpdateProfileSchema, validateBody } from './schemas';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,6 +21,7 @@ app.use((_req, res, next) => {
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+app.use('/api', globalApiRateLimiter);
 
 // Helper to extract authenticated user from Bearer JWT token
 function getAuthUser(req: express.Request): any | null {
@@ -226,12 +229,9 @@ app.get('/api/team', async (req, res) => {
 // AUTHENTICATION ENDPOINTS
 
 // Login Author (Local SQLite)
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', authRateLimiter, validateBody(LoginSchema), (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Заполните никнейм и пароль' });
-    }
     const user = loginUser(username, password);
     const token = signJwt({ username: user.username, isAdmin: user.isAdmin, role: user.role });
     res.json({ ...user, token });
@@ -260,7 +260,7 @@ app.get('/api/auth/me', (req, res) => {
 });
 
 // CubixWorld Native TCP Authentication Endpoint
-app.post('/api/auth/cubix-login', async (req, res) => {
+app.post('/api/auth/cubix-login', authRateLimiter, validateBody(CubixLoginSchema), async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -495,7 +495,7 @@ const userLastCommentTimeMap: Record<string, number> = {};
 const COMMENT_COOLDOWN_MS = 60 * 1000; // 60 seconds
 
 // 2. Add a comment or reply
-app.post('/api/guides/:id/comments', requireAuth, (req, res) => {
+app.post('/api/guides/:id/comments', requireAuth, mutationRateLimiter, validateBody(CreateCommentSchema), (req, res) => {
   try {
     const authUser = (req as any).authUser;
     const { content, parentId } = req.body;
@@ -889,6 +889,45 @@ app.post('/api/server-rules', (req, res) => {
     res.json(saved);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// SEO & Sitemap Endpoints
+app.get('/robots.txt', (_req, res) => {
+  res.type('text/plain');
+  res.send(
+`User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+
+Sitemap: https://wiki.dark-core.ru/sitemap.xml`
+  );
+});
+
+app.get('/sitemap.xml', (_req, res) => {
+  try {
+    const rows = db.prepare('SELECT id, updated_at FROM guides WHERE published = 1 ORDER BY updated_at DESC').all() as any[];
+    const baseUrl = 'https://wiki.dark-core.ru';
+
+    const urls = [
+      `  <url>\n    <loc>${baseUrl}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>`,
+      `  <url>\n    <loc>${baseUrl}/team</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.5</priority>\n  </url>`,
+      `  <url>\n    <loc>${baseUrl}/rules</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.3</priority>\n  </url>`
+    ];
+
+    rows.forEach(r => {
+      const lastMod = r.updated_at ? new Date(r.updated_at).toISOString() : new Date().toISOString();
+      urls.push(
+        `  <url>\n    <loc>${baseUrl}/guide/${r.id}</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`
+      );
+    });
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemapindex.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
+    res.type('application/xml');
+    res.send(xml);
+  } catch (err: any) {
+    res.status(500).send('Error generating sitemap');
   }
 });
 

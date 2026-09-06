@@ -17,8 +17,8 @@ const AuthorDashboardModal = defineAsyncComponent(() => import('./components/Aut
 const AdminPanel = defineAsyncComponent(() => import('./components/AdminPanel.vue'));
 const TelemetryPage = defineAsyncComponent(() => import('./components/TelemetryPage.vue'));
 const RulesModal = defineAsyncComponent(() => import('./components/RulesModal.vue'));
-import ThaumcraftAspectPage from './components/ThaumcraftAspectPage.vue';
-import MinecraftColorGeneratorPage from './components/MinecraftColorGeneratorPage.vue';
+const ThaumcraftAspectPage = defineAsyncComponent(() => import('./components/ThaumcraftAspectPage.vue'));
+const MinecraftColorGeneratorPage = defineAsyncComponent(() => import('./components/MinecraftColorGeneratorPage.vue'));
 
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
