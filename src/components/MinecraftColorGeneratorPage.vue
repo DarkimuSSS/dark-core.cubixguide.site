@@ -59,6 +59,22 @@ const singleColor = ref('&a');
 const outputFormat = ref<'ampersand' | 'section' | 'hex_amp' | 'motd'>('ampersand');
 const copySuccess = ref(false);
 
+const isEyeDropperSupported = ref(typeof window !== 'undefined' && 'EyeDropper' in window);
+
+const pickColorWithEyeDropper = async (target: 'start' | 'end') => {
+  if (!('EyeDropper' in window)) return;
+  try {
+    const eyeDropper = new (window as any).EyeDropper();
+    const result = await eyeDropper.open();
+    if (result && result.sRGBHex) {
+      if (target === 'start') startColor.value = result.sRGBHex;
+      else endColor.value = result.sRGBHex;
+    }
+  } catch (e) {
+    // User cancelled EyeDropper selection
+  }
+};
+
 // Helper: Convert HEX to RGB
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   let c = hex.replace('#', '');
@@ -271,33 +287,57 @@ const copyResult = async () => {
             <!-- Start & End Color Pickers -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div class="p-3 bg-[#0c0d0e] border border-[#26292d] rounded-xl space-y-2">
-                <span class="text-xs font-bold text-slate-300">Начальный цвет:</span>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-300">Начальный цвет:</span>
+                  <button
+                    v-if="isEyeDropperSupported"
+                    type="button"
+                    @click="pickColorWithEyeDropper('start')"
+                    class="p-1 rounded-lg bg-[#16181a] hover:bg-emerald-950/60 border border-[#26292d] hover:border-emerald-400 text-slate-400 hover:text-emerald-300 transition-all flex items-center gap-1 text-[10px] font-bold cursor-pointer"
+                    title="Взять цвет с экрана (Пипетка)"
+                  >
+                    <IconRenderer name="Pipette" size="12" />
+                    <span>Пипетка</span>
+                  </button>
+                </div>
                 <div class="flex items-center gap-2">
                   <input
                     type="color"
                     v-model="startColor"
-                    class="w-9 h-9 rounded-lg border-0 cursor-pointer bg-transparent"
+                    class="w-9 h-9 rounded-lg border-0 cursor-pointer bg-transparent shrink-0"
                   />
                   <input
                     type="text"
                     v-model="startColor"
-                    class="w-full bg-[#16181a] border border-[#26292d] text-xs font-mono text-white rounded-lg px-2.5 py-1.5 uppercase outline-none"
+                    class="w-full bg-[#16181a] border border-[#26292d] text-xs font-mono text-white rounded-lg px-2.5 py-1.5 uppercase outline-none focus:border-emerald-400"
                   />
                 </div>
               </div>
 
               <div class="p-3 bg-[#0c0d0e] border border-[#26292d] rounded-xl space-y-2">
-                <span class="text-xs font-bold text-slate-300">Конечный цвет:</span>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-300">Конечный цвет:</span>
+                  <button
+                    v-if="isEyeDropperSupported"
+                    type="button"
+                    @click="pickColorWithEyeDropper('end')"
+                    class="p-1 rounded-lg bg-[#16181a] hover:bg-emerald-950/60 border border-[#26292d] hover:border-emerald-400 text-slate-400 hover:text-emerald-300 transition-all flex items-center gap-1 text-[10px] font-bold cursor-pointer"
+                    title="Взять цвет с экрана (Пипетка)"
+                  >
+                    <IconRenderer name="Pipette" size="12" />
+                    <span>Пипетка</span>
+                  </button>
+                </div>
                 <div class="flex items-center gap-2">
                   <input
                     type="color"
                     v-model="endColor"
-                    class="w-9 h-9 rounded-lg border-0 cursor-pointer bg-transparent"
+                    class="w-9 h-9 rounded-lg border-0 cursor-pointer bg-transparent shrink-0"
                   />
                   <input
                     type="text"
                     v-model="endColor"
-                    class="w-full bg-[#16181a] border border-[#26292d] text-xs font-mono text-white rounded-lg px-2.5 py-1.5 uppercase outline-none"
+                    class="w-full bg-[#16181a] border border-[#26292d] text-xs font-mono text-white rounded-lg px-2.5 py-1.5 uppercase outline-none focus:border-emerald-400"
                   />
                 </div>
               </div>
