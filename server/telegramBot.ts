@@ -1,4 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
+// Fallback ESM interop handler for node-telegram-bot-api
+const TelegramBotClass: typeof TelegramBot = (TelegramBot as any).default || TelegramBot;
 import { registerAuthorByAdmin, getAuthorUserByUsername } from './db';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
@@ -24,7 +26,7 @@ export function initTelegramBot() {
   }
 
   try {
-    bot = new TelegramBot(BOT_TOKEN, { polling: true });
+    bot = new TelegramBotClass(BOT_TOKEN, { polling: true });
     console.log('[Telegram Bot] Бот успешно запущен в режиме polling!');
 
     // Command /start
