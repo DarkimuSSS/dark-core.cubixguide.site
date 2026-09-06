@@ -222,10 +222,22 @@ const selectAspect = (asp: ThaumcraftAspect) => {
                 selectedAspect?.id === asp.id ? 'ring-2 ring-purple-400 bg-purple-950/40 border-purple-500' : 'bg-[#0c0d0e]/80 border-[#26292d] hover:border-slate-600 hover:bg-[#121416]'
               ]"
             >
+              <!-- Aspect Icon Image or Color Badge -->
               <div
-                class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"
-                :style="{ backgroundColor: asp.color }"
-              ></div>
+                class="w-7 h-7 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform overflow-hidden relative"
+                :style="{ backgroundColor: asp.color + '22' }"
+              >
+                <img 
+                  :src="`/aspects/${asp.id}.png`" 
+                  :alt="asp.nameLat"
+                  class="w-full h-full object-contain"
+                  @error="(e: any) => e.target.style.display = 'none'"
+                />
+                <div
+                  class="w-3.5 h-3.5 rounded-full absolute"
+                  :style="{ backgroundColor: asp.color }"
+                ></div>
+              </div>
               <div class="min-w-0 flex-1">
                 <div class="text-xs font-extrabold text-white truncate group-hover:text-purple-300 transition-colors">
                   {{ asp.nameRu }}
