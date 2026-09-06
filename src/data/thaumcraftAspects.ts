@@ -368,15 +368,6 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     isPrimal: false,
     components: ['herba', 'humanus']
   },
-  metamorphosis: {
-    id: 'metamorphosis',
-    nameRu: 'Метаморфоза',
-    nameLat: 'Metamorphosis',
-    description: 'Изменение формы и превращение',
-    color: '#586f7c',
-    isPrimal: false,
-    components: ['permutatio', 'instrumentum']
-  },
   pannus: {
     id: 'pannus',
     nameRu: 'Ткань',
