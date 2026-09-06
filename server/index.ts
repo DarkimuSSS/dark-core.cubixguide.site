@@ -937,7 +937,7 @@ app.post('/api/server-rules', (req, res) => {
 // SEO & Well-Known Endpoints
 app.get('/.well-known/discord', (_req, res) => {
   res.type('text/plain');
-  res.send('dh=60731f855d4b5ddc2bf21422784534ef02868207');
+  res.send('dh=e15b7e1bb3b0f101fa80dfc56964226d74cf1c49');
 });
 
 app.get('/robots.txt', (_req, res) => {
