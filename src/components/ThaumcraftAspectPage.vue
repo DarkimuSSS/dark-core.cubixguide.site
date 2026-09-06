@@ -49,39 +49,8 @@ const selectAspect = (asp: ThaumcraftAspect) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#090a0c] text-white py-8 px-4 sm:px-6 lg:px-8 space-y-6">
+  <div class="min-h-screen bg-[#090a0c] text-white py-6 px-4 sm:px-6 lg:px-8 space-y-6">
     <div class="max-w-7xl mx-auto space-y-6">
-      
-      <!-- Top Navigation & Header Bar -->
-      <div class="flex items-center justify-between gap-4 bg-[#121417]/95 border border-[#26292d] p-4 sm:p-6 rounded-3xl shadow-2xl backdrop-blur-xl">
-        <div class="flex items-center gap-4">
-          <button
-            type="button"
-            @click="emit('back')"
-            class="px-3.5 py-2 rounded-2xl bg-[#1c1f24] hover:bg-purple-950/60 border border-[#262a30] hover:border-purple-400 text-slate-300 hover:text-white flex items-center gap-2 text-xs font-bold transition-all cursor-pointer shadow-md group"
-          >
-            <IconRenderer name="ArrowLeft" size="16" class="group-hover:-translate-x-1 transition-transform" />
-            <span>Вернуться на главную</span>
-          </button>
-
-          <div class="h-8 w-px bg-[#26292d] hidden sm:block"></div>
-
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-400 p-0.5 shadow-xl shadow-purple-950/50 flex-shrink-0">
-              <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center text-purple-400 font-extrabold text-2xl">
-                🔮
-              </div>
-            </div>
-            <div>
-              <h1 class="text-lg sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
-                <span>Интерактивный Граф Аспектов Thaumcraft 4</span>
-                <span class="text-[10px] sm:text-xs bg-purple-500/20 text-purple-300 border border-purple-500/40 px-2.5 py-0.5 rounded-full font-extrabold uppercase">TC 4.2</span>
-              </h1>
-              <p class="text-xs sm:text-sm text-slate-300 font-medium">Калькулятор моста стола исследований, рецепты скрещивания и справочник стихий</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- RESEARCH TABLE ASPECT BRIDGE FINDER TOOL (TOP SECTION) -->
       <div class="bg-gradient-to-r from-purple-950/40 via-[#121416] to-cyan-950/40 border border-purple-500/30 rounded-3xl p-5 sm:p-7 space-y-5 shadow-2xl">
