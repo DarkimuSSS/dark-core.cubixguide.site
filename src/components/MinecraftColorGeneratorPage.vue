@@ -58,7 +58,7 @@ const QUICK_PALETTE = [
 const activePaletteTarget = ref<'start' | 'end'>('start');
 
 // State
-const modeTab = ref<'gradient' | 'single' | 'sign'>('gradient');
+const modeTab = ref<'gradient' | 'single'>('gradient');
 const inputText = ref('CubixWorld Player');
 const startColor = ref('#00ffcc');
 const endColor = ref('#9900ff');
@@ -66,6 +66,14 @@ const isBold = ref(true);
 const isItalic = ref(false);
 const isUnderline = ref(false);
 const isStrikethrough = ref(false);
+
+// Prefix Customization Options (for /pex /lp /prefix /nick)
+const isPrefixEnabled = ref(true);
+const prefixText = ref('VIP');
+const prefixStartColor = ref('#ff1100');
+const prefixEndColor = ref('#ffaa00');
+const prefixBracketColor = ref('#aaaaaa');
+const prefixStyle = ref<'brackets' | 'solid' | 'badge'>('brackets');
 
 const singleColor = ref('&a');
 const outputFormat = ref<'ampersand' | 'section' | 'hex_amp' | 'motd'>('ampersand');
@@ -107,6 +115,28 @@ function rgbToHex(r: number, g: number, b: number): string {
   }).join('');
 }
 
+// Generate prefix gradient letters
+const formattedPrefixLetters = computed(() => {
+  const text = prefixText.value || 'VIP';
+  const len = text.length;
+  const startRgb = hexToRgb(prefixStartColor.value);
+  const endRgb = hexToRgb(prefixEndColor.value);
+
+  return text.split('').map((char, idx) => {
+    const factor = len > 1 ? idx / (len - 1) : 0;
+    const r = Math.round(startRgb.r + factor * (endRgb.r - startRgb.r));
+    const g = Math.round(startRgb.g + factor * (endRgb.g - startRgb.g));
+    const b = Math.round(startRgb.b + factor * (endRgb.b - startRgb.b));
+    const hex = rgbToHex(r, g, b);
+
+    return {
+      char,
+      hex,
+      cleanHex: hex.replace('#', '')
+    };
+  });
+});
+
 // Generate gradient styled letter array
 const formattedGradientLetters = computed(() => {
   const text = inputText.value || 'CubixWorld';
@@ -129,8 +159,36 @@ const formattedGradientLetters = computed(() => {
   });
 });
 
+// Generated Prefix String Output
+const generatedPrefixOutput = computed(() => {
+  if (!isPrefixEnabled.value || !prefixText.value) return '';
+  const letters = formattedPrefixLetters.value;
+  let pStr = '';
+  
+  if (outputFormat.value === 'hex_amp') {
+    pStr = letters.map(item => `&#${item.cleanHex}&l${item.char}`).join('');
+  } else if (outputFormat.value === 'section') {
+    pStr = letters.map(item => {
+      const h = item.cleanHex.split('').map(c => `§${c}`).join('');
+      return `§x${h}§l${item.char}`;
+    }).join('');
+  } else if (outputFormat.value === 'motd') {
+    pStr = letters.map(item => `{#${item.cleanHex}}&l${item.char}`).join('');
+  } else {
+    pStr = letters.map(item => `&{#${item.cleanHex}}&l${item.char}`).join('');
+  }
+
+  if (prefixStyle.value === 'brackets') {
+    const bColor = prefixBracketColor.value || '#aaaaaa';
+    const bFormat = outputFormat.value === 'hex_amp' ? `&#${bColor.replace('#', '')}` : `&{#${bColor.replace('#', '')}}`;
+    return `${bFormat}[${pStr}${bFormat}] `;
+  }
+  return `${pStr} `;
+});
+
 // Generated String Output depending on output format
 const generatedOutput = computed(() => {
+  let mainTextResult = '';
   if (modeTab.value === 'gradient') {
     const letters = formattedGradientLetters.value;
     let formatPrefix = '';
@@ -141,19 +199,19 @@ const generatedOutput = computed(() => {
 
     if (outputFormat.value === 'hex_amp') {
       // &#RRGGBB format (EssentialsX / Spigot 1.16+)
-      return letters.map(item => `&#${item.cleanHex}${formatPrefix}${item.char}`).join('');
+      mainTextResult = letters.map(item => `&#${item.cleanHex}${formatPrefix}${item.char}`).join('');
     } else if (outputFormat.value === 'section') {
       // §x§R§R§G§G§B§B Bungee/Minecraft Vanilla format
-      return letters.map(item => {
+      mainTextResult = letters.map(item => {
         const h = item.cleanHex.split('').map(c => `§${c}`).join('');
         return `§x${h}${formatPrefix}${item.char}`;
       }).join('');
     } else if (outputFormat.value === 'motd') {
       // JSON / CMI HEX format {#RRGGBB}
-      return letters.map(item => `{#${item.cleanHex}}${formatPrefix}${item.char}`).join('');
+      mainTextResult = letters.map(item => `{#${item.cleanHex}}${formatPrefix}${item.char}`).join('');
     } else {
       // Legacy RGB tag &{#RRGGBB}
-      return letters.map(item => `&{#${item.cleanHex}}${formatPrefix}${item.char}`).join('');
+      mainTextResult = letters.map(item => `&{#${item.cleanHex}}${formatPrefix}${item.char}`).join('');
     }
   } else {
     // Single Color Mode
@@ -165,8 +223,10 @@ const generatedOutput = computed(() => {
     if (isUnderline.value) formatPrefix += outputFormat.value === 'section' ? '§n' : '&n';
     if (isStrikethrough.value) formatPrefix += outputFormat.value === 'section' ? '§m' : '&m';
 
-    return `${code}${formatPrefix}${inputText.value}`;
+    mainTextResult = `${code}${formatPrefix}${inputText.value}`;
   }
+
+  return `${generatedPrefixOutput.value}${mainTextResult}`;
 });
 
 const applyPreset = (preset: { start: string; end: string }) => {
@@ -287,6 +347,70 @@ const copyResult = async () => {
                 <span>S</span>
                 <span>Зачеркнутый (&m)</span>
               </button>
+            </div>
+          </div>
+
+          <!-- Prefix Customizer Block -->
+          <div class="bg-[#121417] border border-[#26292d] rounded-2xl p-4 space-y-3 shadow-md">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-extrabold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                <span class="text-amber-400">👑</span>
+                <span>Настройка Префикса Игрока:</span>
+              </label>
+
+              <!-- Enable/Disable Prefix Checkbox -->
+              <button
+                type="button"
+                @click="isPrefixEnabled = !isPrefixEnabled"
+                :class="['px-2.5 py-1 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5', isPrefixEnabled ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-[#0c0d0e] border-[#26292d] text-slate-400']"
+              >
+                <span>{{ isPrefixEnabled ? '✓ Префикс включен' : '✕ Включить префикс' }}</span>
+              </button>
+            </div>
+
+            <div v-if="isPrefixEnabled" class="space-y-3 pt-1 border-t border-[#26292d]">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-1">
+                  <span class="text-[11px] font-bold text-slate-300">Текст префикса:</span>
+                  <input
+                    type="text"
+                    v-model="prefixText"
+                    placeholder="VIP / PREMIUM / ADMIN"
+                    class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-amber-400 text-xs font-bold text-white rounded-xl px-3 py-2 outline-none"
+                  />
+                </div>
+
+                <div class="space-y-1">
+                  <span class="text-[11px] font-bold text-slate-300">Стиль обрамления:</span>
+                  <select
+                    v-model="prefixStyle"
+                    class="w-full bg-[#0c0d0e] border border-[#26292d] text-xs font-bold text-amber-300 rounded-xl px-3 py-2 outline-none"
+                  >
+                    <option value="brackets">[PREFIX] Скобки</option>
+                    <option value="solid">PREFIX Без скобок</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Prefix Colors -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div class="p-2.5 bg-[#0c0d0e] border border-[#26292d] rounded-xl space-y-1.5">
+                  <span class="text-[11px] font-bold text-slate-300">Цвет градиента префикса:</span>
+                  <div class="flex items-center gap-2">
+                    <input type="color" v-model="prefixStartColor" class="w-7 h-7 rounded border-0 cursor-pointer bg-transparent shrink-0" />
+                    <input type="color" v-model="prefixEndColor" class="w-7 h-7 rounded border-0 cursor-pointer bg-transparent shrink-0" />
+                    <span class="text-[10px] text-slate-400 font-mono">Градиент</span>
+                  </div>
+                </div>
+
+                <div v-if="prefixStyle === 'brackets'" class="p-2.5 bg-[#0c0d0e] border border-[#26292d] rounded-xl space-y-1.5">
+                  <span class="text-[11px] font-bold text-slate-300">Цвет скобок:</span>
+                  <div class="flex items-center gap-2">
+                    <input type="color" v-model="prefixBracketColor" class="w-7 h-7 rounded border-0 cursor-pointer bg-transparent shrink-0" />
+                    <input type="text" v-model="prefixBracketColor" class="w-full bg-[#16181a] border border-[#26292d] text-xs font-mono text-white rounded-lg px-2 py-1 uppercase outline-none" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -465,7 +589,19 @@ const copyResult = async () => {
 
               <!-- Live Player Chat Line -->
               <div class="text-sm leading-relaxed flex items-center flex-wrap gap-1">
-                <span class="text-slate-400 font-bold">&lt;Игрок&gt;:</span>
+                <!-- Prefix Preview -->
+                <template v-if="isPrefixEnabled && prefixText">
+                  <span v-if="prefixStyle === 'brackets'" :style="{ color: prefixBracketColor }" class="font-bold">[</span>
+                  <span
+                    v-for="(item, idx) in formattedPrefixLetters"
+                    :key="'prefix-' + idx"
+                    :style="{ color: item.hex }"
+                    class="font-black"
+                  >{{ item.char }}</span>
+                  <span v-if="prefixStyle === 'brackets'" :style="{ color: prefixBracketColor }" class="font-bold">]</span>
+                </template>
+
+                <span class="text-slate-400 font-bold ml-0.5">&lt;Игрок&gt;:</span>
                 
                 <!-- Gradient Letters -->
                 <template v-if="modeTab === 'gradient'">
