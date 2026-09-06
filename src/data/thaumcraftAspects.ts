@@ -6,6 +6,7 @@ export interface ThaumcraftAspect {
   color: string;
   isPrimal: boolean;
   components?: [string, string];
+  items?: string[];
 }
 
 export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
@@ -16,7 +17,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     nameLat: 'Aer',
     description: 'Первичная стихия воздуха и ветра',
     color: '#ffff7e',
-    isPrimal: true
+    isPrimal: true,
+    items: ['Перо', 'Стрела', 'Cахарный тростник', 'Батут', 'Воздушный шар']
   },
   aqua: {
     id: 'aqua',
@@ -24,7 +26,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     nameLat: 'Aqua',
     description: 'Первичная стихия воды и влаги',
     color: '#00c0ff',
-    isPrimal: true
+    isPrimal: true,
+    items: ['Ведро воды', 'Сырая рыба', 'Кувшинка', 'Снежок', 'Кувшин']
   },
   ignis: {
     id: 'ignis',
@@ -32,7 +35,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     nameLat: 'Ignis',
     description: 'Первичная стихия огня и тепла',
     color: '#ff3c00',
-    isPrimal: true
+    isPrimal: true,
+    items: ['Уголь', 'Факел', 'Огненный стержень (Блейз)', 'Лава', 'Адский камень']
   },
   terra: {
     id: 'terra',
@@ -40,7 +44,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     nameLat: 'Terra',
     description: 'Первичная стихия земли и тверди',
     color: '#56c000',
-    isPrimal: true
+    isPrimal: true,
+    items: ['Bоздух/Земля/Камень', 'Булыжник', 'Грязь', 'Песок', 'Глина']
   },
   ordo: {
     id: 'ordo',
@@ -48,7 +53,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     nameLat: 'Ordo',
     description: 'Первичная стихия порядка и структуры',
     color: '#d5d5d5',
-    isPrimal: true
+    isPrimal: true,
+    items: ['Чистый кварц', 'Полированный камень', 'Стеклянный пузырек', 'Призмарин']
   },
   perditio: {
     id: 'perditio',
@@ -56,7 +62,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     nameLat: 'Perditio',
     description: 'Первичная стихия хаоса и энтропии',
     color: '#404040',
-    isPrimal: true
+    isPrimal: true,
+    items: ['Порох', 'Динамит (TNT)', 'Гнилая плоть', 'Кость', 'Разбитый аспект']
   },
 
   // --- TIER 1 COMPOUND ASPECTS ---
@@ -67,7 +74,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Мороз, лед и холод',
     color: '#e0ffff',
     isPrimal: false,
-    components: ['ignis', 'perditio']
+    components: ['ignis', 'perditio'],
+    items: ['Плотный лёд', 'Снежный блок', 'Снежок', 'Сосулька']
   },
   lux: {
     id: 'lux',
@@ -76,7 +84,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Свечение и яркость',
     color: '#fff600',
     isPrimal: false,
-    components: ['aer', 'ignis']
+    components: ['aer', 'ignis'],
+    items: ['Факел', 'Светящийся камень (Glowstone)', 'Светильник Джека', 'Лампа']
   },
   motus: {
     id: 'motus',
@@ -85,7 +94,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Кинетическая энергия и движение',
     color: '#cdcdcd',
     isPrimal: false,
-    components: ['aer', 'ordo']
+    components: ['aer', 'ordo'],
+    items: ['Ворвань', 'Поршень', 'Рельсы', 'Лодка', 'Винт']
   },
   permutatio: {
     id: 'permutatio',
@@ -94,7 +104,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Превращение и обмен энергией',
     color: '#578357',
     isPrimal: false,
-    components: ['motus', 'aqua']
+    components: ['motus', 'aqua'],
+    items: ['Медный слиток', 'Воронка', 'Сундук', 'Семена']
   },
   potentia: {
     id: 'potentia',
@@ -103,7 +114,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Мощность и чистая сила',
     color: '#c000c0',
     isPrimal: false,
-    components: ['ordo', 'ignis']
+    components: ['ordo', 'ignis'],
+    items: ['Редстоун пыль', 'Огненный шар', 'Уголь', 'Лазурит']
   },
   tempestas: {
     id: 'tempestas',
@@ -112,7 +124,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Буря, гроза и явления природы',
     color: '#ffffff',
     isPrimal: false,
-    components: ['aer', 'gelum']
+    components: ['aer', 'gelum'],
+    items: ['Снежный шар', 'Молниеотвод', 'Туча']
   },
   vacuos: {
     id: 'vacuos',
@@ -121,7 +134,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Вакуум и ничто',
     color: '#888888',
     isPrimal: false,
-    components: ['aer', 'perditio']
+    components: ['aer', 'perditio'],
+    items: ['Пустая колба', 'Мяч', 'Ведро (пустое)', 'Миска']
   },
   venenum: {
     id: 'venenum',
@@ -130,7 +144,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Токсины и отравление',
     color: '#89ce00',
     isPrimal: false,
-    components: ['aqua', 'perditio']
+    components: ['aqua', 'perditio'],
+    items: ['Паучий глаз', 'Зелeварка', 'Ядовитый гриб', 'Отравленная стрела']
   },
   victus: {
     id: 'victus',
@@ -139,7 +154,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Жизненная сила и биология',
     color: '#de0005',
     isPrimal: false,
-    components: ['aqua', 'terra']
+    components: ['aqua', 'terra'],
+    items: ['Яйцо', 'Жареная говядина', 'Яблоко', 'Семена пшеницы']
   },
   vitreus: {
     id: 'vitreus',
@@ -148,7 +164,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Прозрачность и кристаллы',
     color: '#80ffff',
     isPrimal: false,
-    components: ['terra', 'ordo']
+    components: ['terra', 'ordo'],
+    items: ['Стекло', 'Кварц', 'Алмаз', 'Стеклянная панель', 'Магический кристалл']
   },
 
   // --- TIER 2+ COMPOUND ASPECTS ---
@@ -159,7 +176,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Животный мир и фауна',
     color: '#996633',
     isPrimal: false,
-    components: ['motus', 'victus']
+    components: ['motus', 'victus'],
+    items: ['Шерсть', 'Кожа', 'Перо', 'Сырое мясо', 'Паучий шелк']
   },
   cognitio: {
     id: 'cognitio',
@@ -168,7 +186,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Мышление и знание',
     color: '#ffc080',
     isPrimal: false,
-    components: ['ignis', 'potentia']
+    components: ['ignis', 'potentia'],
+    items: ['Книга', 'Бумага', 'Стол зачарования', 'Мозг зомби']
   },
   corpus: {
     id: 'corpus',
@@ -177,7 +196,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Физическая плоть и тело',
     color: '#ee1100',
     isPrimal: false,
-    components: ['mortuus', 'victus']
+    components: ['mortuus', 'victus'],
+    items: ['Сырая свинина', 'Гнилая плоть', 'Сырая говядина', 'Паучий глаз']
   },
   exanimis: {
     id: 'exanimis',
@@ -186,7 +206,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Восставшие мертвецы',
     color: '#3a4000',
     isPrimal: false,
-    components: ['motus', 'mortuus']
+    components: ['motus', 'mortuus'],
+    items: ['Гнилая плоть', 'Кость черепа', 'Череп скелета-иссушителя']
   },
   herba: {
     id: 'herba',
@@ -195,7 +216,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Флора и трава',
     color: '#01ac00',
     isPrimal: false,
-    components: ['victus', 'terra']
+    components: ['victus', 'terra'],
+    items: ['Семена', 'Цветок', 'Листва', 'Трава', 'Кактус']
   },
   instrumentum: {
     id: 'instrumentum',
@@ -204,7 +226,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Орудия труда и механизмы',
     color: '#4682b4',
     isPrimal: false,
-    components: ['humanus', 'ordo']
+    components: ['humanus', 'ordo'],
+    items: ['Железная кирка', 'Меч', 'Топор', 'Лопата', 'Ножницы']
   },
   iter: {
     id: 'iter',
@@ -213,7 +236,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Путешествие и перемещение',
     color: '#e0e000',
     isPrimal: false,
-    components: ['motus', 'victus']
+    components: ['motus', 'victus'],
+    items: ['Жемчуг Эндера', 'Ботинки', 'Седло', 'Компас', 'Вагонетка']
   },
   limus: {
     id: 'limus',
@@ -222,7 +246,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Вязкость и болотная слизь',
     color: '#01ffa8',
     isPrimal: false,
-    components: ['victus', 'aqua']
+    components: ['victus', 'aqua'],
+    items: ['Сгусток слизи', 'Липкий поршень', 'Слаймовый блок']
   },
   metallum: {
     id: 'metallum',
@@ -231,7 +256,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Руды и металлические сплавы',
     color: '#b5b5b5',
     isPrimal: false,
-    components: ['vitreus', 'ordo']
+    components: ['vitreus', 'ordo'],
+    items: ['Железный слиток', 'Золотой слиток', 'Железная руда', 'Ведро']
   },
   mortuus: {
     id: 'mortuus',
@@ -240,7 +266,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Увядание и уход жизни',
     color: '#880000',
     isPrimal: false,
-    components: ['victus', 'perditio']
+    components: ['victus', 'perditio'],
+    items: ['Кость', 'Костная мука', 'Гнилая плоть', 'Череп']
   },
   praecantatio: {
     id: 'praecantatio',
@@ -249,7 +276,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Чистое колдовство и чародейство',
     color: '#cf00ff',
     isPrimal: false,
-    components: ['vacuos', 'potentia']
+    components: ['vacuos', 'potentia'],
+    items: ['Осколок аспекта', 'Великое дерево', 'Магический кристал', 'Пузырек опыта']
   },
   sano: {
     id: 'sano',
@@ -258,7 +286,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Лечение и восстановление',
     color: '#ff9999',
     isPrimal: false,
-    components: ['victus', 'ordo']
+    components: ['victus', 'ordo'],
+    items: ['Зелье лечения', 'Сверкающий арбуз', 'Золотое яблоко', 'Слеза Гаста']
   },
   sensus: {
     id: 'sensus',
@@ -267,7 +296,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Восприятие и зрение',
     color: '#c0ffc0',
     isPrimal: false,
-    components: ['aer', 'lux']
+    components: ['aer', 'lux'],
+    items: ['Светящаяся пыль', 'Око Эндера', 'Незер-кварц', 'Рамка']
   },
   tenebrae: {
     id: 'tenebrae',
@@ -276,7 +306,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Мрак и отсутствие света',
     color: '#222222',
     isPrimal: false,
-    components: ['lux', 'vacuos']
+    components: ['lux', 'vacuos'],
+    items: ['Чернильный мешок', 'Обсидиан', 'Глаз Эндермена']
   },
   vinculum: {
     id: 'vinculum',
@@ -285,7 +316,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Удержание и оцепенение',
     color: '#9a8070',
     isPrimal: false,
-    components: ['motus', 'perditio']
+    components: ['motus', 'perditio'],
+    items: ['Паутина', 'Забор', 'Сундук-ловушка', 'Нить']
   },
   volatus: {
     id: 'volatus',
@@ -294,7 +326,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Парение в воздухе',
     color: '#e7e7e7',
     isPrimal: false,
-    components: ['aer', 'motus']
+    components: ['aer', 'motus'],
+    items: ['Перо', 'Стрела', 'Зелье прыгучести']
   },
   alienis: {
     id: 'alienis',
@@ -303,7 +336,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Иноизмерное и неизвестное',
     color: '#808080',
     isPrimal: false,
-    components: ['vacuos', 'tenebrae']
+    components: ['vacuos', 'tenebrae'],
+    items: ['Жемчуг Эндера', 'Эндер-няк', 'Око Эндера']
   },
   arbor: {
     id: 'arbor',
@@ -312,7 +346,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Древесина и стволы',
     color: '#875000',
     isPrimal: false,
-    components: ['aer', 'herba']
+    components: ['aer', 'herba'],
+    items: ['Дубовая древесина', 'Доски', 'Саженец', 'Палка']
   },
   auram: {
     id: 'auram',
@@ -321,7 +356,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Эфирные магические поля',
     color: '#ffc0ff',
     isPrimal: false,
-    components: ['praecantatio', 'aer']
+    components: ['praecantatio', 'aer'],
+    items: ['Узел ауры в банке', 'Серебряное дерево', 'Эфирная эссенция']
   },
   fames: {
     id: 'fames',
@@ -330,7 +366,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Ненасытность и истощение',
     color: '#9a0303',
     isPrimal: false,
-    components: ['victus', 'vacuos']
+    components: ['victus', 'vacuos'],
+    items: ['Гнилая плоть', 'Зачарованное яблоко', 'Грибное рагу']
   },
   humanus: {
     id: 'humanus',
@@ -339,7 +376,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Человеческая раса и интеллект',
     color: '#ffd7ba',
     isPrimal: false,
-    components: ['bestia', 'cognitio']
+    components: ['bestia', 'cognitio'],
+    items: ['Гнилая плоть', 'Книга', 'Голова игрока', 'Изумруд']
   },
   lucrum: {
     id: 'lucrum',
@@ -348,7 +386,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Накопительство и драгоценности',
     color: '#e6c619',
     isPrimal: false,
-    components: ['humanus', 'fames']
+    components: ['humanus', 'fames'],
+    items: ['Золотой слиток', 'Алмаз', 'Изумруд', 'Монета']
   },
   machina: {
     id: 'machina',
@@ -357,7 +396,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Устройства и шестеренки',
     color: '#8080a0',
     isPrimal: false,
-    components: ['motus', 'instrumentum']
+    components: ['motus', 'instrumentum'],
+    items: ['Редстоун повторитель', 'Раздаччик', 'Поршень', 'Замыкатель']
   },
   messis: {
     id: 'messis',
@@ -366,7 +406,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Сбор плодов и сельское хозяйство',
     color: '#e1c45a',
     isPrimal: false,
-    components: ['herba', 'humanus']
+    components: ['herba', 'humanus'],
+    items: ['Пшеница', 'Хлеб', 'Морковь', 'Картофель', 'Арбуз']
   },
   pannus: {
     id: 'pannus',
@@ -375,7 +416,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Материя и текстиль',
     color: '#eec590',
     isPrimal: false,
-    components: ['instrumentum', 'arbor']
+    components: ['instrumentum', 'arbor'],
+    items: ['Шерсть', 'Нить', 'Ковер', 'Кожаная куртка']
   },
   perfodio: {
     id: 'perfodio',
@@ -384,7 +426,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Добыча руд и бурение',
     color: '#d2b48c',
     isPrimal: false,
-    components: ['humanus', 'ordo']
+    components: ['humanus', 'ordo'],
+    items: ['Железная кирка', 'Кирка', 'Зачарованная кирка', 'Булыжник']
   },
   telum: {
     id: 'telum',
@@ -393,7 +436,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Мечи, луки и боевые средства',
     color: '#c0392b',
     isPrimal: false,
-    components: ['instrumentum', 'ignis']
+    components: ['instrumentum', 'ignis'],
+    items: ['Меч', 'Лук', 'Стрела', 'Трезубец', 'Динамит (TNT)']
   },
   tutamen: {
     id: 'tutamen',
@@ -402,7 +446,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Защита и доспехи',
     color: '#008080',
     isPrimal: false,
-    components: ['instrumentum', 'terra']
+    components: ['instrumentum', 'terra'],
+    items: ['Железный нагрудник', 'Щит', 'Шлем', 'Кожаный шлем']
   },
   spiritus: {
     id: 'spiritus',
@@ -411,7 +456,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Бесплотная душа',
     color: '#e0e0e0',
     isPrimal: false,
-    components: ['victus', 'mortuus']
+    components: ['victus', 'mortuus'],
+    items: ['Песок душ', 'Слеза Гаста', 'Флакон душ']
   },
   fabrico: {
     id: 'fabrico',
@@ -420,7 +466,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Создание вещей и сборка',
     color: '#808000',
     isPrimal: false,
-    components: ['humanus', 'instrumentum']
+    components: ['humanus', 'instrumentum'],
+    items: ['Верстак', 'Верстак тауматурга', 'Сундук']
   },
 
   // --- ADDON & SIN ASPECTS (FORBIDDEN MAGIC / THAUMIC HORIZONS) ---
@@ -431,7 +478,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Грех гордости и тщеславия',
     color: '#9a32cd',
     isPrimal: false,
-    components: ['volatus', 'vacuos']
+    components: ['volatus', 'vacuos'],
+    items: ['Корона', 'Перо элиты', 'Зачарованное золотое яблоко']
   },
   invidia: {
     id: 'invidia',
@@ -440,7 +488,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Грех зависти и ревности',
     color: '#006400',
     isPrimal: false,
-    components: ['sensus', 'fames']
+    components: ['sensus', 'fames'],
+    items: ['Изумруд', 'Око Эндера', 'Зелье невидимости']
   },
   ira: {
     id: 'ira',
@@ -449,7 +498,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Грех ярости и злобы',
     color: '#b22222',
     isPrimal: false,
-    components: ['telum', 'ignis']
+    components: ['telum', 'ignis'],
+    items: ['Огненный меч', 'Порох', 'Огненный шар']
   },
   desidia: {
     id: 'desidia',
@@ -458,7 +508,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Грех лени и апатии',
     color: '#696969',
     isPrimal: false,
-    components: ['vinculum', 'motus']
+    components: ['vinculum', 'motus'],
+    items: ['Кровать', 'Паутина', 'Часы']
   },
   gula: {
     id: 'gula',
@@ -467,7 +518,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Грех обжорства',
     color: '#8b4513',
     isPrimal: false,
-    components: ['fames', 'victus']
+    components: ['fames', 'victus'],
+    items: ['Запеченный свиной окорок', 'Торт', 'Пирог', 'Грибной суп']
   },
   luxuria: {
     id: 'luxuria',
@@ -476,7 +528,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Грех вожделения',
     color: '#ff69b4',
     isPrimal: false,
-    components: ['corpus', 'victus']
+    components: ['corpus', 'victus'],
+    items: ['Сердце моря', 'Роза', 'Зелье регенерации']
   },
   infernus: {
     id: 'infernus',
@@ -485,7 +538,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Пламя преисподней',
     color: '#ff4500',
     isPrimal: false,
-    components: ['ignis', 'praecantatio']
+    components: ['ignis', 'praecantatio'],
+    items: ['Адский камень', 'Адский нарост', 'Лава', 'Стержень Ифрита']
   },
   terminus: {
     id: 'terminus',
@@ -494,7 +548,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Завершение и предел бытия',
     color: '#191970',
     isPrimal: false,
-    components: ['lucrum', 'alienis']
+    components: ['lucrum', 'alienis'],
+    items: ['Звезда Незера', 'Яйцо Дракона', 'Кристалл Края']
   },
   vitium: {
     id: 'vitium',
@@ -503,7 +558,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Теневая порча и искажение',
     color: '#800080',
     isPrimal: false,
-    components: ['praecantatio', 'perditio']
+    components: ['praecantatio', 'perditio'],
+    items: ['Зараженная слизь', 'Зараженный блок', 'Вредоносный кристалл']
   },
   tempus: {
     id: 'tempus',
@@ -512,7 +568,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Течение времени и эпохи',
     color: '#b8860b',
     isPrimal: false,
-    components: ['vacuos', 'ordo']
+    components: ['vacuos', 'ordo'],
+    items: ['Часы', 'Песочные часы', 'Зачарованные часы']
   },
   meto: {
     id: 'meto',
@@ -521,7 +578,8 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     description: 'Сбор урожая и серп',
     color: '#ee82ee',
     isPrimal: false,
-    components: ['messis', 'instrumentum']
+    components: ['messis', 'instrumentum'],
+    items: ['Мотыга', 'Зачарованная мотыга', 'Серп']
   }
 };
 

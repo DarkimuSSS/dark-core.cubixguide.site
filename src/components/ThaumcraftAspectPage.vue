@@ -22,6 +22,8 @@ const targetSearchQuery = ref('');
 
 const isBridgeCalculated = ref(false);
 const isGuideHelpOpen = ref(false);
+const calculatedBridge = ref<string[]>([]);
+const copySuccess = ref(false);
 
 const allAspectsList = computed(() => Object.values(THAUMCRAFT_ASPECTS));
 
@@ -63,6 +65,22 @@ const calculateBridge = () => {
   if (!startAspectId.value || !targetAspectId.value) return;
   calculatedBridge.value = findShortestAspectBridge(startAspectId.value, targetAspectId.value);
   isBridgeCalculated.value = true;
+};
+
+const copyAspectChain = async () => {
+  if (!calculatedBridge.value || calculatedBridge.value.length === 0) return;
+  const textChain = calculatedBridge.value
+    .map(id => THAUMCRAFT_ASPECTS[id] ? `${THAUMCRAFT_ASPECTS[id].nameRu} (${THAUMCRAFT_ASPECTS[id].nameLat})` : id)
+    .join(' ➔ ');
+  try {
+    await navigator.clipboard.writeText(textChain);
+    copySuccess.value = true;
+    setTimeout(() => {
+      copySuccess.value = false;
+    }, 2500);
+  } catch (err) {
+    console.error('Failed to copy aspect chain:', err);
+  }
 };
 
 const getAspect = (id: string): ThaumcraftAspect | undefined => THAUMCRAFT_ASPECTS[id];
@@ -225,8 +243,16 @@ const selectAspect = (asp: ThaumcraftAspect) => {
           </div>
 
           <div v-else class="space-y-2">
-            <div class="flex items-center justify-between text-xs text-purple-300 font-bold">
+            <div class="flex items-center justify-between text-xs text-purple-300 font-bold flex-wrap gap-2">
               <span>Выкладывайте эти аспекты подряд в клетки на столе (Шагов: {{ calculatedBridge.length - 1 }}):</span>
+              <button
+                type="button"
+                @click="copyAspectChain"
+                class="px-2.5 py-1 rounded-lg bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/40 text-purple-200 text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:scale-102 active:scale-98"
+              >
+                <IconRenderer :name="copySuccess ? 'Check' : 'Copy'" size="13" :class="copySuccess ? 'text-emerald-400' : 'text-purple-300'" />
+                <span>{{ copySuccess ? 'Скопировано в буфер!' : 'Скопировать цепочку' }}</span>
+              </button>
             </div>
             
             <div class="flex flex-wrap items-center gap-2 p-3 bg-[#0c0d0e] border border-purple-500/30 rounded-2xl overflow-x-auto">
@@ -496,6 +522,28 @@ const selectAspect = (asp: ThaumcraftAspect) => {
                     </div>
                     <span class="font-extrabold text-amber-400 text-xs">x{{ count }}</span>
                   </div>
+                </div>
+              </div>
+
+              <!-- Interactive Item Scanner (Где взять аспект / Растопка) -->
+              <div class="pt-2 border-t border-[#26292d] space-y-2">
+                <h4 class="text-[10px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <IconRenderer name="Search" size="12" class="text-emerald-400" />
+                  <span>Интерактивный Сканер: Где взять аспект?</span>
+                </h4>
+
+                <div v-if="selectedAspect.items && selectedAspect.items.length > 0" class="flex flex-wrap gap-1.5">
+                  <span
+                    v-for="(item, idx) in selectedAspect.items"
+                    :key="item + idx"
+                    class="px-2.5 py-1 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-200 text-[11px] font-bold flex items-center gap-1 shadow-xs hover:border-emerald-400 transition-colors"
+                  >
+                    <span class="text-[9px]">📦</span>
+                    <span>{{ item }}</span>
+                  </span>
+                </div>
+                <div v-else class="text-[11px] text-slate-400 italic bg-[#16181a] p-2 rounded-xl border border-[#26292d]">
+                  Содержится в редких магических артефактах или получается скрещиванием аспектов на столе.
                 </div>
               </div>
             </div>
