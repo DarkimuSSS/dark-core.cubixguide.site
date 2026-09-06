@@ -283,6 +283,8 @@ const updateUrlRoute = () => {
     params.set('tab', 'team');
   } else if (mode.value === 'thaumcraft') {
     params.set('tab', 'thaumcraft');
+  } else if (mode.value === 'minecraft_color') {
+    params.set('tab', 'colors');
   } else if (mode.value === 'rules') {
     if (initialRulesTab.value === 'server') {
       params.set('tab', 'server_rules');
@@ -336,6 +338,8 @@ const syncFromUrlPath = () => {
     mode.value = 'team';
   } else if (tab === 'thaumcraft' || tab === 'Таумкрафт' || tab === 'Аспекты') {
     mode.value = 'thaumcraft';
+  } else if (tab === 'colors' || tab === 'minecraft_color' || tab === 'Цвета' || tab === 'Градиент') {
+    mode.value = 'minecraft_color';
   } else if (tab === 'wiki' || tab === 'reader' || tab === 'Вики') {
     mode.value = 'reader';
   } else if (tab === 'editor' || tab === 'Конструктор') {
