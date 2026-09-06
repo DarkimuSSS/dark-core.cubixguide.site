@@ -430,6 +430,107 @@ export const THAUMCRAFT_ASPECTS: Record<string, ThaumcraftAspect> = {
     color: '#808000',
     isPrimal: false,
     components: ['humanus', 'instrumentum']
+  },
+
+  // --- ADDON & SIN ASPECTS (FORBIDDEN MAGIC / THAUMIC HORIZONS) ---
+  superbia: {
+    id: 'superbia',
+    nameRu: 'Гордыня',
+    nameLat: 'Superbia',
+    description: 'Грех гордости и тщеславия',
+    color: '#9a32cd',
+    isPrimal: false,
+    components: ['volatus', 'vacuos']
+  },
+  invidia: {
+    id: 'invidia',
+    nameRu: 'Зависть',
+    nameLat: 'Invidia',
+    description: 'Грех зависти и ревности',
+    color: '#006400',
+    isPrimal: false,
+    components: ['sensus', 'fames']
+  },
+  ira: {
+    id: 'ira',
+    nameRu: 'Гнев',
+    nameLat: 'Ira',
+    description: 'Грех ярости и злобы',
+    color: '#b22222',
+    isPrimal: false,
+    components: ['telum', 'ignis']
+  },
+  desidia: {
+    id: 'desidia',
+    nameRu: 'Лень / Праздность',
+    nameLat: 'Desidia',
+    description: 'Грех лени и апатии',
+    color: '#696969',
+    isPrimal: false,
+    components: ['vinculum', 'motus']
+  },
+  gula: {
+    id: 'gula',
+    nameRu: 'Чревоугодие',
+    nameLat: 'Gula',
+    description: 'Грех обжорства',
+    color: '#8b4513',
+    isPrimal: false,
+    components: ['fames', 'victus']
+  },
+  luxuria: {
+    id: 'luxuria',
+    nameRu: 'Похоть',
+    nameLat: 'Luxuria',
+    description: 'Грех вожделения',
+    color: '#ff69b4',
+    isPrimal: false,
+    components: ['corpus', 'victus']
+  },
+  infernus: {
+    id: 'infernus',
+    nameRu: 'Ад / Преисподняя',
+    nameLat: 'Infernus',
+    description: 'Пламя преисподней',
+    color: '#ff4500',
+    isPrimal: false,
+    components: ['ignis', 'praecantatio']
+  },
+  terminus: {
+    id: 'terminus',
+    nameRu: 'Конец / Предел',
+    nameLat: 'Terminus',
+    description: 'Завершение и предел бытия',
+    color: '#191970',
+    isPrimal: false,
+    components: ['lucrum', 'alienis']
+  },
+  vitium: {
+    id: 'vitium',
+    nameRu: 'Порча / Скверна',
+    nameLat: 'Vitium',
+    description: 'Теневая порча и искажение',
+    color: '#800080',
+    isPrimal: false,
+    components: ['praecantatio', 'perditio']
+  },
+  tempus: {
+    id: 'tempus',
+    nameRu: 'Время',
+    nameLat: 'Tempus',
+    description: 'Течение времени и эпохи',
+    color: '#b8860b',
+    isPrimal: false,
+    components: ['vacuos', 'ordo']
+  },
+  meto: {
+    id: 'meto',
+    nameRu: 'Жатва',
+    nameLat: 'Meto',
+    description: 'Сбор урожая и серп',
+    color: '#ee82ee',
+    isPrimal: false,
+    components: ['messis', 'instrumentum']
   }
 };
 
