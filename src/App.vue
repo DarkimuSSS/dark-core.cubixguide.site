@@ -19,6 +19,7 @@ const TelemetryPage = defineAsyncComponent(() => import('./components/TelemetryP
 const RulesModal = defineAsyncComponent(() => import('./components/RulesModal.vue'));
 const ThaumcraftAspectPage = defineAsyncComponent(() => import('./components/ThaumcraftAspectPage.vue'));
 const MinecraftColorGeneratorPage = defineAsyncComponent(() => import('./components/MinecraftColorGeneratorPage.vue'));
+const ApplyAuthorPage = defineAsyncComponent(() => import('./components/ApplyAuthorPage.vue'));
 
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
@@ -35,8 +36,8 @@ const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
 const activeGuide = ref<Guide | null>(null);
 
-// MODE: 'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color'
-const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color'>('home');
+// MODE: 'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color' | 'apply'
+const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color' | 'apply'>('home');
 const isLoading = ref<boolean>(true);
 
 const handleExportData = () => {
@@ -1427,6 +1428,22 @@ const handleViewAllAuthorGuides = (username: string) => {
           </button>
         </div>
 
+        <!-- Apply Author / Support Button -->
+        <button
+          type="button"
+          @click="mode = 'apply'"
+          :class="[
+            'px-2.5 sm:px-3 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all duration-300 shadow-md cursor-pointer shrink-0',
+            mode === 'apply' 
+              ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 text-white shadow-cyan-950/60 ring-2 ring-cyan-500/50' 
+              : 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+          ]"
+          title="Стать Автором или Написать в Поддержку"
+        >
+          <IconRenderer name="UserPlus" size="15" />
+          <span class="hidden md:inline">Стать автором</span>
+        </button>
+
         <!-- Editor Mode Switcher Button -->
         <button
           v-if="isAuthenticated"
@@ -1751,6 +1768,13 @@ const handleViewAllAuthorGuides = (username: string) => {
           <div v-else-if="mode === 'minecraft_color'">
             <MinecraftColorGeneratorPage
               @back="mode = 'home'"
+            />
+          </div>
+
+          <!-- APPLY FOR AUTHOR & SUPPORT PAGE -->
+          <div v-else-if="mode === 'apply'">
+            <ApplyAuthorPage
+              @navigate="(m) => mode = m as any"
             />
           </div>
 

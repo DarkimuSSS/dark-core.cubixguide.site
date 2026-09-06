@@ -7,9 +7,13 @@ import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/g
 import { signJwt, verifyJwt } from './jwt';
 import { authRateLimiter, mutationRateLimiter, globalApiRateLimiter } from './rateLimiter';
 import { LoginSchema, CubixLoginSchema, ChangePasswordSchema, SaveGuideSchema, CreateCommentSchema, CommentReactionSchema, UpdateProfileSchema, validateBody } from './schemas';
+import { initTelegramBot, sendApplicationToAdmin, sendSupportTicketToAdmin } from './telegramBot';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Init Telegram Bot Module
+initTelegramBot();
 
 // Security headers middleware
 app.use((_req, res, next) => {
@@ -22,6 +26,44 @@ app.use((_req, res, next) => {
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use('/api', globalApiRateLimiter);
+
+// API Endpoints for Author Applications & Support Tickets
+app.post('/api/apply-author', mutationRateLimiter, async (req, res) => {
+  try {
+    const { username, server, telegramTag, experience, portfolio, chatId } = req.body;
+    if (!username || !server || !experience) {
+      return res.status(400).json({ error: 'Заполните обязательные поля заявки' });
+    }
+    await sendApplicationToAdmin({
+      username,
+      server,
+      experience,
+      portfolio: portfolio || 'Нет',
+      telegramTag: telegramTag || 'Не указан',
+      chatId: chatId || 'web'
+    });
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/support-ticket', mutationRateLimiter, async (req, res) => {
+  try {
+    const { contact, message, pageUrl } = req.body;
+    if (!contact || !message) {
+      return res.status(400).json({ error: 'Укажите контакт и текст обращения' });
+    }
+    await sendSupportTicketToAdmin({
+      contact,
+      message,
+      pageUrl
+    });
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Helper to extract authenticated user from Bearer JWT token
 function getAuthUser(req: express.Request): any | null {
