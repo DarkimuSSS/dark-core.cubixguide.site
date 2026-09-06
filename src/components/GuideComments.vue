@@ -278,13 +278,6 @@ const handleDeleteComment = async (commentId: string) => {
     console.error('Ошибка удаления комментария:', err);
   }
 };
-    if (res.ok) {
-      await fetchComments(true);
-    }
-  } catch (err) {
-    console.error('Ошибка удаления комментария:', err);
-  }
-};
 
 const formatDate = (dateStr: string) => {
   try {
