@@ -1729,6 +1729,7 @@ const handleViewAllAuthorGuides = (username: string) => {
           <div v-else-if="mode === 'thaumcraft'">
             <ThaumcraftAspectPage
               @back="mode = 'home'"
+              @open-guide="(id) => { selectGuide(id); mode = 'reader'; }"
             />
           </div>
 

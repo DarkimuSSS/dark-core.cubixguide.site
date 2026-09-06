@@ -5,6 +5,7 @@ import { THAUMCRAFT_ASPECTS, findShortestAspectBridge, getAspectSynthesisSteps, 
 
 const emit = defineEmits<{
   (e: 'back'): void;
+  (e: 'open-guide', guideId: string): void;
 }>();
 
 const searchQuery = ref('');
@@ -91,10 +92,10 @@ const selectAspect = (asp: ThaumcraftAspect) => {
           </div>
           <button
             type="button"
-            @click="isGuideHelpOpen = true"
-            class="px-2.5 py-1 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+            @click="emit('open-guide', 'guide_1788713578258')"
+            class="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm hover:scale-102"
           >
-            <IconRenderer name="BookOpen" size="13" />
+            <IconRenderer name="BookOpen" size="14" />
             <span>Как связывать аспекты? (Гайд)</span>
           </button>
         </div>
