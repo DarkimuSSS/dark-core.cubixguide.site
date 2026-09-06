@@ -43,7 +43,19 @@ const GRADIENT_PRESETS = [
   { name: '💎 Зачарованный Алмаз', start: '#00d2ff', end: '#0033ff' },
   { name: '🌸 Закат Сакуры', start: '#ff007f', end: '#ffaaee' },
   { name: '⚡ Электрический Шторм', start: '#ffee00', end: '#ff00ff' },
+  { name: '🔮 Астральный Рубин', start: '#e6005c', end: '#330066' },
+  { name: '🍋 Сочный Лимон', start: '#ffeb3b', end: '#8bc34a' },
+  { name: '🧊 Арктический Лёд', start: '#e0f7fa', end: '#00838f' }
 ];
+
+// Quick Color Swatches Palette
+const QUICK_PALETTE = [
+  '#FF5555', '#FFaa00', '#FFFF55', '#55FF55', '#55FFFF', '#5555FF', '#FF55FF', '#FFFFFF',
+  '#AA0000', '#FF4500', '#FF8C00', '#00AA00', '#00AAAA', '#0000AA', '#AA00AA', '#AAAAAA',
+  '#ff007f', '#9900ff', '#00ffcc', '#ffea00', '#ff0055', '#7000ff', '#00ff88', '#555555'
+];
+
+const activePaletteTarget = ref<'start' | 'end'>('start');
 
 // State
 const modeTab = ref<'gradient' | 'single' | 'sign'>('gradient');
@@ -340,6 +352,45 @@ const copyResult = async () => {
                     class="w-full bg-[#16181a] border border-[#26292d] text-xs font-mono text-white rounded-lg px-2.5 py-1.5 uppercase outline-none focus:border-emerald-400"
                   />
                 </div>
+              </div>
+            </div>
+
+            <!-- Quick Color Palette Swatches -->
+            <div class="space-y-2 pt-1 border-t border-[#26292d]">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-slate-300">Быстрая палитра цветов:</span>
+                <div class="flex items-center gap-1.5 bg-[#0c0d0e] p-1 rounded-lg border border-[#26292d] text-[10px] font-bold">
+                  <button
+                    type="button"
+                    @click="activePaletteTarget = 'start'"
+                    :class="['px-2 py-0.5 rounded transition-all cursor-pointer', activePaletteTarget === 'start' ? 'bg-emerald-600 text-white font-extrabold' : 'text-slate-400 hover:text-white']"
+                  >
+                    В Начальный
+                  </button>
+                  <button
+                    type="button"
+                    @click="activePaletteTarget = 'end'"
+                    :class="['px-2 py-0.5 rounded transition-all cursor-pointer', activePaletteTarget === 'end' ? 'bg-emerald-600 text-white font-extrabold' : 'text-slate-400 hover:text-white']"
+                  >
+                    В Конечный
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-1.5 p-2 bg-[#0c0d0e] border border-[#26292d] rounded-xl justify-between">
+                <button
+                  v-for="colorHex in QUICK_PALETTE"
+                  :key="colorHex"
+                  type="button"
+                  @click="activePaletteTarget === 'start' ? startColor = colorHex : endColor = colorHex"
+                  class="w-6 h-6 rounded-lg border border-white/20 hover:scale-125 transition-transform cursor-pointer shadow-xs relative group/swatch"
+                  :style="{ backgroundColor: colorHex }"
+                  :title="'Применить ' + colorHex"
+                >
+                  <span class="absolute -top-7 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] font-mono px-1.5 py-0.5 rounded opacity-0 group-hover/swatch:opacity-100 transition-opacity pointer-events-none z-20">
+                    {{ colorHex }}
+                  </span>
+                </button>
               </div>
             </div>
 
