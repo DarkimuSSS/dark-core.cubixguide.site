@@ -18,6 +18,7 @@ const AdminPanel = defineAsyncComponent(() => import('./components/AdminPanel.vu
 const TelemetryPage = defineAsyncComponent(() => import('./components/TelemetryPage.vue'));
 const RulesModal = defineAsyncComponent(() => import('./components/RulesModal.vue'));
 import ThaumcraftAspectPage from './components/ThaumcraftAspectPage.vue';
+import MinecraftColorGeneratorPage from './components/MinecraftColorGeneratorPage.vue';
 
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
@@ -34,8 +35,8 @@ const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
 const activeGuide = ref<Guide | null>(null);
 
-// MODE: 'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft'
-const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft'>('home');
+// MODE: 'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color'
+const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color'>('home');
 const isLoading = ref<boolean>(true);
 
 const handleExportData = () => {
@@ -1231,6 +1232,19 @@ const handleViewAllAuthorGuides = (username: string) => {
                       <div class="text-[9.5px] text-dark-muted truncate">Калькулятор и древо</div>
                     </div>
                   </button>
+
+                  <button
+                    @click="mode = 'minecraft_color'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center gap-2.5 cursor-pointer group', mode === 'minecraft_color' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300 shadow-lg shadow-emerald-950/30' : 'bg-[#090a0c]/80 border-[#262a30] text-slate-300 hover:border-emerald-500/40 hover:bg-[#15181e]']"
+                  >
+                    <div class="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform shrink-0">
+                      <IconRenderer name="Palette" size="16" />
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold text-emerald-300 truncate">Цветной Текст MC</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Градиенты и ники</div>
+                    </div>
+                  </button>
                 </div>
               </div>
 
@@ -1730,6 +1744,13 @@ const handleViewAllAuthorGuides = (username: string) => {
             <ThaumcraftAspectPage
               @back="mode = 'home'"
               @open-guide="(id) => { selectGuide(id); mode = 'reader'; }"
+            />
+          </div>
+
+          <!-- MINECRAFT COLOR & GRADIENT TEXT GENERATOR PAGE -->
+          <div v-else-if="mode === 'minecraft_color'">
+            <MinecraftColorGeneratorPage
+              @back="mode = 'home'"
             />
           </div>
 
