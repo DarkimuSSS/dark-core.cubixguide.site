@@ -17,7 +17,7 @@ const AuthorDashboardModal = defineAsyncComponent(() => import('./components/Aut
 const AdminPanel = defineAsyncComponent(() => import('./components/AdminPanel.vue'));
 const TelemetryPage = defineAsyncComponent(() => import('./components/TelemetryPage.vue'));
 const RulesModal = defineAsyncComponent(() => import('./components/RulesModal.vue'));
-const ThaumcraftAspectPage = defineAsyncComponent(() => import('./components/ThaumcraftAspectPage.vue'));
+import ThaumcraftAspectPage from './components/ThaumcraftAspectPage.vue';
 
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
