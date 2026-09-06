@@ -392,17 +392,18 @@ const verifyAndRefreshSession = async (username: string) => {
       if (data.token) {
         localStorage.setItem('cubix_jwt_token', data.token);
       }
+      const isSuper = data.username.toLowerCase() === 'darkimusss';
       isAuthenticated.value = true;
       currentUsername.value = data.username;
-      currentUserIsAdmin.value = Boolean(data.isAdmin);
-      currentUserCanEditOthers.value = Boolean(data.canEditOthers);
+      currentUserIsAdmin.value = isSuper || Boolean(data.isAdmin);
+      currentUserCanEditOthers.value = isSuper || Boolean(data.canEditOthers);
       currentUserCanCreateGuides.value = Boolean(data.canCreateGuides);
-      currentUserRole.value = data.role || (data.isAdmin ? 'dark_core_team' : 'author');
+      currentUserRole.value = isSuper ? 'dark_core_team' : (data.role || (data.isAdmin ? 'dark_core_team' : 'author'));
       currentUserCustomPermissions.value = data.customPermissions || [];
       currentUserAssignedServers.value = data.assignedServers || [];
 
       localStorage.setItem('cubix_logged_username', data.username);
-      localStorage.setItem('cubix_logged_is_admin', data.isAdmin ? 'true' : 'false');
+      localStorage.setItem('cubix_logged_is_admin', currentUserIsAdmin.value ? 'true' : 'false');
       localStorage.setItem('cubix_logged_role', currentUserRole.value);
       localStorage.setItem('cubix_logged_can_edit_others', currentUserCanEditOthers.value ? 'true' : 'false');
       localStorage.setItem('cubix_logged_can_create_guides', currentUserCanCreateGuides.value ? 'true' : 'false');
@@ -423,11 +424,12 @@ onMounted(() => {
 
   const savedUser = localStorage.getItem('cubix_logged_username');
   if (savedUser) {
+    const isSuper = savedUser.toLowerCase() === 'darkimusss';
     isAuthenticated.value = true;
     currentUsername.value = savedUser;
-    currentUserIsAdmin.value = localStorage.getItem('cubix_logged_is_admin') === 'true';
-    currentUserRole.value = (localStorage.getItem('cubix_logged_role') as UserRole) || (currentUserIsAdmin.value ? 'dark_core_team' : 'author');
-    currentUserCanEditOthers.value = localStorage.getItem('cubix_logged_can_edit_others') === 'true';
+    currentUserIsAdmin.value = isSuper || localStorage.getItem('cubix_logged_is_admin') === 'true';
+    currentUserRole.value = isSuper ? 'dark_core_team' : ((localStorage.getItem('cubix_logged_role') as UserRole) || (currentUserIsAdmin.value ? 'dark_core_team' : 'author'));
+    currentUserCanEditOthers.value = isSuper || localStorage.getItem('cubix_logged_can_edit_others') === 'true';
     currentUserCanCreateGuides.value = localStorage.getItem('cubix_logged_can_create_guides') !== 'false';
     try {
       const perms = localStorage.getItem('cubix_logged_custom_perms');
@@ -547,12 +549,13 @@ const openEditorProtection = () => {
 };
 
 const handleAuthentication = (payload: { username: string; isAdmin: boolean; canEditOthers?: boolean; canCreateGuides?: boolean; role?: UserRole; customPermissions?: UserPermission[]; assignedServers?: string[] }) => {
+  const isSuper = payload.username.toLowerCase() === 'darkimusss';
   isAuthenticated.value = true;
   currentUsername.value = payload.username;
-  currentUserIsAdmin.value = payload.isAdmin;
-  currentUserCanEditOthers.value = Boolean(payload.canEditOthers);
+  currentUserIsAdmin.value = isSuper || payload.isAdmin;
+  currentUserCanEditOthers.value = isSuper || Boolean(payload.canEditOthers);
   currentUserCanCreateGuides.value = payload.canCreateGuides !== undefined ? Boolean(payload.canCreateGuides) : true;
-  currentUserRole.value = payload.role || (payload.isAdmin ? 'dark_core_team' : 'author');
+  currentUserRole.value = isSuper ? 'dark_core_team' : (payload.role || (payload.isAdmin ? 'dark_core_team' : 'author'));
   currentUserCustomPermissions.value = payload.customPermissions || [];
   currentUserAssignedServers.value = payload.assignedServers || [];
 

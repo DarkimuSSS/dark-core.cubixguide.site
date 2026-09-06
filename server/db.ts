@@ -322,25 +322,28 @@ function checkHierarchyPermission(callerUsername: string, targetUsername: string
   const cleanCaller = callerUsername.trim();
   const cleanTarget = targetUsername.trim();
 
+  const isCallerSuperAdmin = cleanCaller.toLowerCase() === superAdminUsername.toLowerCase();
+
   const callerRow = db.prepare('SELECT is_admin, role FROM users WHERE LOWER(username) = LOWER(?)').get(cleanCaller) as any;
-  if (!callerRow) {
+  if (!callerRow && !isCallerSuperAdmin) {
     throw new Error('Пользователь, выполняющий действие, не найден в системе');
   }
 
-  const callerRole = callerRow.role || (callerRow.is_admin ? 'dark_core_team' : 'author');
+  const callerRole = isCallerSuperAdmin ? 'dark_core_team' : (callerRow?.role || (callerRow?.is_admin ? 'dark_core_team' : 'author'));
   const targetRow = db.prepare('SELECT is_admin, role FROM users WHERE LOWER(username) = LOWER(?)').get(cleanTarget) as any;
   
   if (!targetRow) {
     throw new Error('Целевой пользователь не найден в системе');
   }
 
-  const targetRole = targetRow.role || (targetRow.is_admin ? 'dark_core_team' : 'author');
+  const isTargetSuperAdmin = cleanTarget.toLowerCase() === superAdminUsername.toLowerCase();
+  const targetRole = isTargetSuperAdmin ? 'dark_core_team' : (targetRow.role || (targetRow.is_admin ? 'dark_core_team' : 'author'));
 
-  if (callerRole === 'dark_core_team') {
-    return { callerRole, targetRole };
+  if (callerRole === 'dark_core_team' || isCallerSuperAdmin) {
+    return { callerRole: 'dark_core_team', targetRole };
   }
 
-  const callerPriority = getPriorityForRole(callerRole, Boolean(callerRow.is_admin));
+  const callerPriority = getPriorityForRole(callerRole, Boolean(callerRow?.is_admin));
   const targetPriority = getPriorityForRole(targetRole, Boolean(targetRow.is_admin));
 
   if (callerPriority >= targetPriority) {
