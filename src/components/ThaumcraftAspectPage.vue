@@ -262,7 +262,7 @@ const selectAspect = (asp: ThaumcraftAspect) => {
                   class="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-sm transition-transform hover:scale-105 cursor-pointer relative group"
                   :style="{ borderColor: THAUMCRAFT_ASPECTS[aspId]?.color + '80', backgroundColor: THAUMCRAFT_ASPECTS[aspId]?.color + '15' }"
                 >
-                  <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-black/60 text-purple-300 font-mono">#{ idx + 1 }</span>
+                  <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-black/60 text-purple-300 font-mono">#{{ idx + 1 }}</span>
                   <div class="w-4 h-4 rounded-md overflow-hidden relative flex-shrink-0 flex items-center justify-center bg-black/40">
                     <img 
                       :src="`/aspects/${aspId}.png`" 
