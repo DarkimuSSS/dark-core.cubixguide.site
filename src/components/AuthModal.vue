@@ -16,7 +16,7 @@ const password = ref('');
 const showPassword = ref(false);
 const errorMessage = ref('');
 const isLoading = ref(false);
-const authMode = ref<'cubix' | 'local'>('cubix'); // Default to CubixWorld TCP Login
+const authMode = ref<'local' | 'cubix'>('local'); // Temporarily default to Local Author Login
 
 const handleLogin = async () => {
   errorMessage.value = '';
@@ -95,33 +95,6 @@ const handleLogin = async () => {
         </button>
       </div>
 
-      <!-- Mode Switcher Tabs -->
-      <div class="grid grid-cols-2 gap-1.5 p-1 bg-[#0c0d0e] rounded-2xl border border-[#26292d]">
-        <button
-          type="button"
-          @click="authMode = 'cubix'; errorMessage = ''"
-          :class="[
-            'py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all',
-            authMode === 'cubix' ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 text-white shadow-md' : 'text-dark-muted hover:text-white'
-          ]"
-        >
-          <IconRenderer name="Globe" size="14" />
-          <span>CubixWorld</span>
-        </button>
-
-        <button
-          type="button"
-          @click="authMode = 'local'; errorMessage = ''"
-          :class="[
-            'py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all',
-            authMode === 'local' ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 text-white shadow-md' : 'text-dark-muted hover:text-white'
-          ]"
-        >
-          <IconRenderer name="Shield" size="14" />
-          <span>Вход Авторов</span>
-        </button>
-      </div>
-
       <!-- Error Message -->
       <div v-if="errorMessage" class="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs font-bold flex items-center gap-2">
         <IconRenderer name="AlertTriangle" size="16" class="text-rose-400 flex-shrink-0" />
@@ -132,25 +105,25 @@ const handleLogin = async () => {
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">
-            {{ authMode === 'cubix' ? 'Игровой никнейм CubixWorld' : 'Никнейм автора' }}
+            Никнейм автора
           </label>
           <input
             type="text"
             v-model="username"
-            :placeholder="authMode === 'cubix' ? 'Никнейм в лаунчере...' : 'Ваш никнейм...'"
+            placeholder="Ваш никнейм..."
             class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-emerald-accent"
           />
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">
-            {{ authMode === 'cubix' ? 'Пароль от аккаунта CubixWorld' : 'Пароль' }}
+            Пароль
           </label>
           <div class="relative">
             <input
               :type="showPassword ? 'text' : 'password'"
               v-model="password"
-              :placeholder="authMode === 'cubix' ? 'Пароль CubixWorld...' : 'Введите пароль...'"
+              placeholder="Введите пароль..."
               class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3.5 pr-10 py-2.5 focus:outline-none focus:border-emerald-accent"
             />
             <button
@@ -169,17 +142,17 @@ const handleLogin = async () => {
           class="w-full py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-950/50 transition-all flex items-center justify-center gap-2"
         >
           <span v-if="isLoading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-          <span>Войти в Аккаунт</span>
+          <span>Войти как Автор</span>
         </button>
       </form>
 
       <!-- Closed Registration Note & Legal Disclaimer -->
-      <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 space-y-1.5 text-center text-[10.5px] leading-relaxed shadow-lg">
-        <p class="text-amber-200 font-medium">
-          🔒 <span class="font-bold text-white">Прямая сквозная аутентификация</span>. Ваш пароль зашифрован RSA-ключом и <strong class="text-amber-400">не сохраняется</strong> на нашем сайте.
+      <div class="bg-[#111315] border border-[#26292d] rounded-2xl p-3.5 space-y-1.5 text-center text-[10.5px] leading-relaxed shadow-lg">
+        <p class="text-slate-300 font-medium">
+          🔒 <span class="font-bold text-white">Доступ только для зарегистрированных авторов</span>.
         </p>
-        <p class="text-[10px] text-amber-400/80 pt-1 border-t border-amber-500/20">
-          CubixGuide Wiki — неофициальный фанатский ресурс и не связан с администрацией CubixWorld.
+        <p class="text-[10px] text-slate-400/80 pt-1 border-t border-[#26292d]">
+          Учётные записи выдаются администрацией команде редакторов вики.
         </p>
       </div>
     </div>
