@@ -136,25 +136,6 @@ app.post('/api/auth/register-invite', mutationRateLimiter, async (req, res) => {
   }
 });
 
-// Helper to extract real client IP address from reverse proxy / Cloudflare headers
-function getClientIp(req: express.Request): string {
-  const cfIp = req.headers['cf-connecting-ip'] as string;
-  if (cfIp) return cfIp.trim();
-  const forwarded = req.headers['x-forwarded-for'] as string;
-  if (forwarded) {
-    let ip = forwarded.split(',')[0].trim();
-    if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
-    return ip;
-  }
-  const realIp = req.headers['x-real-ip'] as string;
-  if (realIp) return realIp.trim();
-  let ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
-  if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
-  return ip;
-}
-
-// Init Telegram Bot Module
-initTelegramBot();
 
 // Security headers middleware
 app.use((_req, res, next) => {
