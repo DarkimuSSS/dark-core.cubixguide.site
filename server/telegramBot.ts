@@ -3,10 +3,7 @@ const require = createRequire(import.meta.url);
 const TelegramBot = require('node-telegram-bot-api');
 import { registerAuthorByAdmin, getAuthorUserByUsername } from './db';
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
-const ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID || '';
-
-let bot: TelegramBot | null = null;
+let bot: any = null;
 
 // User state tracker for step-by-step application in Telegram
 interface ApplicationState {
@@ -20,6 +17,7 @@ interface ApplicationState {
 const userStates = new Map<number, ApplicationState>();
 
 export function initTelegramBot() {
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
   if (!BOT_TOKEN) {
     console.log('[Telegram Bot] TELEGRAM_BOT_TOKEN не задан в .env. Бот работает в режиме отправки по HTTP Webhook/API.');
     return;
@@ -219,7 +217,8 @@ export async function sendApplicationToAdmin(appData: {
   telegramTag: string;
   chatId: string;
 }) {
-  const adminChat = ADMIN_CHAT_ID;
+  const adminChat = process.env.TELEGRAM_ADMIN_CHAT_ID || '';
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
   const messageText = `📥 **НОВАЯ ЗАЯВКА НА АВТОРСТВО**\n\n` +
     `👤 **Никнейм**: \`${appData.username}\`\n` +
     `🎮 **Сервер**: ${appData.server}\n` +
@@ -282,7 +281,8 @@ export async function sendSupportTicketToAdmin(ticket: {
   message: string;
   pageUrl?: string;
 }) {
-  const adminChat = ADMIN_CHAT_ID;
+  const adminChat = process.env.TELEGRAM_ADMIN_CHAT_ID || '';
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
   const text = `💬 **НОВОЕ ОБРАЩЕНИЕ В ПОДДЕРЖКУ**\n\n` +
     `👤 **Пользователь**: ${ticket.username || 'Гость'}\n` +
     `📞 **Контакты**: \`${ticket.contact}\`\n` +
