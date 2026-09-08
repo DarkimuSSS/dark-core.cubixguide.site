@@ -1026,17 +1026,19 @@ const rulesModules = [
   { name: 'COBBLEMON_1211_RULES_DATA', path: '../src/data/cobblemon1211RulesData' }
 ];
 
-for (const mod of rulesModules) {
-  try {
-    const loaded = require(mod.path);
-    const data = loaded[mod.name];
-    if (data) {
-      saveServerRules(data);
-      if (mod.extraId) {
-        saveServerRules({ ...data, server_id: mod.extraId });
+(async () => {
+  for (const mod of rulesModules) {
+    try {
+      const loaded = await import(mod.path);
+      const data = loaded[mod.name];
+      if (data) {
+        saveServerRules(data);
+        if (mod.extraId) {
+          saveServerRules({ ...data, server_id: mod.extraId });
+        }
       }
+    } catch (e) {
+      console.error(`Failed to load/seed server rules module [${mod.name}]:`, e);
     }
-  } catch (e) {
-    console.error(`Failed to load/seed server rules module [${mod.name}]:`, e);
   }
-}
+})();
