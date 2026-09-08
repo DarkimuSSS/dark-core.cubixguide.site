@@ -135,8 +135,10 @@ export interface GuideBlock {
   craftingGrid?: (CraftingSlot | null)[];
   craftingOutput?: CraftingSlot;
 
-  // Multiblock 3D Layer Painter
+  // Multiblock 3D Layer Painter (custom X, Y, Z dimensions)
   gridSize?: number;
+  gridSizeX?: number; // Width (X axis: 1-12)
+  gridSizeZ?: number; // Depth (Z axis: 1-12)
   palette?: MultiblockPaletteItem[];
   layers?: MultiblockLayer[];
 

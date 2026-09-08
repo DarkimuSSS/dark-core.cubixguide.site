@@ -102,21 +102,20 @@ onUnmounted(() => {
   if (autoRotateTimer) clearInterval(autoRotateTimer);
 });
 
-const size = computed(() => props.gridSize || 3);
-
 const getMaterial = (id: string | null): MultiblockPaletteItem => {
   if (!id) return { id: 'empty', name: 'Воздух', icon: 'Square', color: 'transparent' };
   return props.palette?.find(p => p.id === id) || { id, name: id, icon: 'Box', color: '#94a3b8' };
 };
 
-// Compute 3D Position offset for voxels
-const getVoxelStyle = (x: number, y: number, z: number, color: string) => {
+// Compute 3D Position offset for voxels (Supports non-square X x Z grids like 4x6, 3x5, etc)
+const getVoxelStyle = (x: number, y: number, z: number, color: string, numRows: number, numCols: number) => {
   const cubeSize = 40; // exact size of cubic voxel
-  const halfSize = (size.value - 1) / 2;
+  const halfX = (numCols - 1) / 2;
+  const halfZ = (numRows - 1) / 2;
 
-  const posX = (x - halfSize) * cubeSize;
+  const posX = (x - halfX) * cubeSize;
   const posY = -(y * cubeSize); // Y goes up vertically
-  const posZ = (z - halfSize) * cubeSize;
+  const posZ = (z - halfZ) * cubeSize;
 
   return {
     transform: `translate3d(${posX}px, ${posY}px, ${posZ}px)`,
@@ -233,7 +232,7 @@ const materialSummary = computed(() => {
                 <div 
                   v-if="matId"
                   class="voxel-cube"
-                  :style="getVoxelStyle(colIdx, layerIdx, rowIdx, getMaterial(matId).color)"
+                  :style="getVoxelStyle(colIdx, layerIdx, rowIdx, getMaterial(matId).color, layer.grid.length, row.length)"
                   :title="`${getMaterial(matId).name} (Слой Y=${layer.layerNumber})`"
                 >
                   <!-- Cube Faces for 3D Shading effect -->

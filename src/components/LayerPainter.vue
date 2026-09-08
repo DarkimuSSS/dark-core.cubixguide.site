@@ -18,18 +18,30 @@ const viewMode = ref<'3d' | '2d'>(props.isEditing ? '2d' : '3d');
 const activeLayerIndex = ref<number>(0);
 const selectedMaterialId = ref<string>(props.block.palette?.[0]?.id || PRESET_MULTIBLOCK_MATERIALS[0].id);
 
-const currentSize = computed(() => props.block.gridSize || 3);
+const currentSizeX = computed(() => {
+  if (props.block.gridSizeX) return props.block.gridSizeX;
+  if (props.block.layers && props.block.layers[0]?.grid[0]) return props.block.layers[0].grid[0].length;
+  return props.block.gridSize || 3;
+});
+
+const currentSizeZ = computed(() => {
+  if (props.block.gridSizeZ) return props.block.gridSizeZ;
+  if (props.block.layers && props.block.layers[0]?.grid) return props.block.layers[0].grid.length;
+  return props.block.gridSize || 3;
+});
+
 const currentPalette = computed<MultiblockPaletteItem[]>(() => props.block.palette && props.block.palette.length > 0 ? props.block.palette : PRESET_MULTIBLOCK_MATERIALS);
 
 const layersList = computed<MultiblockLayer[]>(() => {
   if (props.block.layers && props.block.layers.length > 0) {
     return props.block.layers;
   }
-  const size = currentSize.value;
+  const sizeX = currentSizeX.value;
+  const sizeZ = currentSizeZ.value;
   return [
-    { layerNumber: 1, grid: Array(size).fill(null).map(() => Array(size).fill(currentPalette.value[0].id)) },
-    { layerNumber: 2, grid: Array(size).fill(null).map(() => Array(size).fill(currentPalette.value[1]?.id || currentPalette.value[0].id)) },
-    { layerNumber: 3, grid: Array(size).fill(null).map(() => Array(size).fill(currentPalette.value[0].id)) },
+    { layerNumber: 1, grid: Array(sizeZ).fill(null).map(() => Array(sizeX).fill(currentPalette.value[0].id)) },
+    { layerNumber: 2, grid: Array(sizeZ).fill(null).map(() => Array(sizeX).fill(currentPalette.value[1]?.id || currentPalette.value[0].id)) },
+    { layerNumber: 3, grid: Array(sizeZ).fill(null).map(() => Array(sizeX).fill(currentPalette.value[0].id)) },
   ];
 });
 
@@ -77,16 +89,22 @@ const paintCell = (rowIndex: number, colIndex: number) => {
   });
 };
 
-const setGridSize = (size: 3 | 5) => {
-  const newGrid = (size: number) => Array(size).fill(null).map(() => Array(size).fill(currentPalette.value[0].id));
-  const newLayers: MultiblockLayer[] = [
-    { layerNumber: 1, grid: newGrid(size) },
-    { layerNumber: 2, grid: newGrid(size) },
-    { layerNumber: 3, grid: newGrid(size) }
-  ];
+const setCustomDimensions = (newWidth: number, newDepth: number) => {
+  const width = Math.max(1, Math.min(12, newWidth));
+  const depth = Math.max(1, Math.min(12, newDepth));
+  
+  const createGrid = () => Array(depth).fill(null).map(() => Array(width).fill(currentPalette.value[0].id));
+  const numLayers = layersList.value.length || 3;
+  const newLayers: MultiblockLayer[] = [];
+  
+  for (let i = 0; i < numLayers; i++) {
+    newLayers.push({ layerNumber: i + 1, grid: createGrid() });
+  }
+
   emit('update', {
     ...props.block,
-    gridSize: size,
+    gridSizeX: width,
+    gridSizeZ: depth,
     layers: newLayers
   });
   activeLayerIndex.value = 0;
@@ -95,10 +113,11 @@ const setGridSize = (size: 3 | 5) => {
 const addLayer = () => {
   const newLayers = JSON.parse(JSON.stringify(layersList.value)) as MultiblockLayer[];
   const nextNum = newLayers.length + 1;
-  const size = currentSize.value;
+  const width = currentSizeX.value;
+  const depth = currentSizeZ.value;
   newLayers.push({
     layerNumber: nextNum,
-    grid: Array(size).fill(null).map(() => Array(size).fill(currentPalette.value[0].id))
+    grid: Array(depth).fill(null).map(() => Array(width).fill(currentPalette.value[0].id))
   });
   emit('update', {
     ...props.block,
@@ -176,7 +195,6 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
       <Multiblock3DViewer 
         :layers="layersList" 
         :palette="currentPalette" 
-        :grid-size="currentSize" 
       />
     </div>
 
@@ -184,25 +202,42 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
     <div v-else class="bg-[#16181a] border border-[#26292d] rounded-2xl p-5 shadow-lg space-y-5 animate-fadeIn">
       <!-- Header Size Switcher -->
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#26292d] pb-4">
-        <div class="text-xs font-bold text-slate-300">
-          Послойное рисование сетки
+        <div class="text-xs font-bold text-slate-300 flex items-center gap-2">
+          <span>Размеры постройки (ШхД):</span>
+          <span class="font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/30">
+            {{ currentSizeX }} x {{ currentSizeZ }} (Высота {{ layersList.length }})
+          </span>
         </div>
 
-        <div v-if="isEditing" class="flex items-center gap-2 bg-[#0c0d0e] p-1 rounded-lg border border-[#26292d]">
-          <span class="text-xs text-dark-muted px-2 font-medium">Размер:</span>
+        <div v-if="isEditing" class="flex flex-wrap items-center gap-1.5 bg-[#0c0d0e] p-1.5 rounded-xl border border-[#26292d]">
+          <span class="text-[11px] text-dark-muted px-1 font-medium">Пресеты:</span>
           <button 
             type="button"
-            @click="setGridSize(3)"
-            :class="['px-2.5 py-1 text-xs font-semibold rounded transition-all cursor-pointer', currentSize === 3 ? 'bg-cyan-600 text-white shadow' : 'text-dark-muted hover:text-white']"
+            @click="setCustomDimensions(3, 3)"
+            :class="['px-2 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer', currentSizeX === 3 && currentSizeZ === 3 ? 'bg-cyan-600 text-white shadow' : 'text-dark-muted hover:text-white bg-[#121416]']"
           >
             3x3
           </button>
           <button 
             type="button"
-            @click="setGridSize(5)"
-            :class="['px-2.5 py-1 text-xs font-semibold rounded transition-all cursor-pointer', currentSize === 5 ? 'bg-cyan-600 text-white shadow' : 'text-dark-muted hover:text-white']"
+            @click="setCustomDimensions(5, 5)"
+            :class="['px-2 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer', currentSizeX === 5 && currentSizeZ === 5 ? 'bg-cyan-600 text-white shadow' : 'text-dark-muted hover:text-white bg-[#121416]']"
           >
             5x5
+          </button>
+          <button 
+            type="button"
+            @click="setCustomDimensions(4, 6)"
+            :class="['px-2 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer', currentSizeX === 4 && currentSizeZ === 6 ? 'bg-cyan-600 text-white shadow' : 'text-dark-muted hover:text-white bg-[#121416]']"
+          >
+            4x6
+          </button>
+          <button 
+            type="button"
+            @click="setCustomDimensions(7, 7)"
+            :class="['px-2 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer', currentSizeX === 7 && currentSizeZ === 7 ? 'bg-cyan-600 text-white shadow' : 'text-dark-muted hover:text-white bg-[#121416]']"
+          >
+            7x7
           </button>
         </div>
       </div>
@@ -273,12 +308,12 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
       <!-- Grid Painter -->
       <div class="flex flex-col items-center justify-center p-6 bg-[#0c0d0e] rounded-xl border border-[#26292d]">
         <div class="text-xs font-medium text-dark-muted mb-3">
-          Матрица Слоя {{ activeLayer.layerNumber }} ({{ currentSize }}x{{ currentSize }})
+          Матрица Слоя {{ activeLayer.layerNumber }} (ШxД: {{ currentSizeX }}x{{ currentSizeZ }})
         </div>
 
         <div 
-          class="grid gap-2 p-3 bg-[#121416] rounded-xl border border-[#26292d] shadow-2xl"
-          :style="{ gridTemplateColumns: `repeat(${currentSize}, minmax(0, 1fr))` }"
+          class="grid gap-2 p-3 bg-[#121416] rounded-xl border border-[#26292d] shadow-2xl overflow-x-auto max-w-full"
+          :style="{ gridTemplateColumns: `repeat(${currentSizeX}, minmax(0, 1fr))` }"
         >
           <template v-for="(row, rowIndex) in activeLayer.grid" :key="rowIndex">
             <button
