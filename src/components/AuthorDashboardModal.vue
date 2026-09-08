@@ -94,34 +94,6 @@ const getEventBadgeClass = (type: string) => {
 <template>
   <!-- FULL PAGE TAB MODE -->
   <div v-if="isFullPage" class="max-w-6xl mx-auto space-y-6 pb-12">
-    <!-- Header -->
-    <div class="p-6 rounded-3xl bg-[#141619] border border-cyan-500/40 shadow-2xl relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <!-- Ambient Glows -->
-      <div class="absolute -top-20 -left-20 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div class="flex items-center gap-3.5 relative z-10">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-emerald-500/20 border border-cyan-500/40 text-cyan-400 flex items-center justify-center shadow-lg shrink-0">
-          <IconRenderer name="TrendingUp" size="24" />
-        </div>
-        <div>
-          <h3 class="text-lg sm:text-xl font-black text-white tracking-tight flex items-center gap-2 flex-wrap">
-            <span>Кабинет и Статистика Автора</span>
-            <span class="text-xs bg-cyan-500/20 text-cyan-300 px-3 py-0.5 rounded-full border border-cyan-500/30 font-mono">{{ username }}</span>
-          </h3>
-          <p class="text-xs text-slate-400 font-medium">Телеметрия просмотров, статистика публикаций и активность по вашим гайдам</p>
-        </div>
-      </div>
-
-      <button 
-        @click="emit('go-home')"
-        class="px-4 py-2 rounded-xl bg-[#1c1f24] hover:bg-[#262a30] text-slate-300 hover:text-white border border-[#34383e] text-xs font-bold transition-all cursor-pointer flex items-center gap-2 relative z-10 shrink-0"
-      >
-        <IconRenderer name="ArrowLeft" size="15" />
-        <span>На главную</span>
-      </button>
-    </div>
-
     <!-- Content Area -->
     <div v-if="isLoading" class="py-20 text-center space-y-3 bg-[#141619] border border-[#26292d] rounded-3xl">
       <IconRenderer name="RotateCw" size="36" class="animate-spin text-cyan-400 mx-auto" />
