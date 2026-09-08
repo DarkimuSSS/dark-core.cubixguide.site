@@ -83,6 +83,7 @@ app.get('/api/admin/invites', async (req, res) => {
 // Public API: Register via Invite Code
 app.post('/api/auth/register-invite', mutationRateLimiter, async (req, res) => {
   try {
+    const { code, username, password } = req.body || {};
     const codeStr = String(code || '').trim();
     const userStr = String(username || '').trim();
     const passStr = String(password || '').trim();
@@ -109,15 +110,15 @@ app.post('/api/auth/register-invite', mutationRateLimiter, async (req, res) => {
     // Register user
     const newUser = registerAuthorByAdmin({
       username: cleanUsername,
-      password: password,
+      password: passStr,
       role: inviteResult.role as any || 'author',
       assignedServers: inviteResult.assignedServers || [],
       canEditOthers: false,
       canCreateGuides: true
-    }, `Invite:${code}`);
+    }, `Invite:${codeStr}`);
 
     // Mark invite as redeemed
-    redeemInviteCode(code, cleanUsername);
+    redeemInviteCode(codeStr, cleanUsername);
 
     // Issue JWT token so user is automatically logged in
     const token = signJwt({ username: cleanUsername, role: newUser.role });
