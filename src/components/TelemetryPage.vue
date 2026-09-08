@@ -62,7 +62,7 @@ onMounted(() => {
 
 const filteredLogs = computed(() => {
   if (!stats.value?.recentLogs) return [];
-  const items = stats.value.recentLogs.filter(log => {
+  return stats.value.recentLogs.filter(log => {
     const matchesType = filterEventType.value === 'all' || log.event_type === filterEventType.value;
     const q = logSearchQuery.value.toLowerCase().trim();
     const matchesQuery = !q ||
@@ -72,7 +72,6 @@ const filteredLogs = computed(() => {
       (log.event_type || '').toLowerCase().includes(q);
     return matchesType && matchesQuery;
   });
-  return items.slice(0, 6);
 });
 
 const formatEventTypeLabel = (type: string) => {
@@ -219,7 +218,7 @@ const getEventTypeBadgeClass = (type: string) => {
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-[#26292d] pb-3">
             <div class="flex items-center gap-2.5">
               <IconRenderer name="Activity" size="20" class="text-cyan-400" />
-              <h3 class="text-sm font-extrabold text-white">Журнал Событий & Действий (6 последних)</h3>
+              <h3 class="text-sm font-extrabold text-white">Журнал Событий & Действий ({{ filteredLogs.length }} последних)</h3>
             </div>
 
             <!-- Event Filters & Search -->
