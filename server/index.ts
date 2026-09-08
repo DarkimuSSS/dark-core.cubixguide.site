@@ -428,11 +428,11 @@ app.get('/api/profiles/:username', (req, res) => {
   try {
     const userRow = db.prepare('SELECT is_verified FROM users WHERE LOWER(username) = LOWER(?)').get(req.params.username) as any;
     if (!userRow) {
-      return res.status(404).json({ error: 'Автор не зарегистрирован' });
+      return res.json({ exists: false, isVerified: false, avatarUrl: '' });
     }
     const isVerified = Boolean(userRow.is_verified);
     const profile = getAuthorProfile(req.params.username);
-    res.json({ ...profile, isVerified });
+    res.json({ exists: true, ...profile, isVerified });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -913,9 +913,9 @@ app.get('/api/server-rules/:serverId', (req, res) => {
     const { serverId } = req.params;
     const rules = getServerRules(serverId);
     if (!rules) {
-      return res.status(404).json({ error: 'Правила для данного сервера не найдены' });
+      return res.json({ found: false });
     }
-    res.json(rules);
+    res.json({ found: true, ...rules });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
