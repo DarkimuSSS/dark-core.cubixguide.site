@@ -1065,29 +1065,74 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
           </button>
         </div>
 
-        <!-- Target Username input optional field -->
-        <div class="p-4 rounded-2xl bg-[#0c0d0e] border border-[#26292d] space-y-3">
-          <label class="block text-xs font-bold text-slate-300">
-            Никнейм будущего автора (опционально, для привязки):
-          </label>
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <!-- Invite Generator Form Options -->
+        <div class="p-4 rounded-2xl bg-[#0c0d0e] border border-[#26292d] space-y-4">
+          <!-- Target Username Optional Field -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-300">
+              Никнейм будущего автора (опционально, для привязки):
+            </label>
             <input
               type="text"
               v-model="inviteTargetUsername"
               placeholder="например, DarkimuSSS (если оставить пустым — код общий)"
-              class="flex-1 bg-[#141618] border border-[#26292d] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-cyan-500/60"
+              class="w-full bg-[#141618] border border-[#26292d] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-cyan-500/60"
             />
-            <button
-              @click="handleCreateInvite"
-              class="px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
-            >
-              <IconRenderer name="Key" size="15" />
-              <span>Создать Инвайт</span>
-            </button>
           </div>
-          <p class="text-[11px] text-dark-muted">
-            Если указать никнейм, по этому инвайту сможет зарегистрироваться <strong class="text-cyan-300">только пользователь с этим ником</strong>.
-          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Target System Role Select -->
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-300">Присваиваемая Роль при активации:</label>
+              <select
+                v-model="selectedInviteRole"
+                class="w-full bg-[#141618] border border-[#26292d] focus:border-cyan-500/60 text-white text-xs font-bold rounded-xl px-3.5 py-2.5 focus:outline-none cursor-pointer"
+              >
+                <option
+                  v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)"
+                  :key="r.role"
+                  :value="r.role"
+                  :disabled="getRolePriority(props.currentRole || (props.isAdmin ? 'dark_core_team' : 'guest')) >= r.priority && props.currentRole !== 'dark_core_team'"
+                >
+                  {{ r.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Generate Trigger Button -->
+            <div class="flex items-end">
+              <button
+                @click="handleCreateInvite"
+                class="w-full py-2.5 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <IconRenderer name="Key" size="15" />
+                <span>Сгенерировать Инвайт</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Assigned Servers Multi-Selection -->
+          <div class="space-y-2 pt-1 border-t border-[#1c1f24]">
+            <label class="block text-xs font-bold text-slate-300">
+              Привязать автора к серверам (выберите нужные):
+            </label>
+            <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto custom-scrollbar p-2 bg-[#141618] rounded-xl border border-[#26292d]">
+              <button
+                v-for="srv in availableServersList"
+                :key="srv"
+                type="button"
+                @click="selectedInviteServers.includes(srv) ? selectedInviteServers = selectedInviteServers.filter(s => s !== srv) : selectedInviteServers.push(srv)"
+                :class="[
+                  'px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all border cursor-pointer select-none',
+                  selectedInviteServers.includes(srv)
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/60 shadow-sm'
+                    : 'bg-[#0c0d0e] text-slate-400 border-transparent hover:border-[#26292d] hover:text-white'
+                ]"
+              >
+                {{ srv }}
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Generated Invite Alert Banner -->
@@ -1122,7 +1167,9 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
                 <span v-else class="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-slate-500/20 text-slate-400 border border-slate-500/30">Использован</span>
               </div>
               <div class="text-[10.5px] text-slate-400 space-y-0.5">
+                <div>Роль: <span class="text-purple-300 font-bold">{{ inv.role }}</span></div>
                 <div v-if="inv.targetUsername">Для кого: <span class="text-cyan-300 font-bold">{{ inv.targetUsername }}</span></div>
+                <div v-if="inv.assignedServers && inv.assignedServers.length > 0">Сервера: <span class="text-amber-300 font-semibold">{{ inv.assignedServers.join(', ') }}</span></div>
                 <div>Создал: <span class="text-slate-200 font-semibold">{{ inv.createdBy }}</span></div>
                 <div v-if="inv.usedBy">Активировал: <span class="text-emerald-400 font-semibold">{{ inv.usedBy }}</span></div>
               </div>
