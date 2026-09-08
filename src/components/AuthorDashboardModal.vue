@@ -49,7 +49,12 @@ const fetchAnalytics = async () => {
   if (!props.username) return;
   isLoading.value = true;
   try {
-    const res = await fetch(`/api/author/analytics?username=${encodeURIComponent(props.username)}`);
+    const headers: Record<string, string> = {};
+    const token = localStorage.getItem('cubix_jwt_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const res = await fetch(`/api/author/analytics?username=${encodeURIComponent(props.username)}`, { headers });
     if (res.ok) {
       analyticsData.value = await res.json();
     }
