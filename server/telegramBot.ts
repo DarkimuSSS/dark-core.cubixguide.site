@@ -65,16 +65,25 @@ export function initTelegramBot() {
         bot?.sendMessage(chatId, `📌 **Шаг 1 из 4:** Укажите ваш игровой никнейм на серверах CubixWorld:`, { parse_mode: 'Markdown' });
       } else if (data === 'support_ticket') {
         bot?.sendMessage(chatId, `💬 Напишите ваш вопрос или описание проблемы ниже, и администрация свяжется с вами!`);
-      } else if (data?.startsWith('app_')) {
-        // Format: app_appr_username_chatId or app_reje_username_chatId
-        const isApprove = data.startsWith('app_appr_');
-        const payload = data.replace(/^app_(appr|reje)_/, '');
-        const parts = payload.split('_');
-        const applicantUsername = parts[0] || 'Author';
-        const applicantChatIdStr = parts[1] || 'web';
+      } else if (data?.startsWith('apv:') || data?.startsWith('rej:')) {
+        // Format: apv:username:chatId or rej:username:chatId
+        const isApprove = data.startsWith('apv:');
+        const payload = data.substring(4);
+        const firstColonIdx = payload.indexOf(':');
+        
+        let applicantUsername = 'Author';
+        let applicantChatIdStr = 'web';
+
+        if (firstColonIdx !== -1) {
+          applicantUsername = payload.substring(0, firstColonIdx);
+          applicantChatIdStr = payload.substring(firstColonIdx + 1);
+        } else {
+          applicantUsername = payload;
+        }
 
         if (isApprove) {
           const tempPassword = 'dc_' + Math.random().toString(36).substring(2, 8);
+          let regStatusMessage = '';
           
           try {
             registerAuthorByAdmin({
@@ -84,13 +93,17 @@ export function initTelegramBot() {
               canEditOthers: false,
               canCreateGuides: true
             }, 'TelegramBot');
-          } catch (e: any) {}
+            regStatusMessage = `✅ **ЗАЯВКА ОДОБРЕНА**\nСоздан аккаунт для автора: \`${applicantUsername}\`\nВременный пароль: \`${tempPassword}\``;
+          } catch (e: any) {
+            regStatusMessage = `⚠️ **ЗАЯВКА ОДОБРЕНА** (Аккаунт \`${applicantUsername}\` уже существует в БД).`;
+          }
 
-          bot?.sendMessage(
-            chatId,
-            `✅ **ЗАЯВКА ОДОБРЕНА**\nСоздан аккаунт для автора: \`${applicantUsername}\`\nВременный пароль: \`${tempPassword}\``,
-            { parse_mode: 'Markdown' }
-          );
+          if (query.message) {
+            bot?.editMessageText(
+              `${query.message.text}\n\n━━━━━━━━━━━━━━━━━━━━\n${regStatusMessage}`,
+              { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown' }
+            );
+          }
 
           if (applicantChatIdStr && applicantChatIdStr !== 'web') {
             bot?.sendMessage(
@@ -100,7 +113,20 @@ export function initTelegramBot() {
             );
           }
         } else {
-          bot?.sendMessage(chatId, `❌ **ЗАЯВКА ОТКЛОНЕНА** для пользователя: \`${applicantUsername}\``, { parse_mode: 'Markdown' });
+          if (query.message) {
+            bot?.editMessageText(
+              `${query.message.text}\n\n━━━━━━━━━━━━━━━━━━━━\n❌ **ЗАЯВКА ОТКЛОНЕНА** для пользователя: \`${applicantUsername}\``,
+              { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown' }
+            );
+          }
+
+          if (applicantChatIdStr && applicantChatIdStr !== 'web') {
+            bot?.sendMessage(
+              Number(applicantChatIdStr),
+              `❌ К сожалению, ваша заявка на авторство временно отклонена.`,
+              { parse_mode: 'Markdown' }
+            );
+          }
         }
       }
     });
@@ -168,12 +194,10 @@ export async function sendApplicationToAdmin(appData: {
     `💬 **Контакты**: ${appData.telegramTag}\n` +
     `📝 **Опыт**: ${appData.experience}\n` +
     `🔗 **Работы/Ссылки**: ${appData.portfolio}\n\n` +
-    `_Выберите решение abaixo:_`;
+    `_Выберите решение ниже:_`;
 
-  const safeUsername = appData.username.replace(/[^a-zA-Z0-9_-]/g, '');
-  const safeChatId = String(appData.chatId).replace(/[^a-zA-Z0-9_-]/g, '');
-  const approveData = `app_appr_${safeUsername}_${safeChatId}`;
-  const rejectData = `app_reje_${safeUsername}_${safeChatId}`;
+  const approveData = `apv:${appData.username}:${appData.chatId}`;
+  const rejectData = `rej:${appData.username}:${appData.chatId}`;
 
   if (bot && adminChat) {
     try {
