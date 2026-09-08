@@ -282,7 +282,7 @@ const getEventTypeBadgeClass = (type: string) => {
                     {{ log.username || 'Гость' }}
                   </td>
                   <td class="py-2.5 px-3 text-dark-muted font-mono text-[10px] whitespace-nowrap">
-                    {{ log.ip_address || '—' }}
+                    {{ (log.ip_address || '—').replace('::ffff:', '') }}
                   </td>
                   <td class="py-2.5 px-3 text-dark-muted text-right whitespace-nowrap font-mono text-[10px]">
                     {{ new Date(log.created_at).toLocaleString() }}

@@ -10,7 +10,25 @@ import { LoginSchema, CubixLoginSchema, ChangePasswordSchema, SaveGuideSchema, C
 import { initTelegramBot, sendApplicationToAdmin, sendSupportTicketToAdmin } from './telegramBot';
 
 const app = express();
+app.set('trust proxy', true);
 const PORT = process.env.PORT || 3001;
+
+// Helper to extract real client IP address from reverse proxy / Cloudflare headers
+function getClientIp(req: express.Request): string {
+  const cfIp = req.headers['cf-connecting-ip'] as string;
+  if (cfIp) return cfIp.trim();
+  const forwarded = req.headers['x-forwarded-for'] as string;
+  if (forwarded) {
+    let ip = forwarded.split(',')[0].trim();
+    if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
+    return ip;
+  }
+  const realIp = req.headers['x-real-ip'] as string;
+  if (realIp) return realIp.trim();
+  let ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
+  if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
+  return ip;
+}
 
 // Init Telegram Bot Module
 initTelegramBot();
@@ -509,7 +527,7 @@ app.get('/api/guides/:id', (req, res) => {
     recordTelemetryEvent('guide_view', {
       guideId: formatted.meta.id,
       guideTitle: formatted.meta.title,
-      ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
+      ipAddress: getClientIp(req),
       userAgent: req.headers['user-agent']
     });
     res.json(formatted);
@@ -610,7 +628,7 @@ app.post('/api/telemetry/track', (req, res) => {
         guideId,
         guideTitle,
         username,
-        ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
+        ipAddress: getClientIp(req),
         userAgent: req.headers['user-agent'],
         extraData: extraData ? String(extraData) : undefined,
         durationSeconds: typeof durationSeconds === 'number' ? durationSeconds : undefined
@@ -727,7 +745,7 @@ app.post('/api/guides', requireAuth, (req, res) => {
       guideId: guide.meta.id,
       guideTitle: guide.meta.title,
       username: requestingUser,
-      ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
+      ipAddress: getClientIp(req),
       userAgent: req.headers['user-agent']
     });
 
@@ -813,7 +831,7 @@ app.put('/api/guides/:id', requireAuth, (req, res) => {
       guideId: guideId,
       guideTitle: guide?.meta?.title,
       username: authUser.username,
-      ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
+      ipAddress: getClientIp(req),
       userAgent: req.headers['user-agent']
     });
 
@@ -893,7 +911,7 @@ app.delete('/api/guides/:id', requireAuth, (req, res) => {
     recordTelemetryEvent('guide_delete', {
       guideId: guideId,
       username: authUser.username,
-      ipAddress: req.ip || (req.headers['x-forwarded-for'] as string),
+      ipAddress: getClientIp(req),
       userAgent: req.headers['user-agent']
     });
 
