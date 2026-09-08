@@ -1070,7 +1070,7 @@ export function listAuthorInvites() {
 }
 
 export function validateInviteCode(code: string, username: string) {
-  const row = db.prepare('SELECT * FROM author_invites WHERE code = ? AND status = "active"').get(code.trim().toUpperCase()) as any;
+  const row = db.prepare("SELECT * FROM author_invites WHERE code = ? AND status = 'active'").get(code.trim().toUpperCase()) as any;
   if (!row) return { valid: false, error: 'Недействительный или уже использованный инвайт-код' };
 
   if (row.target_username && row.target_username.toLowerCase() !== username.trim().toLowerCase()) {
@@ -1088,7 +1088,7 @@ export function validateInviteCode(code: string, username: string) {
 
 export function redeemInviteCode(code: string, username: string) {
   const usedAt = new Date().toISOString();
-  db.prepare('UPDATE author_invites SET status = "used", used_by = ?, used_at = ? WHERE code = ?').run(username, usedAt, code.trim().toUpperCase());
+  db.prepare("UPDATE author_invites SET status = 'used', used_by = ?, used_at = ? WHERE code = ?").run(username, usedAt, code.trim().toUpperCase());
   return { success: true };
 }
 
