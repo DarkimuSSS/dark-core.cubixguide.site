@@ -103,42 +103,6 @@ const getEventTypeBadgeClass = (type: string) => {
 
 <template>
   <div class="space-y-6 pb-24 animate-in fade-in duration-300">
-    <!-- Header Title Bar -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#26292d] pb-5">
-      <div class="space-y-1">
-        <div class="flex items-center gap-3">
-          <div class="p-2.5 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-400 shadow-md">
-            <IconRenderer name="BarChart2" size="24" />
-          </div>
-          <div>
-            <h1 class="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-              <span>Панель Телеметрии & Аналитики</span>
-              <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40">ADMIN</span>
-            </h1>
-            <p class="text-xs text-dark-muted">Мониторинг активности, популярных гайдов и логов сервера в реальном времени</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <button
-          @click="fetchStats"
-          :disabled="isLoading"
-          class="px-3.5 py-2 rounded-xl bg-[#16181a] hover:bg-[#202327] border border-[#26292d] text-slate-200 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-md"
-        >
-          <IconRenderer name="RotateCw" size="14" :class="['text-purple-400', isLoading ? 'animate-spin' : '']" />
-          <span>Обновить данные</span>
-        </button>
-
-        <button
-          @click="emit('go-home')"
-          class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
-        >
-          <span>На Главную</span>
-        </button>
-      </div>
-    </div>
-
     <!-- Loading State -->
     <div v-if="isLoading && !stats" class="py-20 text-center text-dark-muted space-y-3">
       <div class="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
