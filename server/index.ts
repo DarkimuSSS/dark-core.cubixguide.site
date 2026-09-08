@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction, createAuthorInvite, listAuthorInvites, validateInviteCode, redeemInviteCode } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, createAuthorViaInvite, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction, createAuthorInvite, listAuthorInvites, validateInviteCode, redeemInviteCode } from './db';
 import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
@@ -107,15 +107,15 @@ app.post('/api/auth/register-invite', mutationRateLimiter, async (req, res) => {
       return res.status(400).json({ error: `Пользователь с никнеймом "${cleanUsername}" уже зарегистрирован` });
     }
 
-    // Register user
-    const newUser = registerAuthorByAdmin({
+    // Register user via invite
+    const newUser = createAuthorViaInvite({
       username: cleanUsername,
       password: passStr,
       role: inviteResult.role as any || 'author',
       assignedServers: inviteResult.assignedServers || [],
       canEditOthers: false,
       canCreateGuides: true
-    }, `Invite:${codeStr}`);
+    });
 
     // Mark invite as redeemed
     redeemInviteCode(codeStr, cleanUsername);

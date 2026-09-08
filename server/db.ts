@@ -298,13 +298,59 @@ export function verifyPassword(password: string, storedHash: string): { valid: b
   }
 }
 
-// Admin-only Author Registration Helper
-export function registerAuthorByAdmin(username: string, password: string, adminUsername: string) {
-  const cleanUsername = username.trim();
+export function createAuthorViaInvite(params: {
+  username: string;
+  password: string;
+  role?: string;
+  assignedServers?: string[];
+  canEditOthers?: boolean;
+  canCreateGuides?: boolean;
+}) {
+  const cleanUsername = String(params.username || '').trim();
+  const cleanPassword = String(params.password || '').trim();
+
   if (!cleanUsername || cleanUsername.length < 3) {
     throw new Error('Никнейм должен состоять минимум из 3 символов');
   }
-  if (!password || password.length < 4) {
+  if (!cleanPassword || cleanPassword.length < 4) {
+    throw new Error('Пароль должен состоять минимум из 4 символов');
+  }
+
+  const existing = db.prepare('SELECT username FROM users WHERE LOWER(username) = LOWER(?)').get(cleanUsername);
+  if (existing) {
+    throw new Error(`Пользователь с никнеймом "${cleanUsername}" уже зарегистрирован`);
+  }
+
+  const pwdHash = hashPassword(cleanPassword);
+  const createdAt = new Date().toISOString().split('T')[0];
+  const role = params.role || 'author';
+  const assignedServersStr = JSON.stringify(params.assignedServers || []);
+
+  const stmt = db.prepare(`
+    INSERT INTO users (username, password_hash, role, assigned_servers, is_admin, can_edit_others, can_create_guides, is_verified, created_at)
+    VALUES (?, ?, ?, ?, 0, ?, ?, 0, ?)
+  `);
+  stmt.run(cleanUsername, pwdHash, role, assignedServersStr, params.canEditOthers ? 1 : 0, params.canCreateGuides !== false ? 1 : 0, createdAt);
+
+  saveAuthorProfile({
+    username: cleanUsername,
+    avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${cleanUsername}`,
+    bio: '',
+    server: '',
+    badges: ['Автор Гайдов'],
+    updatedAt: createdAt
+  });
+
+  return { username: cleanUsername, role, createdAt };
+}
+
+// Admin-only Author Registration Helper
+export function registerAuthorByAdmin(username: string, password: string, adminUsername: string) {
+  const cleanUsername = String(username || '').trim();
+  if (!cleanUsername || cleanUsername.length < 3) {
+    throw new Error('Никнейм должен состоять минимум из 3 символов');
+  }
+  if (!password || String(password).length < 4) {
     throw new Error('Пароль должен состоять минимум из 4 символов');
   }
 
@@ -319,7 +365,7 @@ export function registerAuthorByAdmin(username: string, password: string, adminU
     throw new Error('Автор с таким никнеймом уже зарегистрирован');
   }
 
-  const pwdHash = hashPassword(password);
+  const pwdHash = hashPassword(String(password));
   const createdAt = new Date().toISOString().split('T')[0];
 
   const stmt = db.prepare('INSERT INTO users (username, password_hash, is_admin, can_edit_others, can_create_guides, is_verified, created_at) VALUES (?, ?, 0, 0, 1, 0, ?)');
