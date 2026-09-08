@@ -117,10 +117,7 @@ const handleApproveGuide = async (guide: any) => {
   try {
     const res = await fetch(`/api/guides/${guide.meta.id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-author-username': props.currentUsername
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(updated)
     });
 
@@ -164,10 +161,7 @@ const confirmRejectGuide = async () => {
   try {
     const res = await fetch(`/api/guides/${guide.meta.id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-author-username': props.currentUsername
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(updated)
     });
 
