@@ -42,6 +42,7 @@ const replyText = ref<string>('');
 const isSubmitting = ref<boolean>(false);
 const cooldownSeconds = ref<number>(0);
 const cooldownErrorMsg = ref<string | null>(null);
+const currentUserAvatar = ref<string | null>(null);
 let cooldownInterval: any = null;
 
 const startCooldownTimer = (seconds: number = 60) => {

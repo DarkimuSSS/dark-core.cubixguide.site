@@ -996,12 +996,9 @@ const confirmDeleteGuide = async () => {
   if (!activeGuide.value) return;
   const guideId = activeGuide.value.meta.id;
   try {
-    const authorUser = currentUsername.value || '';
-    const res = await fetch(`/api/guides/${guideId}?requestingUsername=${encodeURIComponent(authorUser)}`, {
+    const res = await fetch(`/api/guides/${guideId}`, {
       method: 'DELETE',
-      headers: {
-        'x-author-username': authorUser
-      }
+      headers: getAuthHeaders()
     });
     if (res.ok) {
       clearDraftLocalStorage(guideId);
