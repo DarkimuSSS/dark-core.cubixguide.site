@@ -119,6 +119,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS author_invites (
     code TEXT PRIMARY KEY,
+    target_username TEXT,
     role TEXT NOT NULL DEFAULT 'author',
     assigned_servers TEXT,
     created_by TEXT NOT NULL,
@@ -127,6 +128,9 @@ db.exec(`
     created_at TEXT NOT NULL,
     used_at TEXT
   );
+  try {
+    db.exec('ALTER TABLE author_invites ADD COLUMN target_username TEXT');
+  } catch (e) {}
 `);
 
 export function getServerRules(serverId: string) {
@@ -1034,24 +1038,26 @@ export function toggleCommentReaction(commentId: string, username: string, react
 }
 
 // Invite Management Functions
-export function createAuthorInvite(createdBy: string, role: string = 'author', assignedServers: string[] = []) {
+export function createAuthorInvite(createdBy: string, targetUsername?: string, role: string = 'author', assignedServers: string[] = []) {
   const randomHex = crypto.randomBytes(4).toString('hex').toUpperCase();
   const code = `DC-INV-${randomHex}`;
   const createdAt = new Date().toISOString();
   const serversJson = JSON.stringify(assignedServers);
+  const cleanTarget = targetUsername ? targetUsername.trim() : null;
 
   db.prepare(`
-    INSERT INTO author_invites (code, role, assigned_servers, created_by, status, created_at)
-    VALUES (?, ?, ?, ?, 'active', ?)
-  `).run(code, role, serversJson, createdBy, createdAt);
+    INSERT INTO author_invites (code, target_username, role, assigned_servers, created_by, status, created_at)
+    VALUES (?, ?, ?, ?, ?, 'active', ?)
+  `).run(code, cleanTarget, role, serversJson, createdBy, createdAt);
 
-  return { code, role, assignedServers, createdBy, status: 'active', createdAt };
+  return { code, targetUsername: cleanTarget, role, assignedServers, createdBy, status: 'active', createdAt };
 }
 
 export function listAuthorInvites() {
   const rows = db.prepare('SELECT * FROM author_invites ORDER BY created_at DESC').all() as any[];
   return rows.map(r => ({
     code: r.code,
+    targetUsername: r.target_username || null,
     role: r.role,
     assignedServers: JSON.parse(r.assigned_servers || '[]'),
     createdBy: r.created_by,
@@ -1062,11 +1068,18 @@ export function listAuthorInvites() {
   }));
 }
 
-export function validateInviteCode(code: string) {
+export function validateInviteCode(code: string, username: string) {
   const row = db.prepare('SELECT * FROM author_invites WHERE code = ? AND status = "active"').get(code.trim().toUpperCase()) as any;
-  if (!row) return null;
+  if (!row) return { valid: false, error: 'Недействительный или уже использованный инвайт-код' };
+
+  if (row.target_username && row.target_username.toLowerCase() !== username.trim().toLowerCase()) {
+    return { valid: false, error: `Этот инвайт-код выписан персонально для никнейма "${row.target_username}"` };
+  }
+
   return {
+    valid: true,
     code: row.code,
+    targetUsername: row.target_username || null,
     role: row.role,
     assignedServers: JSON.parse(row.assigned_servers || '[]')
   };

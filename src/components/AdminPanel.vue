@@ -41,6 +41,7 @@ const availableServersList = ref<string[]>([
 // Invites State
 const authorInvitesList = ref<any[]>([]);
 const isInvitesLoading = ref(false);
+const inviteTargetUsername = ref('');
 const selectedInviteRole = ref<UserRole>('author');
 const selectedInviteServers = ref<string[]>([]);
 const lastGeneratedInvite = ref<string | null>(null);
@@ -245,6 +246,7 @@ const handleCreateInvite = async () => {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({
+        targetUsername: inviteTargetUsername.value.trim() || undefined,
         role: selectedInviteRole.value,
         assignedServers: selectedInviteServers.value
       })
@@ -252,7 +254,8 @@ const handleCreateInvite = async () => {
     if (res.ok) {
       const data = await res.json();
       lastGeneratedInvite.value = data.code;
-      adminMessage.value = `🔑 Сгенерирован новый инвайт-код: ${data.code}`;
+      adminMessage.value = `🔑 Сгенерирован новый инвайт-код: ${data.code}` + (data.targetUsername ? ` для пользователя ${data.targetUsername}` : '');
+      inviteTargetUsername.value = '';
       fetchAuthorInvites();
     } else {
       const err = await res.json();
@@ -1062,6 +1065,31 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
           </button>
         </div>
 
+        <!-- Target Username input optional field -->
+        <div class="p-4 rounded-2xl bg-[#0c0d0e] border border-[#26292d] space-y-3">
+          <label class="block text-xs font-bold text-slate-300">
+            Никнейм будущего автора (опционально, для привязки):
+          </label>
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <input
+              type="text"
+              v-model="inviteTargetUsername"
+              placeholder="например, DarkimuSSS (если оставить пустым — код общий)"
+              class="flex-1 bg-[#141618] border border-[#26292d] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-cyan-500/60"
+            />
+            <button
+              @click="handleCreateInvite"
+              class="px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+            >
+              <IconRenderer name="Key" size="15" />
+              <span>Создать Инвайт</span>
+            </button>
+          </div>
+          <p class="text-[11px] text-dark-muted">
+            Если указать никнейм, по этому инвайту сможет зарегистрироваться <strong class="text-cyan-300">только пользователь с этим ником</strong>.
+          </p>
+        </div>
+
         <!-- Generated Invite Alert Banner -->
         <div v-if="lastGeneratedInvite" class="p-4 rounded-2xl bg-cyan-950/60 border border-cyan-500/80 text-white space-y-2 animate-fadeIn">
           <div class="flex items-center justify-between">
@@ -1094,8 +1122,9 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
                 <span v-else class="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-slate-500/20 text-slate-400 border border-slate-500/30">Использован</span>
               </div>
               <div class="text-[10.5px] text-slate-400 space-y-0.5">
+                <div v-if="inv.targetUsername">Для кого: <span class="text-cyan-300 font-bold">{{ inv.targetUsername }}</span></div>
                 <div>Создал: <span class="text-slate-200 font-semibold">{{ inv.createdBy }}</span></div>
-                <div v-if="inv.usedBy">Использовал: <span class="text-cyan-300 font-semibold">{{ inv.usedBy }}</span></div>
+                <div v-if="inv.usedBy">Активировал: <span class="text-emerald-400 font-semibold">{{ inv.usedBy }}</span></div>
               </div>
             </div>
           </div>

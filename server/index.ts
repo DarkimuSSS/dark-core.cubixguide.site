@@ -55,8 +55,8 @@ app.post('/api/admin/invites', async (req, res) => {
       return res.status(403).json({ error: 'Доступ разрешен только для команды Dark Core Team' });
     }
 
-    const { role, assignedServers } = req.body;
-    const invite = createAuthorInvite(payload.username, role || 'author', assignedServers || []);
+    const { targetUsername, role, assignedServers } = req.body;
+    const invite = createAuthorInvite(payload.username, targetUsername, role || 'author', assignedServers || []);
     res.json(invite);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -92,12 +92,12 @@ app.post('/api/auth/register-invite', mutationRateLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Пароль должен содержать минимум 6 символов' });
     }
 
-    const validInvite = validateInviteCode(code);
-    if (!validInvite) {
-      return res.status(400).json({ error: 'Недействительный или уже использованный инвайт-код' });
+    const cleanUsername = username.trim();
+    const inviteResult = validateInviteCode(code, cleanUsername);
+    if (!inviteResult.valid) {
+      return res.status(400).json({ error: inviteResult.error });
     }
 
-    const cleanUsername = username.trim();
     const existing = getAuthorUserByUsername(cleanUsername);
     if (existing) {
       return res.status(400).json({ error: `Пользователь с никнеймом "${cleanUsername}" уже зарегистрирован` });
@@ -107,8 +107,8 @@ app.post('/api/auth/register-invite', mutationRateLimiter, async (req, res) => {
     const newUser = registerAuthorByAdmin({
       username: cleanUsername,
       password: password,
-      role: validInvite.role as any || 'author',
-      assignedServers: validInvite.assignedServers || [],
+      role: inviteResult.role as any || 'author',
+      assignedServers: inviteResult.assignedServers || [],
       canEditOthers: false,
       canCreateGuides: true
     }, `Invite:${code}`);
