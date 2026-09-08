@@ -1,6 +1,6 @@
-import TelegramBot from 'node-telegram-bot-api';
-// Fallback ESM handling for CommonJS module
-const BotConstructor = (TelegramBot as any).default || TelegramBot;
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const TelegramBot = require('node-telegram-bot-api');
 import { registerAuthorByAdmin, getAuthorUserByUsername } from './db';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
@@ -26,7 +26,7 @@ export function initTelegramBot() {
   }
 
   try {
-    bot = new BotConstructor(BOT_TOKEN, { polling: true });
+    bot = new TelegramBot(BOT_TOKEN, { polling: true });
     console.log('[Telegram Bot] Бот успешно запущен в режиме polling!');
 
     // Command /start
