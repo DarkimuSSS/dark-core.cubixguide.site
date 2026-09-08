@@ -1,4 +1,5 @@
 import { createRequire } from 'module';
+import crypto from 'crypto';
 const require = createRequire(import.meta.url);
 const TelegramBot = require('node-telegram-bot-api');
 import { registerAuthorByAdmin, getAuthorUserByUsername } from './db';
@@ -95,7 +96,7 @@ export function initTelegramBot() {
         console.log(`[Telegram Bot] Decision: ${isApprove ? 'APPROVE' : 'REJECT'} for applicant '${applicantUsername}', chatId: '${applicantChatIdStr}'`);
 
         if (isApprove) {
-          const tempPassword = 'dc_' + Math.random().toString(36).substring(2, 8);
+          const tempPassword = crypto.randomBytes(8).toString('base64').replace(/[^a-zA-Z0-9]/g, 'K').substring(0, 12);
           let regStatusMessage = '';
           
           try {

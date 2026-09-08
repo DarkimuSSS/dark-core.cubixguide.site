@@ -104,7 +104,7 @@ app.post('/api/admin/applications/approve', async (req, res) => {
     const { id, username } = req.body;
     if (!id || !username) return res.status(400).json({ error: 'Идентификатор заявки и никнейм обязательны' });
 
-    const tempPassword = 'dc_' + Math.random().toString(36).substring(2, 8);
+    const tempPassword = crypto.randomBytes(8).toString('base64').replace(/[^a-zA-Z0-9]/g, 'K').substring(0, 12);
     
     // Register author
     try {
