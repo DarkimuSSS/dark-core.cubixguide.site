@@ -647,54 +647,54 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
         <div
           v-for="author in filteredAuthors"
           :key="author.username"
-          class="p-5 rounded-2xl bg-[#141618]/90 border border-[#26292d] hover:border-cyan-500/50 transition-all duration-300 space-y-4 shadow-xl hover:shadow-cyan-950/20 group relative"
+          class="p-3.5 rounded-2xl bg-[#141618]/90 border border-[#26292d] hover:border-cyan-500/50 transition-all duration-300 space-y-2.5 shadow-xl hover:shadow-cyan-950/20 group relative"
         >
           <!-- TOP CARD HEADER: AVATAR & USERNAME -->
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex items-center gap-3">
+          <div class="flex items-start justify-between gap-2.5">
+            <div class="flex items-center gap-2.5 min-w-0">
               <!-- Avatar with Ring -->
               <div
                 @click="emit('open-profile', author.username)"
-                class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md shrink-0 cursor-pointer group-hover:scale-105 transition-transform"
+                class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 via-cyan-500 to-purple-600 p-0.5 shadow-md shrink-0 cursor-pointer group-hover:scale-105 transition-transform"
                 title="Просмотреть публичный профиль"
               >
-                <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center overflow-hidden">
+                <div class="w-full h-full bg-[#0c0d0e] rounded-[10px] flex items-center justify-center overflow-hidden">
                   <img v-if="authorAvatarsMap[author.username.toLowerCase()]" :src="authorAvatarsMap[author.username.toLowerCase()]" class="w-full h-full object-cover" />
-                  <span v-else class="text-sm font-black text-emerald-400">{{ author.username.charAt(0).toUpperCase() }}</span>
+                  <span v-else class="text-xs font-black text-emerald-400">{{ author.username.charAt(0).toUpperCase() }}</span>
                 </div>
               </div>
 
-              <div>
+              <div class="min-w-0">
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <span
                     @click="emit('open-profile', author.username)"
-                    class="font-black text-white text-base hover:text-cyan-300 transition-colors cursor-pointer"
+                    class="font-black text-white text-sm hover:text-cyan-300 transition-colors cursor-pointer truncate"
                   >
                     {{ author.username }}
                   </span>
 
-                  <span v-if="author.isVerified" class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shadow-sm" title="Проверенный Аккаунт">
-                    <IconRenderer name="Check" size="10" />
+                  <span v-if="author.isVerified" class="w-3.5 h-3.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shadow-sm shrink-0" title="Проверенный Аккаунт">
+                    <IconRenderer name="Check" size="9" />
                   </span>
                 </div>
 
-                <div class="text-[10.5px] text-dark-muted mt-0.5">Создан: {{ author.createdAt || 'Ранее' }}</div>
+                <div class="text-[9.5px] text-dark-muted leading-tight">Создан: {{ author.createdAt || 'Ранее' }}</div>
               </div>
             </div>
 
             <!-- Role Badge -->
-            <span :class="['px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border shadow-md shrink-0', DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.badgeColor || 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40']">
+            <span :class="['px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase border shadow-sm shrink-0', DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.badgeColor || 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40']">
               {{ DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.name || author.role }}
             </span>
           </div>
 
           <!-- CARD CONTROLS: ROLE SELECTOR & SERVERS -->
-          <div class="space-y-2.5 pt-3 border-t border-[#26292d]">
+          <div class="space-y-1.5 pt-2 border-t border-[#26292d]/60 text-[11px]">
             <!-- Role Selector Row -->
-            <div class="flex items-center justify-between gap-2 text-xs relative">
-              <span class="text-dark-muted font-bold text-[11px]">Роль:</span>
+            <div class="flex items-center justify-between gap-2 relative">
+              <span class="text-dark-muted font-bold text-[10.5px]">Роль:</span>
 
-              <span v-if="!canManageTargetRole(props.currentRole || (props.isAdmin ? 'dark_core_team' : 'guest'), author.role || 'author')" class="text-[10px] text-amber-400 font-bold bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-lg">
+              <span v-if="!canManageTargetRole(props.currentRole || (props.isAdmin ? 'dark_core_team' : 'guest'), author.role || 'author')" class="text-[9.5px] text-amber-400 font-bold bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-md">
                 Защищено рангом
               </span>
 
@@ -703,21 +703,21 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
                 <button
                   type="button"
                   @click="editingRoleAuthor = editingRoleAuthor === author.username ? null : author.username; editingAssignedServersAuthor = null;"
-                  :class="['px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 border transition-all cursor-pointer shadow-md', DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.badgeColor || 'bg-[#0c0d0e] text-white border-[#26292d]']"
+                  :class="['px-2 py-0.5 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 border transition-all cursor-pointer shadow-sm', DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.badgeColor || 'bg-[#0c0d0e] text-white border-[#26292d]']"
                 >
                   <span>{{ DEFAULT_SYSTEM_ROLES[author.role as UserRole || 'author']?.name }}</span>
-                  <IconRenderer name="ChevronDown" size="12" :class="['transition-transform duration-200', editingRoleAuthor === author.username ? 'rotate-180' : '']" />
+                  <IconRenderer name="ChevronDown" size="11" :class="['transition-transform duration-200', editingRoleAuthor === author.username ? 'rotate-180' : '']" />
                 </button>
 
                 <!-- Custom Role Selector Dropdown Menu -->
                 <div
                   v-if="editingRoleAuthor === author.username"
-                  class="absolute right-0 top-full mt-2 w-56 p-1.5 rounded-2xl bg-[#0e1013]/95 border border-purple-500/40 shadow-2xl backdrop-blur-xl z-40 space-y-1 animate-in fade-in zoom-in-95 duration-150"
+                  class="absolute right-0 top-full mt-1.5 w-52 p-1 rounded-2xl bg-[#0e1013]/95 border border-purple-500/40 shadow-2xl backdrop-blur-xl z-40 space-y-0.5 animate-in fade-in zoom-in-95 duration-150"
                 >
-                  <div class="text-[10px] font-extrabold text-purple-300 px-2.5 py-1 border-b border-[#26292d] uppercase tracking-wider flex justify-between items-center">
-                    <span>Выбор системной роли:</span>
+                  <div class="text-[9.5px] font-extrabold text-purple-300 px-2 py-0.5 border-b border-[#26292d] uppercase tracking-wider flex justify-between items-center">
+                    <span>Выбор роли:</span>
                     <button @click="editingRoleAuthor = null" class="text-slate-400 hover:text-white">
-                      <IconRenderer name="X" size="12" />
+                      <IconRenderer name="X" size="11" />
                     </button>
                   </div>
 
@@ -727,48 +727,48 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
                     :disabled="getRolePriority(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest')) >= r.priority && props.currentRole !== 'super_admin'"
                     @click="handleAdminChangeUserRole(author, r.role); editingRoleAuthor = null;"
                     :class="[
-                      'w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer border',
+                      'w-full text-left px-2 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center justify-between cursor-pointer border',
                       author.role === r.role ? 'bg-purple-500/20 border-purple-500/40 text-purple-200' : 'hover:bg-[#16181b] border-transparent text-slate-300',
                       (getRolePriority(props.currentRole || (props.isAdmin ? 'super_admin' : 'guest')) >= r.priority && props.currentRole !== 'super_admin') ? 'opacity-40 cursor-not-allowed' : ''
                     ]"
                   >
-                    <span :class="['px-2 py-0.5 rounded-full text-[10px] uppercase font-bold border', r.badgeColor]">
+                    <span :class="['px-1.5 py-0.5 rounded-full text-[9px] uppercase font-bold border', r.badgeColor]">
                       {{ r.name }}
                     </span>
-                    <IconRenderer v-if="author.role === r.role" name="Check" size="13" class="text-purple-400" />
+                    <IconRenderer v-if="author.role === r.role" name="Check" size="12" class="text-purple-400" />
                   </button>
                 </div>
               </div>
             </div>
 
             <!-- Assigned Servers Row -->
-            <div class="flex items-center justify-between gap-2 text-xs relative">
-              <span class="text-dark-muted font-bold text-[11px]">Закрепленные сервера:</span>
+            <div class="flex items-center justify-between gap-2 relative">
+              <span class="text-dark-muted font-bold text-[10.5px]">Закрепленные сервера:</span>
 
               <button
                 @click="editingAssignedServersAuthor = editingAssignedServersAuthor === author.username ? null : author.username"
-                class="px-2.5 py-1 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-300 border border-emerald-500/40 text-[10.5px] font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
+                class="px-2 py-0.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-300 border border-emerald-500/40 text-[10px] font-extrabold transition-all cursor-pointer flex items-center gap-1"
               >
-                <IconRenderer name="Box" size="12" />
+                <IconRenderer name="Box" size="11" />
                 <span>{{ (author.assignedServers && author.assignedServers.length > 0) ? `${author.assignedServers.length} серв.` : 'Все сервера' }}</span>
               </button>
 
               <!-- Assigned Servers Selection Modal Dropdown -->
-              <div v-if="editingAssignedServersAuthor === author.username" class="absolute right-0 top-full mt-2 w-72 p-3.5 rounded-2xl bg-[#0d0f11] border border-emerald-500/50 shadow-2xl z-30 space-y-2.5 backdrop-blur-xl">
-                <div class="text-[11px] font-bold text-emerald-300 border-b border-[#26292d] pb-1.5 flex justify-between items-center">
+              <div v-if="editingAssignedServersAuthor === author.username" class="absolute right-0 top-full mt-1.5 w-64 p-2.5 rounded-2xl bg-[#0d0f11] border border-emerald-500/50 shadow-2xl z-30 space-y-2 backdrop-blur-xl">
+                <div class="text-[10px] font-bold text-emerald-300 border-b border-[#26292d] pb-1 flex justify-between items-center">
                   <span>Выбор серверов CubixWorld:</span>
                   <button @click="editingAssignedServersAuthor = null" class="text-slate-400 hover:text-white">
-                    <IconRenderer name="X" size="13" />
+                    <IconRenderer name="X" size="12" />
                   </button>
                 </div>
 
-                <div class="flex flex-wrap gap-1 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                <div class="flex flex-wrap gap-1 max-h-40 overflow-y-auto custom-scrollbar pr-1">
                   <button
                     v-for="srv in availableServersList"
                     :key="srv"
                     @click="handleAdminToggleAssignedServer(author, srv)"
                     :class="[
-                      'px-2 py-0.5 rounded-lg text-[10.5px] font-bold border transition-all cursor-pointer flex items-center gap-1',
+                      'px-1.5 py-0.5 rounded-md text-[10px] font-bold border transition-all cursor-pointer flex items-center gap-1',
                       (author.assignedServers || []).includes(srv)
                         ? 'bg-emerald-600 text-white border-emerald-400 shadow-sm'
                         : 'bg-[#16181a] text-slate-400 border-[#26292d] hover:text-white'
@@ -782,32 +782,32 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
           </div>
 
           <!-- BOTTOM FOOTER ACTIONS: PASSWORD RESET & DELETE -->
-          <div class="pt-3 border-t border-[#26292d] flex items-center justify-between">
+          <div class="pt-2 border-t border-[#26292d]/60 flex items-center justify-between gap-1 text-[10.5px]">
             <button
               @click="emit('open-profile', author.username)"
-              class="text-xs font-bold text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
+              class="px-2 py-0.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold transition-all flex items-center gap-1 cursor-pointer"
             >
-              <IconRenderer name="User" size="13" />
+              <IconRenderer name="User" size="11" />
               <span>Профиль</span>
             </button>
 
-            <div v-if="canManageTargetRole(props.currentRole || (props.isAdmin ? 'dark_core_team' : 'guest'), author.role || 'author')" class="flex items-center gap-1.5">
+            <div v-if="canManageTargetRole(props.currentRole || (props.isAdmin ? 'dark_core_team' : 'guest'), author.role || 'author')" class="flex items-center gap-1">
               <button
                 @click="resetTargetUsername = (resetTargetUsername === author.username ? null : author.username); resetNewPassword = '';"
-                class="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10.5px] font-bold transition-all cursor-pointer flex items-center gap-1"
+                class="px-2 py-0.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold transition-all cursor-pointer flex items-center gap-1"
                 title="Сбросить пароль"
               >
-                <IconRenderer name="Key" size="12" />
+                <IconRenderer name="Key" size="11" />
                 <span>Пароль</span>
               </button>
 
               <button
                 v-if="author.username.toLowerCase() !== currentUsername.toLowerCase()"
                 @click="promptDeleteAuthor(author.username)"
-                class="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10.5px] font-bold transition-all cursor-pointer flex items-center gap-1"
+                class="px-2 py-0.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold transition-all cursor-pointer flex items-center gap-1"
                 title="Удалить аккаунт"
               >
-                <IconRenderer name="Trash2" size="12" />
+                <IconRenderer name="Trash2" size="11" />
                 <span>Удалить</span>
               </button>
             </div>
