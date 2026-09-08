@@ -163,19 +163,46 @@ const handleRegisterInvite = async () => {
           </div>
           <div>
             <h2 class="text-lg font-extrabold text-white">
-              {{ authMode === 'cubix' ? 'Вход CubixWorld' : 'Вход для Авторов' }}
+              {{ viewState === 'register' ? 'Регистрация по инвайту' : (authMode === 'cubix' ? 'Вход CubixWorld' : 'Авторизация') }}
             </h2>
             <p class="text-xs text-dark-muted">
-              {{ authMode === 'cubix' ? 'Прямой вход через аккаунт CubixWorld.net' : 'Авторизуйтесь для создания и правки гайдов' }}
+              {{ viewState === 'register' ? 'Введите ваш инвайт-код от администрации' : (authMode === 'cubix' ? 'Прямой вход через аккаунт CubixWorld.net' : 'Вход для авторов и модераторов') }}
             </p>
           </div>
         </div>
         <button
           type="button"
           @click="emit('close')"
-          class="text-dark-muted hover:text-white p-1 rounded-xl hover:bg-[#212429] transition-all"
+          class="text-dark-muted hover:text-white p-1 rounded-xl hover:bg-[#212429] transition-all cursor-pointer"
         >
           <IconRenderer name="X" size="20" />
+        </button>
+      </div>
+
+      <!-- Main Navigation Tabs: Login vs Invite Activation -->
+      <div class="grid grid-cols-2 gap-1.5 p-1 bg-[#0c0d0e] rounded-2xl border border-[#26292d]">
+        <button
+          type="button"
+          @click="viewState = 'login'; errorMessage = ''; inviteSuccessMsg = ''"
+          :class="[
+            'py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer',
+            viewState === 'login' ? 'bg-[#1e2227] text-white border border-slate-700 shadow-md' : 'text-dark-muted hover:text-white'
+          ]"
+        >
+          <IconRenderer name="Shield" size="14" class="text-emerald-400" />
+          <span>Вход</span>
+        </button>
+
+        <button
+          type="button"
+          @click="viewState = 'register'; errorMessage = ''; inviteSuccessMsg = ''"
+          :class="[
+            'py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer',
+            viewState === 'register' ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-md shadow-cyan-950/50' : 'text-dark-muted hover:text-white'
+          ]"
+        >
+          <IconRenderer name="Key" size="14" class="text-cyan-400" />
+          <span>Активировать код</span>
         </button>
       </div>
 
