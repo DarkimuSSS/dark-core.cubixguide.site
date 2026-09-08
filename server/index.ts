@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction, saveAuthorApplication, listAuthorApplications, updateApplicationStatus } from './db';
 import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
