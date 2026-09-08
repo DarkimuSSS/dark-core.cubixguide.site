@@ -632,7 +632,7 @@ const handleBannerFileUpload = (e: Event) => {
                   <div class="w-full h-full bg-[#0c0d0e] rounded-[14px] flex items-center justify-center overflow-hidden">
                     <img v-if="profile.avatarUrl" :src="profile.avatarUrl" class="w-full h-full object-cover" />
                     <div v-else class="text-3xl font-black text-emerald-400">
-                      {{ profile.username.charAt(0).toUpperCase() }}
+                      {{ (profile?.username || 'A').charAt(0).toUpperCase() }}
                     </div>
                   </div>
                 </div>

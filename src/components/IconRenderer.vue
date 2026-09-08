@@ -10,7 +10,7 @@ const props = defineProps<{
 }>();
 
 const iconComponent = computed(() => {
-  if (!props.name) return LucideIcons.HelpCircle;
+  if (!props.name || typeof props.name !== 'string') return LucideIcons.HelpCircle;
   // Normalize string to PascalCase if needed
   const formattedName = props.name.charAt(0).toUpperCase() + props.name.slice(1);
   return (LucideIcons as Record<string, any>)[formattedName] || LucideIcons.HelpCircle;
