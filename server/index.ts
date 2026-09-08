@@ -1,6 +1,101 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction, createAuthorInvite, listAuthorInvites, validateInviteCode, redeemInviteCode } from './db';
+
+// ... (other code)
+
+// Admin API: Create Author Invite Code (dark_core_team)
+app.post('/api/admin/invites', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'Токен авторизации отсутствует' });
+    const payload = verifyJwt(authHeader.replace('Bearer ', ''));
+    if (!payload || payload.role !== 'dark_core_team') {
+      return res.status(403).json({ error: 'Доступ разрешен только для команды Dark Core Team' });
+    }
+
+    const { role, assignedServers } = req.body;
+    const invite = createAuthorInvite(payload.username, role || 'author', assignedServers || []);
+    res.json(invite);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin API: List all Invite Codes (dark_core_team)
+app.get('/api/admin/invites', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'Токен авторизации отсутствует' });
+    const payload = verifyJwt(authHeader.replace('Bearer ', ''));
+    if (!payload || payload.role !== 'dark_core_team') {
+      return res.status(403).json({ error: 'Доступ разрешен только для команды Dark Core Team' });
+    }
+
+    const invites = listAuthorInvites();
+    res.json(invites);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Public API: Register via Invite Code
+app.post('/api/auth/register-invite', mutationRateLimiter, async (req, res) => {
+  try {
+    const { code, username, password } = req.body;
+    if (!code || !username || !password) {
+      return res.status(400).json({ error: 'Укажите инвайт-код, никнейм и желаемый пароль' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Пароль должен содержать минимум 6 символов' });
+    }
+
+    const validInvite = validateInviteCode(code);
+    if (!validInvite) {
+      return res.status(400).json({ error: 'Недействительный или уже использованный инвайт-код' });
+    }
+
+    const cleanUsername = username.trim();
+    const existing = getAuthorUserByUsername(cleanUsername);
+    if (existing) {
+      return res.status(400).json({ error: `Пользователь с никнеймом "${cleanUsername}" уже зарегистрирован` });
+    }
+
+    // Register user
+    const newUser = registerAuthorByAdmin({
+      username: cleanUsername,
+      password: password,
+      role: validInvite.role as any || 'author',
+      assignedServers: validInvite.assignedServers || [],
+      canEditOthers: false,
+      canCreateGuides: true
+    }, `Invite:${code}`);
+
+    // Mark invite as redeemed
+    redeemInviteCode(code, cleanUsername);
+
+    // Issue JWT token so user is automatically logged in
+    const token = signJwt({ username: cleanUsername, role: newUser.role });
+
+    res.json({
+      ok: true,
+      token,
+      user: {
+        username: cleanUsername,
+        role: newUser.role,
+        isAdmin: newUser.isAdmin,
+        canEditOthers: newUser.canEditOthers,
+        canCreateGuides: newUser.canCreateGuides,
+        assignedServers: newUser.assignedServers
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// API Endpoints for Support Tickets
 import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 

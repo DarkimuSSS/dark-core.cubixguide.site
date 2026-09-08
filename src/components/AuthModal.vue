@@ -15,8 +15,11 @@ const username = ref('');
 const password = ref('');
 const showPassword = ref(false);
 const errorMessage = ref('');
+const inviteSuccessMsg = ref('');
 const isLoading = ref(false);
 const authMode = ref<'local' | 'cubix'>('local');
+const viewState = ref<'login' | 'register'>('login');
+const inviteCode = ref('');
 const isCubixUnlocked = ref(false);
 
 const handleKeyDown = (e: KeyboardEvent) => {
@@ -87,6 +90,61 @@ const handleLogin = async () => {
     isLoading.value = false;
   }
 };
+
+const handleRegisterInvite = async () => {
+  errorMessage.value = '';
+  inviteSuccessMsg.value = '';
+  if (!inviteCode.value.trim() || !username.value.trim() || !password.value.trim()) {
+    errorMessage.value = 'Заполните инвайт-код, никнейм и желаемый пароль';
+    return;
+  }
+
+  if (password.value.trim().length < 6) {
+    errorMessage.value = 'Пароль должен быть длиннее 6 символов';
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+    const res = await fetch('/api/auth/register-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: inviteCode.value.trim(),
+        username: username.value.trim(),
+        password: password.value.trim()
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.user) {
+      if (data.token) {
+        localStorage.setItem('cubix_jwt_token', data.token);
+      }
+      inviteSuccessMsg.value = '🎉 Регистрация по инвайту успешна!';
+      setTimeout(() => {
+        emit('authenticate', {
+          username: data.user.username,
+          isAdmin: Boolean(data.user.isAdmin),
+          canEditOthers: Boolean(data.user.canEditOthers),
+          canCreateGuides: Boolean(data.user.canCreateGuides),
+          token: data.token
+        });
+        username.value = '';
+        password.value = '';
+        inviteCode.value = '';
+        emit('close');
+      }, 500);
+    } else {
+      errorMessage.value = data.error || 'Ошибка активации инвайта';
+    }
+  } catch (err: any) {
+    errorMessage.value = 'Ошибка соединения с сервером';
+  } finally {
+    isLoading.value = false;
+  }
+};
 </script>
 
 <template>
@@ -148,14 +206,20 @@ const handleLogin = async () => {
         </button>
       </div>
 
+      <!-- Success Message -->
+      <div v-if="inviteSuccessMsg" class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs font-bold flex items-center gap-2">
+        <IconRenderer name="CheckCircle" size="16" class="text-emerald-400 flex-shrink-0" />
+        <span>{{ inviteSuccessMsg }}</span>
+      </div>
+
       <!-- Error Message -->
       <div v-if="errorMessage" class="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs font-bold flex items-center gap-2">
         <IconRenderer name="AlertTriangle" size="16" class="text-rose-400 flex-shrink-0" />
         <span>{{ errorMessage }}</span>
       </div>
 
-      <!-- Login Form -->
-      <form @submit.prevent="handleLogin" class="space-y-4">
+      <!-- VIEW 1: Login Form -->
+      <form v-if="viewState === 'login'" @submit.prevent="handleLogin" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">
             {{ authMode === 'cubix' ? 'Игровой никнейм CubixWorld' : 'Никнейм автора' }}
@@ -199,19 +263,89 @@ const handleLogin = async () => {
         </button>
       </form>
 
+      <!-- VIEW 2: Invite Registration Form -->
+      <form v-else @submit.prevent="handleRegisterInvite" class="space-y-4 animate-fadeIn">
+        <div>
+          <label class="block text-xs font-bold text-cyan-300 mb-1.5">
+            Пригласительный Инвайт-код *
+          </label>
+          <input
+            type="text"
+            v-model="inviteCode"
+            placeholder="например, DC-INV-8A2F"
+            class="w-full bg-[#0c0d0e] border border-cyan-500/50 font-mono text-cyan-300 text-xs font-bold rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-cyan-400 uppercase tracking-widest"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">
+            Ваш игровой Никнейм на CubixWorld *
+          </label>
+          <input
+            type="text"
+            v-model="username"
+            placeholder="например, DarkimuSSS"
+            class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-emerald-accent"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">
+            Придумайте свой пароль *
+          </label>
+          <div class="relative">
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              v-model="password"
+              placeholder="Минимум 6 символов..."
+              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-3.5 pr-10 py-2.5 focus:outline-none focus:border-emerald-accent"
+            />
+            <button
+              type="button"
+              @click="showPassword = !showPassword"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1"
+            >
+              <IconRenderer :name="showPassword ? 'EyeOff' : 'Eye'" size="16" class="text-cyan-400" />
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          :disabled="isLoading"
+          class="w-full py-3 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <span v-if="isLoading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span>🔑 Активировать Инвайт и Создать Аккаунт</span>
+        </button>
+      </form>
+
       <!-- Closed Registration Note & Legal Disclaimer -->
       <div v-if="authMode === 'cubix'" class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 space-y-1.5 text-center text-[10.5px] leading-relaxed shadow-lg animate-fadeIn">
         <p class="text-amber-200 font-medium">
           🔒 <span class="font-bold text-white">Прямая сквозная аутентификация</span>. Ваш пароль зашифрован RSA-ключом и <strong class="text-amber-400">не сохраняется</strong> на нашем сайте.
         </p>
       </div>
-      <div v-else class="bg-[#111315] border border-[#26292d] rounded-2xl p-3.5 space-y-1.5 text-center text-[10.5px] leading-relaxed shadow-lg">
+      <div v-else-if="viewState === 'login'" class="bg-[#111315] border border-[#26292d] rounded-2xl p-3.5 space-y-1.5 text-center text-[10.5px] leading-relaxed shadow-lg">
         <p class="text-slate-300 font-medium">
-          🔒 <span class="font-bold text-white">Доступ только для зарегистрированных авторов</span>.
+          Есть пригласительный инвайт-код?
         </p>
-        <p class="text-[10px] text-slate-400/80 pt-1 border-t border-[#26292d]">
-          Учётные записи выдаются администрацией команде редакторов вики.
-        </p>
+        <button
+          type="button"
+          @click="viewState = 'register'; errorMessage = ''; inviteSuccessMsg = ''"
+          class="text-xs text-cyan-400 font-extrabold hover:underline cursor-pointer"
+        >
+          🔑 Активировать инвайт и зарегистрироваться
+        </button>
+      </div>
+      <div v-else class="bg-[#111315] border border-[#26292d] rounded-2xl p-3.5 text-center text-[10.5px] leading-relaxed shadow-lg">
+        <button
+          type="button"
+          @click="viewState = 'login'; errorMessage = ''; inviteSuccessMsg = ''"
+          class="text-xs text-slate-400 font-bold hover:text-white cursor-pointer"
+        >
+          ← Вернуться к обычному входу
+        </button>
       </div>
     </div>
   </div>

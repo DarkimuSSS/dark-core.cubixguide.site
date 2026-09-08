@@ -116,6 +116,17 @@ db.exec(`
     sections TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS author_invites (
+    code TEXT PRIMARY KEY,
+    role TEXT NOT NULL DEFAULT 'author',
+    assigned_servers TEXT,
+    created_by TEXT NOT NULL,
+    used_by TEXT,
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TEXT NOT NULL,
+    used_at TEXT
+  );
 `);
 
 export function getServerRules(serverId: string) {
@@ -1020,6 +1031,51 @@ export function toggleCommentReaction(commentId: string, username: string, react
     db.prepare('INSERT INTO comment_reactions (comment_id, username, reaction_type) VALUES (?, ?, ?)').run(commentId, username, reactionType);
     return { action: 'added', reactionType };
   }
+}
+
+// Invite Management Functions
+export function createAuthorInvite(createdBy: string, role: string = 'author', assignedServers: string[] = []) {
+  const randomHex = crypto.randomBytes(4).toString('hex').toUpperCase();
+  const code = `DC-INV-${randomHex}`;
+  const createdAt = new Date().toISOString();
+  const serversJson = JSON.stringify(assignedServers);
+
+  db.prepare(`
+    INSERT INTO author_invites (code, role, assigned_servers, created_by, status, created_at)
+    VALUES (?, ?, ?, ?, 'active', ?)
+  `).run(code, role, serversJson, createdBy, createdAt);
+
+  return { code, role, assignedServers, createdBy, status: 'active', createdAt };
+}
+
+export function listAuthorInvites() {
+  const rows = db.prepare('SELECT * FROM author_invites ORDER BY created_at DESC').all() as any[];
+  return rows.map(r => ({
+    code: r.code,
+    role: r.role,
+    assignedServers: JSON.parse(r.assigned_servers || '[]'),
+    createdBy: r.created_by,
+    usedBy: r.used_by,
+    status: r.status,
+    createdAt: r.created_at,
+    usedAt: r.used_at
+  }));
+}
+
+export function validateInviteCode(code: string) {
+  const row = db.prepare('SELECT * FROM author_invites WHERE code = ? AND status = "active"').get(code.trim().toUpperCase()) as any;
+  if (!row) return null;
+  return {
+    code: row.code,
+    role: row.role,
+    assignedServers: JSON.parse(row.assigned_servers || '[]')
+  };
+}
+
+export function redeemInviteCode(code: string, username: string) {
+  const usedAt = new Date().toISOString();
+  db.prepare('UPDATE author_invites SET status = "used", used_by = ?, used_at = ? WHERE code = ?').run(username, usedAt, code.trim().toUpperCase());
+  return { success: true };
 }
 
 

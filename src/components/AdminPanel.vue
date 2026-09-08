@@ -38,6 +38,13 @@ const availableServersList = ref<string[]>([
   "SkyTech", "MagicalTech"
 ]);
 
+// Invites State
+const authorInvitesList = ref<any[]>([]);
+const isInvitesLoading = ref(false);
+const selectedInviteRole = ref<UserRole>('author');
+const selectedInviteServers = ref<string[]>([]);
+const lastGeneratedInvite = ref<string | null>(null);
+
 // Registration State
 const newAuthorUsername = ref('');
 const newAuthorPassword = ref('');
@@ -216,9 +223,52 @@ const fetchAdminAuthorsList = async () => {
   }
 };
 
+const fetchAuthorInvites = async () => {
+  if (props.currentRole !== 'dark_core_team') return;
+  isInvitesLoading.value = true;
+  try {
+    const res = await fetch('/api/admin/invites', { headers: getAuthHeaders() });
+    if (res.ok) {
+      authorInvitesList.value = await res.json();
+    }
+  } catch (e) {
+    console.error('Ошибка загрузки инвайтов:', e);
+  } finally {
+    isInvitesLoading.value = false;
+  }
+};
+
+const handleCreateInvite = async () => {
+  adminMessage.value = '';
+  try {
+    const res = await fetch('/api/admin/invites', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        role: selectedInviteRole.value,
+        assignedServers: selectedInviteServers.value
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      lastGeneratedInvite.value = data.code;
+      adminMessage.value = `🔑 Сгенерирован новый инвайт-код: ${data.code}`;
+      fetchAuthorInvites();
+    } else {
+      const err = await res.json();
+      adminMessage.value = `Ошибка: ${err.error}`;
+    }
+  } catch (e: any) {
+    adminMessage.value = `Ошибка: ${e.message}`;
+  }
+};
+
 onMounted(() => {
   fetchAdminAuthorsList();
   fetchPendingGuides();
+  if (props.currentRole === 'dark_core_team') {
+    fetchAuthorInvites();
+  }
 });
 
 const filteredAuthors = computed(() => {
@@ -563,7 +613,7 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
         ]"
       >
         <IconRenderer name="UserPlus" size="15" />
-        <span>Регистрация Автора</span>
+        <span>Инвайт-коды & Доступ</span>
       </button>
     </div>
 
@@ -990,77 +1040,140 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
       </div>
     </div>
 
-    <!-- TAB 4: REGISTER NEW AUTHOR ACCOUNT -->
-    <div v-else-if="activeTab === 'register'" class="max-w-xl mx-auto p-6 rounded-3xl bg-[#141618] border border-emerald-500/40 shadow-2xl space-y-4">
-      <div class="flex items-center gap-3 border-b border-[#26292d] pb-4">
-        <div class="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-          <IconRenderer name="UserPlus" size="22" />
+    <!-- TAB 4: INVITES GENERATOR & MANUAL REGISTER -->
+    <div v-else-if="activeTab === 'register'" class="space-y-6">
+      
+      <!-- Invite Generator Card (Strictly for dark_core_team) -->
+      <div v-if="props.currentRole === 'dark_core_team'" class="p-6 rounded-3xl bg-[#141618] border border-cyan-500/40 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-[#26292d] pb-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 rounded-2xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+              <IconRenderer name="Key" size="22" />
+            </div>
+            <div>
+              <h3 class="text-base font-black text-white">Генератор Пригласительных Инвайт-кодов</h3>
+              <p class="text-xs text-dark-muted">Создавайте одноразовые ключи доступа для кандидатов на роль Автора</p>
+            </div>
+          </div>
+
+          <button @click="handleCreateInvite" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer">
+            <IconRenderer name="Plus" size="14" />
+            <span>Сгенерировать Инвайт</span>
+          </button>
         </div>
-        <div>
-          <h3 class="text-base font-black text-white">Регистрация Нового Участника</h3>
-          <p class="text-xs text-dark-muted">Создайте новый аккаунт с назначением системной роли и пароля</p>
+
+        <!-- Generated Invite Alert Banner -->
+        <div v-if="lastGeneratedInvite" class="p-4 rounded-2xl bg-cyan-950/60 border border-cyan-500/80 text-white space-y-2 animate-fadeIn">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-cyan-300">🎉 Готовый инвайт-код (скопируйте и передайте кандидату):</span>
+            <button @click="lastGeneratedInvite = null" class="text-slate-400 hover:text-white p-1">
+              <IconRenderer name="X" size="14" />
+            </button>
+          </div>
+          <div class="p-3 bg-black/60 rounded-xl border border-cyan-500/40 flex items-center justify-between">
+            <span class="font-mono text-base font-black text-cyan-300 tracking-widest select-all">{{ lastGeneratedInvite }}</span>
+            <span class="text-[11px] text-slate-400">Одноразовый • Роль: {{ selectedInviteRole }}</span>
+          </div>
+        </div>
+
+        <!-- Active Invites Table -->
+        <div class="space-y-2 pt-2">
+          <h4 class="text-xs font-extrabold text-slate-300 uppercase tracking-wider">История Инвайтов ({{ authorInvitesList.length }})</h4>
+          <div v-if="authorInvitesList.length === 0" class="p-4 text-center text-xs text-slate-500 bg-[#0c0d0e] rounded-xl border border-[#26292d]">
+            Активных инвайт-кодов пока нет. Сгенерируйте первый код кнопкой выше.
+          </div>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div
+              v-for="inv in authorInvitesList"
+              :key="inv.code"
+              class="p-3.5 rounded-2xl bg-[#0c0d0e] border border-[#26292d] space-y-1.5 shadow-md"
+            >
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-xs text-white tracking-widest select-all">{{ inv.code }}</span>
+                <span v-if="inv.status === 'active'" class="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Активен</span>
+                <span v-else class="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-slate-500/20 text-slate-400 border border-slate-500/30">Использован</span>
+              </div>
+              <div class="text-[10.5px] text-slate-400 space-y-0.5">
+                <div>Создал: <span class="text-slate-200 font-semibold">{{ inv.createdBy }}</span></div>
+                <div v-if="inv.usedBy">Использовал: <span class="text-cyan-300 font-semibold">{{ inv.usedBy }}</span></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <form @submit.prevent="handleAdminRegisterAuthor" class="space-y-4 pt-1">
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-300">Игровой / Локальный никнейм:</label>
-          <div class="relative">
-            <input
-              type="text"
-              v-model="newAuthorUsername"
-              placeholder="Введите никнейм..."
-              class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500/70 text-white text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none transition-all"
-            />
-            <IconRenderer name="User" size="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" />
+      <!-- Manual Direct Registration Card -->
+      <div class="max-w-xl mx-auto p-6 rounded-3xl bg-[#141618] border border-emerald-500/40 shadow-2xl space-y-4">
+        <div class="flex items-center gap-3 border-b border-[#26292d] pb-4">
+          <div class="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+            <IconRenderer name="UserPlus" size="22" />
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white">Прямое создание аккаунта администратором</h3>
+            <p class="text-xs text-dark-muted">Создайте учетную запись вручную в случае необходимости</p>
           </div>
         </div>
 
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-300">Начальный пароль аккаунта:</label>
-          <div class="relative">
-            <input
-              :type="showNewAuthorPassword ? 'text' : 'password'"
-              v-model="newAuthorPassword"
-              placeholder="Введите пароль..."
-              class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500/70 text-white text-xs rounded-xl pl-9 pr-9 py-2.5 focus:outline-none transition-all"
-            />
-            <IconRenderer name="Lock" size="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" />
-            <button
-              type="button"
-              @click="showNewAuthorPassword = !showNewAuthorPassword"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white"
+        <form @submit.prevent="handleAdminRegisterAuthor" class="space-y-4 pt-1">
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-300">Игровой / Локальный никнейм:</label>
+            <div class="relative">
+              <input
+                type="text"
+                v-model="newAuthorUsername"
+                placeholder="Введите никнейм..."
+                class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500/70 text-white text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none transition-all"
+              />
+              <IconRenderer name="User" size="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" />
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-300">Начальный пароль аккаунта:</label>
+            <div class="relative">
+              <input
+                :type="showNewAuthorPassword ? 'text' : 'password'"
+                v-model="newAuthorPassword"
+                placeholder="Введите пароль..."
+                class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500/70 text-white text-xs rounded-xl pl-9 pr-9 py-2.5 focus:outline-none transition-all"
+              />
+              <IconRenderer name="Lock" size="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" />
+              <button
+                type="button"
+                @click="showNewAuthorPassword = !showNewAuthorPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white"
+              >
+                <IconRenderer :name="showNewAuthorPassword ? 'EyeOff' : 'Eye'" size="15" />
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-300">Начальная системная роль:</label>
+            <select
+              v-model="newAuthorRole"
+              class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500/70 text-white text-xs font-bold rounded-xl px-3 py-2.5 focus:outline-none cursor-pointer"
             >
-              <IconRenderer :name="showNewAuthorPassword ? 'EyeOff' : 'Eye'" size="15" />
-            </button>
+              <option
+                v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)"
+                :key="r.role"
+                :value="r.role"
+                :disabled="getRolePriority(props.currentRole || (props.isAdmin ? 'dark_core_team' : 'guest')) >= r.priority && props.currentRole !== 'dark_core_team'"
+              >
+                {{ r.name }}
+              </option>
+            </select>
           </div>
-        </div>
 
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-300">Начальная системная роль:</label>
-          <select
-            v-model="newAuthorRole"
-            class="w-full bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500/70 text-white text-xs font-bold rounded-xl px-3 py-2.5 focus:outline-none cursor-pointer"
+          <button
+            type="submit"
+            class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
           >
-            <option
-              v-for="r in Object.values(DEFAULT_SYSTEM_ROLES)"
-              :key="r.role"
-              :value="r.role"
-              :disabled="getRolePriority(props.currentRole || (props.isAdmin ? 'dark_core_team' : 'guest')) >= r.priority && props.currentRole !== 'dark_core_team'"
-            >
-              {{ r.name }}
-            </option>
-          </select>
-        </div>
-
-        <button
-          type="submit"
-          class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
-        >
-          <IconRenderer name="UserPlus" size="16" />
-          <span>Создать учетную запись</span>
-        </button>
-      </form>
+            <IconRenderer name="UserPlus" size="16" />
+            <span>Создать учетную запись</span>
+          </button>
+        </form>
+      </div>
     </div>
 
     <!-- Confirm Author Delete Modal -->
