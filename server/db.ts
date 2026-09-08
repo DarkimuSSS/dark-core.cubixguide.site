@@ -128,10 +128,11 @@ db.exec(`
     created_at TEXT NOT NULL,
     used_at TEXT
   );
-  try {
-    db.exec('ALTER TABLE author_invites ADD COLUMN target_username TEXT');
-  } catch (e) {}
 `);
+
+try {
+  db.exec('ALTER TABLE author_invites ADD COLUMN target_username TEXT');
+} catch (e) {}
 
 export function getServerRules(serverId: string) {
   const row = db.prepare('SELECT * FROM server_rules WHERE server_id = ?').get(serverId) as any;
