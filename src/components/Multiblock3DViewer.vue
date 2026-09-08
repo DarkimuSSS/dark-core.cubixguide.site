@@ -111,19 +111,16 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
 
 // Compute 3D Position offset for voxels
 const getVoxelStyle = (x: number, y: number, z: number, color: string) => {
-  const cubeSize = 36; // base pixel size of cube
-  const gap = 4;
-  const step = cubeSize + gap;
+  const cubeSize = 40; // exact size of cubic voxel
   const halfSize = (size.value - 1) / 2;
 
-  const posX = (x - halfSize) * step;
-  const posY = -(y * step); // Y goes up
-  const posZ = (z - halfSize) * step;
+  const posX = (x - halfSize) * cubeSize;
+  const posY = -(y * cubeSize); // Y goes up vertically
+  const posZ = (z - halfSize) * cubeSize;
 
   return {
     transform: `translate3d(${posX}px, ${posY}px, ${posZ}px)`,
-    backgroundColor: color,
-    borderColor: color !== 'transparent' ? color : 'transparent'
+    backgroundColor: color
   };
 };
 
@@ -319,30 +316,30 @@ const materialSummary = computed(() => {
   width: 0;
   height: 0;
   transform-style: preserve-3d;
-  perspective: 1000px;
 }
 
 .voxel-cube {
   position: absolute;
-  width: 36px;
-  height: 36px;
+  top: -20px;
+  left: -20px;
+  width: 40px;
+  height: 40px;
   transform-style: preserve-3d;
-  transition: transform 0.15s ease-out;
 }
 
 .face {
   position: absolute;
-  width: 36px;
-  height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
-  backface-visibility: visible;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
+  backface-visibility: hidden;
 }
 
-.front  { transform: translateZ(18px); filter: brightness(0.9); }
-.back   { transform: rotateY(180deg) translateZ(18px); filter: brightness(0.6); }
-.top    { transform: rotateX(90deg) translateZ(18px); filter: brightness(1.15); }
-.bottom { transform: rotateX(-90deg) translateZ(18px); filter: brightness(0.4); }
-.left   { transform: rotateY(-90deg) translateZ(18px); filter: brightness(0.75); }
-.right  { transform: rotateY(90deg) translateZ(18px); filter: brightness(0.85); }
+.front  { transform: translateZ(20px); filter: brightness(0.95); }
+.back   { transform: rotateY(180deg) translateZ(20px); filter: brightness(0.5); }
+.top    { transform: rotateX(90deg) translateZ(20px); filter: brightness(1.2); }
+.bottom { transform: rotateX(-90deg) translateZ(20px); filter: brightness(0.35); }
+.left   { transform: rotateY(-90deg) translateZ(20px); filter: brightness(0.7); }
+.right  { transform: rotateY(90deg) translateZ(20px); filter: brightness(0.85); }
 </style>
