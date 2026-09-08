@@ -956,10 +956,13 @@ const requestDeleteGuide = () => {
   isDeleteGuideConfirmOpen.value = true;
 };
 
-// Delete a guide by ID directly from the catalog (admin quick-delete)
+// Delete a guide by ID directly from the catalog (admin / authorized quick-delete)
 const pendingDeleteGuideId = ref<string>('');
 const promptDeleteGuideById = (guideId: string) => {
-  if (!currentUserIsAdmin.value) return;
+  if (!currentUserIsAdmin.value && !currentUserCanEditOthers.value) {
+    showToast('У вас нет прав для удаления чужих гайдов');
+    return;
+  }
   pendingDeleteGuideId.value = guideId;
   isDeleteGuideConfirmOpen.value = true;
 };
@@ -1529,12 +1532,12 @@ const handleViewAllAuthorGuides = (username: string) => {
               :guides="guides"
               :initial-search-query="initialCatalogSearchQuery"
               :is-admin="currentUserIsAdmin"
-              :can-edit-others="canUserEditActiveGuide"
+              :can-edit-others="currentUserCanEditOthers || currentUserIsAdmin"
               :current-username="currentUsername || ''"
               @select-guide="handleHomeSelectGuide"
               @create-guide="createNewGuide"
               @open-author="openAuthorProfile"
-              @delete-guide="requestDeleteGuideById"
+              @delete-guide="promptDeleteGuideById"
             />
           </div>
 
@@ -1717,8 +1720,8 @@ const handleViewAllAuthorGuides = (username: string) => {
                     <span class="text-[10px] text-dark-muted">Блоков: {{ (guide.blocks || []).length }}</span>
                     <div class="flex items-center gap-1.5">
                       <button 
-                        @click.stop="requestDeleteGuideById(guide.meta.id)" 
-                        class="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-bold transition-all"
+                        @click.stop="promptDeleteGuideById(guide.meta.id)" 
+                        class="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-bold transition-all cursor-pointer"
                         title="Удалить черновик"
                       >
                         Удалить
