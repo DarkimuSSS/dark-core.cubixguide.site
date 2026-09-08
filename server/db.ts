@@ -4,10 +4,33 @@ import fs from 'fs';
 import crypto from 'crypto';
 import type { Guide, AuthorProfile } from '../src/types/guide';
 
+// Auto-read .env file if process.env wasn't populated by launcher
+try {
+  const envFilePath = path.resolve(process.cwd(), '.env');
+  if (fs.existsSync(envFilePath)) {
+    const envContent = fs.readFileSync(envFilePath, 'utf-8');
+    for (const line of envContent.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx !== -1) {
+        const key = trimmed.substring(0, eqIdx).trim();
+        const val = trimmed.substring(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
+        if (!process.env[key]) {
+          process.env[key] = val;
+        }
+      }
+    }
+  }
+} catch (e) {}
+
 const envDbPath = process.env.DATABASE_PATH;
-const dbPath = envDbPath 
-  ? path.resolve(envDbPath) 
+const fallbackPath = fs.existsSync('/var/www/wiki.dark-core.sqlite') 
+  ? '/var/www/wiki.dark-core.sqlite' 
   : path.resolve(process.cwd(), '..', 'wiki.dark-core.sqlite');
+
+const dbPath = envDbPath ? path.resolve(envDbPath) : fallbackPath;
+console.log(`[Database] Connecting to SQLite database at: ${dbPath}`);
 
 export const db = new Database(dbPath);
 
