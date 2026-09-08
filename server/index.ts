@@ -1,8 +1,49 @@
 import express from 'express';
 import cors from 'cors';
 import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction, createAuthorInvite, listAuthorInvites, validateInviteCode, redeemInviteCode } from './db';
+import { authenticateViaCubixTcp } from './cubixAuth';
+import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
-// ... (other code)
+import { signJwt, verifyJwt } from './jwt';
+import { authRateLimiter, mutationRateLimiter, globalApiRateLimiter } from './rateLimiter';
+import { LoginSchema, CubixLoginSchema, ChangePasswordSchema, SaveGuideSchema, CreateCommentSchema, CommentReactionSchema, UpdateProfileSchema, validateBody } from './schemas';
+import { initTelegramBot, sendSupportTicketToAdmin } from './telegramBot';
+
+const app = express();
+app.set('trust proxy', true);
+const PORT = process.env.PORT || 3001;
+
+// Helper to extract real client IP address from reverse proxy / Cloudflare headers
+function getClientIp(req: express.Request): string {
+  const cfIp = req.headers['cf-connecting-ip'] as string;
+  if (cfIp) return cfIp.trim();
+  const forwarded = req.headers['x-forwarded-for'] as string;
+  if (forwarded) {
+    let ip = forwarded.split(',')[0].trim();
+    if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
+    return ip;
+  }
+  const realIp = req.headers['x-real-ip'] as string;
+  if (realIp) return realIp.trim();
+  let ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
+  if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
+  return ip;
+}
+
+// Init Telegram Bot Module
+initTelegramBot();
+
+// Security headers middleware
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use('/api', globalApiRateLimiter);
 
 // Admin API: Create Author Invite Code (dark_core_team)
 app.post('/api/admin/invites', async (req, res) => {
@@ -94,19 +135,6 @@ app.post('/api/auth/register-invite', mutationRateLimiter, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// API Endpoints for Support Tickets
-import { authenticateViaCubixTcp } from './cubixAuth';
-import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
-
-import { signJwt, verifyJwt } from './jwt';
-import { authRateLimiter, mutationRateLimiter, globalApiRateLimiter } from './rateLimiter';
-import { LoginSchema, CubixLoginSchema, ChangePasswordSchema, SaveGuideSchema, CreateCommentSchema, CommentReactionSchema, UpdateProfileSchema, validateBody } from './schemas';
-import { initTelegramBot, sendSupportTicketToAdmin } from './telegramBot';
-
-const app = express();
-app.set('trust proxy', true);
-const PORT = process.env.PORT || 3001;
 
 // Helper to extract real client IP address from reverse proxy / Cloudflare headers
 function getClientIp(req: express.Request): string {

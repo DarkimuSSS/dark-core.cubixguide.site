@@ -1082,12 +1082,14 @@ export function redeemInviteCode(code: string, username: string) {
 // Seed default OneBlock & Create rules into server_rules table if empty
 const rulesCount = db.prepare('SELECT COUNT(*) as count FROM server_rules WHERE server_id = ?').get('OneBlock') as { count: number };
 if (rulesCount.count === 0) {
-  try {
-    const { ONEBLOCK_RULES_DATA } = require('../src/data/serverRulesData');
-    saveServerRules(ONEBLOCK_RULES_DATA);
-  } catch (e) {
-    console.error('Error seeding initial server rules:', e);
-  }
+  (async () => {
+    try {
+      const { ONEBLOCK_RULES_DATA } = await import('../src/data/serverRulesData');
+      saveServerRules(ONEBLOCK_RULES_DATA);
+    } catch (e) {
+      console.error('Error seeding initial server rules:', e);
+    }
+  })();
 }
 
 const rulesModules = [
