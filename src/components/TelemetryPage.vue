@@ -36,7 +36,12 @@ const logSearchQuery = ref<string>('');
 const fetchStats = async () => {
   isLoading.value = true;
   try {
-    const res = await fetch('/api/telemetry/stats');
+    const headers: Record<string, string> = {};
+    const token = localStorage.getItem('cubix_jwt_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const res = await fetch('/api/telemetry/stats', { headers });
     if (res.ok) {
       stats.value = await res.json();
     }

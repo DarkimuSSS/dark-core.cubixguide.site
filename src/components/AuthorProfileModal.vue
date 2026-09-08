@@ -168,11 +168,14 @@ const activeAdminTab = ref<'users' | 'telemetry'>('users');
 const fetchTelemetryStats = async () => {
   if (!props.isAdmin) return;
   try {
-    const res = await fetch('/api/telemetry/stats', {
-      headers: {
-        'x-author-username': props.currentLoggedInUsername || ''
-      }
-    });
+    const headers: Record<string, string> = {
+      'x-author-username': props.currentLoggedInUsername || ''
+    };
+    const token = localStorage.getItem('cubix_jwt_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const res = await fetch('/api/telemetry/stats', { headers });
     if (res.ok) {
       telemetryStats.value = await res.json();
     }
@@ -184,7 +187,12 @@ const fetchTelemetryStats = async () => {
 const fetchAdminAuthorsList = async () => {
   if (!props.isAdmin) return;
   try {
-    const res = await fetch('/api/admin/authors');
+    const headers: Record<string, string> = {};
+    const token = localStorage.getItem('cubix_jwt_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const res = await fetch('/api/admin/authors', { headers });
     if (res.ok) {
       const list = await res.json();
       registeredAuthorsList.value = list;

@@ -33,7 +33,12 @@ const fetchTelemetry = async () => {
   if (!props.isAdmin) return;
   isLoadingTelemetry.value = true;
   try {
-    const res = await fetch('/api/telemetry/stats');
+    const headers: Record<string, string> = {};
+    const token = localStorage.getItem('cubix_jwt_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const res = await fetch('/api/telemetry/stats', { headers });
     if (res.ok) {
       telemetryStats.value = await res.json();
     }
