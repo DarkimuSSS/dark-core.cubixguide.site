@@ -17,7 +17,7 @@ const emit = defineEmits<{
 }>();
 
 // Navigation Sub-tabs for Admin Panel
-type AdminTab = 'authors' | 'moderation' | 'applications' | 'roles' | 'register';
+type AdminTab = 'authors' | 'moderation' | 'roles' | 'register';
 const activeTab = ref<AdminTab>('authors');
 
 const registeredAuthorsList = ref<any[]>([]);
@@ -29,11 +29,6 @@ const roleFilter = ref<string>('all');
 const editingAssignedServersAuthor = ref<string | null>(null);
 const editingRoleAuthor = ref<string | null>(null);
 const isRoleFilterOpen = ref(false);
-
-// Author Applications State (strictly for dark_core_team)
-const authorApplicationsList = ref<any[]>([]);
-const isApplicationsLoading = ref(false);
-const createdAuthorCredentials = ref<{ username: string; tempPassword: string } | null>(null);
 
 const availableServersList = ref<string[]>([
   "OneBlock", "IceAndFire_1165", "Create_1211", "MagicRPG", "Galaxy", 
@@ -221,66 +216,9 @@ const fetchAdminAuthorsList = async () => {
   }
 };
 
-const fetchAuthorApplications = async () => {
-  if (props.currentRole !== 'dark_core_team') return;
-  isApplicationsLoading.value = true;
-  try {
-    const res = await fetch('/api/admin/applications', {
-      headers: getAuthHeaders()
-    });
-    if (res.ok) {
-      authorApplicationsList.value = await res.json();
-    }
-  } catch (e) {
-    console.error('Ошибка загрузки заявок:', e);
-  } finally {
-    isApplicationsLoading.value = false;
-  }
-};
-
-const handleApproveApplication = async (app: any) => {
-  adminMessage.value = '';
-  try {
-    const res = await fetch('/api/admin/applications/approve', {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ id: app.id, username: app.username })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      createdAuthorCredentials.value = { username: data.username, tempPassword: data.tempPassword };
-      adminMessage.value = `✅ Заявка пользователя ${data.username} успешно одобрена! Аккаунт создан.`;
-      fetchAuthorApplications();
-      fetchAdminAuthorsList();
-    } else {
-      const err = await res.json();
-      adminMessage.value = `Ошибка: ${err.error}`;
-    }
-  } catch (e: any) {
-    adminMessage.value = `Ошибка: ${e.message}`;
-  }
-};
-
-const handleRejectApplication = async (id: string) => {
-  try {
-    const res = await fetch('/api/admin/applications/reject', {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ id })
-    });
-    if (res.ok) {
-      adminMessage.value = 'Заявка отклонена.';
-      fetchAuthorApplications();
-    }
-  } catch (e: any) {}
-};
-
 onMounted(() => {
   fetchAdminAuthorsList();
   fetchPendingGuides();
-  if (props.currentRole === 'dark_core_team') {
-    fetchAuthorApplications();
-  }
 });
 
 const filteredAuthors = computed(() => {
@@ -600,23 +538,7 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
         </span>
       </button>
 
-      <!-- Applications Tab (Strictly for dark_core_team) -->
-      <button
-        v-if="currentRole === 'dark_core_team'"
-        @click="activeTab = 'applications'"
-        :class="[
-          'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer shrink-0 border relative',
-          activeTab === 'applications'
-            ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-md'
-            : 'bg-[#121416] text-slate-400 border-transparent hover:border-[#26292d] hover:text-white'
-        ]"
-      >
-        <IconRenderer name="Inbox" size="15" />
-        <span>Заявки на Авторство</span>
-        <span v-if="authorApplicationsList.filter(a => a.status === 'pending').length > 0" class="px-1.5 py-0.5 rounded-full bg-indigo-500 text-white text-[9.5px] font-black">
-          {{ authorApplicationsList.filter(a => a.status === 'pending').length }}
-        </span>
-      </button>
+
 
       <button
         @click="activeTab = 'roles'"
@@ -1018,116 +940,7 @@ const handleAdminToggleAssignedServer = async (author: any, serverName: string) 
       </div>
     </div>
 
-    <!-- TAB: AUTHOR APPLICATIONS (STRICTLY FOR DARK_CORE_TEAM) -->
-    <div v-else-if="activeTab === 'applications' && currentRole === 'dark_core_team'" class="space-y-4">
-      <div class="p-4 rounded-2xl bg-[#141618] border border-indigo-500/40 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <IconRenderer name="Inbox" size="22" class="text-indigo-400" />
-          <div>
-            <h3 class="text-sm font-black text-white">Заявки на Авторство ({{ authorApplicationsList.length }})</h3>
-            <p class="text-xs text-indigo-200/70">Только для руководства Dark Core Team: проверка и 1-click одобрение заявок с генерацией паролей</p>
-          </div>
-        </div>
 
-        <button @click="fetchAuthorApplications" class="text-xs text-indigo-300 hover:underline flex items-center gap-1.5 cursor-pointer font-bold">
-          <IconRenderer name="RotateCw" size="13" :class="isApplicationsLoading ? 'animate-spin' : ''" />
-          <span>Обновить</span>
-        </button>
-      </div>
-
-      <!-- Created Credentials Notification Banner -->
-      <div v-if="createdAuthorCredentials" class="p-4 rounded-2xl bg-emerald-950/60 border-2 border-emerald-500/80 text-white space-y-2 shadow-2xl animate-fadeIn">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2 text-emerald-400 font-extrabold text-sm">
-            <IconRenderer name="CheckCircle2" size="18" />
-            <span>Аккаунт автора успешно создан!</span>
-          </div>
-          <button @click="createdAuthorCredentials = null" class="text-slate-400 hover:text-white p-1">
-            <IconRenderer name="X" size="14" />
-          </button>
-        </div>
-        <div class="p-3 bg-black/40 rounded-xl border border-emerald-500/30 flex flex-wrap items-center gap-6 text-xs">
-          <div>Никнейм: <span class="font-bold text-white font-mono bg-emerald-950 px-2 py-0.5 rounded border border-emerald-500/40">{{ createdAuthorCredentials.username }}</span></div>
-          <div>Сгенерированный Пароль: <span class="font-bold text-amber-300 font-mono bg-black px-2.5 py-1 rounded border border-amber-500/40 text-sm select-all">{{ createdAuthorCredentials.tempPassword }}</span></div>
-        </div>
-        <p class="text-[11px] text-slate-300">Передайте этот пароль автору. Он сможет изменить его в настройках своего профиля.</p>
-      </div>
-
-      <!-- Applications List -->
-      <div v-if="authorApplicationsList.length === 0" class="p-8 text-center bg-[#141618] rounded-2xl border border-[#26292d]">
-        <IconRenderer name="Inbox" size="32" class="mx-auto text-slate-600 mb-2" />
-        <p class="text-sm text-slate-400">Новых заявок пока нет.</p>
-      </div>
-
-      <div v-else class="grid grid-cols-1 gap-4">
-        <div 
-          v-for="app in authorApplicationsList" 
-          :key="app.id"
-          class="p-5 rounded-2xl bg-[#141618] border border-[#26292d] hover:border-indigo-500/40 transition-all space-y-3 shadow-lg"
-        >
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#26292d] pb-3">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-black text-base shadow-md">
-                {{ app.username.charAt(0).toUpperCase() }}
-              </div>
-              <div>
-                <h4 class="text-sm font-bold text-white flex items-center gap-2">
-                  <span>{{ app.username }}</span>
-                  <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                    {{ app.server }}
-                  </span>
-                </h4>
-                <span class="text-[11px] text-slate-400">Контакты: <span class="text-indigo-300 font-semibold">{{ app.telegramTag || 'Не указаны' }}</span></span>
-              </div>
-            </div>
-
-            <!-- Status Badge -->
-            <div>
-              <span v-if="app.status === 'approved'" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                <IconRenderer name="CheckCircle" size="12" /> Одобрено
-              </span>
-              <span v-else-if="app.status === 'rejected'" class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center gap-1">
-                <IconRenderer name="XCircle" size="12" /> Отклонено
-              </span>
-              <span v-else class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                <IconRenderer name="Clock" size="12" /> На рассмотрении
-              </span>
-            </div>
-          </div>
-
-          <!-- Application details -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div class="p-3 rounded-xl bg-[#0c0d0e] border border-[#26292d]">
-              <span class="text-[10px] font-bold text-dark-muted uppercase block mb-1">Опыт и знания модов:</span>
-              <p class="text-slate-200 whitespace-pre-line leading-relaxed">{{ app.experience }}</p>
-            </div>
-            <div class="p-3 rounded-xl bg-[#0c0d0e] border border-[#26292d]">
-              <span class="text-[10px] font-bold text-dark-muted uppercase block mb-1">Примеры работ / Ссылки:</span>
-              <p class="text-slate-200 whitespace-pre-line leading-relaxed break-all">{{ app.portfolio || 'Не указаны' }}</p>
-            </div>
-          </div>
-
-          <!-- Action Buttons for Pending Applications -->
-          <div v-if="app.status === 'pending'" class="flex items-center justify-end gap-2 pt-2">
-            <button
-              @click="handleRejectApplication(app.id)"
-              class="px-3.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
-            >
-              <IconRenderer name="X" size="14" />
-              <span>Отклонить</span>
-            </button>
-
-            <button
-              @click="handleApproveApplication(app)"
-              class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition-all cursor-pointer shadow-lg flex items-center gap-1.5"
-            >
-              <IconRenderer name="Check" size="14" />
-              <span>Одобрить и создать аккаунт</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- TAB 3: SYSTEM ROLES CATALOG & PERMISSIONS DIRECTORY -->
     <div v-else-if="activeTab === 'roles'" class="space-y-4">

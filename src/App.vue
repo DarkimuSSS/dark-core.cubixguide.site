@@ -19,7 +19,7 @@ const TelemetryPage = defineAsyncComponent(() => import('./components/TelemetryP
 const RulesModal = defineAsyncComponent(() => import('./components/RulesModal.vue'));
 const ThaumcraftAspectPage = defineAsyncComponent(() => import('./components/ThaumcraftAspectPage.vue'));
 const MinecraftColorGeneratorPage = defineAsyncComponent(() => import('./components/MinecraftColorGeneratorPage.vue'));
-const ApplyAuthorPage = defineAsyncComponent(() => import('./components/ApplyAuthorPage.vue'));
+
 
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
@@ -1771,12 +1771,7 @@ const handleViewAllAuthorGuides = (username: string) => {
             />
           </div>
 
-          <!-- APPLY FOR AUTHOR & SUPPORT PAGE -->
-          <div v-else-if="mode === 'apply'">
-            <ApplyAuthorPage
-              @navigate="(m) => mode = m as any"
-            />
-          </div>
+
 
           <!-- CUBIXWORLD TEAM STAFF FULL PAGE VIEW -->
           <div v-else-if="mode === 'team'" class="px-3 sm:px-6 pt-4">
