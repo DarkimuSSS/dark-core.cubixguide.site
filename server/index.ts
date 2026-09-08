@@ -83,17 +83,20 @@ app.get('/api/admin/invites', async (req, res) => {
 // Public API: Register via Invite Code
 app.post('/api/auth/register-invite', mutationRateLimiter, async (req, res) => {
   try {
-    const { code, username, password } = req.body;
-    if (!code || !username || !password) {
+    const codeStr = String(code || '').trim();
+    const userStr = String(username || '').trim();
+    const passStr = String(password || '').trim();
+
+    if (!codeStr || !userStr || !passStr) {
       return res.status(400).json({ error: 'Укажите инвайт-код, никнейм и желаемый пароль' });
     }
 
-    if (password.length < 6) {
+    if (passStr.length < 6) {
       return res.status(400).json({ error: 'Пароль должен содержать минимум 6 символов' });
     }
 
-    const cleanUsername = username.trim();
-    const inviteResult = validateInviteCode(code, cleanUsername);
+    const cleanUsername = userStr;
+    const inviteResult = validateInviteCode(codeStr, cleanUsername);
     if (!inviteResult.valid) {
       return res.status(400).json({ error: inviteResult.error });
     }
