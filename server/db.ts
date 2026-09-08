@@ -1074,7 +1074,7 @@ export function validateInviteCode(code: string, username: string) {
   if (!row) return { valid: false, error: 'Недействительный или уже использованный инвайт-код' };
 
   if (row.target_username && row.target_username.toLowerCase() !== username.trim().toLowerCase()) {
-    return { valid: false, error: `Этот инвайт-код выписан персонально для никнейма "${row.target_username}"` };
+    return { valid: false, error: 'Этот инвайт-код предназначен для другого игрока' };
   }
 
   return {
