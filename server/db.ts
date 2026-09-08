@@ -1020,9 +1020,7 @@ export function toggleCommentReaction(commentId: string, username: string, react
     db.prepare('INSERT INTO comment_reactions (comment_id, username, reaction_type) VALUES (?, ?, ?)').run(commentId, username, reactionType);
     return { action: 'added', reactionType };
   }
-}
 
-}
 
 // Seed default OneBlock & Create rules into server_rules table if empty
 const rulesCount = db.prepare('SELECT COUNT(*) as count FROM server_rules WHERE server_id = ?').get('OneBlock') as { count: number };
