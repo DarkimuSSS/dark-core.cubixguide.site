@@ -52,34 +52,49 @@ export function initTelegramBot() {
 
     // Callback query listener (Buttons)
     bot.on('callback_query', async (query) => {
+      console.log('[Telegram Bot] Received callback query:', query.data, 'from user:', query.from.username || query.from.id);
       if (!query.message) return;
       const chatId = query.message.chat.id;
-      const data = query.data;
+      const data = query.data || '';
 
       try {
         await bot?.answerCallbackQuery(query.id);
-      } catch (e) {}
+      } catch (e: any) {
+        console.error('[Telegram Bot] Error answering callback query:', e.message);
+      }
 
       if (data === 'apply_author') {
         userStates.set(chatId, { step: 'username' });
         bot?.sendMessage(chatId, `📌 **Шаг 1 из 4:** Укажите ваш игровой никнейм на серверах CubixWorld:`, { parse_mode: 'Markdown' });
       } else if (data === 'support_ticket') {
         bot?.sendMessage(chatId, `💬 Напишите ваш вопрос или описание проблемы ниже, и администрация свяжется с вами!`);
-      } else if (data?.startsWith('apv:') || data?.startsWith('rej:')) {
-        // Format: apv:username:chatId or rej:username:chatId
-        const isApprove = data.startsWith('apv:');
-        const payload = data.substring(4);
-        const firstColonIdx = payload.indexOf(':');
+      } else if (data.startsWith('apv:') || data.startsWith('rej:') || data.startsWith('app_')) {
+        console.log('[Telegram Bot] Processing application decision callback:', data);
         
+        let isApprove = false;
         let applicantUsername = 'Author';
         let applicantChatIdStr = 'web';
 
-        if (firstColonIdx !== -1) {
-          applicantUsername = payload.substring(0, firstColonIdx);
-          applicantChatIdStr = payload.substring(firstColonIdx + 1);
+        if (data.startsWith('apv:') || data.startsWith('rej:')) {
+          isApprove = data.startsWith('apv:');
+          const payload = data.substring(4);
+          const firstColonIdx = payload.indexOf(':');
+          if (firstColonIdx !== -1) {
+            applicantUsername = payload.substring(0, firstColonIdx);
+            applicantChatIdStr = payload.substring(firstColonIdx + 1);
+          } else {
+            applicantUsername = payload;
+          }
         } else {
-          applicantUsername = payload;
+          // Backward compatibility for older buttons: app_appr_... / app_reje_...
+          isApprove = data.startsWith('app_appr_');
+          const payload = data.replace(/^app_(appr|reje)_/, '');
+          const parts = payload.split('_');
+          applicantUsername = parts[0] || 'Author';
+          applicantChatIdStr = parts[1] || 'web';
         }
+
+        console.log(`[Telegram Bot] Decision: ${isApprove ? 'APPROVE' : 'REJECT'} for applicant '${applicantUsername}', chatId: '${applicantChatIdStr}'`);
 
         if (isApprove) {
           const tempPassword = 'dc_' + Math.random().toString(36).substring(2, 8);
@@ -94,38 +109,55 @@ export function initTelegramBot() {
               canCreateGuides: true
             }, 'TelegramBot');
             regStatusMessage = `✅ **ЗАЯВКА ОДОБРЕНА**\nСоздан аккаунт для автора: \`${applicantUsername}\`\nВременный пароль: \`${tempPassword}\``;
+            console.log(`[Telegram Bot] Registered author '${applicantUsername}' successfully with temp password '${tempPassword}'`);
           } catch (e: any) {
             regStatusMessage = `⚠️ **ЗАЯВКА ОДОБРЕНА** (Аккаунт \`${applicantUsername}\` уже существует в БД).`;
+            console.warn(`[Telegram Bot] Author '${applicantUsername}' registration warning:`, e.message);
           }
 
           if (query.message) {
-            bot?.editMessageText(
-              `${query.message.text}\n\n━━━━━━━━━━━━━━━━━━━━\n${regStatusMessage}`,
-              { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown' }
-            );
+            try {
+              await bot?.editMessageText(
+                `${query.message.text}\n\n━━━━━━━━━━━━━━━━━━━━\n${regStatusMessage}`,
+                { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown' }
+              );
+            } catch (editErr: any) {
+              console.error('[Telegram Bot] Failed to edit admin message:', editErr.message);
+              await bot?.sendMessage(chatId, regStatusMessage, { parse_mode: 'Markdown' });
+            }
           }
 
-          if (applicantChatIdStr && applicantChatIdStr !== 'web') {
-            bot?.sendMessage(
-              Number(applicantChatIdStr),
-              `🎉 **Ваша заявка на авторство одобрена!**\n\nДанные для входа на вики (https://wiki.dark-core.ru):\n👤 Логин: \`${applicantUsername}\`\n🔑 Пароль: \`${tempPassword}\`\n\nСмените пароль после первого входа!`,
-              { parse_mode: 'Markdown' }
-            );
+          if (applicantChatIdStr && applicantChatIdStr !== 'web' && !isNaN(Number(applicantChatIdStr))) {
+            try {
+              await bot?.sendMessage(
+                Number(applicantChatIdStr),
+                `🎉 **Ваша заявка на авторство одобрена!**\n\nДанные для входа на вики (https://wiki.dark-core.ru):\n👤 Логин: \`${applicantUsername}\`\n🔑 Пароль: \`${tempPassword}\`\n\nСмените пароль после первого входа!`,
+                { parse_mode: 'Markdown' }
+              );
+            } catch (notifyErr: any) {
+              console.error('[Telegram Bot] Failed to notify applicant:', notifyErr.message);
+            }
           }
         } else {
           if (query.message) {
-            bot?.editMessageText(
-              `${query.message.text}\n\n━━━━━━━━━━━━━━━━━━━━\n❌ **ЗАЯВКА ОТКЛОНЕНА** для пользователя: \`${applicantUsername}\``,
-              { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown' }
-            );
+            try {
+              await bot?.editMessageText(
+                `${query.message.text}\n\n━━━━━━━━━━━━━━━━━━━━\n❌ **ЗАЯВКА ОТКЛОНЕНА** для пользователя: \`${applicantUsername}\``,
+                { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown' }
+              );
+            } catch (editErr: any) {
+              await bot?.sendMessage(chatId, `❌ **ЗАЯВКА ОТКЛОНЕНА** для пользователя: \`${applicantUsername}\``, { parse_mode: 'Markdown' });
+            }
           }
 
-          if (applicantChatIdStr && applicantChatIdStr !== 'web') {
-            bot?.sendMessage(
-              Number(applicantChatIdStr),
-              `❌ К сожалению, ваша заявка на авторство временно отклонена.`,
-              { parse_mode: 'Markdown' }
-            );
+          if (applicantChatIdStr && applicantChatIdStr !== 'web' && !isNaN(Number(applicantChatIdStr))) {
+            try {
+              await bot?.sendMessage(
+                Number(applicantChatIdStr),
+                `❌ К сожалению, ваша заявка на авторство временно отклонена.`,
+                { parse_mode: 'Markdown' }
+              );
+            } catch (notifyErr: any) {}
           }
         }
       }
