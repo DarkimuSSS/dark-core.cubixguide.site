@@ -22,6 +22,16 @@ const viewState = ref<'login' | 'register'>('login');
 const inviteCode = ref('');
 const isCubixUnlocked = ref(false);
 
+const generateRandomPassword = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
+  let gen = '';
+  for (let i = 0; i < 14; i++) {
+    gen += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  password.value = gen;
+  showPassword.value = true;
+};
+
 const handleKeyDown = (e: KeyboardEvent) => {
   // Secret hotkey: Ctrl + Shift + C unlocks CubixWorld Login mode
   if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c' || e.key === 'С' || e.key === 'с')) {
@@ -317,9 +327,20 @@ const handleRegisterInvite = async () => {
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">
-            Придумайте свой пароль *
-          </label>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold text-slate-300">
+              Придумайте свой пароль *
+            </label>
+            <button
+              type="button"
+              @click="generateRandomPassword"
+              class="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+              title="Сгенерировать надежный случайный пароль"
+            >
+              <IconRenderer name="RefreshCw" size="12" />
+              <span>Сгенерировать пароль</span>
+            </button>
+          </div>
           <div class="relative">
             <input
               :type="showPassword ? 'text' : 'password'"
@@ -330,7 +351,8 @@ const handleRegisterInvite = async () => {
             <button
               type="button"
               @click="showPassword = !showPassword"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white p-1 cursor-pointer"
+              title="Показать / Скрыть пароль"
             >
               <IconRenderer :name="showPassword ? 'EyeOff' : 'Eye'" size="16" class="text-cyan-400" />
             </button>
