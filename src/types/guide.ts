@@ -57,6 +57,14 @@ export interface MultiblockPaletteItem {
   name: string;
   icon: string;
   color: string;
+  imageUrl?: string; // Custom texture / block image URL
+}
+
+export interface AuthorMediaItem {
+  id: string;
+  name: string;
+  url: string;
+  uploadedAt: string;
 }
 
 export interface ChecklistItem {

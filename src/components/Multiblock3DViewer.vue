@@ -235,13 +235,49 @@ const materialSummary = computed(() => {
                   :style="getVoxelStyle(colIdx, layerIdx, rowIdx, getMaterial(matId).color, layer.grid.length, row.length)"
                   :title="`${getMaterial(matId).name} (Слой Y=${layer.layerNumber})`"
                 >
-                  <!-- Cube Faces for 3D Shading effect -->
-                  <div class="face front" :style="{ backgroundColor: getMaterial(matId).color }"></div>
-                  <div class="face back" :style="{ backgroundColor: getMaterial(matId).color }"></div>
-                  <div class="face top" :style="{ backgroundColor: getMaterial(matId).color }"></div>
-                  <div class="face bottom" :style="{ backgroundColor: getMaterial(matId).color }"></div>
-                  <div class="face left" :style="{ backgroundColor: getMaterial(matId).color }"></div>
-                  <div class="face right" :style="{ backgroundColor: getMaterial(matId).color }"></div>
+                  <!-- Cube Faces with custom texture image or color shading -->
+                  <div 
+                    class="face front" 
+                    :style="{ 
+                      backgroundColor: getMaterial(matId).color,
+                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
+                    }"
+                  ></div>
+                  <div 
+                    class="face back" 
+                    :style="{ 
+                      backgroundColor: getMaterial(matId).color,
+                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
+                    }"
+                  ></div>
+                  <div 
+                    class="face top" 
+                    :style="{ 
+                      backgroundColor: getMaterial(matId).color,
+                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
+                    }"
+                  ></div>
+                  <div 
+                    class="face bottom" 
+                    :style="{ 
+                      backgroundColor: getMaterial(matId).color,
+                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
+                    }"
+                  ></div>
+                  <div 
+                    class="face left" 
+                    :style="{ 
+                      backgroundColor: getMaterial(matId).color,
+                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
+                    }"
+                  ></div>
+                  <div 
+                    class="face right" 
+                    :style="{ 
+                      backgroundColor: getMaterial(matId).color,
+                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
+                    }"
+                  ></div>
                 </div>
               </template>
             </template>
@@ -333,6 +369,9 @@ const materialSummary = computed(() => {
   border: 1px solid rgba(0, 0, 0, 0.4);
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
   backface-visibility: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .front  { transform: translateZ(20px); filter: brightness(0.95); }

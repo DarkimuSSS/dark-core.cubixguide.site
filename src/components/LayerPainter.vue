@@ -2,21 +2,47 @@
 import { ref, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import Multiblock3DViewer from './Multiblock3DViewer.vue';
+import AuthorGalleryModal from './AuthorGalleryModal.vue';
 import { PRESET_MULTIBLOCK_MATERIALS } from '../data/presetItems';
-import type { GuideBlock, MultiblockLayer, MultiblockPaletteItem } from '../types/guide';
+import type { GuideBlock, MultiblockLayer, MultiblockPaletteItem, AuthorMediaItem } from '../types/guide';
 
 const props = defineProps<{
   block: GuideBlock;
   isEditing?: boolean;
+  currentUsername?: string;
 }>();
 
 const emit = defineEmits<{
   (e: 'update', block: GuideBlock): void;
 }>();
 
+const isGalleryOpen = ref(false);
 const viewMode = ref<'3d' | '2d'>(props.isEditing ? '2d' : '3d');
 const activeLayerIndex = ref<number>(0);
 const selectedMaterialId = ref<string>(props.block.palette?.[0]?.id || PRESET_MULTIBLOCK_MATERIALS[0].id);
+
+const handleSelectGalleryMedia = (media: AuthorMediaItem) => {
+  const customPalette = [...currentPalette.value];
+  const customId = `custom_${media.id}`;
+  
+  // Check if item already exists in palette
+  if (!customPalette.some(p => p.id === customId)) {
+    customPalette.push({
+      id: customId,
+      name: media.name,
+      icon: 'Image',
+      color: '#06b6d4',
+      imageUrl: media.url
+    });
+
+    emit('update', {
+      ...props.block,
+      palette: customPalette
+    });
+  }
+
+  selectedMaterialId.value = customId;
+};
 
 const currentSizeX = computed(() => {
   if (props.block.gridSizeX) return props.block.gridSizeX;
@@ -244,7 +270,20 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
 
       <!-- Palette Picker -->
       <div v-if="isEditing" class="space-y-2">
-        <div class="text-xs font-medium text-dark-muted uppercase tracking-wider">Палитра блоков (нажмите для выбора):</div>
+        <div class="flex items-center justify-between">
+          <div class="text-xs font-medium text-dark-muted uppercase tracking-wider">Палитра блоков (нажмите для выбора):</div>
+          
+          <button
+            type="button"
+            @click="isGalleryOpen = true"
+            class="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            title="Открыть персональную галерею текстур"
+          >
+            <IconRenderer name="FolderPlus" size="13" />
+            <span>Папка текстур автора</span>
+          </button>
+        </div>
+
         <div class="flex flex-wrap gap-2">
           <button
             v-for="mat in currentPalette"
@@ -258,7 +297,9 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
                 : 'bg-[#121416] border-[#26292d] hover:border-[#3b3f46] text-slate-300'
             ]"
           >
-            <span class="w-3 h-3 rounded-full border border-black/40" :style="{ backgroundColor: mat.color }"></span>
+            <!-- Texture Image Preview or Color Circle -->
+            <img v-if="mat.imageUrl" :src="mat.imageUrl" class="w-4 h-4 rounded border border-white/20 object-cover" />
+            <span v-else class="w-3 h-3 rounded-full border border-black/40" :style="{ backgroundColor: mat.color }"></span>
             <IconRenderer :name="mat.icon" size="14" :color="mat.color" />
             {{ mat.name }}
           </button>
@@ -376,6 +417,15 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
         </div>
       </div>
     </div>
+
+    <!-- Author Gallery Modal for Custom Textures Selection -->
+    <AuthorGalleryModal
+      :is-open="isGalleryOpen"
+      :username="currentUsername || ''"
+      :is-select-mode="true"
+      @close="isGalleryOpen = false"
+      @select="handleSelectGalleryMedia"
+    />
   </div>
 </template>
 

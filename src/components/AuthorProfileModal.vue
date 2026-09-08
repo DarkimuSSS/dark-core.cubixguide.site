@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import IconRenderer from './IconRenderer.vue';
+import AuthorGalleryModal from './AuthorGalleryModal.vue';
 import { DEFAULT_SYSTEM_ROLES } from '../data/roles';
 import type { AuthorProfile, Guide, UserRole } from '../types/guide';
 
@@ -22,6 +23,7 @@ const emit = defineEmits<{
 const isEditing = ref(false);
 const isLoading = ref(false);
 const isAuthorVerified = ref(false);
+const isAuthorGalleryOpen = ref(false);
 
 // Change Password State
 const isChangePasswordOpen = ref(false);
@@ -552,6 +554,22 @@ const handleBannerFileUpload = (e: Event) => {
           <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
             <div class="bg-[#0c0d0e] border border-indigo-500/40 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
               Закрыть
+            </div>
+          </div>
+        </div>
+
+        <!-- Author Gallery Button -->
+        <div v-if="isOwnProfile" class="relative group/tool">
+          <button
+            type="button"
+            @click="isAuthorGalleryOpen = true"
+            class="w-10 h-10 rounded-2xl bg-[#0c0d0e] hover:bg-amber-950/60 text-amber-400 border-2 border-amber-500/80 hover:border-amber-400 flex items-center justify-center shadow-2xl hover:scale-110 transition-all cursor-pointer"
+          >
+            <IconRenderer name="FolderImage" size="18" class="stroke-[2]" />
+          </button>
+          <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 hidden group-hover/tool:flex items-center pointer-events-none">
+            <div class="bg-[#0c0d0e] border border-amber-500/40 text-amber-300 text-xs font-semibold px-3 py-1 rounded-xl whitespace-nowrap shadow-2xl">
+              Галерея текстур
             </div>
           </div>
         </div>
@@ -1229,5 +1247,12 @@ const handleBannerFileUpload = (e: Event) => {
         </button>
       </div>
     </div>
+
+    <!-- AUTHOR GALLERY MODAL -->
+    <AuthorGalleryModal
+      :is-open="isAuthorGalleryOpen"
+      :username="props.username"
+      @close="isAuthorGalleryOpen = false"
+    />
   </div>
 </template>
