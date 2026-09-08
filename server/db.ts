@@ -128,6 +128,18 @@ db.exec(`
     created_at TEXT NOT NULL,
     used_at TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS asset_packs (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    author TEXT NOT NULL,
+    category TEXT NOT NULL DEFAULT 'Общий',
+    items TEXT NOT NULL,
+    downloads INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
 `);
 
 try {
@@ -1187,3 +1199,57 @@ const rulesModules = [
     }
   }
 })();
+
+export function getAllAssetPacks() {
+  const rows = db.prepare('SELECT * FROM asset_packs ORDER BY created_at DESC').all() as any[];
+  return rows.map(r => ({
+    id: r.id,
+    title: r.title,
+    description: r.description || '',
+    author: r.author,
+    category: r.category || 'Общий',
+    items: JSON.parse(r.items || '[]'),
+    downloads: Number(r.downloads || 0),
+    createdAt: r.created_at,
+    updatedAt: r.updated_at
+  }));
+}
+
+export function saveAssetPack(packData: { id?: string; title: string; description?: string; author: string; category?: string; items: any[] }) {
+  const now = new Date().toISOString();
+  const id = packData.id || `pack_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  
+  const existing = db.prepare('SELECT id FROM asset_packs WHERE id = ?').get(id);
+  if (existing) {
+    db.prepare(`
+      UPDATE asset_packs 
+      SET title = ?, description = ?, category = ?, items = ?, updated_at = ?
+      WHERE id = ? AND author = ?
+    `).run(packData.title, packData.description || '', packData.category || 'Общий', JSON.stringify(packData.items || []), now, id, packData.author);
+  } else {
+    db.prepare(`
+      INSERT INTO asset_packs (id, title, description, author, category, items, downloads, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)
+    `).run(id, packData.title, packData.description || '', packData.author, packData.category || 'Общий', JSON.stringify(packData.items || []), now, now);
+  }
+
+  return { id, title: packData.title, author: packData.author };
+}
+
+export function deleteAssetPack(id: string, requestingUser: string, isAdmin: boolean = false) {
+  const pack = db.prepare('SELECT author FROM asset_packs WHERE id = ?').get(id) as any;
+  if (!pack) return { success: false, error: 'Пак не найден' };
+
+  if (!isAdmin && pack.author.toLowerCase() !== requestingUser.toLowerCase()) {
+    return { success: false, error: 'Вы не можете удалить чужой пак' };
+  }
+
+  db.prepare('SELECT id FROM asset_packs WHERE id = ?');
+  db.prepare('DELETE FROM asset_packs WHERE id = ?').run(id);
+  return { success: true };
+}
+
+export function incrementAssetPackDownloads(id: string) {
+  db.prepare('UPDATE asset_packs SET downloads = downloads + 1 WHERE id = ?').run(id);
+  return { success: true };
+}

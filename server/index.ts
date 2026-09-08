@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, createAuthorViaInvite, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction, createAuthorInvite, listAuthorInvites, validateInviteCode, redeemInviteCode } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, createAuthorViaInvite, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction, createAuthorInvite, listAuthorInvites, validateInviteCode, redeemInviteCode, getAllAssetPacks, saveAssetPack, deleteAssetPack, incrementAssetPackDownloads } from './db';
 import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
@@ -1036,6 +1036,57 @@ app.post('/api/server-rules', (req, res) => {
     }
     const saved = saveServerRules(rulesData);
     res.json(saved);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Marketplace Asset Packs API
+app.get('/api/market/packs', (_req, res) => {
+  try {
+    const packs = getAllAssetPacks();
+    res.json(packs);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/market/packs', (req, res) => {
+  try {
+    const { title, description, author, category, items, id } = req.body;
+    if (!title || !author || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Укажите название, автора и хотя бы одну текстуру' });
+    }
+    const saved = saveAssetPack({ id, title, description, author, category, items });
+    res.json(saved);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/market/packs/:id/install', (req, res) => {
+  try {
+    const { id } = req.params;
+    incrementAssetPackDownloads(id);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/market/packs/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const requestingUser = String(req.query.requestingUsername || '').trim();
+    const isAdmin = req.query.isAdmin === 'true';
+    if (!requestingUser) {
+      return res.status(401).json({ error: 'Необходима авторизация' });
+    }
+    const result = deleteAssetPack(id, requestingUser, isAdmin);
+    if (!result.success) {
+      return res.status(403).json({ error: result.error });
+    }
+    res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

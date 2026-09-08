@@ -67,6 +67,22 @@ export interface AuthorMediaItem {
   uploadedAt: string;
 }
 
+export interface AssetPack {
+  id: string;
+  title: string;
+  description: string;
+  author: string;
+  category: string;
+  items: {
+    id: string;
+    name: string;
+    url: string;
+  }[];
+  downloads: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ChecklistItem {
   id: string;
   text: string;
