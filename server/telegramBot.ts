@@ -28,14 +28,19 @@ export function initTelegramBot() {
     bot = new TelegramBot(BOT_TOKEN, { polling: true });
     console.log('[Telegram Bot] Бот успешно запущен в упрощенном режиме (polling).');
 
-    // Command /start
-    bot.onText(/\/start/, (msg: any) => {
+    // Command /start & message listener
+    bot.on('message', (msg: any) => {
+      if (!msg.text) return;
+      const text = msg.text.trim();
       const chatId = msg.chat.id;
-      bot?.sendMessage(
-        chatId,
-        `👋 **Приветствуем в портале Dark Core Wiki!**\n\nДля подачи заявки на авторство используйте форму на сайте: https://wiki.dark-core.ru/apply-author\n\nЕсли ваша заявка будет одобрена администрацией, вам придет сообщение с данными от аккаунта в этот чат!`,
-        { parse_mode: 'Markdown' }
-      );
+
+      if (text.startsWith('/start')) {
+        bot?.sendMessage(
+          chatId,
+          `👋 **Приветствуем в портале Dark Core Wiki!**\n\nДля подачи заявки на авторство используйте форму на сайте: https://wiki.dark-core.ru/apply-author\n\nЕсли ваша заявка будет одобрена администрацией, вам придет сообщение с данными от аккаунта в этот чат!`,
+          { parse_mode: 'Markdown' }
+        ).catch((e: any) => console.error('[Telegram Bot] Send message error:', e.message));
+      }
     });
 
   } catch (err: any) {
