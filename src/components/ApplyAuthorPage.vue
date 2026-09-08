@@ -193,7 +193,7 @@ const handleSendSupport = async () => {
           </div>
         </div>
         <a
-          href="https://t.me/darkcore_wiki_bot"
+          href="https://t.me/CubixAnalyzerBot"
           target="_blank"
           class="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 whitespace-nowrap"
         >
