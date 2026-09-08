@@ -127,27 +127,10 @@ const handleSendSupport = async () => {
     <!-- Navigation Tabs -->
     <div class="flex items-center justify-center">
       <div class="bg-[#16181a] border border-[#26292d] p-1.5 rounded-2xl flex items-center gap-2 shadow-lg">
-        <button
-          @click="activeTab = 'apply'"
-          :class="[
-            'px-6 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all',
-            activeTab === 'apply' ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 text-white shadow-lg' : 'text-dark-muted hover:text-white'
-          ]"
-        >
+        <div class="px-6 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white shadow-lg">
           <IconRenderer name="UserPlus" size="16" />
           <span>Заявка на Авторство</span>
-        </button>
-
-        <button
-          @click="activeTab = 'support'"
-          :class="[
-            'px-6 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all',
-            activeTab === 'support' ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 text-white shadow-lg' : 'text-dark-muted hover:text-white'
-          ]"
-        >
-          <IconRenderer name="MessageSquare" size="16" />
-          <span>Служба Поддержки</span>
-        </button>
+        </div>
       </div>
     </div>
 
@@ -179,27 +162,6 @@ const handleSendSupport = async () => {
           <h3 class="text-sm font-bold text-white">Бонусы и Награды</h3>
           <p class="text-xs text-dark-muted leading-relaxed">Поощрение лучших гайдов, упоминание в статьях и закрытом чате авторов.</p>
         </div>
-      </div>
-
-      <!-- Telegram Bot Direct Banner -->
-      <div class="bg-gradient-to-r from-cyan-950/40 via-[#16181a] to-emerald-950/40 border border-cyan-500/30 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 flex items-center justify-center flex-shrink-0">
-            <IconRenderer name="Send" size="24" />
-          </div>
-          <div>
-            <h4 class="text-sm font-bold text-white">Удобная анкета через Telegram Бота</h4>
-            <p class="text-xs text-dark-muted">Пройдите пошаговый опрос в Telegram за 1 минуту и получите мгновенный ответ!</p>
-          </div>
-        </div>
-        <a
-          href="https://t.me/CubixAnalyzerBot"
-          target="_blank"
-          class="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 whitespace-nowrap"
-        >
-          <span>Открыть Telegram Бота</span>
-          <IconRenderer name="ExternalLink" size="14" />
-        </a>
       </div>
 
       <!-- Application Form -->
