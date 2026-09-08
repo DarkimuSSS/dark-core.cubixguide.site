@@ -52,14 +52,94 @@ app.post('/api/apply-author', mutationRateLimiter, async (req, res) => {
     if (!username || !server || !experience) {
       return res.status(400).json({ error: 'Заполните обязательные поля заявки' });
     }
-    await sendApplicationToAdmin({
-      username,
-      server,
-      experience,
-      portfolio: portfolio || 'Нет',
-      telegramTag: telegramTag || 'Не указан',
-      chatId: chatId || 'web'
-    });
+    
+    // Save to SQLite DB for Admin Panel review
+    const appRecord = saveAuthorApplication({ username, server, experience, portfolio, telegramTag });
+
+    // Try optional Telegram notification
+    try {
+      await sendApplicationToAdmin({
+        username,
+        server,
+        experience,
+        portfolio: portfolio || 'Нет',
+        telegramTag: telegramTag || 'Не указан',
+        chatId: chatId || 'web'
+      });
+    } catch (e) {}
+
+    res.json({ ok: true, id: appRecord.id });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin API: List all applications (Strictly for dark_core_team)
+app.get('/api/admin/applications', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'Токен авторизации отсутствует' });
+    const payload = verifyJwt(authHeader.replace('Bearer ', ''));
+    if (!payload || payload.role !== 'dark_core_team') {
+      return res.status(403).json({ error: 'Доступ разрешен только для команды Dark Core Team' });
+    }
+
+    const apps = listAuthorApplications();
+    res.json(apps);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin API: Approve Application in 1 click (Strictly for dark_core_team)
+app.post('/api/admin/applications/approve', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'Токен авторизации отсутствует' });
+    const payload = verifyJwt(authHeader.replace('Bearer ', ''));
+    if (!payload || payload.role !== 'dark_core_team') {
+      return res.status(403).json({ error: 'Доступ разрешен только для команды Dark Core Team' });
+    }
+
+    const { id, username } = req.body;
+    if (!id || !username) return res.status(400).json({ error: 'Идентификатор заявки и никнейм обязательны' });
+
+    const tempPassword = 'dc_' + Math.random().toString(36).substring(2, 8);
+    
+    // Register author
+    try {
+      registerAuthorByAdmin({
+        username,
+        password: tempPassword,
+        role: 'author',
+        canEditOthers: false,
+        canCreateGuides: true
+      }, payload.username);
+    } catch (e: any) {
+      // If user exists, continue updating status
+    }
+
+    updateApplicationStatus(id, 'approved');
+    res.json({ ok: true, tempPassword, username });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin API: Reject Application (Strictly for dark_core_team)
+app.post('/api/admin/applications/reject', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'Токен авторизации отсутствует' });
+    const payload = verifyJwt(authHeader.replace('Bearer ', ''));
+    if (!payload || payload.role !== 'dark_core_team') {
+      return res.status(403).json({ error: 'Доступ разрешен только для команды Dark Core Team' });
+    }
+
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: 'Идентификатор заявки обязателен' });
+
+    updateApplicationStatus(id, 'rejected');
     res.json({ ok: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

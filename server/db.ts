@@ -116,6 +116,17 @@ db.exec(`
     sections TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS author_applications (
+    id TEXT PRIMARY KEY,
+    username TEXT NOT NULL,
+    server TEXT NOT NULL,
+    experience TEXT NOT NULL,
+    portfolio TEXT,
+    telegram_tag TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TEXT NOT NULL
+  );
 `);
 
 export function getServerRules(serverId: string) {
@@ -1020,6 +1031,35 @@ export function toggleCommentReaction(commentId: string, username: string, react
     db.prepare('INSERT INTO comment_reactions (comment_id, username, reaction_type) VALUES (?, ?, ?)').run(commentId, username, reactionType);
     return { action: 'added', reactionType };
   }
+}
+
+export function saveAuthorApplication(data: { username: string; server: string; experience: string; portfolio?: string; telegramTag?: string }) {
+  const id = `app_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  const createdAt = new Date().toISOString();
+  db.prepare(`
+    INSERT INTO author_applications (id, username, server, experience, portfolio, telegram_tag, status, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
+  `).run(id, data.username, data.server, data.experience, data.portfolio || '', data.telegramTag || '', createdAt);
+  return { id, ...data, status: 'pending', createdAt };
+}
+
+export function listAuthorApplications() {
+  const rows = db.prepare('SELECT * FROM author_applications ORDER BY created_at DESC').all() as any[];
+  return rows.map(r => ({
+    id: r.id,
+    username: r.username,
+    server: r.server,
+    experience: r.experience,
+    portfolio: r.portfolio,
+    telegramTag: r.telegram_tag,
+    status: r.status,
+    createdAt: r.created_at
+  }));
+}
+
+export function updateApplicationStatus(id: string, status: 'approved' | 'rejected') {
+  db.prepare('UPDATE author_applications SET status = ? WHERE id = ?').run(status, id);
+  return { success: true };
 }
 
 // Seed default OneBlock & Create rules into server_rules table if empty
