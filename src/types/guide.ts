@@ -67,6 +67,28 @@ export interface MultiblockPaletteItem {
   rightImageUrl?: string; // Custom right face texture URL
 }
 
+export interface ModelElement {
+  id: string;
+  name: string;
+  posX: number;
+  posY: number;
+  posZ: number;
+  sizeX: number;
+  sizeY: number;
+  sizeZ: number;
+  rotX?: number;
+  rotY?: number;
+  rotZ?: number;
+  color: string;
+  opacity?: number;
+  topImageUrl?: string;
+  bottomImageUrl?: string;
+  frontImageUrl?: string;
+  backImageUrl?: string;
+  leftImageUrl?: string;
+  rightImageUrl?: string;
+}
+
 export interface CustomBlockModel {
   id: string;
   name: string;
@@ -84,6 +106,7 @@ export interface CustomBlockModel {
   backImageUrl?: string;
   leftImageUrl?: string;
   rightImageUrl?: string;
+  elements?: ModelElement[];
   createdAt: string;
 }
 
