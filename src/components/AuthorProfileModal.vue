@@ -779,6 +779,55 @@ const handleBannerFileUpload = (e: Event) => {
               </div>
             </div>
 
+            <!-- AUTHOR CABINET ACTION HUB GRID -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              
+              <!-- Card 1: Texture Gallery & Marketplace -->
+              <div
+                @click="isAuthorGalleryOpen = true"
+                class="group relative bg-[#0c0d0e]/90 hover:bg-[#121518]/95 border border-amber-500/30 hover:border-amber-400/80 p-4 rounded-2xl transition-all cursor-pointer shadow-lg hover:shadow-amber-950/40 backdrop-blur-md overflow-hidden flex items-center justify-between gap-3"
+              >
+                <div class="space-y-1 z-10 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <h4 class="text-xs font-black text-white group-hover:text-amber-300 transition-colors truncate">
+                      Папка текстур & Маркетплейс
+                    </h4>
+                  </div>
+                  <p class="text-[11px] text-dark-muted font-medium line-clamp-1">
+                    Свои картинки блоков и готовые паки сообщества
+                  </p>
+                </div>
+
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 group-hover:bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 group-hover:scale-110 transition-transform">
+                  <IconRenderer name="FolderImage" size="20" />
+                </div>
+              </div>
+
+              <!-- Card 2: Author Guides Hub -->
+              <div
+                @click="emit('view-all-guides', username)"
+                class="group relative bg-[#0c0d0e]/90 hover:bg-[#121518]/95 border border-cyan-500/30 hover:border-cyan-400/80 p-4 rounded-2xl transition-all cursor-pointer shadow-lg hover:shadow-cyan-950/40 backdrop-blur-md overflow-hidden flex items-center justify-between gap-3"
+              >
+                <div class="space-y-1 z-10 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                    <h4 class="text-xs font-black text-white group-hover:text-cyan-300 transition-colors truncate">
+                      Мои публикации ({{ authorGuides.length }})
+                    </h4>
+                  </div>
+                  <p class="text-[11px] text-dark-muted font-medium line-clamp-1">
+                    Все созданные и опубликованные статьи
+                  </p>
+                </div>
+
+                <div class="w-10 h-10 rounded-xl bg-cyan-500/10 group-hover:bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0 group-hover:scale-110 transition-transform">
+                  <IconRenderer name="BookOpen" size="20" />
+                </div>
+              </div>
+
+            </div>
+
             <!-- CHANGE PASSWORD FORM (Self Service for Author) -->
             <div v-if="isChangePasswordOpen && isOwnProfile" class="space-y-4 bg-[#0c0d0e]/90 border border-cyan-500/40 p-5 rounded-2xl animate-fadeIn backdrop-blur-md shadow-2xl">
               <div class="flex items-center justify-between border-b border-cyan-500/30 pb-2">
