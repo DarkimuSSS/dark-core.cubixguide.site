@@ -170,63 +170,64 @@ const getEventBadgeClass = (type: string) => {
             </div>
           </div>
 
-          <!-- Quick Action Buttons Hub -->
-          <div class="flex flex-wrap items-center justify-center sm:justify-end gap-3 shrink-0 relative z-10">
+          <!-- Quick Action Buttons Column Stack -->
+          <div class="flex flex-col gap-2 w-full sm:w-64 shrink-0 relative z-10">
             
             <!-- 1. Texture Gallery & Packs Button -->
             <button
               type="button"
               @click="isAuthorGalleryOpen = true"
-              class="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:from-amber-400 hover:to-purple-500 text-white font-black text-xs shadow-xl shadow-amber-950/40 transition-all cursor-pointer flex items-center gap-2.5 hover:scale-105"
+              class="w-full px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:from-amber-400 hover:to-purple-500 text-white font-black text-xs shadow-md shadow-amber-950/30 transition-all cursor-pointer flex items-center justify-between hover:scale-[1.02]"
             >
-              <div class="w-7 h-7 rounded-xl bg-black/20 flex items-center justify-center">
-                <IconRenderer name="FolderImage" size="16" />
+              <div class="flex items-center gap-2.5">
+                <div class="w-6 h-6 rounded-lg bg-black/20 flex items-center justify-center shrink-0">
+                  <IconRenderer name="FolderImage" size="14" />
+                </div>
+                <span class="text-xs font-black">Папка Текстур</span>
               </div>
-              <div class="text-left">
-                <div class="text-[11px] leading-tight font-extrabold">Папка Текстур</div>
-                <div class="text-[9px] text-amber-200 opacity-90 font-bold">& Маркетплейс паков</div>
-              </div>
+              <span class="text-[10px] text-amber-200 opacity-90 font-medium">Маркет</span>
             </button>
 
             <!-- 2. 3D Block Model Editor Button -->
             <button
               type="button"
               @click="isBlockModelEditorOpen = true"
-              class="px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-black text-xs shadow-xl shadow-purple-950/40 transition-all cursor-pointer flex items-center gap-2.5 hover:scale-105"
+              class="w-full px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-black text-xs shadow-md shadow-purple-950/30 transition-all cursor-pointer flex items-center justify-between hover:scale-[1.02]"
             >
-              <div class="w-7 h-7 rounded-xl bg-black/20 flex items-center justify-center">
-                <IconRenderer name="Box" size="16" />
+              <div class="flex items-center gap-2.5">
+                <div class="w-6 h-6 rounded-lg bg-black/20 flex items-center justify-center shrink-0">
+                  <IconRenderer name="Box" size="14" />
+                </div>
+                <span class="text-xs font-black">Редактор 3D-блоков</span>
               </div>
-              <div class="text-left">
-                <div class="text-[11px] leading-tight font-extrabold">Редактор 3D-блоков</div>
-                <div class="text-[9px] text-cyan-200 opacity-90 font-bold">6 граней & модели</div>
-              </div>
+              <span class="text-[10px] text-cyan-200 opacity-90 font-medium">6 граней</span>
             </button>
 
             <!-- 3. Standalone Marketplace Page Button -->
             <button
               type="button"
               @click="emit('open-market')"
-              class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-black text-xs shadow-xl shadow-emerald-950/40 transition-all cursor-pointer flex items-center gap-2.5 hover:scale-105 border border-white/10"
+              class="w-full px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-black text-xs shadow-md shadow-emerald-950/30 transition-all cursor-pointer flex items-center justify-between hover:scale-[1.02] border border-white/10"
             >
-              <div class="w-7 h-7 rounded-xl bg-black/30 flex items-center justify-center border border-white/10">
-                <IconRenderer name="ShoppingBag" size="16" class="text-emerald-300" />
+              <div class="flex items-center gap-2.5">
+                <div class="w-6 h-6 rounded-lg bg-black/30 flex items-center justify-center shrink-0 border border-white/10">
+                  <IconRenderer name="ShoppingBag" size="14" class="text-emerald-300" />
+                </div>
+                <span class="text-xs font-black">Маркетплейс</span>
               </div>
-              <div class="text-left">
-                <div class="text-[11px] leading-tight font-extrabold">Маркетплейс</div>
-                <div class="text-[9px] text-emerald-200 opacity-90 font-bold">Паки текстур & 3D</div>
-              </div>
+              <span class="text-[10px] text-emerald-200 opacity-90 font-medium">Паки</span>
             </button>
 
             <!-- Go Home / Create New Guide Button -->
             <button
               type="button"
               @click="emit('go-home')"
-              class="px-4 py-3 rounded-2xl bg-[#1a1e24] hover:bg-[#242a33] border border-[#343b46] hover:border-cyan-500/50 text-white font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 hover:scale-105 shadow-md"
+              class="w-full px-3.5 py-2 rounded-xl bg-[#1a1e24] hover:bg-[#242a33] border border-[#343b46] hover:border-cyan-500/50 text-white font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.02] shadow-sm"
             >
-              <IconRenderer name="Plus" size="16" class="text-cyan-400" />
+              <IconRenderer name="Plus" size="14" class="text-cyan-400" />
               <span>Создать новый гайд</span>
             </button>
+
           </div>
 
         </div>
