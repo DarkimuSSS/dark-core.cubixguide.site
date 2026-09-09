@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import IconRenderer from './IconRenderer.vue'
+import AuthorGalleryModal from './AuthorGalleryModal.vue'
+import BlockModelEditorModal from './BlockModelEditorModal.vue'
 import type { CustomBlockModel } from '../types/guide'
 
 const props = defineProps<{
@@ -14,7 +16,9 @@ const emit = defineEmits<{
   (e: 'select-model', model: CustomBlockModel): void
 }>()
 
-const activeTab = ref<'market' | 'my'>('market')
+// Active section in unified Assets Hub:
+// 'market_models' | 'market_packs' | 'author_gallery' | 'model_editor'
+const activeTab = ref<'market_models' | 'market_packs' | 'author_gallery' | 'model_editor'>('market_models')
 const searchQuery = ref('')
 const selectedCategory = ref('all')
 const isPublishingModalOpen = ref(false)
@@ -186,56 +190,71 @@ const deleteLocalModel = (id: string) => {
       <!-- MAIN TABS CONTROL -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#26292d] pb-4">
         <!-- Tab Selector Pills -->
-        <div class="flex items-center gap-2 bg-[#0c0d0e] p-1.5 rounded-2xl border border-[#26292d]">
+        <div class="flex items-center gap-2 bg-[#0c0d0e] p-1.5 rounded-2xl border border-[#26292d] flex-wrap">
+          
+          <!-- Tab 1: Маркет 3D-Моделей -->
           <button
             type="button"
-            @click="activeTab = 'market'"
+            @click="activeTab = 'market_models'"
             :class="[
-              'px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2.5 cursor-pointer',
-              activeTab === 'market' 
+              'px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
+              activeTab === 'market_models' 
                 ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-lg shadow-emerald-950/40' 
                 : 'text-slate-400 hover:text-white'
             ]"
           >
-            <IconRenderer name="ShoppingBag" size="16" />
-            <span>Маркетплейс 3D-Моделей</span>
-            <span class="px-2 py-0.5 text-[10px] bg-emerald-400/20 text-emerald-300 font-black rounded-md border border-emerald-400/30">
+            <IconRenderer name="ShoppingBag" size="15" />
+            <span>🛒 Маркет 3D-Моделей</span>
+            <span class="px-1.5 py-0.5 text-[10px] bg-emerald-400/20 text-emerald-300 font-black rounded-md border border-emerald-400/30">
               {{ marketModels.length }}
             </span>
           </button>
 
+          <!-- Tab 2: Галерея & Паки Текстур -->
           <button
             type="button"
-            @click="activeTab = 'my'; loadLocalModels()"
+            @click="activeTab = 'author_gallery'"
             :class="[
-              'px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2.5 cursor-pointer',
-              activeTab === 'my' 
-                ? 'bg-gradient-to-r from-cyan-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-cyan-950/40' 
+              'px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
+              activeTab === 'author_gallery' 
+                ? 'bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 text-white shadow-lg shadow-amber-950/40' 
                 : 'text-slate-400 hover:text-white'
             ]"
           >
-            <IconRenderer name="Folder" size="16" />
-            <span>Моя коллекция</span>
-            <span class="px-2 py-0.5 text-[10px] bg-cyan-400/20 text-cyan-300 font-black rounded-md border border-cyan-400/30">
-              {{ localModels.length }}
-            </span>
+            <IconRenderer name="FolderImage" size="15" />
+            <span>📁 Галерея Текстур & Паки</span>
+          </button>
+
+          <!-- Tab 3: Редактор 3D-Блоков -->
+          <button
+            type="button"
+            @click="activeTab = 'model_editor'"
+            :class="[
+              'px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
+              activeTab === 'model_editor' 
+                ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white shadow-lg shadow-purple-950/40' 
+                : 'text-slate-400 hover:text-white'
+            ]"
+          >
+            <IconRenderer name="Box" size="15" />
+            <span>🎲 Конструктор 3D</span>
           </button>
         </div>
 
         <!-- Search Bar -->
-        <div v-if="activeTab === 'market'" class="relative flex-1 max-w-sm">
+        <div v-if="activeTab === 'market_models'" class="relative flex-1 max-w-sm">
           <IconRenderer name="Search" size="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" />
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Поиск по названию или автору..."
+            placeholder="Поиск 3D-модели..."
             class="w-full pl-10 pr-4 py-2.5 bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500 rounded-xl text-xs text-slate-100 placeholder-dark-muted focus:outline-none transition-all shadow-inner"
           />
         </div>
       </div>
 
-      <!-- CATEGORIES BAR -->
-      <div v-if="activeTab === 'market'" class="flex items-center gap-2 flex-wrap">
+      <!-- CATEGORIES BAR FOR MARKETPLACE -->
+      <div v-if="activeTab === 'market_models'" class="flex items-center gap-2 flex-wrap">
         <button
           v-for="cat in categories"
           :key="cat.id"
@@ -254,8 +273,8 @@ const deleteLocalModel = (id: string) => {
       <!-- CONTENT GRID -->
       <div class="flex-1 overflow-y-auto custom-scrollbar pr-1">
         
-        <!-- Marketplace Tab Content -->
-        <div v-if="activeTab === 'market'">
+        <!-- SECTION 1: 3D Models Marketplace -->
+        <div v-if="activeTab === 'market_models'">
           <div v-if="isLoadingMarket" class="text-center py-20 text-dark-muted space-y-3">
             <IconRenderer name="Loader2" size="36" class="animate-spin mx-auto text-emerald-400" />
             <p class="text-xs font-semibold">Загрузка карточек из каталога...</p>
@@ -331,66 +350,22 @@ const deleteLocalModel = (id: string) => {
           </div>
         </div>
 
-        <!-- Personal Models Tab Content -->
-        <div v-if="activeTab === 'my'">
-          <div v-if="localModels.length === 0" class="text-center py-20 bg-[#0c0d0e] border border-[#26292d] rounded-2xl space-y-3">
-            <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mx-auto flex items-center justify-center text-cyan-400">
-              <IconRenderer name="Box" size="28" />
-            </div>
-            <h3 class="text-base font-bold text-white">Моделей пока нет</h3>
-            <p class="text-xs text-dark-muted">Создавайте 3D-блоки с персональными 6 гранями и отправляйте их в маркетплейс</p>
-          </div>
+        <!-- SECTION 2: Author Texture Gallery & Packs -->
+        <div v-else-if="activeTab === 'author_gallery'">
+          <AuthorGalleryModal
+            :is-open="true"
+            :username="props.authorName || ''"
+            @close="activeTab = 'market_models'"
+          />
+        </div>
 
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            <div
-              v-for="model in localModels"
-              :key="model.id"
-              class="bg-[#0c0d0e] border border-[#26292d] hover:border-cyan-500/50 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1.5 shadow-lg"
-            >
-              <div class="w-full h-40 bg-gradient-to-b from-[#16181a] to-[#0d0f11] border border-[#26292d] rounded-xl flex items-center justify-center relative overflow-hidden">
-                <div class="preview-3d-wrapper">
-                  <div class="cube-3d">
-                    <div class="face front" :style="{ backgroundImage: `url(${model.textures.north || ''})` }"></div>
-                    <div class="face back" :style="{ backgroundImage: `url(${model.textures.south || ''})` }"></div>
-                    <div class="face right" :style="{ backgroundImage: `url(${model.textures.east || ''})` }"></div>
-                    <div class="face left" :style="{ backgroundImage: `url(${model.textures.west || ''})` }"></div>
-                    <div class="face top" :style="{ backgroundImage: `url(${model.textures.top || ''})` }"></div>
-                    <div class="face bottom" :style="{ backgroundImage: `url(${model.textures.bottom || ''})` }"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-3.5">
-                <h4 class="text-sm font-extrabold text-white group-hover:text-cyan-400 transition-colors truncate">
-                  {{ model.name }}
-                </h4>
-              </div>
-
-              <div class="mt-4 pt-3 border-t border-[#26292d] flex items-center gap-2">
-                <button
-                  @click="useModel(model)"
-                  class="flex-1 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
-                >
-                  <IconRenderer name="Paintbrush" size="13" />
-                  <span>Применить</span>
-                </button>
-                <button
-                  @click="openPublishModal(model)"
-                  class="p-2.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-xs transition-all cursor-pointer"
-                  title="Опубликовать в Маркет"
-                >
-                  <IconRenderer name="Share2" size="14" />
-                </button>
-                <button
-                  @click="deleteLocalModel(model.id)"
-                  class="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs transition-all cursor-pointer"
-                  title="Удалить"
-                >
-                  <IconRenderer name="Trash2" size="14" />
-                </button>
-              </div>
-            </div>
-          </div>
+        <!-- SECTION 3: 3D Block Model Editor Constructor -->
+        <div v-else-if="activeTab === 'model_editor'">
+          <BlockModelEditorModal
+            :is-open="true"
+            :username="props.authorName || ''"
+            @close="activeTab = 'market_models'"
+          />
         </div>
 
       </div>
