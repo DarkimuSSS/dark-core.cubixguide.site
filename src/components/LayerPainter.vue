@@ -326,18 +326,30 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
 
       <!-- Palette Picker -->
       <div v-if="isEditing" class="space-y-2">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
           <div class="text-xs font-medium text-dark-muted uppercase tracking-wider">Палитра блоков (нажмите для выбора):</div>
           
-          <button
-            type="button"
-            @click="isGalleryOpen = true"
-            class="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-            title="Открыть персональную галерею текстур"
-          >
-            <IconRenderer name="FolderPlus" size="13" />
-            <span>Папка текстур автора</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              @click="isGalleryOpen = true"
+              class="px-2.5 py-1 rounded-lg bg-[#121416] hover:bg-[#1a1d21] text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Открыть коллекцию 3D моделей блоков"
+            >
+              <IconRenderer name="Box" size="13" class="text-cyan-400" />
+              <span>3D-Модели</span>
+            </button>
+
+            <button
+              type="button"
+              @click="isGalleryOpen = true"
+              class="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Открыть персональную галерею текстур"
+            >
+              <IconRenderer name="FolderPlus" size="13" />
+              <span>Папка текстур</span>
+            </button>
+          </div>
         </div>
 
         <div class="flex flex-wrap gap-2">

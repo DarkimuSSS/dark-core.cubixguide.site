@@ -384,16 +384,28 @@ const publishPack = async () => {
           </button>
         </div>
 
-        <!-- Action: Publish Pack to Marketplace -->
-        <button
-          v-if="activeTab === 'my' && mediaList.length > 0"
-          type="button"
-          @click="openPublishModal"
-          class="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
-        >
-          <IconRenderer name="Share2" size="13" />
-          <span>Опубликовать пак</span>
-        </button>
+        <!-- Actions: 3D Models Gallery & Publish Pack -->
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            @click="isModelGalleryOpen = true"
+            class="px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+            title="Выбрать готовую 3D-модель блока"
+          >
+            <IconRenderer name="Box" size="13" class="text-cyan-400" />
+            <span>3D-Модели блоков</span>
+          </button>
+
+          <button
+            v-if="activeTab === 'my' && mediaList.length > 0"
+            type="button"
+            @click="openPublishModal"
+            class="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+          >
+            <IconRenderer name="Share2" size="13" />
+            <span>Опубликовать пак</span>
+          </button>
+        </div>
       </div>
 
       <!-- Feedback Global Banners -->
