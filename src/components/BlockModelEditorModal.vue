@@ -389,6 +389,7 @@ const applyToActiveGuide = () => {
               class="scene-3d-single"
               :style="{ transform: `rotateX(${rotX}deg) rotateY(${rotY}deg)` }"
             >
+              <div class="floor-pedestal"></div>
               <div class="face-single front" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"><span class="face-label">Front</span></div>
               <div class="face-single back" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"><span class="face-label">Back</span></div>
               <div class="face-single top" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"><span class="face-label">Top</span></div>
@@ -403,6 +404,7 @@ const applyToActiveGuide = () => {
               class="scene-3d-single"
               :style="{ transform: `rotateX(${rotX}deg) rotateY(${rotY}deg)` }"
             >
+              <div class="floor-pedestal"></div>
               <div class="face-slab front" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"><span class="face-label">Front</span></div>
               <div class="face-slab back" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"><span class="face-label">Back</span></div>
               <div class="face-slab top" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"><span class="face-label">Top</span></div>
@@ -417,6 +419,7 @@ const applyToActiveGuide = () => {
               class="scene-3d-single"
               :style="{ transform: `rotateX(${rotX}deg) rotateY(${rotY}deg)` }"
             >
+              <div class="floor-pedestal"></div>
               <!-- Base Box (Bottom Half) -->
               <div class="face-stair-base front" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"></div>
               <div class="face-stair-base back" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"></div>
@@ -845,7 +848,25 @@ const applyToActiveGuide = () => {
   width: 0;
   height: 0;
   transform-style: preserve-3d;
+  transform-origin: 0 0 0;
   transition: transform 0.05s linear;
+}
+
+.floor-pedestal {
+  position: absolute;
+  top: -90px;
+  left: -90px;
+  width: 180px;
+  height: 180px;
+  transform: rotateX(90deg) translateZ(-66px);
+  background-image: 
+    radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, transparent 70%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 100% 100%, 15px 15px, 15px 15px;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 12px;
+  pointer-events: none;
 }
 
 .face-label {
