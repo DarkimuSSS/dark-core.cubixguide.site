@@ -107,6 +107,19 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
   return props.palette?.find(p => p.id === id) || { id, name: id, icon: 'Box', color: '#94a3b8' };
 };
 
+const getFaceTextureStyle = (matId: string | null, face: 'top' | 'bottom' | 'side') => {
+  const mat = getMaterial(matId);
+  let url = mat.imageUrl;
+  if (face === 'top' && mat.topImageUrl) url = mat.topImageUrl;
+  else if (face === 'bottom' && mat.bottomImageUrl) url = mat.bottomImageUrl;
+  else if (face === 'side' && mat.sideImageUrl) url = mat.sideImageUrl;
+
+  return {
+    backgroundColor: mat.color,
+    backgroundImage: url ? `url('${url}')` : 'none'
+  };
+};
+
 // Compute 3D Position offset for voxels (Supports non-square X x Z grids like 4x6, 3x5, etc)
 const getVoxelStyle = (x: number, y: number, z: number, color: string, numRows: number, numCols: number) => {
   const cubeSize = 40; // exact size of cubic voxel
@@ -235,49 +248,13 @@ const materialSummary = computed(() => {
                   :style="getVoxelStyle(colIdx, layerIdx, rowIdx, getMaterial(matId).color, layer.grid.length, row.length)"
                   :title="`${getMaterial(matId).name} (Слой Y=${layer.layerNumber})`"
                 >
-                  <!-- Cube Faces with custom texture image or color shading -->
-                  <div 
-                    class="face front" 
-                    :style="{ 
-                      backgroundColor: getMaterial(matId).color,
-                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
-                    }"
-                  ></div>
-                  <div 
-                    class="face back" 
-                    :style="{ 
-                      backgroundColor: getMaterial(matId).color,
-                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
-                    }"
-                  ></div>
-                  <div 
-                    class="face top" 
-                    :style="{ 
-                      backgroundColor: getMaterial(matId).color,
-                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
-                    }"
-                  ></div>
-                  <div 
-                    class="face bottom" 
-                    :style="{ 
-                      backgroundColor: getMaterial(matId).color,
-                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
-                    }"
-                  ></div>
-                  <div 
-                    class="face left" 
-                    :style="{ 
-                      backgroundColor: getMaterial(matId).color,
-                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
-                    }"
-                  ></div>
-                  <div 
-                    class="face right" 
-                    :style="{ 
-                      backgroundColor: getMaterial(matId).color,
-                      backgroundImage: getMaterial(matId).imageUrl ? `url('${getMaterial(matId).imageUrl}')` : 'none'
-                    }"
-                  ></div>
+                  <!-- Cube Faces with custom multi-face textures or color shading -->
+                  <div class="face front" :style="getFaceTextureStyle(matId, 'side')"></div>
+                  <div class="face back" :style="getFaceTextureStyle(matId, 'side')"></div>
+                  <div class="face top" :style="getFaceTextureStyle(matId, 'top')"></div>
+                  <div class="face bottom" :style="getFaceTextureStyle(matId, 'bottom')"></div>
+                  <div class="face left" :style="getFaceTextureStyle(matId, 'side')"></div>
+                  <div class="face right" :style="getFaceTextureStyle(matId, 'side')"></div>
                 </div>
               </template>
             </template>

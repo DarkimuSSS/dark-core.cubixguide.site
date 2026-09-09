@@ -57,7 +57,10 @@ export interface MultiblockPaletteItem {
   name: string;
   icon: string;
   color: string;
-  imageUrl?: string; // Custom texture / block image URL
+  imageUrl?: string; // Custom texture / block image URL (default/sides)
+  topImageUrl?: string; // Custom top face texture URL
+  bottomImageUrl?: string; // Custom bottom face texture URL
+  sideImageUrl?: string; // Custom side faces texture URL
 }
 
 export interface AuthorMediaItem {

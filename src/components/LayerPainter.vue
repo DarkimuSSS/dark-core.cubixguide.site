@@ -20,28 +20,72 @@ const isGalleryOpen = ref(false);
 const viewMode = ref<'3d' | '2d'>(props.isEditing ? '2d' : '3d');
 const activeLayerIndex = ref<number>(0);
 const selectedMaterialId = ref<string>(props.block.palette?.[0]?.id || PRESET_MULTIBLOCK_MATERIALS[0].id);
+const activeTargetFace = ref<'all' | 'top' | 'bottom' | 'side'>('all');
 
-const handleSelectGalleryMedia = (media: AuthorMediaItem) => {
+const selectedMat = computed(() => {
+  return currentPalette.value.find(p => p.id === selectedMaterialId.value) || currentPalette.value[0];
+});
+
+const openGalleryForFace = (face: 'all' | 'top' | 'bottom' | 'side') => {
+  activeTargetFace.value = face;
+  isGalleryOpen.value = true;
+};
+
+const updateSelectedMatFace = (face: 'top' | 'bottom' | 'side' | 'all', url: string) => {
   const customPalette = [...currentPalette.value];
-  const customId = `custom_${media.id}`;
-  
-  // Check if item already exists in palette
-  if (!customPalette.some(p => p.id === customId)) {
-    customPalette.push({
-      id: customId,
-      name: media.name,
-      icon: 'Image',
-      color: '#06b6d4',
-      imageUrl: media.url
-    });
+  const idx = customPalette.findIndex(p => p.id === selectedMaterialId.value);
+  if (idx !== -1) {
+    const mat = { ...customPalette[idx] };
+    if (face === 'top') mat.topImageUrl = url;
+    else if (face === 'bottom') mat.bottomImageUrl = url;
+    else if (face === 'side') mat.sideImageUrl = url;
+    else mat.imageUrl = url;
 
+    customPalette[idx] = mat;
     emit('update', {
       ...props.block,
       palette: customPalette
     });
   }
+};
 
-  selectedMaterialId.value = customId;
+const handleSelectGalleryMedia = (media: AuthorMediaItem) => {
+  const customPalette = [...currentPalette.value];
+  let targetIdx = customPalette.findIndex(p => p.id === selectedMaterialId.value);
+
+  if (targetIdx === -1) {
+    const newMat: MultiblockPaletteItem = {
+      id: `custom_${media.id}_${Date.now()}`,
+      name: media.name,
+      icon: 'Image',
+      color: '#06b6d4',
+      imageUrl: media.url
+    };
+    if (activeTargetFace.value === 'top') newMat.topImageUrl = media.url;
+    if (activeTargetFace.value === 'bottom') newMat.bottomImageUrl = media.url;
+    if (activeTargetFace.value === 'side') newMat.sideImageUrl = media.url;
+
+    customPalette.push(newMat);
+    selectedMaterialId.value = newMat.id;
+  } else {
+    const mat = { ...customPalette[targetIdx] };
+    if (activeTargetFace.value === 'all') {
+      mat.imageUrl = media.url;
+    } else if (activeTargetFace.value === 'top') {
+      mat.topImageUrl = media.url;
+    } else if (activeTargetFace.value === 'bottom') {
+      mat.bottomImageUrl = media.url;
+    } else if (activeTargetFace.value === 'side') {
+      mat.sideImageUrl = media.url;
+      if (!mat.imageUrl) mat.imageUrl = media.url;
+    }
+    customPalette[targetIdx] = mat;
+  }
+
+  emit('update', {
+    ...props.block,
+    palette: customPalette
+  });
 };
 
 const currentSizeX = computed(() => {
@@ -298,11 +342,84 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
             ]"
           >
             <!-- Texture Image Preview or Color Circle -->
-            <img v-if="mat.imageUrl" :src="mat.imageUrl" class="w-4 h-4 rounded border border-white/20 object-cover" />
+            <img v-if="mat.imageUrl || mat.topImageUrl || mat.sideImageUrl" :src="mat.sideImageUrl || mat.topImageUrl || mat.imageUrl" class="w-4 h-4 rounded border border-white/20 object-cover" />
             <span v-else class="w-3 h-3 rounded-full border border-black/40" :style="{ backgroundColor: mat.color }"></span>
             <IconRenderer :name="mat.icon" size="14" :color="mat.color" />
             {{ mat.name }}
           </button>
+        </div>
+
+        <!-- Face Textures Configuration Box for Selected Block -->
+        <div v-if="selectedMat" class="bg-[#0c0d0e] border border-[#26292d] p-3 rounded-xl space-y-2.5">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-300">
+            <span class="flex items-center gap-1.5">
+              <IconRenderer name="Layers" size="14" class="text-cyan-400" />
+              <span>Текстуры граней блока: <strong class="text-cyan-300">{{ selectedMat.name }}</strong></span>
+            </span>
+            <span class="text-[10px] text-dark-muted font-medium">Верх, Бока и Низ могут иметь разную текстуру</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <!-- 1. Top Face Texture -->
+            <div class="bg-[#121416] p-2.5 rounded-xl border border-[#26292d] space-y-1.5">
+              <div class="text-[11px] font-extrabold text-emerald-400 flex items-center justify-between">
+                <span>⬆️ Верхняя грань (Top)</span>
+                <button type="button" @click="openGalleryForFace('top')" class="text-[10px] font-bold text-cyan-400 hover:underline cursor-pointer">Галерея</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-[#16181a] border border-white/10 overflow-hidden flex-shrink-0">
+                  <img v-if="selectedMat.topImageUrl || selectedMat.imageUrl" :src="selectedMat.topImageUrl || selectedMat.imageUrl" class="w-full h-full object-cover" />
+                </div>
+                <input
+                  type="text"
+                  :value="selectedMat.topImageUrl || ''"
+                  @input="updateSelectedMatFace('top', ($event.target as HTMLInputElement).value)"
+                  placeholder="URL верха..."
+                  class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-[11px] rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-400"
+                />
+              </div>
+            </div>
+
+            <!-- 2. Side Face Texture -->
+            <div class="bg-[#121416] p-2.5 rounded-xl border border-[#26292d] space-y-1.5">
+              <div class="text-[11px] font-extrabold text-cyan-400 flex items-center justify-between">
+                <span>⬛ Боковые грани (Sides)</span>
+                <button type="button" @click="openGalleryForFace('side')" class="text-[10px] font-bold text-cyan-400 hover:underline cursor-pointer">Галерея</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-[#16181a] border border-white/10 overflow-hidden flex-shrink-0">
+                  <img v-if="selectedMat.sideImageUrl || selectedMat.imageUrl" :src="selectedMat.sideImageUrl || selectedMat.imageUrl" class="w-full h-full object-cover" />
+                </div>
+                <input
+                  type="text"
+                  :value="selectedMat.sideImageUrl || selectedMat.imageUrl || ''"
+                  @input="updateSelectedMatFace('side', ($event.target as HTMLInputElement).value)"
+                  placeholder="URL боков..."
+                  class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-[11px] rounded-lg px-2 py-1 focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+            </div>
+
+            <!-- 3. Bottom Face Texture -->
+            <div class="bg-[#121416] p-2.5 rounded-xl border border-[#26292d] space-y-1.5">
+              <div class="text-[11px] font-extrabold text-amber-400 flex items-center justify-between">
+                <span>⬇️ Нижняя грань (Bottom)</span>
+                <button type="button" @click="openGalleryForFace('bottom')" class="text-[10px] font-bold text-cyan-400 hover:underline cursor-pointer">Галерея</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-[#16181a] border border-white/10 overflow-hidden flex-shrink-0">
+                  <img v-if="selectedMat.bottomImageUrl || selectedMat.imageUrl" :src="selectedMat.bottomImageUrl || selectedMat.imageUrl" class="w-full h-full object-cover" />
+                </div>
+                <input
+                  type="text"
+                  :value="selectedMat.bottomImageUrl || ''"
+                  @input="updateSelectedMatFace('bottom', ($event.target as HTMLInputElement).value)"
+                  placeholder="URL низа..."
+                  class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-[11px] rounded-lg px-2 py-1 focus:outline-none focus:border-amber-400"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
