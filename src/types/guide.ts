@@ -61,6 +61,26 @@ export interface MultiblockPaletteItem {
   topImageUrl?: string; // Custom top face texture URL
   bottomImageUrl?: string; // Custom bottom face texture URL
   sideImageUrl?: string; // Custom side faces texture URL
+  frontImageUrl?: string; // Custom front face texture URL
+  backImageUrl?: string; // Custom back face texture URL
+  leftImageUrl?: string; // Custom left face texture URL
+  rightImageUrl?: string; // Custom right face texture URL
+}
+
+export interface CustomBlockModel {
+  id: string;
+  name: string;
+  color: string;
+  icon?: string;
+  imageUrl?: string;
+  topImageUrl?: string;
+  bottomImageUrl?: string;
+  sideImageUrl?: string;
+  frontImageUrl?: string;
+  backImageUrl?: string;
+  leftImageUrl?: string;
+  rightImageUrl?: string;
+  createdAt: string;
 }
 
 export interface AuthorMediaItem {

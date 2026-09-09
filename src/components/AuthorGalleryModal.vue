@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import IconRenderer from './IconRenderer.vue';
-import type { AuthorMediaItem, AssetPack } from '../types/guide';
+import BlockModelEditorModal from './BlockModelEditorModal.vue';
+import type { AuthorMediaItem, AssetPack, MultiblockPaletteItem } from '../types/guide';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -12,9 +13,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'select', media: AuthorMediaItem): void;
+  (e: 'select-model', model: MultiblockPaletteItem): void;
 }>();
 
 const activeTab = ref<'my' | 'market'>('my');
+const isModelEditorOpen = ref(false);
 
 // Personal Gallery State
 const mediaList = ref<AuthorMediaItem[]>([]);
@@ -364,16 +367,27 @@ const publishPack = async () => {
           </button>
         </div>
 
-        <!-- Action: Publish Pack to Marketplace -->
-        <button
-          v-if="activeTab === 'my' && mediaList.length > 0"
-          type="button"
-          @click="openPublishModal"
-          class="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
-        >
-          <IconRenderer name="Share2" size="14" />
-          <span>Опубликовать пак</span>
-        </button>
+        <!-- Action: 3D Model Constructor & Publish Pack -->
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            @click="isModelEditorOpen = true"
+            class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-md hover:scale-105"
+          >
+            <IconRenderer name="Box" size="14" />
+            <span>🎲 Конструктор 3D-блоков</span>
+          </button>
+
+          <button
+            v-if="activeTab === 'my' && mediaList.length > 0"
+            type="button"
+            @click="openPublishModal"
+            class="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+          >
+            <IconRenderer name="Share2" size="14" />
+            <span>Опубликовать пак</span>
+          </button>
+        </div>
       </div>
 
       <!-- Feedback Global Banners -->
@@ -725,5 +739,13 @@ const publishPack = async () => {
         </div>
       </div>
     </div>
+
+    <!-- 3D BLOCK MODEL EDITOR MODAL -->
+    <BlockModelEditorModal
+      :is-open="isModelEditorOpen"
+      :username="props.username"
+      @close="isModelEditorOpen = false"
+      @select-model="(model) => { emit('select-model', model); isModelEditorOpen = false; emit('close'); }"
+    />
   </div>
 </template>

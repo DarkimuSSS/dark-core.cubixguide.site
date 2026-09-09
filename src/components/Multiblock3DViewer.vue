@@ -107,12 +107,16 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
   return props.palette?.find(p => p.id === id) || { id, name: id, icon: 'Box', color: '#94a3b8' };
 };
 
-const getFaceTextureStyle = (matId: string | null, face: 'top' | 'bottom' | 'side') => {
+const getFaceTextureStyle = (matId: string | null, face: 'top' | 'bottom' | 'front' | 'back' | 'left' | 'right' | 'side') => {
   const mat = getMaterial(matId);
   let url = mat.imageUrl;
   if (face === 'top' && mat.topImageUrl) url = mat.topImageUrl;
   else if (face === 'bottom' && mat.bottomImageUrl) url = mat.bottomImageUrl;
-  else if (face === 'side' && mat.sideImageUrl) url = mat.sideImageUrl;
+  else if (face === 'front' && mat.frontImageUrl) url = mat.frontImageUrl;
+  else if (face === 'back' && mat.backImageUrl) url = mat.backImageUrl;
+  else if (face === 'left' && mat.leftImageUrl) url = mat.leftImageUrl;
+  else if (face === 'right' && mat.rightImageUrl) url = mat.rightImageUrl;
+  else if (mat.sideImageUrl) url = mat.sideImageUrl;
 
   return {
     backgroundColor: mat.color,
@@ -249,12 +253,12 @@ const materialSummary = computed(() => {
                   :title="`${getMaterial(matId).name} (Слой Y=${layer.layerNumber})`"
                 >
                   <!-- Cube Faces with custom multi-face textures or color shading -->
-                  <div class="face front" :style="getFaceTextureStyle(matId, 'side')"></div>
-                  <div class="face back" :style="getFaceTextureStyle(matId, 'side')"></div>
+                  <div class="face front" :style="getFaceTextureStyle(matId, 'front')"></div>
+                  <div class="face back" :style="getFaceTextureStyle(matId, 'back')"></div>
                   <div class="face top" :style="getFaceTextureStyle(matId, 'top')"></div>
                   <div class="face bottom" :style="getFaceTextureStyle(matId, 'bottom')"></div>
-                  <div class="face left" :style="getFaceTextureStyle(matId, 'side')"></div>
-                  <div class="face right" :style="getFaceTextureStyle(matId, 'side')"></div>
+                  <div class="face left" :style="getFaceTextureStyle(matId, 'left')"></div>
+                  <div class="face right" :style="getFaceTextureStyle(matId, 'right')"></div>
                 </div>
               </template>
             </template>

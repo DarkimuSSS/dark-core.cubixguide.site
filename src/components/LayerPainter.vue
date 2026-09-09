@@ -88,6 +88,18 @@ const handleSelectGalleryMedia = (media: AuthorMediaItem) => {
   });
 };
 
+const handleSelectCustomModel = (model: MultiblockPaletteItem) => {
+  const customPalette = [...currentPalette.value];
+  if (!customPalette.some(p => p.id === model.id)) {
+    customPalette.push(model);
+    emit('update', {
+      ...props.block,
+      palette: customPalette
+    });
+  }
+  selectedMaterialId.value = model.id;
+};
+
 const currentSizeX = computed(() => {
   if (props.block.gridSizeX) return props.block.gridSizeX;
   if (props.block.layers && props.block.layers[0]?.grid[0]) return props.block.layers[0].grid[0].length;
@@ -542,6 +554,7 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
       :is-select-mode="true"
       @close="isGalleryOpen = false"
       @select="handleSelectGalleryMedia"
+      @select-model="handleSelectCustomModel"
     />
   </div>
 </template>
