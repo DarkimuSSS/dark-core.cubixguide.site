@@ -420,19 +420,25 @@ const applyToActiveGuide = () => {
               :style="{ transform: `rotateX(${rotX}deg) rotateY(${rotY}deg)` }"
             >
               <div class="floor-pedestal"></div>
-              <!-- Base Box (Bottom Half) -->
-              <div class="face-stair-base front" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"></div>
-              <div class="face-stair-base back" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"></div>
-              <div class="face-stair-base bottom" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.bottom ? `url('${faceTextures.bottom}')` : 'none' }"></div>
-              <div class="face-stair-base left" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"></div>
-              <div class="face-stair-base right" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"></div>
               
-              <!-- Upper Step Box (Top Back Half) -->
-              <div class="face-stair-step top" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"><span class="face-label">Step</span></div>
-              <div class="face-stair-step front" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"></div>
-              <div class="face-stair-step back" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"></div>
-              <div class="face-stair-step left" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"></div>
-              <div class="face-stair-step right" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"></div>
+              <!-- Bottom Base Cuboid (130x65x130) -->
+              <div class="stair-sub-base">
+                <div class="face-sb front" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"></div>
+                <div class="face-sb back" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"></div>
+                <div class="face-sb top" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"></div>
+                <div class="face-sb bottom" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.bottom ? `url('${faceTextures.bottom}')` : 'none' }"></div>
+                <div class="face-sb left" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"></div>
+                <div class="face-sb right" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"></div>
+              </div>
+              
+              <!-- Upper Step Cuboid (130x65x65) -->
+              <div class="stair-sub-step">
+                <div class="face-ss top" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"><span class="face-label">Step</span></div>
+                <div class="face-ss front" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"></div>
+                <div class="face-ss back" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"></div>
+                <div class="face-ss left" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"></div>
+                <div class="face-ss right" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"></div>
+              </div>
             </div>
           </div>
 
@@ -928,9 +934,17 @@ const applyToActiveGuide = () => {
 .face-slab.right  { top: -32.5px; left: -65px; width: 130px; height: 65px; transform: rotateY(90deg) translateZ(65px); filter: brightness(0.9); }
 
 /* 3. STAIRS GEOMETRY FACES */
-.face-stair-base, .face-stair-step {
+.stair-sub-base {
   position: absolute;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+  transform: translate3d(0, 32.5px, 0);
+}
+
+.face-sb {
+  position: absolute;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
   backface-visibility: hidden;
   background-size: cover;
@@ -941,17 +955,37 @@ const applyToActiveGuide = () => {
   justify-content: center;
 }
 
-/* Stair Base (Bottom Half: 130x65x130) */
-.face-stair-base.front  { top: 0px; left: -65px; width: 130px; height: 65px; transform: translateZ(65px); filter: brightness(1); }
-.face-stair-base.back   { top: 0px; left: -65px; width: 130px; height: 65px; transform: rotateY(180deg) translateZ(65px); filter: brightness(0.65); }
-.face-stair-base.bottom { top: -65px; left: -65px; width: 130px; height: 130px; transform: rotateX(-90deg) translateZ(65px); filter: brightness(0.4); }
-.face-stair-base.left   { top: 0px; left: -65px; width: 130px; height: 65px; transform: rotateY(-90deg) translateZ(65px); filter: brightness(0.8); }
-.face-stair-base.right  { top: 0px; left: -65px; width: 130px; height: 65px; transform: rotateY(90deg) translateZ(65px); filter: brightness(0.9); }
+.face-sb.front  { top: -32.5px; left: -65px; width: 130px; height: 65px; transform: translateZ(65px); filter: brightness(1); }
+.face-sb.back   { top: -32.5px; left: -65px; width: 130px; height: 65px; transform: rotateY(180deg) translateZ(65px); filter: brightness(0.65); }
+.face-sb.top    { top: -65px; left: -65px; width: 130px; height: 130px; transform: rotateX(90deg) translateZ(32.5px); filter: brightness(1.1); }
+.face-sb.bottom { top: -65px; left: -65px; width: 130px; height: 130px; transform: rotateX(-90deg) translateZ(32.5px); filter: brightness(0.4); }
+.face-sb.left   { top: -32.5px; left: -65px; width: 130px; height: 65px; transform: rotateY(-90deg) translateZ(65px); filter: brightness(0.8); }
+.face-sb.right  { top: -32.5px; left: -65px; width: 130px; height: 65px; transform: rotateY(90deg) translateZ(65px); filter: brightness(0.9); }
 
-/* Stair Step (Top Back Half: 130x65x65) */
-.face-stair-step.top    { top: -65px; left: -65px; width: 130px; height: 65px; transform: rotateX(90deg) translateZ(65px) translateY(32.5px); filter: brightness(1.2); }
-.face-stair-step.front  { top: -65px; left: -65px; width: 130px; height: 65px; transform: translateZ(0px); filter: brightness(1); }
-.face-stair-step.back   { top: -65px; left: -65px; width: 130px; height: 65px; transform: rotateY(180deg) translateZ(65px); filter: brightness(0.65); }
-.face-stair-step.left   { top: -65px; left: -65px; width: 65px; height: 65px; transform: rotateY(-90deg) translateZ(65px) translateX(-32.5px); filter: brightness(0.8); }
-.face-stair-step.right  { top: -65px; left: -65px; width: 65px; height: 65px; transform: rotateY(90deg) translateZ(65px) translateX(32.5px); filter: brightness(0.9); }
+.stair-sub-step {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+  transform: translate3d(0, -32.5px, -32.5px);
+}
+
+.face-ss {
+  position: absolute;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+  backface-visibility: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.face-ss.front  { top: -32.5px; left: -65px; width: 130px; height: 65px; transform: translateZ(32.5px); filter: brightness(1); }
+.face-ss.back   { top: -32.5px; left: -65px; width: 130px; height: 65px; transform: rotateY(180deg) translateZ(32.5px); filter: brightness(0.65); }
+.face-ss.top    { top: -32.5px; left: -65px; width: 130px; height: 65px; transform: rotateX(90deg) translateZ(32.5px); filter: brightness(1.2); }
+.face-ss.left   { top: -32.5px; left: -32.5px; width: 65px; height: 65px; transform: rotateY(-90deg) translateZ(65px); filter: brightness(0.8); }
+.face-ss.right  { top: -32.5px; left: -32.5px; width: 65px; height: 65px; transform: rotateY(90deg) translateZ(65px); filter: brightness(0.9); }
 </style>
