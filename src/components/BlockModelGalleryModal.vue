@@ -146,116 +146,137 @@ const deleteLocalModel = (id: string) => {
 </script>
 
 <template>
-  <div v-if="isOpen" :class="[embedded ? 'w-full' : 'fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 animate-fadeIn']">
-    <div :class="[embedded ? 'bg-[#16181a] border border-[#26292d] w-full rounded-3xl p-5 sm:p-7 shadow-2xl space-y-5 flex flex-col' : 'bg-[#16181a] border border-[#26292d] w-full max-w-5xl rounded-3xl p-5 sm:p-7 shadow-2xl space-y-5 relative max-h-[92vh] flex flex-col overflow-hidden']">
+  <div v-if="isOpen" :class="[embedded ? 'w-full space-y-6' : 'fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 animate-fadeIn']">
+    <div :class="[embedded ? 'w-full space-y-6' : 'bg-[#16181a] border border-[#26292d] w-full max-w-6xl rounded-3xl p-5 sm:p-8 shadow-2xl space-y-6 relative max-h-[92vh] flex flex-col overflow-hidden']">
       
-      <!-- Header -->
-      <div class="flex items-center justify-between border-b border-[#26292d] pb-4 shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-600 flex items-center justify-center text-white font-extrabold shadow-lg shadow-emerald-950/50">
-            <IconRenderer name="Box" size="22" />
-          </div>
-          <div>
-            <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
-              Маркетплейс & Галерея 3D-Моделей
+      <!-- HERO BANNER FOR MARKETPLACE HUB -->
+      <div class="relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#16181a] via-[#121416] to-[#0c0d0e] border border-[#26292d] p-6 sm:p-8 shadow-xl">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div class="space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold shadow-inner">
+              <IconRenderer name="Box" size="14" class="text-emerald-400 animate-pulse" />
+              <span>Маркетплейс Ресурсов & 3D-Моделей</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Центр Ассетов <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">& 3D-Блоков</span>
             </h2>
-            <p class="text-xs text-dark-muted">
-              Выбирайте, скачивайте и делитесь авторскими 3D-блоками с кастомными 6 гранями
+            <p class="text-xs sm:text-sm text-dark-muted max-w-xl leading-relaxed">
+              Публикуйте свои текстуры, скачивайте уникальные 3D-блоки сообщества в 1 клик и используйте их в интерактивных гайдах.
             </p>
           </div>
-        </div>
 
-        <button
-          v-if="!embedded"
-          type="button"
-          @click="$emit('close')"
-          class="text-dark-muted hover:text-white p-2 rounded-xl hover:bg-[#212429] transition-all cursor-pointer"
-        >
-          <IconRenderer name="X" size="20" />
-        </button>
+          <!-- Top Actions -->
+          <div class="flex items-center gap-3">
+            <button
+              v-if="!embedded"
+              type="button"
+              @click="$emit('close')"
+              class="px-4 py-2 rounded-xl bg-[#0c0d0e] hover:bg-[#212429] border border-[#26292d] text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
+            >
+              <IconRenderer name="X" size="16" />
+              <span>Закрыть</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <!-- Navigation Tabs & Search -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#26292d] pb-4 shrink-0">
+      <!-- MAIN TABS CONTROL -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#26292d] pb-4">
+        <!-- Tab Selector Pills -->
         <div class="flex items-center gap-2 bg-[#0c0d0e] p-1.5 rounded-2xl border border-[#26292d]">
           <button
             type="button"
             @click="activeTab = 'market'"
             :class="[
-              'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
-              activeTab === 'market' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+              'px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2.5 cursor-pointer',
+              activeTab === 'market' 
+                ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-lg shadow-emerald-950/40' 
+                : 'text-slate-400 hover:text-white'
             ]"
           >
-            <IconRenderer name="ShoppingBag" size="15" />
-            <span>🛒 Маркет 3D-Моделей ({{ marketModels.length }})</span>
+            <IconRenderer name="ShoppingBag" size="16" />
+            <span>Маркетплейс 3D-Моделей</span>
+            <span class="px-2 py-0.5 text-[10px] bg-emerald-400/20 text-emerald-300 font-black rounded-md border border-emerald-400/30">
+              {{ marketModels.length }}
+            </span>
           </button>
 
           <button
             type="button"
             @click="activeTab = 'my'; loadLocalModels()"
             :class="[
-              'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
-              activeTab === 'my' ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+              'px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2.5 cursor-pointer',
+              activeTab === 'my' 
+                ? 'bg-gradient-to-r from-cyan-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-cyan-950/40' 
+                : 'text-slate-400 hover:text-white'
             ]"
           >
-            <IconRenderer name="Folder" size="15" />
-            <span>📁 Мои 3D-Модели ({{ localModels.length }})</span>
+            <IconRenderer name="Folder" size="16" />
+            <span>Моя коллекция</span>
+            <span class="px-2 py-0.5 text-[10px] bg-cyan-400/20 text-cyan-300 font-black rounded-md border border-cyan-400/30">
+              {{ localModels.length }}
+            </span>
           </button>
         </div>
 
         <!-- Search Bar -->
-        <div v-if="activeTab === 'market'" class="relative flex-1 max-w-md">
+        <div v-if="activeTab === 'market'" class="relative flex-1 max-w-sm">
           <IconRenderer name="Search" size="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" />
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Поиск 3D-модели по названию или автору..."
-            class="w-full pl-10 pr-4 py-2 bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500 rounded-xl text-xs text-slate-100 placeholder-dark-muted focus:outline-none transition-all"
+            placeholder="Поиск по названию или автору..."
+            class="w-full pl-10 pr-4 py-2.5 bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500 rounded-xl text-xs text-slate-100 placeholder-dark-muted focus:outline-none transition-all shadow-inner"
           />
         </div>
       </div>
 
-      <!-- Categories Filter Bar -->
-      <div v-if="activeTab === 'market'" class="flex items-center gap-2 flex-wrap shrink-0">
+      <!-- CATEGORIES BAR -->
+      <div v-if="activeTab === 'market'" class="flex items-center gap-2 flex-wrap">
         <button
           v-for="cat in categories"
           :key="cat.id"
           @click="selectedCategory = cat.id"
           :class="[
-            'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border',
+            'px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border flex items-center gap-2',
             selectedCategory === cat.id
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-md shadow-emerald-950/30'
               : 'bg-[#0c0d0e] text-slate-400 border-[#26292d] hover:text-white hover:bg-[#1a1d21]'
           ]"
         >
-          {{ cat.name }}
+          <span>{{ cat.name }}</span>
         </button>
       </div>
 
-      <!-- Content Area -->
+      <!-- CONTENT GRID -->
       <div class="flex-1 overflow-y-auto custom-scrollbar pr-1">
         
         <!-- Marketplace Tab Content -->
         <div v-if="activeTab === 'market'">
-          <div v-if="isLoadingMarket" class="text-center py-16 text-dark-muted space-y-3">
-            <IconRenderer name="Loader2" size="32" class="animate-spin mx-auto text-emerald-400" />
-            <p class="text-xs">Загрузка 3D-моделей из базы данных...</p>
+          <div v-if="isLoadingMarket" class="text-center py-20 text-dark-muted space-y-3">
+            <IconRenderer name="Loader2" size="36" class="animate-spin mx-auto text-emerald-400" />
+            <p class="text-xs font-semibold">Загрузка карточек из каталога...</p>
           </div>
 
-          <div v-else-if="filteredMarketModels.length === 0" class="text-center py-16 bg-[#0c0d0e] border border-[#26292d] rounded-2xl space-y-3">
-            <IconRenderer name="Box" size="36" class="mx-auto text-emerald-400/40" />
+          <div v-else-if="filteredMarketModels.length === 0" class="text-center py-20 bg-[#0c0d0e] border border-[#26292d] rounded-2xl space-y-3">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mx-auto flex items-center justify-center text-emerald-400">
+              <IconRenderer name="Box" size="28" />
+            </div>
             <h3 class="text-base font-bold text-white">Модели не найдены</h3>
-            <p class="text-xs text-dark-muted">В этой категории пока нет опубликованных 3D-моделей</p>
+            <p class="text-xs text-dark-muted">В этой категории пока нет опубликованных 3D-блоков</p>
           </div>
 
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             <div
               v-for="model in filteredMarketModels"
               :key="model.id"
-              class="bg-[#0c0d0e] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1 shadow-md hover:shadow-xl hover:shadow-emerald-950/20"
+              class="bg-[#0c0d0e] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1.5 shadow-lg hover:shadow-2xl hover:shadow-emerald-950/30"
             >
-              <!-- 3D Rotating Cube Container -->
-              <div class="w-full h-36 bg-[#16181a] border border-[#26292d] rounded-xl flex items-center justify-center relative overflow-hidden">
+              <!-- 3D Box Visual Scene -->
+              <div class="w-full h-40 bg-gradient-to-b from-[#16181a] to-[#0d0f11] border border-[#26292d] rounded-xl flex items-center justify-center relative overflow-hidden group-hover:border-emerald-500/30 transition-colors">
                 <div class="preview-3d-wrapper">
                   <div class="cube-3d">
                     <div class="face front" :style="{ backgroundImage: `url(${model.textures.north || ''})` }"></div>
@@ -267,40 +288,40 @@ const deleteLocalModel = (id: string) => {
                   </div>
                 </div>
 
-                <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10 text-[10px] text-emerald-300 font-extrabold flex items-center gap-1">
-                  <IconRenderer name="Download" size="10" />
+                <div class="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[11px] text-emerald-300 font-extrabold flex items-center gap-1.5 shadow-md">
+                  <IconRenderer name="Download" size="12" />
                   <span>{{ model.downloads || 0 }}</span>
                 </div>
               </div>
 
-              <!-- Model Info -->
-              <div class="mt-3 space-y-1 flex-1">
-                <h4 class="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
+              <!-- Info Card Body -->
+              <div class="mt-3.5 space-y-1.5 flex-1">
+                <h4 class="text-sm font-extrabold text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
                   {{ model.name }}
                 </h4>
-                <p class="text-[11px] text-dark-muted flex items-center gap-1">
-                  <IconRenderer name="User" size="12" class="text-slate-400" />
+                <div class="flex items-center gap-1.5 text-[11px] text-dark-muted font-medium">
+                  <IconRenderer name="User" size="12" class="text-emerald-400" />
                   <span>{{ model.author || 'Автор не указан' }}</span>
-                </p>
-                <p v-if="model.description" class="text-[11px] text-slate-400 line-clamp-2 leading-tight pt-1">
+                </div>
+                <p v-if="model.description" class="text-[11px] text-slate-400 line-clamp-2 leading-relaxed pt-1">
                   {{ model.description }}
                 </p>
               </div>
 
-              <!-- Card Action Button -->
-              <div class="mt-3 pt-3 border-t border-[#26292d]">
+              <!-- Footer Action -->
+              <div class="mt-4 pt-3 border-t border-[#26292d]">
                 <button
                   v-if="isInstalled(model.id)"
                   @click="useModel(model)"
-                  class="w-full py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  class="w-full py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   <IconRenderer name="Check" size="14" />
-                  <span>Использовать</span>
+                  <span>Уже установлено</span>
                 </button>
                 <button
                   v-else
                   @click="installMarketModel(model)"
-                  class="w-full py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-950/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.02]"
                 >
                   <IconRenderer name="Download" size="14" />
                   <span>Скачать 3D-модель</span>
@@ -312,19 +333,21 @@ const deleteLocalModel = (id: string) => {
 
         <!-- Personal Models Tab Content -->
         <div v-if="activeTab === 'my'">
-          <div v-if="localModels.length === 0" class="text-center py-16 bg-[#0c0d0e] border border-[#26292d] rounded-2xl space-y-3">
-            <IconRenderer name="Box" size="36" class="mx-auto text-cyan-400/40" />
+          <div v-if="localModels.length === 0" class="text-center py-20 bg-[#0c0d0e] border border-[#26292d] rounded-2xl space-y-3">
+            <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mx-auto flex items-center justify-center text-cyan-400">
+              <IconRenderer name="Box" size="28" />
+            </div>
             <h3 class="text-base font-bold text-white">Моделей пока нет</h3>
-            <p class="text-xs text-dark-muted">Создавайте свои уникальные 3D-блоки в конструкторе и сохраняйте их здесь</p>
+            <p class="text-xs text-dark-muted">Создавайте 3D-блоки с персональными 6 гранями и отправляйте их в маркетплейс</p>
           </div>
 
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             <div
               v-for="model in localModels"
               :key="model.id"
-              class="bg-[#0c0d0e] border border-[#26292d] hover:border-cyan-500/50 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1 shadow-md"
+              class="bg-[#0c0d0e] border border-[#26292d] hover:border-cyan-500/50 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1.5 shadow-lg"
             >
-              <div class="w-full h-36 bg-[#16181a] border border-[#26292d] rounded-xl flex items-center justify-center relative overflow-hidden">
+              <div class="w-full h-40 bg-gradient-to-b from-[#16181a] to-[#0d0f11] border border-[#26292d] rounded-xl flex items-center justify-center relative overflow-hidden">
                 <div class="preview-3d-wrapper">
                   <div class="cube-3d">
                     <div class="face front" :style="{ backgroundImage: `url(${model.textures.north || ''})` }"></div>
@@ -337,30 +360,30 @@ const deleteLocalModel = (id: string) => {
                 </div>
               </div>
 
-              <div class="mt-3">
-                <h4 class="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors truncate">
+              <div class="mt-3.5">
+                <h4 class="text-sm font-extrabold text-white group-hover:text-cyan-400 transition-colors truncate">
                   {{ model.name }}
                 </h4>
               </div>
 
-              <div class="mt-3 pt-3 border-t border-[#26292d] flex items-center gap-1.5">
+              <div class="mt-4 pt-3 border-t border-[#26292d] flex items-center gap-2">
                 <button
                   @click="useModel(model)"
-                  class="flex-1 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                  class="flex-1 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
                 >
                   <IconRenderer name="Paintbrush" size="13" />
                   <span>Применить</span>
                 </button>
                 <button
                   @click="openPublishModal(model)"
-                  class="p-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-xs transition-all cursor-pointer"
+                  class="p-2.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-xs transition-all cursor-pointer"
                   title="Опубликовать в Маркет"
                 >
                   <IconRenderer name="Share2" size="14" />
                 </button>
                 <button
                   @click="deleteLocalModel(model.id)"
-                  class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs transition-all cursor-pointer"
+                  class="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs transition-all cursor-pointer"
                   title="Удалить"
                 >
                   <IconRenderer name="Trash2" size="14" />
