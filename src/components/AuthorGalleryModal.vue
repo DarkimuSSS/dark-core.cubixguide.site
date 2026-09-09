@@ -332,10 +332,10 @@ const publishPack = async () => {
           </div>
           <div>
             <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
-              Центр Ассетов & Маркетплейс
+              Галерея & Маркетплейс текстур
             </h2>
             <p class="text-xs text-dark-muted">
-              {{ isSelectMode ? 'Выберите текстуру или 3D-модель для интеграции' : 'Управление текстурами, 3D-моделями и маркетплейсом паков' }}
+              {{ isSelectMode ? 'Выберите текстуру для использования в 3D структуре' : 'Загружайте свои текстуры или скачивайте паки сообщества' }}
             </p>
           </div>
         </div>
@@ -362,7 +362,7 @@ const publishPack = async () => {
             ]"
           >
             <IconRenderer name="Folder" size="15" />
-            <span>📁 Мои Текстуры ({{ mediaList.length }})</span>
+            <span>Моя галерея ({{ mediaList.length }})</span>
           </button>
 
           <button
@@ -374,28 +374,10 @@ const publishPack = async () => {
             ]"
           >
             <IconRenderer name="ShoppingBag" size="15" />
-            <span>🛒 Маркет Паков</span>
+            <span>Маркетплейс паков</span>
             <span class="px-1.5 py-0.5 text-[10px] bg-amber-400/20 text-amber-300 font-extrabold rounded-md border border-amber-400/30">
               {{ marketPacks.length }}
             </span>
-          </button>
-
-          <button
-            type="button"
-            @click="isModelGalleryOpen = true"
-            class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white hover:bg-white/5 border border-white/10"
-          >
-            <IconRenderer name="Cubes" size="15" class="text-emerald-400" />
-            <span>📦 Маркет 3D-Моделей</span>
-          </button>
-
-          <button
-            type="button"
-            @click="isModelEditorOpen = true"
-            class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white hover:bg-white/5 border border-white/10"
-          >
-            <IconRenderer name="Box" size="15" class="text-cyan-400" />
-            <span>🎲 Редактор 3D</span>
           </button>
         </div>
 
