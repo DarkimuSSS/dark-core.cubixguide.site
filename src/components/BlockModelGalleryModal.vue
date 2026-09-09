@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import IconRenderer from './IconRenderer.vue'
 import type { CustomBlockModel } from '../types/guide'
 
 const props = defineProps<{
   isOpen: boolean
   authorName?: string
+  embedded?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -12,7 +14,7 @@ const emit = defineEmits<{
   (e: 'select-model', model: CustomBlockModel): void
 }>()
 
-const activeTab = ref<'my' | 'market'>('market')
+const activeTab = ref<'market' | 'my'>('market')
 const searchQuery = ref('')
 const selectedCategory = ref('all')
 const isPublishingModalOpen = ref(false)
@@ -144,392 +146,290 @@ const deleteLocalModel = (id: string) => {
 </script>
 
 <template>
-  <div v-if="isOpen" class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal-content model-gallery-modal">
-      <header class="modal-header">
-        <div class="header-title">
-          <i class="fas-cube title-icon"></i>
+  <div v-if="isOpen" :class="[embedded ? 'w-full' : 'fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 animate-fadeIn']">
+    <div :class="[embedded ? 'bg-[#16181a] border border-[#26292d] w-full rounded-3xl p-5 sm:p-7 shadow-2xl space-y-5 flex flex-col' : 'bg-[#16181a] border border-[#26292d] w-full max-w-5xl rounded-3xl p-5 sm:p-7 shadow-2xl space-y-5 relative max-h-[92vh] flex flex-col overflow-hidden']">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-[#26292d] pb-4 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-600 flex items-center justify-center text-white font-extrabold shadow-lg shadow-emerald-950/50">
+            <IconRenderer name="Box" size="22" />
+          </div>
           <div>
-            <h2>Галерея & Маркетплейс 3D-моделей</h2>
-            <p class="subtitle">Выбирайте, публикуйте и применяйте объёмные 3D-модели блоков</p>
+            <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
+              Маркетплейс & Галерея 3D-Моделей
+            </h2>
+            <p class="text-xs text-dark-muted">
+              Выбирайте, скачивайте и делитесь авторскими 3D-блоками с кастомными 6 гранями
+            </p>
           </div>
         </div>
-        <button class="btn-close" @click="$emit('close')">
-          <i class="fas-times"></i>
-        </button>
-      </header>
 
-      <!-- Tabs Navigation -->
-      <div class="tabs-bar">
-        <button 
-          class="tab-btn" 
-          :class="{ active: activeTab === 'market' }"
-          @click="activeTab = 'market'"
+        <button
+          v-if="!embedded"
+          type="button"
+          @click="$emit('close')"
+          class="text-dark-muted hover:text-white p-2 rounded-xl hover:bg-[#212429] transition-all cursor-pointer"
         >
-          <i class="fas-shopping-bag"></i> Маркетплейс 3D-моделей
+          <IconRenderer name="X" size="20" />
         </button>
-        <button 
-          class="tab-btn" 
-          :class="{ active: activeTab === 'my' }"
-          @click="activeTab = 'my'; loadLocalModels()"
+      </div>
+
+      <!-- Navigation Tabs & Search -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#26292d] pb-4 shrink-0">
+        <div class="flex items-center gap-2 bg-[#0c0d0e] p-1.5 rounded-2xl border border-[#26292d]">
+          <button
+            type="button"
+            @click="activeTab = 'market'"
+            :class="[
+              'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
+              activeTab === 'market' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+            ]"
+          >
+            <IconRenderer name="ShoppingBag" size="15" />
+            <span>🛒 Маркет 3D-Моделей ({{ marketModels.length }})</span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeTab = 'my'; loadLocalModels()"
+            :class="[
+              'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
+              activeTab === 'my' ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+            ]"
+          >
+            <IconRenderer name="Folder" size="15" />
+            <span>📁 Мои 3D-Модели ({{ localModels.length }})</span>
+          </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div v-if="activeTab === 'market'" class="relative flex-1 max-w-md">
+          <IconRenderer name="Search" size="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Поиск 3D-модели по названию или автору..."
+            class="w-full pl-10 pr-4 py-2 bg-[#0c0d0e] border border-[#26292d] focus:border-emerald-500 rounded-xl text-xs text-slate-100 placeholder-dark-muted focus:outline-none transition-all"
+          />
+        </div>
+      </div>
+
+      <!-- Categories Filter Bar -->
+      <div v-if="activeTab === 'market'" class="flex items-center gap-2 flex-wrap shrink-0">
+        <button
+          v-for="cat in categories"
+          :key="cat.id"
+          @click="selectedCategory = cat.id"
+          :class="[
+            'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border',
+            selectedCategory === cat.id
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
+              : 'bg-[#0c0d0e] text-slate-400 border-[#26292d] hover:text-white hover:bg-[#1a1d21]'
+          ]"
         >
-          <i class="fas-box-open"></i> Мои 3D-модели ({{ localModels.length }})
+          {{ cat.name }}
         </button>
       </div>
 
-      <!-- Marketplace Tab -->
-      <div v-if="activeTab === 'market'" class="tab-pane">
-        <div class="filter-controls">
-          <div class="search-box">
-            <i class="fas-search"></i>
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              placeholder="Поиск по названию или автору..." 
-            />
-          </div>
-
-          <div class="category-pills">
-            <button 
-              v-for="cat in categories" 
-              :key="cat.id"
-              class="pill-btn"
-              :class="{ active: selectedCategory === cat.id }"
-              @click="selectedCategory = cat.id"
-            >
-              {{ cat.name }}
-            </button>
-          </div>
-        </div>
-
-        <div v-if="isLoadingMarket" class="loading-state">
-          <i class="fas-spinner fa-spin"></i> Загрузка 3D-моделей из маркетплейса...
-        </div>
-
-        <div v-else-if="filteredMarketModels.length === 0" class="empty-state">
-          <i class="fas-cube-empty"></i>
-          <p>В этой категории пока нет опубликованных 3D-моделей</p>
-        </div>
-
-        <div v-else class="models-grid">
-          <div v-for="model in filteredMarketModels" :key="model.id" class="model-card">
-            <!-- 3D Box Preview -->
-            <div class="preview-3d-wrapper">
-              <div class="cube-3d">
-                <div class="face front" :style="{ backgroundImage: `url(${model.textures.north || ''})` }"></div>
-                <div class="face back" :style="{ backgroundImage: `url(${model.textures.south || ''})` }"></div>
-                <div class="face right" :style="{ backgroundImage: `url(${model.textures.east || ''})` }"></div>
-                <div class="face left" :style="{ backgroundImage: `url(${model.textures.west || ''})` }"></div>
-                <div class="face top" :style="{ backgroundImage: `url(${model.textures.top || ''})` }"></div>
-                <div class="face bottom" :style="{ backgroundImage: `url(${model.textures.bottom || ''})` }"></div>
-              </div>
-            </div>
-
-            <div class="card-info">
-              <h4 class="model-name">{{ model.name }}</h4>
-              <p class="model-author"><i class="fas-user"></i> {{ model.author || 'Автор не указан' }}</p>
-              <p v-if="model.description" class="model-desc">{{ model.description }}</p>
-              
-              <div class="card-footer">
-                <span class="download-badge">
-                  <i class="fas-download"></i> {{ model.downloads || 0 }}
-                </span>
-                
-                <button 
-                  v-if="isInstalled(model.id)" 
-                  class="btn-action installed"
-                  @click="useModel(model)"
-                >
-                  <i class="fas-check"></i> Использовать
-                </button>
-                <button 
-                  v-else 
-                  class="btn-action install"
-                  @click="installMarketModel(model)"
-                >
-                  <i class="fas-file-download"></i> Скачать
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- My 3D Models Tab -->
-      <div v-if="activeTab === 'my'" class="tab-pane">
-        <div v-if="localModels.length === 0" class="empty-state">
-          <i class="fas-cubes"></i>
-          <p>У вас еще нет сохраненных 3D-моделей. Вы можете легко создать их в редакторе моделей!</p>
-        </div>
-
-        <div v-else class="models-grid">
-          <div v-for="model in localModels" :key="model.id" class="model-card">
-            <div class="preview-3d-wrapper">
-              <div class="cube-3d">
-                <div class="face front" :style="{ backgroundImage: `url(${model.textures.north || ''})` }"></div>
-                <div class="face back" :style="{ backgroundImage: `url(${model.textures.south || ''})` }"></div>
-                <div class="face right" :style="{ backgroundImage: `url(${model.textures.east || ''})` }"></div>
-                <div class="face left" :style="{ backgroundImage: `url(${model.textures.west || ''})` }"></div>
-                <div class="face top" :style="{ backgroundImage: `url(${model.textures.top || ''})` }"></div>
-                <div class="face bottom" :style="{ backgroundImage: `url(${model.textures.bottom || ''})` }"></div>
-              </div>
-            </div>
-
-            <div class="card-info">
-              <h4 class="model-name">{{ model.name }}</h4>
-              
-              <div class="card-actions">
-                <button class="btn-primary-sm" @click="useModel(model)">
-                  <i class="fas-paint-brush"></i> Применить
-                </button>
-                <button class="btn-publish-sm" @click="openPublishModal(model)">
-                  <i class="fas-share-alt"></i> В маркет
-                </button>
-                <button class="btn-danger-sm" @click="deleteLocalModel(model.id)">
-                  <i class="fas-trash"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal to Publish to Marketplace -->
-    <div v-if="isPublishingModalOpen" class="submodal-overlay" @click.self="isPublishingModalOpen = false">
-      <div class="submodal-content">
-        <h3>Публикация 3D-модели в Маркет</h3>
+      <!-- Content Area -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar pr-1">
         
-        <div v-if="modelToPublish" class="form-group">
-          <label>Название модели:</label>
-          <input v-model="modelToPublish.name" type="text" class="input-field" />
+        <!-- Marketplace Tab Content -->
+        <div v-if="activeTab === 'market'">
+          <div v-if="isLoadingMarket" class="text-center py-16 text-dark-muted space-y-3">
+            <IconRenderer name="Loader2" size="32" class="animate-spin mx-auto text-emerald-400" />
+            <p class="text-xs">Загрузка 3D-моделей из базы данных...</p>
+          </div>
 
-          <label>Категория:</label>
-          <select v-model="publishCategory" class="input-field">
-            <option value="blocks">Блоки</option>
-            <option value="furniture">Декорации / Мебель</option>
-            <option value="ores">Руды и металлы</option>
-            <option value="nature">Растения и природа</option>
-          </select>
+          <div v-else-if="filteredMarketModels.length === 0" class="text-center py-16 bg-[#0c0d0e] border border-[#26292d] rounded-2xl space-y-3">
+            <IconRenderer name="Box" size="36" class="mx-auto text-emerald-400/40" />
+            <h3 class="text-base font-bold text-white">Модели не найдены</h3>
+            <p class="text-xs text-dark-muted">В этой категории пока нет опубликованных 3D-моделей</p>
+          </div>
 
-          <label>Описание (опционально):</label>
-          <textarea v-model="modelToPublish.description" class="input-field textarea" placeholder="Опишите текстуры и назначение блока..."></textarea>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div
+              v-for="model in filteredMarketModels"
+              :key="model.id"
+              class="bg-[#0c0d0e] border border-[#26292d] hover:border-emerald-500/50 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1 shadow-md hover:shadow-xl hover:shadow-emerald-950/20"
+            >
+              <!-- 3D Rotating Cube Container -->
+              <div class="w-full h-36 bg-[#16181a] border border-[#26292d] rounded-xl flex items-center justify-center relative overflow-hidden">
+                <div class="preview-3d-wrapper">
+                  <div class="cube-3d">
+                    <div class="face front" :style="{ backgroundImage: `url(${model.textures.north || ''})` }"></div>
+                    <div class="face back" :style="{ backgroundImage: `url(${model.textures.south || ''})` }"></div>
+                    <div class="face right" :style="{ backgroundImage: `url(${model.textures.east || ''})` }"></div>
+                    <div class="face left" :style="{ backgroundImage: `url(${model.textures.west || ''})` }"></div>
+                    <div class="face top" :style="{ backgroundImage: `url(${model.textures.top || ''})` }"></div>
+                    <div class="face bottom" :style="{ backgroundImage: `url(${model.textures.bottom || ''})` }"></div>
+                  </div>
+                </div>
+
+                <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10 text-[10px] text-emerald-300 font-extrabold flex items-center gap-1">
+                  <IconRenderer name="Download" size="10" />
+                  <span>{{ model.downloads || 0 }}</span>
+                </div>
+              </div>
+
+              <!-- Model Info -->
+              <div class="mt-3 space-y-1 flex-1">
+                <h4 class="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
+                  {{ model.name }}
+                </h4>
+                <p class="text-[11px] text-dark-muted flex items-center gap-1">
+                  <IconRenderer name="User" size="12" class="text-slate-400" />
+                  <span>{{ model.author || 'Автор не указан' }}</span>
+                </p>
+                <p v-if="model.description" class="text-[11px] text-slate-400 line-clamp-2 leading-tight pt-1">
+                  {{ model.description }}
+                </p>
+              </div>
+
+              <!-- Card Action Button -->
+              <div class="mt-3 pt-3 border-t border-[#26292d]">
+                <button
+                  v-if="isInstalled(model.id)"
+                  @click="useModel(model)"
+                  class="w-full py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <IconRenderer name="Check" size="14" />
+                  <span>Использовать</span>
+                </button>
+                <button
+                  v-else
+                  @click="installMarketModel(model)"
+                  class="w-full py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <IconRenderer name="Download" size="14" />
+                  <span>Скачать 3D-модель</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="submodal-actions">
-          <button class="btn-secondary" @click="isPublishingModalOpen = false">Отмена</button>
-          <button class="btn-success" @click="submitPublish">Опубликовать</button>
+        <!-- Personal Models Tab Content -->
+        <div v-if="activeTab === 'my'">
+          <div v-if="localModels.length === 0" class="text-center py-16 bg-[#0c0d0e] border border-[#26292d] rounded-2xl space-y-3">
+            <IconRenderer name="Box" size="36" class="mx-auto text-cyan-400/40" />
+            <h3 class="text-base font-bold text-white">Моделей пока нет</h3>
+            <p class="text-xs text-dark-muted">Создавайте свои уникальные 3D-блоки в конструкторе и сохраняйте их здесь</p>
+          </div>
+
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div
+              v-for="model in localModels"
+              :key="model.id"
+              class="bg-[#0c0d0e] border border-[#26292d] hover:border-cyan-500/50 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1 shadow-md"
+            >
+              <div class="w-full h-36 bg-[#16181a] border border-[#26292d] rounded-xl flex items-center justify-center relative overflow-hidden">
+                <div class="preview-3d-wrapper">
+                  <div class="cube-3d">
+                    <div class="face front" :style="{ backgroundImage: `url(${model.textures.north || ''})` }"></div>
+                    <div class="face back" :style="{ backgroundImage: `url(${model.textures.south || ''})` }"></div>
+                    <div class="face right" :style="{ backgroundImage: `url(${model.textures.east || ''})` }"></div>
+                    <div class="face left" :style="{ backgroundImage: `url(${model.textures.west || ''})` }"></div>
+                    <div class="face top" :style="{ backgroundImage: `url(${model.textures.top || ''})` }"></div>
+                    <div class="face bottom" :style="{ backgroundImage: `url(${model.textures.bottom || ''})` }"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <h4 class="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors truncate">
+                  {{ model.name }}
+                </h4>
+              </div>
+
+              <div class="mt-3 pt-3 border-t border-[#26292d] flex items-center gap-1.5">
+                <button
+                  @click="useModel(model)"
+                  class="flex-1 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <IconRenderer name="Paintbrush" size="13" />
+                  <span>Применить</span>
+                </button>
+                <button
+                  @click="openPublishModal(model)"
+                  class="p-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-xs transition-all cursor-pointer"
+                  title="Опубликовать в Маркет"
+                >
+                  <IconRenderer name="Share2" size="14" />
+                </button>
+                <button
+                  @click="deleteLocalModel(model.id)"
+                  class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs transition-all cursor-pointer"
+                  title="Удалить"
+                >
+                  <IconRenderer name="Trash2" size="14" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Submodal for Publishing to Marketplace -->
+    <div v-if="isPublishingModalOpen" class="fixed inset-0 z-60 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn" @click.self="isPublishingModalOpen = false">
+      <div class="bg-[#16181a] border border-[#26292d] rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <IconRenderer name="Share2" size="18" class="text-emerald-400" />
+          Публикация 3D-модели в Маркет
+        </h3>
+
+        <div v-if="modelToPublish" class="space-y-3 text-xs">
+          <div>
+            <label class="block text-slate-300 mb-1 font-semibold">Название модели:</label>
+            <input v-model="modelToPublish.name" type="text" class="w-full px-3 py-2 bg-[#0c0d0e] border border-[#26292d] rounded-xl text-white outline-none focus:border-emerald-500" />
+          </div>
+
+          <div>
+            <label class="block text-slate-300 mb-1 font-semibold">Категория:</label>
+            <select v-model="publishCategory" class="w-full px-3 py-2 bg-[#0c0d0e] border border-[#26292d] rounded-xl text-white outline-none focus:border-emerald-500">
+              <option value="blocks">Блоки</option>
+              <option value="furniture">Декорации / Мебель</option>
+              <option value="ores">Руды и металлы</option>
+              <option value="nature">Растения и природа</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-slate-300 mb-1 font-semibold">Описание (опционально):</label>
+            <textarea v-model="modelToPublish.description" class="w-full px-3 py-2 bg-[#0c0d0e] border border-[#26292d] rounded-xl text-white outline-none focus:border-emerald-500 h-20 resize-none"></textarea>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#26292d]">
+          <button @click="isPublishingModalOpen = false" class="px-4 py-2 rounded-xl bg-[#0c0d0e] hover:bg-[#1a1d21] border border-[#26292d] text-slate-300 text-xs font-bold cursor-pointer">
+            Отмена
+          </button>
+          <button @click="submitPublish" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md cursor-pointer">
+            Опубликовать
+          </button>
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(10, 15, 25, 0.85);
-  backdrop-filter: blur(8px);
-  z-index: 1100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.modal-content.model-gallery-modal {
-  background: #141c2c;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  width: 1000px;
-  max-width: 95vw;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  color: #fff;
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 20px 24px;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.title-icon {
-  font-size: 28px;
-  color: #10b981;
-}
-
-.modal-header h2 {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0;
-  color: #f3f4f6;
-}
-
-.subtitle {
-  font-size: 13px;
-  color: #9ca3af;
-  margin: 2px 0 0 0;
-}
-
-.btn-close {
-  background: transparent;
-  border: none;
-  color: #9ca3af;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.btn-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.tabs-bar {
-  display: flex;
-  gap: 8px;
-  padding: 12px 24px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.tab-btn {
-  background: transparent;
-  border: none;
-  color: #9ca3af;
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-
-.tab-btn:hover {
-  color: #e5e7eb;
-}
-
-.tab-btn.active {
-  color: #10b981;
-  border-bottom-color: #10b981;
-}
-
-.tab-pane {
-  padding: 24px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.filter-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-box i {
-  position: absolute;
-  left: 16px;
-  color: #6b7280;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 12px 16px 12px 44px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  color: #fff;
-  font-size: 14px;
-  outline: none;
-}
-
-.category-pills {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.pill-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #9ca3af;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.pill-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.pill-btn.active {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: #10b981;
-  color: #10b981;
-}
-
-.models-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
-}
-
-.model-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: transform 0.2s, border-color 0.2s;
-}
-
-.model-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(16, 185, 129, 0.4);
-}
-
 .preview-3d-wrapper {
-  width: 140px;
-  height: 140px;
+  width: 100px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 600px;
+  perspective: 500px;
 }
 
 .cube-3d {
-  width: 70px;
-  height: 70px;
+  width: 54px;
+  height: 54px;
   position: relative;
   transform-style: preserve-3d;
   animation: rotateCube 12s infinite linear;
@@ -542,154 +442,18 @@ const deleteLocalModel = (id: string) => {
 
 .face {
   position: absolute;
-  width: 70px;
-  height: 70px;
+  width: 54px;
+  height: 54px;
   background-size: cover;
   image-rendering: pixelated;
-  border: 1px solid rgba(0,0,0,0.3);
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+  border: 1px solid rgba(0,0,0,0.4);
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
 }
 
-.face.front  { transform: translateZ(35px); }
-.face.back   { transform: rotateY(180deg) translateZ(35px); }
-.face.right  { transform: rotateY(90deg) translateZ(35px); }
-.face.left   { transform: rotateY(-90deg) translateZ(35px); }
-.face.top    { transform: rotateX(90deg) translateZ(35px); }
-.face.bottom { transform: rotateX(-90deg) translateZ(35px); }
-
-.card-info {
-  width: 100%;
-  margin-top: 16px;
-}
-
-.model-name {
-  font-size: 15px;
-  font-weight: 600;
-  margin: 0 0 4px 0;
-  color: #f9fafb;
-}
-
-.model-author {
-  font-size: 12px;
-  color: #9ca3af;
-  margin: 0 0 8px 0;
-}
-
-.model-desc {
-  font-size: 12px;
-  color: #6b7280;
-  margin: 0 0 12px 0;
-  line-height: 1.4;
-}
-
-.card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-}
-
-.download-badge {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.btn-action {
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-action.install {
-  background: #10b981;
-  color: #fff;
-}
-
-.btn-action.installed {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-  border: 1px solid #10b981;
-}
-
-.card-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.btn-primary-sm, .btn-publish-sm, .btn-danger-sm {
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.btn-primary-sm { background: #3b82f6; color: #fff; flex: 1; justify-content: center; }
-.btn-publish-sm { background: #8b5cf6; color: #fff; }
-.btn-danger-sm { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-
-.empty-state, .loading-state {
-  text-align: center;
-  padding: 40px;
-  color: #9ca3af;
-}
-
-/* Submodal */
-.submodal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 1200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.submodal-content {
-  background: #1e293b;
-  border-radius: 12px;
-  padding: 24px;
-  width: 400px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.input-field {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 6px;
-  padding: 8px 12px;
-  color: #fff;
-}
-
-.textarea {
-  height: 80px;
-  resize: none;
-}
-
-.submodal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.btn-secondary { background: #475569; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-.btn-success { background: #10b981; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+.face.front  { transform: translateZ(27px); }
+.face.back   { transform: rotateY(180deg) translateZ(27px); }
+.face.right  { transform: rotateY(90deg) translateZ(27px); }
+.face.left   { transform: rotateY(-90deg) translateZ(27px); }
+.face.top    { transform: rotateX(90deg) translateZ(27px); }
+.face.bottom { transform: rotateX(-90deg) translateZ(27px); }
 </style>

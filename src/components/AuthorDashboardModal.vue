@@ -18,6 +18,7 @@ const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'select-guide', guideId: string): void;
   (e: 'go-home'): void;
+  (e: 'open-assets'): void;
 }>();
 
 const isLoading = ref(true);
@@ -176,7 +177,7 @@ const getEventBadgeClass = (type: string) => {
             <!-- Unified Assets Hub Button -->
             <button
               type="button"
-              @click="isAuthorGalleryOpen = true"
+              @click="emit('open-assets')"
               class="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:to-purple-500 text-white font-black text-xs shadow-xl shadow-purple-950/40 transition-all cursor-pointer flex items-center gap-2.5 hover:scale-105 border border-white/10"
             >
               <div class="w-8 h-8 rounded-xl bg-black/30 flex items-center justify-center border border-white/10">
