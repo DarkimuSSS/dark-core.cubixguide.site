@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import IconRenderer from './IconRenderer.vue';
+import AuthorGalleryModal from './AuthorGalleryModal.vue';
 
 const props = withDefaults(defineProps<{
   isOpen?: boolean;
@@ -18,6 +19,7 @@ const emit = defineEmits<{
 }>();
 
 const isLoading = ref(true);
+const isAuthorGalleryOpen = ref(false);
 const analyticsData = ref<{
   author: string;
   totalGuides: number;
@@ -102,6 +104,37 @@ const getEventBadgeClass = (type: string) => {
 
     <div v-else-if="analyticsData" class="space-y-6">
       
+      <!-- Author Dashboard Hero Banner & Quick Actions -->
+      <div class="bg-gradient-to-r from-[#141619] via-[#1a1d22] to-[#141619] border border-[#2b2f36] rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6">
+        <!-- Ambient Glow -->
+        <div class="absolute -top-10 -left-10 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="space-y-1 text-center sm:text-left relative z-10">
+          <div class="flex items-center justify-center sm:justify-start gap-2">
+            <span class="px-2.5 py-0.5 text-[10px] font-extrabold bg-amber-400/10 text-amber-300 border border-amber-400/30 rounded-lg">Кабинет Автора</span>
+            <span class="text-xs text-dark-muted font-mono">{{ username }}</span>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+            Рабочий кабинет и аналитика статей
+          </h2>
+          <p class="text-xs text-slate-400 max-w-lg">
+            Управляйте вашей персональной папкой текстур, отслеживайте просмотры гайдов и публикуйте паки для сообщества.
+          </p>
+        </div>
+
+        <!-- Quick Action Button -->
+        <div class="flex items-center gap-3 relative z-10 shrink-0">
+          <button
+            type="button"
+            @click="isAuthorGalleryOpen = true"
+            class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white font-extrabold text-xs shadow-lg shadow-amber-950/50 transition-all cursor-pointer flex items-center gap-2 hover:scale-105"
+          >
+            <IconRenderer name="FolderImage" size="18" />
+            <span>Папка текстур & Маркетплейс</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Key Metrics Cards Row -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         <!-- Total Views -->
@@ -257,12 +290,23 @@ const getEventBadgeClass = (type: string) => {
           </div>
         </div>
 
-        <button 
-          @click="emit('close')"
-          class="p-2 rounded-xl bg-[#1c1f24] hover:bg-[#262a30] text-dark-muted hover:text-white border border-[#34383e] transition-colors cursor-pointer"
-        >
-          <IconRenderer name="X" size="18" />
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            @click="isAuthorGalleryOpen = true"
+            class="px-3.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+          >
+            <IconRenderer name="FolderImage" size="15" />
+            <span class="hidden sm:inline">Папка текстур & Маркетплейс</span>
+          </button>
+
+          <button 
+            @click="emit('close')"
+            class="p-2 rounded-xl bg-[#1c1f24] hover:bg-[#262a30] text-dark-muted hover:text-white border border-[#34383e] transition-colors cursor-pointer"
+          >
+            <IconRenderer name="X" size="18" />
+          </button>
+        </div>
       </div>
 
       <!-- Content Area -->
@@ -415,4 +459,11 @@ const getEventBadgeClass = (type: string) => {
       </div>
     </div>
   </div>
+
+  <!-- AUTHOR GALLERY MODAL -->
+  <AuthorGalleryModal
+    :is-open="isAuthorGalleryOpen"
+    :username="username"
+    @close="isAuthorGalleryOpen = false"
+  />
 </template>
