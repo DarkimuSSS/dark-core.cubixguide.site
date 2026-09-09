@@ -325,17 +325,17 @@ const publishPack = async () => {
     <div class="bg-[#16181a] border border-[#26292d] w-full max-w-4xl rounded-3xl p-5 sm:p-7 shadow-2xl space-y-5 relative max-h-[92vh] flex flex-col overflow-hidden">
       
       <!-- Header -->
-      <div class="flex items-center justify-between border-b border-[#26292d] pb-4 shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white font-extrabold shadow-lg shadow-cyan-950/50">
-            <IconRenderer name="FolderPlus" size="22" />
+      <div class="flex items-center justify-between border-b border-[#26292d] pb-3 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white font-extrabold shadow-md shrink-0">
+            <IconRenderer name="FolderPlus" size="18" />
           </div>
           <div>
-            <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
+            <h2 class="text-lg font-extrabold text-white leading-tight flex items-center gap-2">
               Галерея & Маркетплейс текстур
             </h2>
-            <p class="text-xs text-dark-muted">
-              {{ isSelectMode ? 'Выберите текстуру для использования в 3D структуре' : 'Загружайте свои текстуры или скачивайте паки сообщества' }}
+            <p class="text-[11px] text-dark-muted">
+              {{ isSelectMode ? 'Выберите текстуру для использования в 3D модельке' : 'Загружайте свои текстуры или скачивайте паки сообщества' }}
             </p>
           </div>
         </div>
@@ -344,38 +344,41 @@ const publishPack = async () => {
         <button
           type="button"
           @click="emit('close')"
-          class="text-dark-muted hover:text-white p-2 rounded-xl hover:bg-[#212429] transition-all cursor-pointer"
+          class="text-dark-muted hover:text-white p-1.5 rounded-xl hover:bg-[#212429] transition-all cursor-pointer"
         >
-          <IconRenderer name="X" size="20" />
+          <IconRenderer name="X" size="18" />
         </button>
       </div>
 
-      <!-- Navigation Tabs -->
+      <!-- Navigation Tabs Bar -->
       <div class="flex items-center justify-between gap-3 border-b border-[#26292d] pb-3 shrink-0 flex-wrap">
-        <div class="flex items-center gap-2 bg-[#0c0d0e] p-1.5 rounded-2xl border border-[#26292d] flex-wrap">
+        <div class="flex items-center gap-1.5 bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
           <button
             type="button"
             @click="activeTab = 'my'"
             :class="[
-              'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
-              activeTab === 'my' ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+              'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer',
+              activeTab === 'my' ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
             ]"
           >
-            <IconRenderer name="Folder" size="15" />
-            <span>Моя галерея ({{ mediaList.length }})</span>
+            <IconRenderer name="Folder" size="14" />
+            <span>Моя галерея</span>
+            <span class="px-1.5 py-0.2 text-[10px] bg-cyan-500/20 text-cyan-300 font-extrabold rounded-md border border-cyan-400/30">
+              {{ mediaList.length }}
+            </span>
           </button>
 
           <button
             type="button"
             @click="activeTab = 'market'"
             :class="[
-              'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer relative',
-              activeTab === 'market' ? 'bg-gradient-to-r from-amber-500 to-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+              'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer relative',
+              activeTab === 'market' ? 'bg-gradient-to-r from-amber-500 to-rose-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
             ]"
           >
-            <IconRenderer name="ShoppingBag" size="15" />
+            <IconRenderer name="ShoppingBag" size="14" />
             <span>Маркетплейс паков</span>
-            <span class="px-1.5 py-0.5 text-[10px] bg-amber-400/20 text-amber-300 font-extrabold rounded-md border border-amber-400/30">
+            <span class="px-1.5 py-0.2 text-[10px] bg-amber-400/20 text-amber-300 font-extrabold rounded-md border border-amber-400/30">
               {{ marketPacks.length }}
             </span>
           </button>
@@ -386,20 +389,20 @@ const publishPack = async () => {
           v-if="activeTab === 'my' && mediaList.length > 0"
           type="button"
           @click="openPublishModal"
-          class="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+          class="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
         >
-          <IconRenderer name="Share2" size="14" />
+          <IconRenderer name="Share2" size="13" />
           <span>Опубликовать пак</span>
         </button>
       </div>
 
       <!-- Feedback Global Banners -->
       <div v-if="successMessage || errorMessage" class="shrink-0 space-y-2">
-        <p v-if="successMessage" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/30 flex items-center justify-between">
+        <p v-if="successMessage" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/30 flex items-center justify-between">
           <span>{{ successMessage }}</span>
           <button @click="successMessage = ''" class="text-emerald-400 hover:text-white"><IconRenderer name="X" size="14" /></button>
         </p>
-        <p v-if="errorMessage" class="text-xs font-bold text-rose-400 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/30 flex items-center justify-between">
+        <p v-if="errorMessage" class="text-xs font-bold text-rose-400 bg-rose-500/10 p-2 rounded-xl border border-rose-500/30 flex items-center justify-between">
           <span>{{ errorMessage }}</span>
           <button @click="errorMessage = ''" class="text-rose-400 hover:text-white"><IconRenderer name="X" size="14" /></button>
         </p>
@@ -409,37 +412,39 @@ const publishPack = async () => {
       <div v-if="activeTab === 'my'" class="space-y-4 overflow-y-auto custom-scrollbar pr-1 flex-1">
         
         <!-- Add New Image Box -->
-        <div class="bg-[#0c0d0e] border border-[#26292d] p-4 rounded-2xl space-y-3 shadow-inner">
-          <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-            <IconRenderer name="Plus" size="14" class="text-cyan-400" />
-            Загрузить текстуру с ПК или добавить по URL
-          </h4>
+        <div class="bg-[#0c0d0e] border border-[#26292d] p-3 sm:p-3.5 rounded-2xl space-y-2.5 shadow-inner">
+          <div class="flex items-center justify-between">
+            <h4 class="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <IconRenderer name="Plus" size="13" class="text-cyan-400" />
+              Загрузить текстуру с ПК или добавить по URL
+            </h4>
+          </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
-              <label class="block text-[11px] font-bold text-dark-muted mb-1">Название текстуры</label>
+              <label class="block text-[10px] font-bold text-dark-muted mb-0.5">Название текстуры</label>
               <input
                 type="text"
                 v-model="newImageName"
                 placeholder="например, Кварцевая плита..."
-                class="w-full bg-[#121416] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-cyan-400"
+                class="w-full bg-[#121416] border border-[#26292d] text-white text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-cyan-400"
               />
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-dark-muted mb-1">URL-ссылка на картинку</label>
+              <label class="block text-[10px] font-bold text-dark-muted mb-0.5">URL-ссылка на картинку</label>
               <input
                 type="text"
                 v-model="newImageUrl"
                 placeholder="https://i.imgur.com/example.png..."
-                class="w-full bg-[#121416] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-cyan-400"
+                class="w-full bg-[#121416] border border-[#26292d] text-white text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-cyan-400"
               />
             </div>
           </div>
 
-          <div class="flex items-center justify-between gap-3 pt-1">
-            <label class="px-3 py-2 rounded-xl bg-[#16181a] hover:bg-[#212429] border border-[#26292d] text-xs font-bold text-slate-300 hover:text-white flex items-center gap-2 cursor-pointer transition-all">
-              <IconRenderer name="Upload" size="14" class="text-purple-400" />
+          <div class="flex items-center justify-between gap-2 pt-0.5">
+            <label class="px-3 py-1.5 rounded-xl bg-[#16181a] hover:bg-[#212429] border border-[#26292d] text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1.5 cursor-pointer transition-all">
+              <IconRenderer name="Upload" size="13" class="text-purple-400" />
               <span>Загрузить с ПК</span>
               <input type="file" accept="image/*" class="hidden" @change="handleFileUpload" />
             </label>
@@ -447,67 +452,67 @@ const publishPack = async () => {
             <button
               type="button"
               @click="handleAddMedia"
-              class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+              class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
             >
-              <IconRenderer name="Check" size="14" />
+              <IconRenderer name="Check" size="13" />
               <span>Добавить в палитру</span>
             </button>
           </div>
         </div>
 
         <!-- Search Header -->
-        <div class="flex items-center justify-between gap-3 pt-2">
-          <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">
-            Ваши сохраненные текстуры ({{ filteredMedia.length }})
+        <div class="flex items-center justify-between gap-3">
+          <h4 class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+            Сохраненные текстуры ({{ filteredMedia.length }})
           </h4>
 
-          <div class="relative w-48">
+          <div class="relative w-44">
             <input
               type="text"
               v-model="searchQuery"
               placeholder="Поиск..."
-              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-8 pr-3 py-1.5 focus:outline-none focus:border-cyan-400"
+              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl pl-7 pr-3 py-1 focus:outline-none focus:border-cyan-400"
             />
-            <IconRenderer name="Search" size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-muted" />
+            <IconRenderer name="Search" size="13" class="absolute left-2 top-1/2 -translate-y-1/2 text-dark-muted" />
           </div>
         </div>
 
         <!-- Empty State -->
-        <div v-if="filteredMedia.length === 0" class="text-center py-12 bg-[#0c0d0e] rounded-2xl border border-[#26292d] space-y-2">
-          <IconRenderer name="Image" size="32" class="mx-auto text-dark-muted/40" />
+        <div v-if="filteredMedia.length === 0" class="text-center py-8 bg-[#0c0d0e] rounded-2xl border border-[#26292d] space-y-1.5">
+          <IconRenderer name="Image" size="28" class="mx-auto text-dark-muted/40" />
           <p class="text-xs text-dark-muted">В вашей галерее пока нет текстур</p>
         </div>
 
         <!-- Media Grid -->
-        <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
           <div
             v-for="item in filteredMedia"
             :key="item.id"
             @click="selectMediaItem(item)"
             :class="[
-              'group bg-[#0c0d0e] border rounded-2xl p-2.5 space-y-2 relative transition-all shadow-md overflow-hidden',
-              isSelectMode ? 'hover:border-cyan-400 cursor-pointer hover:shadow-cyan-950/50 hover:-translate-y-0.5' : 'border-[#26292d]'
+              'group bg-[#0c0d0e] border rounded-xl p-2 space-y-1.5 relative transition-all shadow-sm overflow-hidden flex flex-col justify-between',
+              isSelectMode ? 'hover:border-cyan-400 cursor-pointer hover:shadow-cyan-950/40 hover:-translate-y-0.5' : 'border-[#26292d] hover:border-slate-600'
             ]"
           >
-            <div class="w-full h-24 rounded-xl bg-[#16181a] overflow-hidden relative border border-white/5">
-              <img :src="item.url" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-              <div v-if="isSelectMode" class="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <span class="bg-cyan-500 text-black text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">Выбрать</span>
+            <div class="w-full aspect-square rounded-lg bg-[#16181a] overflow-hidden relative border border-white/5 flex items-center justify-center bg-[radial-gradient(#26292d_1px,transparent_1px)] [background-size:8px_8px]">
+              <img :src="item.url" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+              <div v-if="isSelectMode" class="absolute inset-0 bg-cyan-500/15 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span class="bg-cyan-500 text-black text-[10px] font-black px-2 py-0.5 rounded-md shadow-lg">Выбрать</span>
               </div>
             </div>
 
-            <div class="flex items-center justify-between gap-2">
-              <div class="min-w-0">
-                <p class="text-xs font-bold text-white truncate">{{ item.name }}</p>
-                <p class="text-[10px] text-dark-muted">{{ item.uploadedAt }}</p>
+            <div class="flex items-center justify-between gap-1 pt-0.5">
+              <div class="min-w-0 flex-1">
+                <p class="text-[11px] font-bold text-white truncate leading-tight">{{ item.name }}</p>
+                <p class="text-[9px] text-dark-muted truncate">{{ item.uploadedAt }}</p>
               </div>
               <button
                 type="button"
                 @click.stop="deleteMedia(item.id)"
-                class="text-rose-400/60 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors"
+                class="text-rose-400/60 hover:text-rose-400 p-1 rounded-md hover:bg-rose-500/10 transition-colors shrink-0"
                 title="Удалить"
               >
-                <IconRenderer name="Trash2" size="13" />
+                <IconRenderer name="Trash2" size="12" />
               </button>
             </div>
           </div>
