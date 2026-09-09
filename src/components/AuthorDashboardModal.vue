@@ -218,16 +218,6 @@ const getEventBadgeClass = (type: string) => {
               <span class="text-[10px] text-emerald-200 opacity-90 font-medium">Паки</span>
             </button>
 
-            <!-- Go Home / Create New Guide Button -->
-            <button
-              type="button"
-              @click="emit('go-home')"
-              class="w-full px-3.5 py-2 rounded-xl bg-[#1a1e24] hover:bg-[#242a33] border border-[#343b46] hover:border-cyan-500/50 text-white font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.02] shadow-sm"
-            >
-              <IconRenderer name="Plus" size="14" class="text-cyan-400" />
-              <span>Создать новый гайд</span>
-            </button>
-
           </div>
 
         </div>
