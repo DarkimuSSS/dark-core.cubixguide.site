@@ -173,48 +173,21 @@ const getEventBadgeClass = (type: string) => {
           <!-- Quick Action Buttons Hub -->
           <div class="flex flex-wrap items-center justify-center sm:justify-end gap-3 shrink-0 relative z-10">
             
-            <!-- Texture Gallery & Marketplace Card Button -->
+            <!-- Unified Assets Hub Button -->
             <button
               type="button"
               @click="isAuthorGalleryOpen = true"
-              class="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:from-amber-400 hover:to-purple-500 text-white font-black text-xs shadow-xl shadow-amber-950/40 transition-all cursor-pointer flex items-center gap-2.5 hover:scale-105"
+              class="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:to-purple-500 text-white font-black text-xs shadow-xl shadow-purple-950/40 transition-all cursor-pointer flex items-center gap-2.5 hover:scale-105 border border-white/10"
             >
-              <div class="w-7 h-7 rounded-xl bg-black/20 flex items-center justify-center">
-                <IconRenderer name="FolderImage" size="16" />
+              <div class="w-8 h-8 rounded-xl bg-black/30 flex items-center justify-center border border-white/10">
+                <IconRenderer name="FolderImage" size="18" class="text-amber-300" />
               </div>
               <div class="text-left">
-                <div class="text-[11px] leading-tight">Папка Текстур</div>
-                <div class="text-[9px] text-amber-200 opacity-90 font-bold">& Маркетплейс паков</div>
-              </div>
-            </button>
-
-            <!-- 3D Block Model Editor Button -->
-            <button
-              type="button"
-              @click="isBlockModelEditorOpen = true"
-              class="px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-black text-xs shadow-xl shadow-purple-950/40 transition-all cursor-pointer flex items-center gap-2.5 hover:scale-105"
-            >
-              <div class="w-7 h-7 rounded-xl bg-black/20 flex items-center justify-center">
-                <IconRenderer name="Box" size="16" />
-              </div>
-              <div class="text-left">
-                <div class="text-[11px] leading-tight">Редактор 3D-блоков</div>
-                <div class="text-[9px] text-cyan-200 opacity-90 font-bold">6 граней & пресеты</div>
-              </div>
-            </button>
-
-            <!-- 3D Block Model Gallery Button -->
-            <button
-              type="button"
-              @click="isBlockModelGalleryOpen = true"
-              class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-black text-xs shadow-xl shadow-emerald-950/40 transition-all cursor-pointer flex items-center gap-2.5 hover:scale-105"
-            >
-              <div class="w-7 h-7 rounded-xl bg-black/20 flex items-center justify-center">
-                <IconRenderer name="Cubes" size="16" />
-              </div>
-              <div class="text-left">
-                <div class="text-[11px] leading-tight">Маркетплейс 3D-моделей</div>
-                <div class="text-[9px] text-emerald-200 opacity-90 font-bold">Каталог моделей</div>
+                <div class="text-[12px] leading-tight font-extrabold flex items-center gap-1.5">
+                  Центр Ассетов & 3D
+                  <span class="px-1.5 py-0.5 text-[9px] bg-amber-400/20 text-amber-200 rounded-md border border-amber-400/30">Текстуры & 3D</span>
+                </div>
+                <div class="text-[9px] text-purple-200 opacity-90 font-bold">Паки текстур, 3D-модели и Маркетплейс</div>
               </div>
             </button>
 

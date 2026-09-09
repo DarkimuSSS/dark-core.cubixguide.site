@@ -332,10 +332,10 @@ const publishPack = async () => {
           </div>
           <div>
             <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
-              Галерея & Маркетплейс текстур
+              Центр Ассетов & Маркетплейс
             </h2>
             <p class="text-xs text-dark-muted">
-              {{ isSelectMode ? 'Выберите текстуру для использования в 3D структуре' : 'Загружайте свои текстуры или скачивайте паки сообщества' }}
+              {{ isSelectMode ? 'Выберите текстуру или 3D-модель для интеграции' : 'Управление текстурами, 3D-моделями и маркетплейсом паков' }}
             </p>
           </div>
         </div>
@@ -351,8 +351,8 @@ const publishPack = async () => {
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="flex items-center justify-between gap-3 border-b border-[#26292d] pb-3 shrink-0">
-        <div class="flex items-center gap-2 bg-[#0c0d0e] p-1 rounded-2xl border border-[#26292d]">
+      <div class="flex items-center justify-between gap-3 border-b border-[#26292d] pb-3 shrink-0 flex-wrap">
+        <div class="flex items-center gap-2 bg-[#0c0d0e] p-1.5 rounded-2xl border border-[#26292d] flex-wrap">
           <button
             type="button"
             @click="activeTab = 'my'"
@@ -362,7 +362,7 @@ const publishPack = async () => {
             ]"
           >
             <IconRenderer name="Folder" size="15" />
-            <span>Моя галерея ({{ mediaList.length }})</span>
+            <span>📁 Мои Текстуры ({{ mediaList.length }})</span>
           </button>
 
           <button
@@ -374,7 +374,7 @@ const publishPack = async () => {
             ]"
           >
             <IconRenderer name="ShoppingBag" size="15" />
-            <span>Маркетплейс паков</span>
+            <span>🛒 Маркет Паков</span>
             <span class="px-1.5 py-0.5 text-[10px] bg-amber-400/20 text-amber-300 font-extrabold rounded-md border border-amber-400/30">
               {{ marketPacks.length }}
             </span>
@@ -382,20 +382,20 @@ const publishPack = async () => {
 
           <button
             type="button"
-            @click="isModelEditorOpen = true"
-            class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white shadow-md hover:scale-105"
+            @click="isModelGalleryOpen = true"
+            class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white hover:bg-white/5 border border-white/10"
           >
-            <IconRenderer name="Box" size="15" />
-            <span>🎲 Редактор 3D-блоков</span>
+            <IconRenderer name="Cubes" size="15" class="text-emerald-400" />
+            <span>📦 Маркет 3D-Моделей</span>
           </button>
 
           <button
             type="button"
-            @click="isModelGalleryOpen = true"
-            class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-md hover:scale-105"
+            @click="isModelEditorOpen = true"
+            class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white hover:bg-white/5 border border-white/10"
           >
-            <IconRenderer name="Cubes" size="15" />
-            <span>🛒 Маркет 3D-моделей</span>
+            <IconRenderer name="Box" size="15" class="text-cyan-400" />
+            <span>🎲 Редактор 3D</span>
           </button>
         </div>
 
