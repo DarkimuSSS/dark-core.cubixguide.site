@@ -41,8 +41,22 @@ const faceTextures = ref({
 const isGalleryOpen = ref(false);
 const activeFaceForGallery = ref<'all' | 'top' | 'bottom' | 'front' | 'back' | 'left' | 'right'>('all');
 
-// Saved Models Library
+// Saved Models Library & Selected for Pack
 const savedModels = ref<CustomBlockModel[]>([]);
+const selectedModelIdsForPack = ref<string[]>([]);
+
+// Publish Pack Modal State
+const isPublishModalOpen = ref(false);
+const publishTitle = ref('');
+const publishDescription = ref('');
+const publishCategory = ref('Мебель & Декор');
+const isPublishing = ref(false);
+const notification = ref<string | null>(null);
+
+const showNotification = (msg: string) => {
+  notification.value = msg;
+  setTimeout(() => { notification.value = null; }, 4000);
+};
 
 const effectiveUsername = computed(() => {
   if (props.username && props.username.trim()) return props.username.trim();
@@ -63,6 +77,10 @@ const loadSavedModels = () => {
     const raw = localStorage.getItem(STORAGE_KEY.value);
     if (raw) {
       savedModels.value = JSON.parse(raw);
+    } else {
+      // Global fallback
+      const globalRaw = localStorage.getItem('cubix_block_models');
+      if (globalRaw) savedModels.value = JSON.parse(globalRaw);
     }
   } catch (e) {
     console.error('Error loading saved block models:', e);
@@ -72,6 +90,7 @@ const loadSavedModels = () => {
 const persistSavedModels = () => {
   try {
     localStorage.setItem(STORAGE_KEY.value, JSON.stringify(savedModels.value));
+    localStorage.setItem('cubix_block_models', JSON.stringify(savedModels.value));
   } catch (e) {
     console.error('Error saving block models:', e);
   }
@@ -149,11 +168,11 @@ const clearAllTextures = () => {
   faceTextures.value = { top: '', bottom: '', front: '', back: '', left: '', right: '' };
 };
 
-// Preset Actions
+// Model Saving & Management
 const saveCurrentModel = () => {
   const newModel: CustomBlockModel = {
     id: `block_model_${Date.now()}`,
-    name: modelName.value.trim() || 'Пользовательский блок',
+    name: modelName.value.trim() || 'Пользовательский 3D блок',
     color: modelColor.value,
     icon: modelIcon.value,
     imageUrl: faceTextures.value.front || faceTextures.value.top || '',
@@ -168,6 +187,7 @@ const saveCurrentModel = () => {
 
   savedModels.value.unshift(newModel);
   persistSavedModels();
+  showNotification(`3D-модель "${newModel.name}" сохранена в вашей библиотеке!`);
 };
 
 const loadModelIntoEditor = (m: CustomBlockModel) => {
@@ -186,7 +206,83 @@ const loadModelIntoEditor = (m: CustomBlockModel) => {
 
 const deleteModelPreset = (id: string) => {
   savedModels.value = savedModels.value.filter(m => m.id !== id);
+  selectedModelIdsForPack.value = selectedModelIdsForPack.value.filter(mId => mId !== id);
   persistSavedModels();
+};
+
+// Form 3D Models Pack & Publish to Marketplace
+const openCreatePackModal = () => {
+  if (savedModels.value.length === 0) {
+    showNotification('Сначала сохраните хотя бы одну 3D-модель!');
+    return;
+  }
+  selectedModelIdsForPack.value = savedModels.value.map(m => m.id);
+  publishTitle.value = '';
+  publishDescription.value = '';
+  publishCategory.value = 'Мебель & Декор';
+  isPublishModalOpen.value = true;
+};
+
+const toggleSelectModelForPack = (id: string) => {
+  if (selectedModelIdsForPack.value.includes(id)) {
+    selectedModelIdsForPack.value = selectedModelIdsForPack.value.filter(mId => mId !== id);
+  } else {
+    selectedModelIdsForPack.value.push(id);
+  }
+};
+
+const publishModelPack = async () => {
+  if (!publishTitle.value.trim()) {
+    showNotification('Укажите название пака моделей');
+    return;
+  }
+  if (selectedModelIdsForPack.value.length === 0) {
+    showNotification('Выберите хотя бы одну модель для пака');
+    return;
+  }
+
+  isPublishing.value = true;
+  try {
+    const selectedModels = savedModels.value.filter(m => selectedModelIdsForPack.value.includes(m.id));
+    const items = selectedModels.map(m => ({
+      id: m.id,
+      name: m.name,
+      url: m.imageUrl || m.topImageUrl || m.frontImageUrl || '',
+      type: 'model' as const,
+      textures: {
+        top: m.topImageUrl,
+        bottom: m.bottomImageUrl,
+        north: m.frontImageUrl,
+        south: m.backImageUrl,
+        west: m.leftImageUrl,
+        east: m.rightImageUrl
+      }
+    }));
+
+    const payload = {
+      title: publishTitle.value.trim(),
+      description: publishDescription.value.trim(),
+      author: props.username || 'Аноним',
+      category: publishCategory.value,
+      items,
+      models: selectedModels
+    };
+
+    const res = await fetch('/api/market/packs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      showNotification('Пак 3D-моделей успешно опубликован в Маркетплейсе!');
+      isPublishModalOpen.value = false;
+    }
+  } catch (e) {
+    showNotification('Ошибка при публикации пака');
+  } finally {
+    isPublishing.value = false;
+  }
 };
 
 const applyToActiveGuide = () => {
@@ -497,21 +593,39 @@ const applyToActiveGuide = () => {
             </div>
           </div>
 
-          <!-- SAVED MODELS LIBRARY & ACTIONS -->
+      <!-- Toast Notification -->
+      <transition name="fade">
+        <div v-if="notification" class="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-amber-500 to-purple-600 text-white font-extrabold text-xs px-4 py-2 rounded-xl shadow-xl border border-white/20 flex items-center gap-2 animate-bounce">
+          <IconRenderer name="CheckCircle" size="16" />
+          <span>{{ notification }}</span>
+        </div>
+      </transition>
+
+      <!-- SAVED MODELS LIBRARY & ACTIONS -->
           <div class="bg-[#0c0d0e] border border-[#26292d] p-4 rounded-2xl space-y-3">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between flex-wrap gap-2">
               <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                 <IconRenderer name="Bookmark" size="14" class="text-amber-400" />
                 Библиотека моделей ({{ savedModels.length }})
               </h4>
-              <button
-                type="button"
-                @click="saveCurrentModel"
-                class="px-3 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
-              >
-                <IconRenderer name="Save" size="13" />
-                <span>Сохранить пресет</span>
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  @click="openCreatePackModal"
+                  class="px-3 py-1 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/40 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <IconRenderer name="PackagePlus" size="13" />
+                  <span>Сформировать пак</span>
+                </button>
+                <button
+                  type="button"
+                  @click="saveCurrentModel"
+                  class="px-3 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <IconRenderer name="Save" size="13" />
+                  <span>Сохранить пресет</span>
+                </button>
+              </div>
             </div>
 
             <!-- Saved Presets List -->
@@ -569,6 +683,101 @@ const applyToActiveGuide = () => {
       @close="isGalleryOpen = false"
       @select="handleSelectGalleryMedia"
     />
+
+    <!-- CREATE & PUBLISH 3D MODELS PACK MODAL SUBDIALOG -->
+    <div v-if="isPublishModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fadeIn">
+      <div class="bg-[#141619] border border-[#26292d] w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-5 relative">
+        <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30">
+              <IconRenderer name="Package" size="18" />
+            </div>
+            <div>
+              <h3 class="text-base font-black text-white">Публикация пака 3D-моделей</h3>
+              <p class="text-xs text-dark-muted">Выберите модели и опубликуйте пак в Маркетплейс</p>
+            </div>
+          </div>
+          <button type="button" @click="isPublishModalOpen = false" class="text-dark-muted hover:text-white p-1.5 rounded-lg hover:bg-[#202327]">
+            <IconRenderer name="X" size="18" />
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-dark-muted mb-1">Название пака</label>
+            <input
+              type="text"
+              v-model="publishTitle"
+              placeholder="например, Набор Фэнтези Кубов"
+              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-purple-400"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-dark-muted mb-1">Описание</label>
+            <textarea
+              v-model="publishDescription"
+              rows="2"
+              placeholder="Опишите особенности вашего набора..."
+              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-400 resize-none"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-dark-muted mb-1">Категория</label>
+            <select
+              v-model="publishCategory"
+              class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-purple-400"
+            >
+              <option value="Мебель & Декор">Мебель & Декор</option>
+              <option value="Строительные блоки">Строительные блоки</option>
+              <option value="Техника & Механизмы">Техника & Механизмы</option>
+              <option value="Природа & Биомы">Природа & Биомы</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-dark-muted mb-2">
+              Включить модели в пак ({{ selectedModelIdsForPack.length }} из {{ savedModels.length }})
+            </label>
+            <div class="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto custom-scrollbar p-1">
+              <div
+                v-for="m in savedModels"
+                :key="m.id"
+                @click="toggleSelectModelForPack(m.id)"
+                :class="['p-2 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition-all', selectedModelIdsForPack.includes(m.id) ? 'bg-purple-500/15 border-purple-500/50 text-purple-200' : 'bg-[#0c0d0e] border-[#26292d] text-dark-muted']"
+              >
+                <div class="flex items-center gap-2 truncate">
+                  <span class="w-3 h-3 rounded-full shrink-0" :style="{ backgroundColor: m.color }"></span>
+                  <span class="truncate">{{ m.name }}</span>
+                </div>
+                <IconRenderer v-if="selectedModelIdsForPack.includes(m.id)" name="Check" size="14" class="text-purple-400 shrink-0" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#26292d]">
+          <button
+            type="button"
+            @click="isPublishModalOpen = false"
+            class="px-4 py-2 rounded-xl bg-[#0c0d0e] hover:bg-[#202327] border border-[#26292d] text-white text-xs font-bold transition-all cursor-pointer"
+          >
+            Отмена
+          </button>
+
+          <button
+            type="button"
+            @click="publishModelPack"
+            :disabled="isPublishing"
+            class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs shadow-lg shadow-purple-950/40 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+          >
+            <IconRenderer name="Upload" size="14" />
+            <span>{{ isPublishing ? 'Публикация...' : 'Опубликовать в Маркет' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
