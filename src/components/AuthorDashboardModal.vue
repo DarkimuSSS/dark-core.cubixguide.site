@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
-import AuthorGalleryModal from './AuthorGalleryModal.vue';
-import BlockModelEditorModal from './BlockModelEditorModal.vue';
-import BlockModelGalleryModal from './BlockModelGalleryModal.vue';
 
 const props = withDefaults(defineProps<{
   isOpen?: boolean;
@@ -22,9 +19,6 @@ const emit = defineEmits<{
 }>();
 
 const isLoading = ref(true);
-const isAuthorGalleryOpen = ref(false);
-const isBlockModelEditorOpen = ref(false);
-const isBlockModelGalleryOpen = ref(false);
 const searchQuery = ref('');
 const statusFilter = ref<'all' | 'published' | 'draft'>('all');
 
@@ -578,25 +572,4 @@ const getEventBadgeClass = (type: string) => {
       </div>
     </div>
   </div>
-
-  <!-- AUTHOR GALLERY MODAL -->
-  <AuthorGalleryModal
-    :is-open="isAuthorGalleryOpen"
-    :username="username"
-    @close="isAuthorGalleryOpen = false"
-  />
-
-  <!-- 3D BLOCK MODEL EDITOR MODAL -->
-  <BlockModelEditorModal
-    :is-open="isBlockModelEditorOpen"
-    :username="username"
-    @close="isBlockModelEditorOpen = false"
-  />
-
-  <!-- 3D BLOCK MODEL GALLERY MODAL -->
-  <BlockModelGalleryModal
-    :is-open="isBlockModelGalleryOpen"
-    :author-name="username"
-    @close="isBlockModelGalleryOpen = false"
-  />
 </template>
