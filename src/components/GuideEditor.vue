@@ -2127,22 +2127,20 @@ const stopOutlineDrag = () => {
               >
                 <IconRenderer name="MoreVertical" size="15" />
               </button>
-              <!-- Context dropdown -->
+              <!-- Context dropdown horizontal toolbar -->
               <div
                 v-if="activeBlockMenuId === block.id"
                 @click.stop
-                class="absolute left-full top-0 ml-1 z-50 bg-[#16181a] border border-[#26292d] rounded-xl shadow-2xl p-1.5 flex flex-col gap-0.5 w-48"
+                class="absolute left-0 top-full mt-1.5 z-50 bg-[#121416]/95 backdrop-blur-md border border-[#2d3138] rounded-2xl shadow-2xl p-1.5 flex items-center gap-1.5 whitespace-nowrap text-xs animate-fadeIn"
               >
                 <!-- Change Block Type selector -->
                 <div class="relative group/typechange">
-                  <button type="button" class="w-full text-left text-xs text-amber-300 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center justify-between">
-                    <span class="flex items-center gap-2">
-                      <IconRenderer name="RefreshCw" size="14" class="text-amber-400 shrink-0" />
-                      Сменить тип
-                    </span>
-                    <span class="text-[10px] text-dark-muted font-bold">▸</span>
+                  <button type="button" class="px-2.5 py-1.5 rounded-xl bg-[#1c1f24] hover:bg-[#26292d] text-amber-300 font-bold flex items-center gap-1.5 border border-amber-500/20 hover:border-amber-500/40 transition-all">
+                    <IconRenderer name="RefreshCw" size="13" class="text-amber-400 shrink-0" />
+                    <span>Сменить тип</span>
+                    <span class="text-[9px] text-dark-muted font-black">▾</span>
                   </button>
-                  <div class="absolute left-full top-0 ml-1 hidden group-hover/typechange:flex flex-col bg-[#16181a] border border-[#26292d] rounded-xl shadow-2xl p-1.5 gap-0.5 w-44 z-50">
+                  <div class="absolute left-0 top-full mt-1 hidden group-hover/typechange:flex flex-col bg-[#16181a] border border-[#26292d] rounded-xl shadow-2xl p-1 gap-0.5 w-44 z-50">
                     <button @click="changeBlockType(block, 'heading'); activeBlockMenuId = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-2.5 py-1.5 rounded-lg flex items-center gap-2"><IconRenderer name="FileText" size="13" class="text-cyan-400" />Заголовок</button>
                     <button @click="changeBlockType(block, 'text'); activeBlockMenuId = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-2.5 py-1.5 rounded-lg flex items-center gap-2"><IconRenderer name="Edit3" size="13" class="text-emerald-400" />Текст</button>
                     <button @click="changeBlockType(block, 'callout'); activeBlockMenuId = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-2.5 py-1.5 rounded-lg flex items-center gap-2"><IconRenderer name="Lightbulb" size="13" class="text-amber-400" />Совет / Callout</button>
@@ -2152,69 +2150,96 @@ const stopOutlineDrag = () => {
                   </div>
                 </div>
 
-                <button @click="duplicateBlock(index); activeBlockMenuId = null" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5">
-                  <IconRenderer name="Copy" size="14" class="text-cyan-400 shrink-0" />Дублировать
-                </button>
-                <button @click="moveBlock(index, 'up'); activeBlockMenuId = null" :disabled="index === 0" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 disabled:opacity-30">
-                  <IconRenderer name="ArrowUp" size="14" class="text-slate-400 shrink-0" />Переместить вверх
-                </button>
-                <button @click="moveBlock(index, 'down'); activeBlockMenuId = null" :disabled="index === guide.blocks.length - 1" class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center gap-2.5 disabled:opacity-30">
-                  <IconRenderer name="ArrowDown" size="14" class="text-slate-400 shrink-0" />Переместить вниз
+                <!-- Duplicate -->
+                <button
+                  @click="duplicateBlock(index); activeBlockMenuId = null"
+                  class="px-2.5 py-1.5 rounded-xl bg-[#1c1f24] hover:bg-[#26292d] text-slate-200 hover:text-white font-medium flex items-center gap-1.5 transition-all border border-[#2d3138]"
+                  title="Дублировать блок"
+                >
+                  <IconRenderer name="Copy" size="13" class="text-cyan-400 shrink-0" />
+                  <span>Дублировать</span>
                 </button>
 
-                <!-- Pack into Section Submenu (if any section exists in guide) -->
-                <div v-if="block.type !== 'section' && guide.blocks.some(b => b.type === 'section')" class="relative group/packsec">
-                  <button type="button" class="w-full text-left text-xs text-cyan-300 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center justify-between">
-                    <span class="flex items-center gap-2">
-                      <IconRenderer name="Layout" size="14" class="text-cyan-400 shrink-0" />
-                      Поместить в секцию
-                    </span>
-                    <span class="text-[10px] text-dark-muted font-bold">▸</span>
+                <!-- Move Up / Down -->
+                <div class="flex items-center gap-0.5 bg-[#0c0d0e] p-0.5 rounded-xl border border-[#2d3138]">
+                  <button
+                    @click="moveBlock(index, 'up'); activeBlockMenuId = null"
+                    :disabled="index === 0"
+                    class="p-1.5 rounded-lg hover:bg-[#26292d] text-slate-300 hover:text-white disabled:opacity-30 transition-colors"
+                    title="Переместить вверх"
+                  >
+                    <IconRenderer name="ArrowUp" size="13" />
                   </button>
-                  <div class="absolute left-full top-0 ml-1 hidden group-hover/packsec:flex flex-col bg-[#16181a] border border-[#26292d] rounded-xl shadow-2xl p-1.5 gap-1 w-52 z-50">
-                    <template v-for="secBlock in guide.blocks.filter(b => b.type === 'section')" :key="secBlock.id">
-                      <div class="text-[10px] font-bold text-dark-muted px-2 py-0.5 border-b border-[#26292d] truncate">
-                        {{ secBlock.sectionTitle || 'Секция с колонками' }}
-                      </div>
-                      <button
-                        v-for="(col, colIdx) in (secBlock.columns || [])"
-                        :key="col.id"
-                        @click="packBlockIntoSection(index, secBlock.id, col.id); activeBlockMenuId = null"
-                        class="text-left text-[11px] text-slate-200 hover:bg-[#26292d] px-2.5 py-1.5 rounded-lg flex items-center justify-between"
-                      >
-                        <span>В колонку {{ colIdx + 1 }}</span>
-                        <span class="text-[9px] text-cyan-400 font-bold">({{ col.customWidth || 50 }}%)</span>
-                      </button>
-                    </template>
-                  </div>
+                  <button
+                    @click="moveBlock(index, 'down'); activeBlockMenuId = null"
+                    :disabled="index === guide.blocks.length - 1"
+                    class="p-1.5 rounded-lg hover:bg-[#26292d] text-slate-300 hover:text-white disabled:opacity-30 transition-colors"
+                    title="Переместить вниз"
+                  >
+                    <IconRenderer name="ArrowDown" size="13" />
+                  </button>
                 </div>
 
-                <div class="border-t border-[#26292d] my-0.5"></div>
+                <!-- Outline Toggle -->
                 <button
-                  @click="updateBlock({ ...block, showInOutline: !(block.showInOutline ?? (block.type === 'heading')) }); activeBlockMenuId = null"
-                  class="text-left text-xs text-slate-200 hover:bg-[#26292d] px-3 py-2 rounded-lg flex items-center justify-between gap-2"
+                  @click="updateBlock({ ...block, showInOutline: !(block.showInOutline ?? (block.type === 'heading')) })"
+                  class="px-2.5 py-1.5 rounded-xl bg-[#1c1f24] hover:bg-[#26292d] text-slate-200 font-medium flex items-center gap-1.5 transition-all border border-[#2d3138]"
+                  title="Вкл/выкл отображение в оглавлении"
                 >
-                  <span class="flex items-center gap-2">
-                    <IconRenderer name="List" size="14" class="text-emerald-400 shrink-0" />
-                    В содержание
-                  </span>
-                  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#0c0d0e]" :class="(block.showInOutline ?? (block.type === 'heading')) ? 'text-emerald-400' : 'text-dark-muted'">
+                  <IconRenderer name="List" size="13" class="text-emerald-400 shrink-0" />
+                  <span>Содержание:</span>
+                  <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#0c0d0e]" :class="(block.showInOutline ?? (block.type === 'heading')) ? 'text-emerald-400' : 'text-dark-muted'">
                     {{ (block.showInOutline ?? (block.type === 'heading')) ? 'Да' : 'Нет' }}
                   </span>
                 </button>
-                <div class="border-t border-[#26292d] my-0.5"></div>
-                <div class="px-3 py-1 text-[10px] text-dark-muted font-bold uppercase">Ширина</div>
-                <div class="grid grid-cols-4 gap-1 px-2 pb-1">
-                  <button v-for="w in [33, 50, 66, 100]" :key="w" @click="updateBlockWidth(block, w); activeBlockMenuId = null" :class="['text-[11px] font-bold py-1 rounded transition-all', (block.customWidth || 100) === w ? 'bg-emerald-600 text-white' : 'bg-[#0c0d0e] text-dark-muted hover:text-white']">{{ w }}%</button>
+
+                <!-- Separator -->
+                <div class="w-px h-5 bg-[#26292d] mx-0.5"></div>
+
+                <!-- Width buttons -->
+                <div class="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-xl border border-[#2d3138]">
+                  <span class="text-[10px] font-bold text-dark-muted px-1">ШИРИНА:</span>
+                  <button
+                    v-for="w in [33, 50, 66, 100]"
+                    :key="w"
+                    @click="updateBlockWidth(block, w)"
+                    :class="[
+                      'text-[10px] font-extrabold px-2 py-0.5 rounded-lg transition-all',
+                      (block.customWidth || 100) === w ? 'bg-emerald-600 text-white shadow-sm' : 'text-dark-muted hover:text-white hover:bg-[#1f2226]'
+                    ]"
+                  >
+                    {{ w }}%
+                  </button>
                 </div>
-                <div class="border-t border-[#26292d] my-0.5"></div>
-                <div class="px-3 py-1 text-[10px] text-dark-muted font-bold uppercase">Стиль</div>
-                <div class="grid grid-cols-2 gap-1 px-2 pb-1">
-                  <button v-for="v in ['default', 'subtle', 'accent', 'bordered']" :key="v" @click="updateBlockVariant(block, v as BlockVariant); activeBlockMenuId = null" :class="['text-[11px] font-semibold py-1 rounded transition-all capitalize', (block.variant || 'default') === v ? 'bg-emerald-600 text-white' : 'bg-[#0c0d0e] text-dark-muted hover:text-white']">{{ v === 'default' ? 'Обычный' : v === 'subtle' ? 'Тёмный' : v === 'accent' ? 'Акцент' : 'Рамка' }}</button>
+
+                <!-- Style buttons -->
+                <div class="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-xl border border-[#2d3138]">
+                  <span class="text-[10px] font-bold text-dark-muted px-1">СТИЛЬ:</span>
+                  <button
+                    v-for="v in ['default', 'subtle', 'accent', 'bordered']"
+                    :key="v"
+                    @click="updateBlockVariant(block, v as BlockVariant)"
+                    :class="[
+                      'text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all',
+                      (block.variant || 'default') === v ? 'bg-emerald-600 text-white shadow-sm' : 'text-dark-muted hover:text-white hover:bg-[#1f2226]'
+                    ]"
+                  >
+                    {{ v === 'default' ? 'Обычный' : v === 'subtle' ? 'Тёмный' : v === 'accent' ? 'Акцент' : 'Рамка' }}
+                  </button>
                 </div>
-                <div class="border-t border-[#26292d] my-0.5"></div>
-                <button @click="requestDeleteBlock(index); activeBlockMenuId = null" :disabled="guide.blocks.length <= 1" class="text-left text-xs text-rose-400 hover:bg-rose-500/10 px-3 py-2 rounded-lg flex items-center gap-2.5 disabled:opacity-30 w-full">
-                  <IconRenderer name="Trash2" size="14" class="shrink-0" />Удалить блок
+
+                <!-- Separator -->
+                <div class="w-px h-5 bg-[#26292d] mx-0.5"></div>
+
+                <!-- Delete Block -->
+                <button
+                  @click="requestDeleteBlock(index); activeBlockMenuId = null"
+                  :disabled="guide.blocks.length <= 1"
+                  class="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1.5 transition-all border border-rose-500/30 disabled:opacity-30"
+                  title="Удалить данный блок"
+                >
+                  <IconRenderer name="Trash2" size="13" class="shrink-0" />
+                  <span>Удалить</span>
                 </button>
               </div>
             </div>
