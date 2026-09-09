@@ -19,7 +19,7 @@ const isDragging = ref(false);
 const previousMousePosition = ref({ x: 0, y: 0 });
 const rotX = ref(-20);
 const rotY = ref(35);
-const isAutoRotating = ref(true);
+const isAutoRotating = ref(false);
 let autoRotateTimer: any = null;
 
 // Geometry Type: 'full' (Полный блок), 'slab' (Полублок / Плита), 'stairs' (Ступени)
@@ -403,7 +403,7 @@ const applyToActiveGuide = () => {
 
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 animate-fadeIn">
-    <div class="bg-[#141619] border border-[#26292d] w-full max-w-5xl rounded-3xl p-5 sm:p-7 shadow-2xl space-y-5 relative max-h-[92vh] flex flex-col overflow-hidden">
+    <div class="bg-[#141619] border border-[#26292d] w-full max-w-6xl rounded-3xl p-5 sm:p-7 shadow-2xl space-y-5 relative max-h-[92vh] flex flex-col overflow-hidden">
       
       <!-- Toast Notification -->
       <transition name="fade">
@@ -450,11 +450,173 @@ const applyToActiveGuide = () => {
         </div>
       </div>
 
-      <!-- MAIN EDITOR CONTAINER -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 overflow-y-auto custom-scrollbar pr-1">
+      <!-- MAIN 3-COLUMN EDITOR CONTAINER -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 overflow-y-auto custom-scrollbar pr-1">
         
-        <!-- LEFT COLUMN (5 cols): LIVE 3D GEOMETRY CANVAS -->
-        <div class="lg:col-span-5 bg-[#0c0d0e] border border-[#26292d] rounded-2xl p-4 flex flex-col items-center justify-between min-h-[340px] relative overflow-hidden select-none shadow-inner">
+        <!-- COLUMN 1 (LEFT, 4 cols): НАСТРОЙКА ГРАНЕЙ (TEXTURES STUDIO) -->
+        <div class="lg:col-span-4 bg-[#0c0d0e] border border-[#26292d] p-4 rounded-2xl space-y-4 flex flex-col justify-between">
+          <div class="space-y-3.5">
+            <div class="flex items-center justify-between border-b border-[#26292d] pb-2.5">
+              <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <IconRenderer name="Layers" size="14" class="text-cyan-400" />
+                Настройка граней
+              </h4>
+
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  @click="applyActiveTextureToAll"
+                  class="px-2 py-1 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 text-[10.5px] font-extrabold transition-all cursor-pointer flex items-center gap-1"
+                  title="Скопировать текстуру этой грани на все стороны"
+                >
+                  <IconRenderer name="Copy" size="11" />
+                  <span>На все</span>
+                </button>
+
+                <button
+                  type="button"
+                  @click="clearAllTextures"
+                  class="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10.5px] font-bold transition-all cursor-pointer"
+                >
+                  Сброс
+                </button>
+              </div>
+            </div>
+
+            <!-- Face Selection Tabs (6 Sides) -->
+            <div>
+              <label class="block text-[10.5px] font-bold text-dark-muted mb-1.5 uppercase">Выберите грань куба</label>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button
+                  v-for="face in faceList"
+                  :key="face.key"
+                  type="button"
+                  @click="selectedFace = face.key as any"
+                  :class="['p-1.5 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer transition-all relative overflow-hidden', selectedFace === face.key ? face.activeBg + ' shadow-md scale-[1.02]' : 'bg-[#141619] border-[#26292d] text-dark-muted hover:border-slate-700']"
+                >
+                  <div v-if="faceTextures[face.key as keyof typeof faceTextures]" class="w-5 h-5 rounded border border-white/20 overflow-hidden bg-black/40 shrink-0">
+                    <img :src="faceTextures[face.key as keyof typeof faceTextures]" class="w-full h-full object-cover" />
+                  </div>
+                  <IconRenderer v-else :name="face.icon" size="13" :class="face.color" />
+
+                  <span class="text-[11px] font-extrabold truncate">{{ face.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Active Face Detailed Inspector -->
+            <div class="bg-[#141619] border border-[#26292d] p-3 rounded-2xl space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-[11.5px] font-extrabold text-white flex items-center gap-1.5">
+                  Грань: <span :class="['font-black', activeFaceInfo.color]">{{ activeFaceInfo.label }} ({{ activeFaceInfo.short }})</span>
+                </span>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <!-- Large Preview Tile -->
+                <div class="w-16 h-16 rounded-xl bg-[#0c0d0e] border-2 border-[#26292d] overflow-hidden shrink-0 flex items-center justify-center relative shadow-inner" :style="{ backgroundColor: modelColor }">
+                  <img v-if="faceTextures[selectedFace]" :src="faceTextures[selectedFace]" class="w-full h-full object-cover" />
+                  <IconRenderer v-else :name="activeFaceInfo.icon" size="20" class="text-white/30" />
+                </div>
+
+                <!-- Face Controls -->
+                <div class="space-y-2 flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      @click="openGalleryForFace(selectedFace)"
+                      class="px-2.5 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                    >
+                      <IconRenderer name="Image" size="13" />
+                      <span>Из Галереи</span>
+                    </button>
+
+                    <button
+                      v-if="faceTextures[selectedFace]"
+                      type="button"
+                      @click="faceTextures[selectedFace] = ''"
+                      class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[11px] font-bold transition-all cursor-pointer"
+                      title="Удалить текстуру"
+                    >
+                      <IconRenderer name="Trash2" size="13" />
+                    </button>
+                  </div>
+
+                  <input
+                    type="text"
+                    v-model="faceTextures[selectedFace]"
+                    placeholder="URL текстуры..."
+                    class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-[11px] rounded-xl px-2.5 py-1 focus:outline-none focus:border-cyan-400 font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Minecraft 2D Cube Net (Развёртка 2D) -->
+          <div class="bg-[#141619] border border-[#26292d] p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1">
+            <span class="text-[9.5px] font-extrabold text-dark-muted uppercase tracking-wider">2D Развёртка куба</span>
+            
+            <div class="grid grid-cols-4 grid-rows-3 gap-1 w-32 h-20 p-0.5">
+              <!-- Row 1: Top (col 2) -->
+              <div></div>
+              <div
+                @click="selectedFace = 'top'"
+                :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'top' ? 'border-emerald-400 ring-2 ring-emerald-500/50 bg-emerald-500/30 text-white' : 'border-white/10 bg-[#0c0d0e] text-dark-muted']"
+              >
+                <img v-if="faceTextures.top" :src="faceTextures.top" class="w-full h-full object-cover" />
+                <span v-else>T</span>
+              </div>
+              <div></div>
+              <div></div>
+
+              <!-- Row 2: Left, Front, Right, Back -->
+              <div
+                @click="selectedFace = 'left'"
+                :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'left' ? 'border-blue-400 ring-2 ring-blue-500/50 bg-blue-500/30 text-white' : 'border-white/10 bg-[#0c0d0e] text-dark-muted']"
+              >
+                <img v-if="faceTextures.left" :src="faceTextures.left" class="w-full h-full object-cover" />
+                <span v-else>L</span>
+              </div>
+              <div
+                @click="selectedFace = 'front'"
+                :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'front' ? 'border-cyan-400 ring-2 ring-cyan-500/50 bg-cyan-500/30 text-white' : 'border-white/10 bg-[#0c0d0e] text-dark-muted']"
+              >
+                <img v-if="faceTextures.front" :src="faceTextures.front" class="w-full h-full object-cover" />
+                <span v-else>F</span>
+              </div>
+              <div
+                @click="selectedFace = 'right'"
+                :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'right' ? 'border-indigo-400 ring-2 ring-indigo-500/50 bg-indigo-500/30 text-white' : 'border-white/10 bg-[#0c0d0e] text-dark-muted']"
+              >
+                <img v-if="faceTextures.right" :src="faceTextures.right" class="w-full h-full object-cover" />
+                <span v-else>R</span>
+              </div>
+              <div
+                @click="selectedFace = 'back'"
+                :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'back' ? 'border-purple-400 ring-2 ring-purple-500/50 bg-purple-500/30 text-white' : 'border-white/10 bg-[#0c0d0e] text-dark-muted']"
+              >
+                <img v-if="faceTextures.back" :src="faceTextures.back" class="w-full h-full object-cover" />
+                <span v-else>B</span>
+              </div>
+
+              <!-- Row 3: Bottom (col 2) -->
+              <div></div>
+              <div
+                @click="selectedFace = 'bottom'"
+                :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'bottom' ? 'border-amber-400 ring-2 ring-amber-500/50 bg-amber-500/30 text-white' : 'border-white/10 bg-[#0c0d0e] text-dark-muted']"
+              >
+                <img v-if="faceTextures.bottom" :src="faceTextures.bottom" class="w-full h-full object-cover" />
+                <span v-else>Btm</span>
+              </div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMN 2 (MIDDLE, 4 cols): ЗОНА 3D МОДЕЛИ (3D ORBIT VIEWPORT) -->
+        <div class="lg:col-span-4 bg-[#0c0d0e] border border-[#26292d] rounded-2xl p-4 flex flex-col items-center justify-between min-h-[360px] relative overflow-hidden select-none shadow-inner">
           
           <div class="w-full flex items-center justify-between text-xs font-bold text-slate-300 z-10">
             <span class="flex items-center gap-1.5 text-amber-400">
@@ -473,7 +635,7 @@ const applyToActiveGuide = () => {
 
           <!-- 3D ORBIT VIEWPORT -->
           <div
-            class="w-full h-64 flex items-center justify-center cursor-grab active:cursor-grabbing relative"
+            class="w-full h-72 flex items-center justify-center cursor-grab active:cursor-grabbing relative"
             @mousedown="onMouseDown"
             @mousemove="onMouseMove"
             @mouseup="onMouseUp"
@@ -545,10 +707,10 @@ const applyToActiveGuide = () => {
           </div>
         </div>
 
-        <!-- RIGHT COLUMN (7 cols): SHAPE SELECTION & TEXTURES -->
-        <div class="lg:col-span-7 space-y-4">
+        <!-- COLUMN 3 (RIGHT, 4 cols): ФОРМА, ПАРАМЕТРЫ И БИБЛИОТЕКА -->
+        <div class="lg:col-span-4 space-y-4">
           
-          <!-- Block Shape & General Settings -->
+          <!-- Shape Type & Model Properties -->
           <div class="bg-[#0c0d0e] border border-[#26292d] p-4 rounded-2xl space-y-3">
             <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
               <IconRenderer name="Sliders" size="14" class="text-amber-400" />
@@ -558,37 +720,37 @@ const applyToActiveGuide = () => {
             <!-- Shape Type Selector -->
             <div>
               <label class="block text-[11px] font-bold text-dark-muted mb-1.5">Форма блока</label>
-              <div class="grid grid-cols-3 gap-2">
+              <div class="grid grid-cols-3 gap-1.5">
                 <button
                   type="button"
                   @click="setShape('full')"
-                  :class="['p-2.5 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-2 cursor-pointer transition-all', blockShape === 'full' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-md shadow-cyan-950/40' : 'bg-[#141619] border-[#26292d] text-dark-muted hover:border-slate-700']"
+                  :class="['p-2 rounded-xl border text-xs font-extrabold flex flex-col items-center justify-center gap-1 cursor-pointer transition-all', blockShape === 'full' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-md shadow-cyan-950/40' : 'bg-[#141619] border-[#26292d] text-dark-muted hover:border-slate-700']"
                 >
                   <IconRenderer name="Box" size="16" />
-                  <span>Полный блок</span>
+                  <span class="text-[11px]">Блок</span>
                 </button>
 
                 <button
                   type="button"
                   @click="setShape('slab')"
-                  :class="['p-2.5 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-2 cursor-pointer transition-all', blockShape === 'slab' ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md shadow-amber-950/40' : 'bg-[#141619] border-[#26292d] text-dark-muted hover:border-slate-700']"
+                  :class="['p-2 rounded-xl border text-xs font-extrabold flex flex-col items-center justify-center gap-1 cursor-pointer transition-all', blockShape === 'slab' ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md shadow-amber-950/40' : 'bg-[#141619] border-[#26292d] text-dark-muted hover:border-slate-700']"
                 >
                   <IconRenderer name="MinusSquare" size="16" />
-                  <span>Полублок (Плита)</span>
+                  <span class="text-[11px]">Полублок</span>
                 </button>
 
                 <button
                   type="button"
                   @click="setShape('stairs')"
-                  :class="['p-2.5 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-2 cursor-pointer transition-all', blockShape === 'stairs' ? 'bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-md shadow-purple-950/40' : 'bg-[#141619] border-[#26292d] text-dark-muted hover:border-slate-700']"
+                  :class="['p-2 rounded-xl border text-xs font-extrabold flex flex-col items-center justify-center gap-1 cursor-pointer transition-all', blockShape === 'stairs' ? 'bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-md shadow-purple-950/40' : 'bg-[#141619] border-[#26292d] text-dark-muted hover:border-slate-700']"
                 >
                   <IconRenderer name="Layers" size="16" />
-                  <span>Ступени</span>
+                  <span class="text-[11px]">Ступени</span>
                 </button>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div class="space-y-2.5 pt-1">
               <div>
                 <label class="block text-[11px] font-bold text-dark-muted mb-1">Название модели</label>
                 <input
@@ -605,7 +767,7 @@ const applyToActiveGuide = () => {
                   <input
                     type="color"
                     v-model="modelColor"
-                    class="w-9 h-9 rounded-xl border border-[#26292d] bg-transparent cursor-pointer"
+                    class="w-8 h-8 rounded-xl border border-[#26292d] bg-transparent cursor-pointer"
                   />
                   <input
                     type="text"
@@ -615,193 +777,6 @@ const applyToActiveGuide = () => {
                 </div>
               </div>
             </div>
-
-            <!-- Quick Texture Actions -->
-            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#26292d]">
-              <button
-                type="button"
-                @click="openGalleryForFace('all')"
-                class="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
-              >
-                <IconRenderer name="FolderPlus" size="13" />
-                <span>Задать текстуру на ВСЕ грани</span>
-              </button>
-
-              <button
-                type="button"
-                @click="clearAllTextures"
-                class="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer"
-              >
-                Очистить текстуры
-              </button>
-            </div>
-          </div>
-
-          <!-- SLEEK INTERACTIVE FACE TEXTURE STUDIO -->
-          <div class="bg-[#0c0d0e] border border-[#26292d] p-4 rounded-2xl space-y-4">
-            
-            <div class="flex items-center justify-between border-b border-[#26292d] pb-2.5">
-              <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                <IconRenderer name="Layers" size="14" class="text-cyan-400" />
-                Настройка текстур граней
-              </h4>
-
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  @click="applyActiveTextureToAll"
-                  class="px-2.5 py-1 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 text-[11px] font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
-                  title="Скопировать текстуру этой грани на все стороны"
-                >
-                  <IconRenderer name="Copy" size="12" />
-                  <span>На все 6 граней</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="clearAllTextures"
-                  class="px-2.5 py-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[11px] font-bold transition-all cursor-pointer"
-                >
-                  Очистить все
-                </button>
-              </div>
-            </div>
-
-            <!-- Face Selection Tabs (6 Sides) -->
-            <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-              <button
-                v-for="face in faceList"
-                :key="face.key"
-                type="button"
-                @click="selectedFace = face.key as any"
-                :class="['p-2 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 cursor-pointer transition-all relative overflow-hidden', selectedFace === face.key ? face.activeBg + ' shadow-md scale-[1.02]' : 'bg-[#141619] border-[#26292d] text-dark-muted hover:border-slate-700']"
-              >
-                <!-- Thumbnail indicator if texture present -->
-                <div v-if="faceTextures[face.key as keyof typeof faceTextures]" class="w-6 h-6 rounded-md border border-white/20 overflow-hidden bg-black/40">
-                  <img :src="faceTextures[face.key as keyof typeof faceTextures]" class="w-full h-full object-cover" />
-                </div>
-                <IconRenderer v-else :name="face.icon" size="14" :class="face.color" />
-
-                <span class="text-[11px] font-extrabold">{{ face.label }}</span>
-              </button>
-            </div>
-
-            <!-- Selected Face Detailed Inspector & UV Net -->
-            <div class="bg-[#141619] border border-[#26292d] p-3.5 rounded-2xl grid grid-cols-1 sm:grid-cols-12 gap-3.5 items-center">
-              
-              <!-- Active Face Texture Preview & Actions -->
-              <div class="sm:col-span-8 space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-extrabold text-white flex items-center gap-1.5">
-                    Грань: <span :class="['font-black', activeFaceInfo.color]">{{ activeFaceInfo.label }} ({{ activeFaceInfo.short }})</span>
-                  </span>
-                </div>
-
-                <div class="flex items-center gap-3">
-                  <!-- Large Preview Tile -->
-                  <div class="w-16 h-16 rounded-xl bg-[#0c0d0e] border-2 border-[#26292d] overflow-hidden shrink-0 flex items-center justify-center relative shadow-inner" :style="{ backgroundColor: modelColor }">
-                    <img v-if="faceTextures[selectedFace]" :src="faceTextures[selectedFace]" class="w-full h-full object-cover" />
-                    <IconRenderer v-else :name="activeFaceInfo.icon" size="20" class="text-white/30" />
-                  </div>
-
-                  <!-- Face Controls -->
-                  <div class="space-y-2 flex-1">
-                    <div class="flex items-center gap-2">
-                      <button
-                        type="button"
-                        @click="openGalleryForFace(selectedFace)"
-                        class="px-3 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
-                      >
-                        <IconRenderer name="Image" size="14" />
-                        <span>Из Галереи</span>
-                      </button>
-
-                      <button
-                        v-if="faceTextures[selectedFace]"
-                        type="button"
-                        @click="faceTextures[selectedFace] = ''"
-                        class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer"
-                        title="Удалить текстуру"
-                      >
-                        <IconRenderer name="Trash2" size="14" />
-                      </button>
-                    </div>
-
-                    <div>
-                      <input
-                        type="text"
-                        v-model="faceTextures[selectedFace]"
-                        placeholder="Вставьте URL изображения..."
-                        class="w-full bg-[#0c0d0e] border border-[#26292d] text-white text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-cyan-400 font-mono"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Minecraft 2D Cube Net (Развёртка 2D) -->
-              <div class="sm:col-span-4 bg-[#0c0d0e] border border-[#26292d] p-2.5 rounded-2xl flex flex-col items-center justify-center space-y-1">
-                <span class="text-[9.5px] font-extrabold text-dark-muted uppercase tracking-wider">2D Развёртка куба</span>
-                
-                <div class="grid grid-cols-4 grid-rows-3 gap-1 w-28 h-20 p-0.5">
-                  <!-- Row 1: Top (col 2) -->
-                  <div></div>
-                  <div
-                    @click="selectedFace = 'top'"
-                    :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'top' ? 'border-emerald-400 ring-2 ring-emerald-500/50 bg-emerald-500/30 text-white' : 'border-white/10 bg-[#141619] text-dark-muted']"
-                  >
-                    <img v-if="faceTextures.top" :src="faceTextures.top" class="w-full h-full object-cover" />
-                    <span v-else>T</span>
-                  </div>
-                  <div></div>
-                  <div></div>
-
-                  <!-- Row 2: Left, Front, Right, Back -->
-                  <div
-                    @click="selectedFace = 'left'"
-                    :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'left' ? 'border-blue-400 ring-2 ring-blue-500/50 bg-blue-500/30 text-white' : 'border-white/10 bg-[#141619] text-dark-muted']"
-                  >
-                    <img v-if="faceTextures.left" :src="faceTextures.left" class="w-full h-full object-cover" />
-                    <span v-else>L</span>
-                  </div>
-                  <div
-                    @click="selectedFace = 'front'"
-                    :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'front' ? 'border-cyan-400 ring-2 ring-cyan-500/50 bg-cyan-500/30 text-white' : 'border-white/10 bg-[#141619] text-dark-muted']"
-                  >
-                    <img v-if="faceTextures.front" :src="faceTextures.front" class="w-full h-full object-cover" />
-                    <span v-else>F</span>
-                  </div>
-                  <div
-                    @click="selectedFace = 'right'"
-                    :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'right' ? 'border-indigo-400 ring-2 ring-indigo-500/50 bg-indigo-500/30 text-white' : 'border-white/10 bg-[#141619] text-dark-muted']"
-                  >
-                    <img v-if="faceTextures.right" :src="faceTextures.right" class="w-full h-full object-cover" />
-                    <span v-else>R</span>
-                  </div>
-                  <div
-                    @click="selectedFace = 'back'"
-                    :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'back' ? 'border-purple-400 ring-2 ring-purple-500/50 bg-purple-500/30 text-white' : 'border-white/10 bg-[#141619] text-dark-muted']"
-                  >
-                    <img v-if="faceTextures.back" :src="faceTextures.back" class="w-full h-full object-cover" />
-                    <span v-else>B</span>
-                  </div>
-
-                  <!-- Row 3: Bottom (col 2) -->
-                  <div></div>
-                  <div
-                    @click="selectedFace = 'bottom'"
-                    :class="['rounded border cursor-pointer flex items-center justify-center text-[8px] font-bold overflow-hidden transition-all', selectedFace === 'bottom' ? 'border-amber-400 ring-2 ring-amber-500/50 bg-amber-500/30 text-white' : 'border-white/10 bg-[#141619] text-dark-muted']"
-                  >
-                    <img v-if="faceTextures.bottom" :src="faceTextures.bottom" class="w-full h-full object-cover" />
-                    <span v-else>Btm</span>
-                  </div>
-                  <div></div>
-                  <div></div>
-                </div>
-              </div>
-
-            </div>
-
           </div>
 
           <!-- SAVED MODELS LIBRARY & ACTIONS -->
@@ -814,32 +789,24 @@ const applyToActiveGuide = () => {
               <div class="flex items-center gap-2">
                 <button
                   type="button"
-                  @click="openCreatePackModal"
-                  class="px-3 py-1 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/40 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
-                >
-                  <IconRenderer name="PackagePlus" size="13" />
-                  <span>Сформировать пак</span>
-                </button>
-                <button
-                  type="button"
                   @click="saveCurrentModel"
-                  class="px-3 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
+                  class="px-2.5 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1"
                 >
-                  <IconRenderer name="Save" size="13" />
-                  <span>Сохранить пресет</span>
+                  <IconRenderer name="Save" size="12" />
+                  <span>Сохранить</span>
                 </button>
               </div>
             </div>
 
             <!-- Saved Presets List -->
-            <div v-if="savedModels.length > 0" class="flex flex-wrap gap-2 max-h-28 overflow-y-auto custom-scrollbar p-1">
+            <div v-if="savedModels.length > 0" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto custom-scrollbar p-0.5">
               <div
                 v-for="m in savedModels"
                 :key="m.id"
                 @click="loadModelIntoEditor(m)"
-                class="px-3 py-1.5 rounded-xl bg-[#141619] border border-[#26292d] hover:border-amber-400 text-xs font-bold text-white flex items-center gap-2 transition-all cursor-pointer group"
+                class="px-2.5 py-1 rounded-xl bg-[#141619] border border-[#26292d] hover:border-amber-400 text-xs font-bold text-white flex items-center gap-2 transition-all cursor-pointer group"
               >
-                <span class="w-3 h-3 rounded-full" :style="{ backgroundColor: m.color }"></span>
+                <span class="w-2.5 h-2.5 rounded-full" :style="{ backgroundColor: m.color }"></span>
                 <span>{{ m.name }}</span>
                 <button
                   type="button"
@@ -851,6 +818,17 @@ const applyToActiveGuide = () => {
               </div>
             </div>
             <p v-else class="text-[11px] text-dark-muted">У вас пока нет сохраненных пресетов моделей</p>
+
+            <div class="pt-2 border-t border-[#26292d]">
+              <button
+                type="button"
+                @click="openCreatePackModal"
+                class="w-full py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/40 text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <IconRenderer name="PackagePlus" size="14" />
+                <span>Сформировать пак в Маркет</span>
+              </button>
+            </div>
           </div>
 
         </div>
