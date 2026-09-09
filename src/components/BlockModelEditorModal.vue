@@ -297,6 +297,57 @@ const publishModelPack = async () => {
   }
 };
 
+const exportAsJSON = () => {
+  let elements = [];
+  if (blockShape.value === 'full') {
+    elements = [{
+      name: modelName.value,
+      from: [0, 0, 0],
+      to: [16, 16, 16],
+      color: modelColor.value,
+      faces: faceTextures.value
+    }];
+  } else if (blockShape.value === 'slab') {
+    elements = [{
+      name: modelName.value,
+      from: [0, 0, 0],
+      to: [16, 8, 16],
+      color: modelColor.value,
+      faces: faceTextures.value
+    }];
+  } else if (blockShape.value === 'stairs') {
+    elements = [
+      {
+        name: `${modelName.value} (Основание)`,
+        from: [0, 0, 0],
+        to: [16, 8, 16],
+        color: modelColor.value,
+        faces: faceTextures.value
+      },
+      {
+        name: `${modelName.value} (Ступень)`,
+        from: [0, 8, 8],
+        to: [16, 16, 16],
+        color: modelColor.value,
+        faces: faceTextures.value
+      }
+    ];
+  }
+
+  const exportData = {
+    format_version: "1.20.0",
+    model_type: blockShape.value,
+    model_name: modelName.value,
+    color: modelColor.value,
+    elements,
+    textures: faceTextures.value
+  };
+
+  const str = JSON.stringify(exportData, null, 2);
+  navigator.clipboard.writeText(str);
+  showNotification('JSON схемы 3D-модели скопирован в буфер обмена!');
+};
+
 const applyToActiveGuide = () => {
   const paletteItem: MultiblockPaletteItem = {
     id: `custom_model_${Date.now()}`,
@@ -345,13 +396,25 @@ const applyToActiveGuide = () => {
           </div>
         </div>
 
-        <button
-          type="button"
-          @click="emit('close')"
-          class="text-dark-muted hover:text-white p-2 rounded-xl hover:bg-[#212429] transition-all cursor-pointer"
-        >
-          <IconRenderer name="X" size="20" />
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            @click="exportAsJSON"
+            class="px-3 py-1.5 rounded-xl bg-[#0c0d0e] hover:bg-[#202327] border border-[#26292d] text-cyan-300 hover:text-cyan-200 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
+            title="Скопировать JSON схемы модели"
+          >
+            <IconRenderer name="Code" size="14" />
+            <span>Экспорт JSON</span>
+          </button>
+
+          <button
+            type="button"
+            @click="emit('close')"
+            class="text-dark-muted hover:text-white p-2 rounded-xl hover:bg-[#212429] transition-all cursor-pointer"
+          >
+            <IconRenderer name="X" size="20" />
+          </button>
+        </div>
       </div>
 
       <!-- MAIN EDITOR CONTAINER -->
