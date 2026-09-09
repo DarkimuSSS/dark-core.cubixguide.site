@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import AuthorGalleryModal from './AuthorGalleryModal.vue';
 import BlockModelEditorModal from './BlockModelEditorModal.vue';
+import BlockModelGalleryModal from './BlockModelGalleryModal.vue';
 
 const props = withDefaults(defineProps<{
   isOpen?: boolean;
@@ -22,6 +23,7 @@ const emit = defineEmits<{
 const isLoading = ref(true);
 const isAuthorGalleryOpen = ref(false);
 const isBlockModelEditorOpen = ref(false);
+const isBlockModelGalleryOpen = ref(false);
 const searchQuery = ref('');
 const statusFilter = ref<'all' | 'published' | 'draft'>('all');
 
@@ -196,8 +198,23 @@ const getEventBadgeClass = (type: string) => {
                 <IconRenderer name="Box" size="16" />
               </div>
               <div class="text-left">
-                <div class="text-[11px] leading-tight">Конструктор 3D-блоков</div>
+                <div class="text-[11px] leading-tight">Редактор 3D-блоков</div>
                 <div class="text-[9px] text-cyan-200 opacity-90 font-bold">6 граней & пресеты</div>
+              </div>
+            </button>
+
+            <!-- 3D Block Model Gallery Button -->
+            <button
+              type="button"
+              @click="isBlockModelGalleryOpen = true"
+              class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-black text-xs shadow-xl shadow-emerald-950/40 transition-all cursor-pointer flex items-center gap-2.5 hover:scale-105"
+            >
+              <div class="w-7 h-7 rounded-xl bg-black/20 flex items-center justify-center">
+                <IconRenderer name="Cubes" size="16" />
+              </div>
+              <div class="text-left">
+                <div class="text-[11px] leading-tight">Маркетплейс 3D-моделей</div>
+                <div class="text-[9px] text-emerald-200 opacity-90 font-bold">Каталог моделей</div>
               </div>
             </button>
 
@@ -600,5 +617,12 @@ const getEventBadgeClass = (type: string) => {
     :is-open="isBlockModelEditorOpen"
     :username="username"
     @close="isBlockModelEditorOpen = false"
+  />
+
+  <!-- 3D BLOCK MODEL GALLERY MODAL -->
+  <BlockModelGalleryModal
+    :is-open="isBlockModelGalleryOpen"
+    :author-name="username"
+    @close="isBlockModelGalleryOpen = false"
   />
 </template>

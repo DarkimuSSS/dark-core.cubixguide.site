@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import BlockModelEditorModal from './BlockModelEditorModal.vue';
+import BlockModelGalleryModal from './BlockModelGalleryModal.vue';
 import type { AuthorMediaItem, AssetPack, MultiblockPaletteItem } from '../types/guide';
 
 const props = defineProps<{
@@ -18,6 +19,7 @@ const emit = defineEmits<{
 
 const activeTab = ref<'my' | 'market'>('my');
 const isModelEditorOpen = ref(false);
+const isModelGalleryOpen = ref(false);
 
 // Personal Gallery State
 const mediaList = ref<AuthorMediaItem[]>([]);
@@ -384,7 +386,16 @@ const publishPack = async () => {
             class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white shadow-md hover:scale-105"
           >
             <IconRenderer name="Box" size="15" />
-            <span>🎲 Конструктор 3D-блоков</span>
+            <span>🎲 Редактор 3D-блоков</span>
+          </button>
+
+          <button
+            type="button"
+            @click="isModelGalleryOpen = true"
+            class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-md hover:scale-105"
+          >
+            <IconRenderer name="Cubes" size="15" />
+            <span>🛒 Маркет 3D-моделей</span>
           </button>
         </div>
 
@@ -756,6 +767,26 @@ const publishPack = async () => {
       :username="props.username"
       @close="isModelEditorOpen = false"
       @select-model="(model) => { emit('select-model', model); isModelEditorOpen = false; emit('close'); }"
+    />
+
+    <!-- 3D BLOCK MODEL GALLERY MODAL -->
+    <BlockModelGalleryModal
+      :is-open="isModelGalleryOpen"
+      :author-name="props.username"
+      @close="isModelGalleryOpen = false"
+      @select-model="(model) => { 
+        emit('select-model', {
+          id: model.id,
+          name: model.name,
+          icon: 'Box',
+          color: '#3b82f6',
+          topImageUrl: model.textures.top,
+          bottomImageUrl: model.textures.bottom,
+          sideImageUrl: model.textures.north || model.textures.south || model.textures.east || model.textures.west
+        }); 
+        isModelGalleryOpen = false; 
+        emit('close'); 
+      }"
     />
   </div>
 </template>

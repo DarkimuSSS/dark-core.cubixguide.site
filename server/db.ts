@@ -140,6 +140,23 @@ db.exec(`
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS public_block_models (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    author TEXT NOT NULL,
+    category TEXT NOT NULL DEFAULT 'Общий',
+    color TEXT DEFAULT '#06b6d4',
+    top_image_url TEXT,
+    bottom_image_url TEXT,
+    front_image_url TEXT,
+    back_image_url TEXT,
+    left_image_url TEXT,
+    right_image_url TEXT,
+    downloads INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+  );
 `);
 
 try {
@@ -1251,5 +1268,65 @@ export function deleteAssetPack(id: string, requestingUser: string, isAdmin: boo
 
 export function incrementAssetPackDownloads(id: string) {
   db.prepare('UPDATE asset_packs SET downloads = downloads + 1 WHERE id = ?').run(id);
+  return { success: true };
+}
+
+export function getAllPublicBlockModels() {
+  const rows = db.prepare('SELECT * FROM public_block_models ORDER BY created_at DESC').all() as any[];
+  return rows.map(r => ({
+    id: r.id,
+    name: r.name,
+    description: r.description || '',
+    author: r.author,
+    category: r.category || 'Общий',
+    color: r.color || '#06b6d4',
+    topImageUrl: r.top_image_url || '',
+    bottomImageUrl: r.bottom_image_url || '',
+    frontImageUrl: r.front_image_url || '',
+    backImageUrl: r.back_image_url || '',
+    leftImageUrl: r.left_image_url || '',
+    rightImageUrl: r.right_image_url || '',
+    downloads: Number(r.downloads || 0),
+    createdAt: r.created_at
+  }));
+}
+
+export function savePublicBlockModel(data: { id?: string; name: string; description?: string; author: string; category?: string; color?: string; topImageUrl?: string; bottomImageUrl?: string; frontImageUrl?: string; backImageUrl?: string; leftImageUrl?: string; rightImageUrl?: string }) {
+  const now = new Date().toISOString();
+  const id = data.id || `model_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  
+  db.prepare(`
+    INSERT INTO public_block_models (id, name, description, author, category, color, top_image_url, bottom_image_url, front_image_url, back_image_url, left_image_url, right_image_url, downloads, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      name=excluded.name,
+      description=excluded.description,
+      category=excluded.category,
+      color=excluded.color,
+      top_image_url=excluded.top_image_url,
+      bottom_image_url=excluded.bottom_image_url,
+      front_image_url=excluded.front_image_url,
+      back_image_url=excluded.back_image_url,
+      left_image_url=excluded.left_image_url,
+      right_image_url=excluded.right_image_url
+  `).run(id, data.name, data.description || '', data.author, data.category || 'Общий', data.color || '#06b6d4', data.topImageUrl || '', data.bottomImageUrl || '', data.frontImageUrl || '', data.backImageUrl || '', data.leftImageUrl || '', data.rightImageUrl || '', now);
+
+  return { id, name: data.name, author: data.author };
+}
+
+export function deletePublicBlockModel(id: string, requestingUser: string, isAdmin: boolean = false) {
+  const model = db.prepare('SELECT author FROM public_block_models WHERE id = ?').get(id) as any;
+  if (!model) return { success: false, error: 'Модель не найдена' };
+
+  if (!isAdmin && model.author.toLowerCase() !== requestingUser.toLowerCase()) {
+    return { success: false, error: 'Вы не можете удалить чужую модель' };
+  }
+
+  db.prepare('DELETE FROM public_block_models WHERE id = ?').run(id);
+  return { success: true };
+}
+
+export function incrementBlockModelDownloads(id: string) {
+  db.prepare('UPDATE public_block_models SET downloads = downloads + 1 WHERE id = ?').run(id);
   return { success: true };
 }

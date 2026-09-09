@@ -71,6 +71,10 @@ export interface CustomBlockModel {
   id: string;
   name: string;
   color: string;
+  description?: string;
+  author?: string;
+  category?: string;
+  downloads?: number;
   icon?: string;
   imageUrl?: string;
   topImageUrl?: string;

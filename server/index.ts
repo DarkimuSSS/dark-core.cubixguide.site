@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, createAuthorViaInvite, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction, createAuthorInvite, listAuthorInvites, validateInviteCode, redeemInviteCode, getAllAssetPacks, saveAssetPack, deleteAssetPack, incrementAssetPackDownloads } from './db';
+import { db, getAuthorProfile, saveAuthorProfile, registerAuthorByAdmin, createAuthorViaInvite, loginUser, getAuthorUserByUsername, listAllAuthors, changeUserPassword, resetAuthorPasswordByAdmin, deleteAuthorByAdmin, updateAuthorPermissionsByAdmin, updateAuthorRoleByAdmin, recordTelemetryEvent, getTelemetryStats, upsertCubixAuthor, fetchCubixTeamData, getServerRules, saveServerRules, getGuideComments, addGuideComment, deleteGuideComment, toggleCommentReaction, createAuthorInvite, listAuthorInvites, validateInviteCode, redeemInviteCode, getAllAssetPacks, saveAssetPack, deleteAssetPack, incrementAssetPackDownloads, getAllPublicBlockModels, savePublicBlockModel, deletePublicBlockModel, incrementBlockModelDownloads } from './db';
 import { authenticateViaCubixTcp } from './cubixAuth';
 import type { Guide, GuideMeta, GuideBlock, AuthorProfile } from '../src/types/guide';
 
@@ -1083,6 +1083,57 @@ app.delete('/api/market/packs/:id', (req, res) => {
       return res.status(401).json({ error: 'Необходима авторизация' });
     }
     const result = deleteAssetPack(id, requestingUser, isAdmin);
+    if (!result.success) {
+      return res.status(403).json({ error: result.error });
+    }
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Marketplace 3D Block Models API
+app.get('/api/market/models', (_req, res) => {
+  try {
+    const models = getAllPublicBlockModels();
+    res.json(models);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/market/models', (req, res) => {
+  try {
+    const { id, name, description, author, category, color, topImageUrl, bottomImageUrl, frontImageUrl, backImageUrl, leftImageUrl, rightImageUrl } = req.body;
+    if (!name || !author) {
+      return res.status(400).json({ error: 'Укажите название модели и автора' });
+    }
+    const saved = savePublicBlockModel({ id, name, description, author, category, color, topImageUrl, bottomImageUrl, frontImageUrl, backImageUrl, leftImageUrl, rightImageUrl });
+    res.json(saved);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/market/models/:id/install', (req, res) => {
+  try {
+    const { id } = req.params;
+    incrementBlockModelDownloads(id);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/market/models/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const requestingUser = String(req.query.requestingUsername || '').trim();
+    const isAdmin = req.query.isAdmin === 'true';
+    if (!requestingUser) {
+      return res.status(401).json({ error: 'Необходима авторизация' });
+    }
+    const result = deletePublicBlockModel(id, requestingUser, isAdmin);
     if (!result.success) {
       return res.status(403).json({ error: result.error });
     }
