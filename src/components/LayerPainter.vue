@@ -499,12 +499,20 @@ const getMaterial = (id: string | null): MultiblockPaletteItem => {
               ]"
               :style="{ borderColor: cellMatId ? getMaterial(cellMatId).color : '#26292d' }"
             >
-              <IconRenderer 
-                v-if="cellMatId" 
-                :name="getMaterial(cellMatId).icon" 
-                size="22" 
-                :color="getMaterial(cellMatId).color" 
-              />
+              <template v-if="cellMatId">
+                <img 
+                  v-if="getMaterial(cellMatId).topImageUrl || getMaterial(cellMatId).sideImageUrl || getMaterial(cellMatId).imageUrl"
+                  :src="getMaterial(cellMatId).topImageUrl || getMaterial(cellMatId).sideImageUrl || getMaterial(cellMatId).imageUrl" 
+                  class="w-full h-full object-cover rounded-md p-0.5" 
+                  :alt="getMaterial(cellMatId).name"
+                />
+                <IconRenderer 
+                  v-else 
+                  :name="getMaterial(cellMatId).icon" 
+                  size="22" 
+                  :color="getMaterial(cellMatId).color" 
+                />
+              </template>
               <span v-else class="text-[10px] text-dark-muted font-mono">.</span>
 
               <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block z-20 pointer-events-none">
