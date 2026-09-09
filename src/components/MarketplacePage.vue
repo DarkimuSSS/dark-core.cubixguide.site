@@ -9,6 +9,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'go-home'): void
+  (e: 'open-author-dashboard'): void
 }>()
 
 const activeTab = ref<'packs' | 'models'>('packs')
@@ -169,32 +170,32 @@ const installModel = async (model: CustomBlockModel) => {
   <div class="space-y-8 pb-24 max-w-7xl mx-auto px-4 sm:px-6 pt-4">
     
     <!-- HERO MARKETPLACE HEADER BANNER -->
-    <div class="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#16181a] via-[#121416] to-[#0c0d0e] border border-[#26292d] p-6 sm:p-10 shadow-2xl">
-      <div class="absolute -top-28 -right-28 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-28 -left-28 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#16181a] via-[#121416] to-[#0c0d0e] border border-[#26292d] px-4 py-4 sm:px-6 sm:py-5 shadow-xl">
+      <div class="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-600/10 rounded-full blur-2xl pointer-events-none"></div>
 
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-        <div class="space-y-3">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-extrabold shadow-inner">
-            <IconRenderer name="ShoppingBag" size="14" class="text-amber-400" />
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+        <div class="space-y-1.5">
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-extrabold shadow-inner">
+            <IconRenderer name="ShoppingBag" size="12" class="text-amber-400" />
             <span>Официальный Маркетплейс Сообщества</span>
           </div>
 
-          <h1 class="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+          <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight">
             Маркетплейс <span class="bg-gradient-to-r from-amber-400 via-rose-400 to-purple-400 bg-clip-text text-transparent">Ассетов & 3D-Моделей</span>
           </h1>
 
-          <p class="text-xs sm:text-sm text-dark-muted max-w-2xl leading-relaxed">
-            Единая коллекция авторских ресурс-паков, пакетов текстур и готовых 3D-моделей блоков. Скачивайте ассеты в 1 клик для применения в ваших гайдах.
+          <p class="text-xs text-dark-muted max-w-2xl leading-relaxed">
+            Коллекция авторских ресурс-паков, пакетов текстур и готовых 3D-моделей блоков. Скачивайте ассеты в 1 клик.
           </p>
         </div>
 
         <button
-          @click="emit('go-home')"
-          class="px-5 py-2.5 rounded-2xl bg-[#1c1f24] hover:bg-[#262a30] border border-[#34383e] text-slate-300 hover:text-white text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 self-start md:self-center shadow-lg"
+          @click="emit('open-author-dashboard')"
+          class="px-4 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/50 text-cyan-300 hover:text-cyan-200 text-xs font-bold transition-all cursor-pointer flex items-center gap-2 self-start sm:self-center shadow-md shrink-0"
         >
-          <IconRenderer name="ArrowLeft" size="16" />
-          <span>На главную</span>
+          <IconRenderer name="User" size="14" />
+          <span>Кабинет автора</span>
         </button>
       </div>
     </div>

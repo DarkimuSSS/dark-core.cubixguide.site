@@ -1769,6 +1769,7 @@ const handleViewAllAuthorGuides = (username: string) => {
             <MarketplacePage
               :current-username="currentUsername || ''"
               @go-home="mode = 'home'"
+              @open-author-dashboard="mode = 'author_dashboard'"
             />
           </div>
 
