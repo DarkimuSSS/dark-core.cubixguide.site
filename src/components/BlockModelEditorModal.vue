@@ -43,7 +43,20 @@ const activeFaceForGallery = ref<'all' | 'top' | 'bottom' | 'front' | 'back' | '
 
 // Saved Models Library
 const savedModels = ref<CustomBlockModel[]>([]);
-const STORAGE_KEY = computed(() => `cubix_block_models_${(props.username || 'default').toLowerCase()}`);
+
+const effectiveUsername = computed(() => {
+  if (props.username && props.username.trim()) return props.username.trim();
+  try {
+    const savedUser = localStorage.getItem('cubix_user');
+    if (savedUser) {
+      const parsed = JSON.parse(savedUser);
+      if (parsed && parsed.username) return parsed.username;
+    }
+  } catch (e) {}
+  return 'author';
+});
+
+const STORAGE_KEY = computed(() => `cubix_block_models_${effectiveUsername.value.toLowerCase()}`);
 
 const loadSavedModels = () => {
   try {

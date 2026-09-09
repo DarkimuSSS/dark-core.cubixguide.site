@@ -45,7 +45,19 @@ const isPublishing = ref(false);
 
 const CATEGORIES = ['Все', 'Minecraft Блоки', 'Индустриальные', 'Магия & Алхимия', 'Общий'];
 
-const STORAGE_KEY = computed(() => `cubix_author_gallery_${(props.username || 'default').toLowerCase()}`);
+const effectiveUsername = computed(() => {
+  if (props.username && props.username.trim()) return props.username.trim();
+  try {
+    const savedUser = localStorage.getItem('cubix_user');
+    if (savedUser) {
+      const parsed = JSON.parse(savedUser);
+      if (parsed && parsed.username) return parsed.username;
+    }
+  } catch (e) {}
+  return 'author';
+});
+
+const STORAGE_KEY = computed(() => `cubix_author_gallery_${effectiveUsername.value.toLowerCase()}`);
 
 const loadGallery = () => {
   try {

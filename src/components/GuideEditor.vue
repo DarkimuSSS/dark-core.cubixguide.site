@@ -2645,7 +2645,7 @@ const stopOutlineDrag = () => {
 
             <!-- MULTIBLOCK -->
             <div v-else-if="block.type === 'multiblock'">
-              <LayerPainter :block="block" :is-editing="true" @update="updateBlock" />
+              <LayerPainter :block="block" :is-editing="true" :current-username="author" @update="updateBlock" />
             </div>
 
             <!-- CHECKLIST -->
