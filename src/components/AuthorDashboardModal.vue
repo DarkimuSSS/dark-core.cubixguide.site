@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import AuthorGalleryModal from './AuthorGalleryModal.vue';
+import BlockModelEditorModal from './BlockModelEditorModal.vue';
 
 const props = withDefaults(defineProps<{
   isOpen?: boolean;
@@ -20,6 +21,7 @@ const emit = defineEmits<{
 
 const isLoading = ref(true);
 const isAuthorGalleryOpen = ref(false);
+const isBlockModelEditorOpen = ref(false);
 const searchQuery = ref('');
 const statusFilter = ref<'all' | 'published' | 'draft'>('all');
 
@@ -181,6 +183,21 @@ const getEventBadgeClass = (type: string) => {
               <div class="text-left">
                 <div class="text-[11px] leading-tight">Папка Текстур</div>
                 <div class="text-[9px] text-amber-200 opacity-90 font-bold">& Маркетплейс паков</div>
+              </div>
+            </button>
+
+            <!-- 3D Block Model Editor Button -->
+            <button
+              type="button"
+              @click="isBlockModelEditorOpen = true"
+              class="px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-black text-xs shadow-xl shadow-purple-950/40 transition-all cursor-pointer flex items-center gap-2.5 hover:scale-105"
+            >
+              <div class="w-7 h-7 rounded-xl bg-black/20 flex items-center justify-center">
+                <IconRenderer name="Box" size="16" />
+              </div>
+              <div class="text-left">
+                <div class="text-[11px] leading-tight">Конструктор 3D-блоков</div>
+                <div class="text-[9px] text-cyan-200 opacity-90 font-bold">6 граней & пресеты</div>
               </div>
             </button>
 
@@ -576,5 +593,12 @@ const getEventBadgeClass = (type: string) => {
     :is-open="isAuthorGalleryOpen"
     :username="username"
     @close="isAuthorGalleryOpen = false"
+  />
+
+  <!-- 3D BLOCK MODEL EDITOR MODAL -->
+  <BlockModelEditorModal
+    :is-open="isBlockModelEditorOpen"
+    :username="username"
+    @close="isBlockModelEditorOpen = false"
   />
 </template>

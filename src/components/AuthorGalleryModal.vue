@@ -377,29 +377,27 @@ const publishPack = async () => {
               {{ marketPacks.length }}
             </span>
           </button>
-        </div>
 
-        <!-- Action: 3D Model Constructor & Publish Pack -->
-        <div class="flex items-center gap-2">
           <button
             type="button"
             @click="isModelEditorOpen = true"
-            class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-md hover:scale-105"
+            class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white shadow-md hover:scale-105"
           >
-            <IconRenderer name="Box" size="14" />
+            <IconRenderer name="Box" size="15" />
             <span>🎲 Конструктор 3D-блоков</span>
           </button>
-
-          <button
-            v-if="activeTab === 'my' && mediaList.length > 0"
-            type="button"
-            @click="openPublishModal"
-            class="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
-          >
-            <IconRenderer name="Share2" size="14" />
-            <span>Опубликовать пак</span>
-          </button>
         </div>
+
+        <!-- Action: Publish Pack to Marketplace -->
+        <button
+          v-if="activeTab === 'my' && mediaList.length > 0"
+          type="button"
+          @click="openPublishModal"
+          class="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+        >
+          <IconRenderer name="Share2" size="14" />
+          <span>Опубликовать пак</span>
+        </button>
       </div>
 
       <!-- Feedback Global Banners -->
