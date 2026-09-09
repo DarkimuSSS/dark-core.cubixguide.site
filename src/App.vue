@@ -327,7 +327,12 @@ const syncFromUrlPath = () => {
   if (guideParam) {
     activeGuideId.value = guideParam;
     const found = guides.value.find(g => g.meta.id === guideParam);
-    if (found) activeGuide.value = JSON.parse(JSON.stringify(found));
+    if (found) {
+      activeGuide.value = JSON.parse(JSON.stringify(found));
+      trackGuideView(found.meta.id, found.meta.title);
+    } else {
+      trackGuideView(guideParam);
+    }
   }
 
   if (tab === 'rules' || tab === 'Правила' || tab === 'Общие') {
@@ -718,11 +723,28 @@ const fetchGuides = async (silent: boolean = false) => {
   }
 };
 
+const trackGuideView = (guideId: string, guideTitle?: string) => {
+  if (!guideId) return;
+  fetch('/api/telemetry/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      eventType: 'guide_view',
+      guideId: guideId,
+      guideTitle: guideTitle || '',
+      username: currentUsername.value || undefined
+    })
+  }).catch(() => {});
+};
+
 const selectGuide = (guideId: string) => {
   activeGuideId.value = guideId;
   const found = guides.value.find(g => g.meta.id === guideId);
   if (found) {
     activeGuide.value = JSON.parse(JSON.stringify(found));
+    trackGuideView(found.meta.id, found.meta.title);
+  } else {
+    trackGuideView(guideId);
   }
   if (isAuthenticated.value) {
     checkDraftInLocalStorage(guideId);
