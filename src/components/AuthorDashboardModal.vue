@@ -18,6 +18,7 @@ const emit = defineEmits<{
   (e: 'select-guide', guideId: string): void;
   (e: 'go-home'): void;
   (e: 'open-assets'): void;
+  (e: 'open-market'): void;
 }>();
 
 const isLoading = ref(true);
@@ -199,6 +200,21 @@ const getEventBadgeClass = (type: string) => {
               <div class="text-left">
                 <div class="text-[11px] leading-tight font-extrabold">Редактор 3D-блоков</div>
                 <div class="text-[9px] text-cyan-200 opacity-90 font-bold">6 граней & модели</div>
+              </div>
+            </button>
+
+            <!-- 3. Standalone Marketplace Page Button -->
+            <button
+              type="button"
+              @click="emit('open-market')"
+              class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-black text-xs shadow-xl shadow-emerald-950/40 transition-all cursor-pointer flex items-center gap-2.5 hover:scale-105 border border-white/10"
+            >
+              <div class="w-7 h-7 rounded-xl bg-black/30 flex items-center justify-center border border-white/10">
+                <IconRenderer name="ShoppingBag" size="16" class="text-emerald-300" />
+              </div>
+              <div class="text-left">
+                <div class="text-[11px] leading-tight font-extrabold">Маркетплейс</div>
+                <div class="text-[9px] text-emerald-200 opacity-90 font-bold">Паки текстур & 3D</div>
               </div>
             </button>
 

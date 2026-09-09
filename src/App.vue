@@ -21,6 +21,7 @@ const ThaumcraftAspectPage = defineAsyncComponent(() => import('./components/Tha
 const MinecraftColorGeneratorPage = defineAsyncComponent(() => import('./components/MinecraftColorGeneratorPage.vue'));
 const BecomeAuthorModal = defineAsyncComponent(() => import('./components/BecomeAuthorModal.vue'));
 const BlockModelGalleryModal = defineAsyncComponent(() => import('./components/BlockModelGalleryModal.vue'));
+const MarketplacePage = defineAsyncComponent(() => import('./components/MarketplacePage.vue'));
 
 import { isInternalUrl } from './utils/linkParser';
 import { PRESET_ITEMS } from './data/presetItems';
@@ -38,8 +39,8 @@ const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
 const activeGuide = ref<Guide | null>(null);
 
-// MODE: 'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color' | 'apply' | 'assets'
-const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color' | 'apply' | 'assets'>('home');
+// MODE: 'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color' | 'apply' | 'assets' | 'market'
+const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color' | 'apply' | 'assets' | 'market'>('home');
 const isLoading = ref<boolean>(true);
 
 const handleExportData = () => {
@@ -278,6 +279,8 @@ const updateUrlRoute = () => {
     params.set('tab', 'drafts');
   } else if (mode.value === 'author_dashboard') {
     params.set('tab', 'author_dashboard');
+  } else if (mode.value === 'market') {
+    params.set('tab', 'market');
   } else if (mode.value === 'assets') {
     params.set('tab', 'assets');
   } else if (mode.value === 'telemetry') {
@@ -335,7 +338,9 @@ const syncFromUrlPath = () => {
     mode.value = 'rules';
   } else if (tab === 'author_dashboard' || tab === 'Кабинет' || tab === 'АналитикаАвтора') {
     mode.value = isAuthenticated.value ? 'author_dashboard' : 'home';
-  } else if (tab === 'assets' || tab === 'market' || tab === 'Ассеты' || tab === 'Маркет') {
+  } else if (tab === 'market' || tab === 'Маркетплейс' || tab === 'Маркет') {
+    mode.value = 'market';
+  } else if (tab === 'assets' || tab === 'Ассеты') {
     mode.value = 'assets';
   } else if (tab === 'telemetry' || tab === 'Телеметрия' || tab === 'Аналитика') {
     mode.value = 'telemetry';
@@ -1755,10 +1760,19 @@ const handleViewAllAuthorGuides = (username: string) => {
               @go-home="mode = 'home'"
               @select-guide="(id) => { selectGuide(id); mode = 'reader'; }"
               @open-assets="mode = 'assets'"
+              @open-market="mode = 'market'"
             />
           </div>
 
-          <!-- ASSETS HUB & MARKETPLACE FULL PAGE VIEW (tab=assets) -->
+          <!-- STANDALONE MARKETPLACE PAGE VIEW (tab=market) -->
+          <div v-else-if="mode === 'market'">
+            <MarketplacePage
+              :current-username="currentUsername || ''"
+              @go-home="mode = 'home'"
+            />
+          </div>
+
+          <!-- ASSETS HUB FULL PAGE VIEW (tab=assets) -->
           <div v-else-if="mode === 'assets'" class="px-3 sm:px-6 pt-4 pb-24">
             <BlockModelGalleryModal
               :is-open="true"

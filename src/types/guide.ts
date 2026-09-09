@@ -104,7 +104,17 @@ export interface AssetPack {
     id: string;
     name: string;
     url: string;
+    type?: 'texture' | 'model';
+    textures?: {
+      top?: string;
+      bottom?: string;
+      north?: string;
+      south?: string;
+      east?: string;
+      west?: string;
+    };
   }[];
+  models?: CustomBlockModel[];
   downloads: number;
   createdAt: string;
   updatedAt: string;
