@@ -394,6 +394,39 @@ const handleAutoParseRules = async () => {
               </button>
             </div>
 
+            <!-- Section Pills (For Server Rules tab) -->
+            <div v-else-if="currentServerData?.sections?.length" class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
+              <button
+                type="button"
+                @click="activeSectionId = 'all'"
+                :class="[
+                  'px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 border cursor-pointer',
+                  activeSectionId === 'all'
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 border-cyan-400 text-white shadow-md shadow-cyan-950/50 scale-[1.03]'
+                    : 'bg-[#16181c] border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/15'
+                ]"
+              >
+                <IconRenderer name="Layers" size="13" />
+                <span>Все разделы</span>
+              </button>
+
+              <button
+                v-for="sec in currentServerData.sections"
+                :key="sec.section_id"
+                type="button"
+                @click="activeSectionId = sec.section_id"
+                :class="[
+                  'px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 border cursor-pointer',
+                  activeSectionId === sec.section_id
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 border-cyan-400 text-white shadow-md shadow-cyan-950/50 scale-[1.03]'
+                    : 'bg-[#16181c] border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/15'
+                ]"
+              >
+                <span class="w-4 h-4 rounded-md bg-cyan-500/20 text-cyan-300 text-[10px] font-black flex items-center justify-center">{{ sec.section_id }}</span>
+                <span>{{ sec.title }}</span>
+              </button>
+            </div>
+
             <!-- Server Info Note (For Server tab) -->
             <div v-else class="flex items-center justify-between bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-3 text-xs text-cyan-200">
               <div class="flex items-center gap-2.5">
