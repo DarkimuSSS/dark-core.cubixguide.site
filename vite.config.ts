@@ -22,9 +22,6 @@ export default defineConfig({
             if (id.includes('lucide-vue-next')) {
               return 'lucide-icons';
             }
-            if (id.includes('three') || id.includes('@three')) {
-              return 'three-vendor';
-            }
             return 'vendor';
           }
         }
