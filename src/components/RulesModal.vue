@@ -461,27 +461,27 @@ const handleAutoParseRules = async () => {
               <div
                 v-for="r in filteredGeneralRules"
                 :key="r.num"
-                class="p-4 sm:p-5 rounded-2xl bg-[#14161a] border border-white/5 hover:border-emerald-500/30 transition-all duration-200 space-y-2.5 group hover:shadow-[0_4px_20px_rgba(16,185,129,0.05)]"
+                class="p-4 sm:p-5 rounded-2xl bg-[#14161a] border border-white/5 hover:border-emerald-500/30 transition-all duration-200 space-y-3 group hover:shadow-[0_4px_20px_rgba(16,185,129,0.05)]"
               >
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex items-center gap-3">
-                    <span class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black flex items-center justify-center shrink-0 shadow-inner">
-                      {{ r.num }}
-                    </span>
+                <div class="flex items-start gap-3">
+                  <span class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black flex items-center justify-center shrink-0 shadow-inner mt-0.5">
+                    {{ r.num }}
+                  </span>
+                  <div class="space-y-1.5 flex-1 min-w-0">
                     <h3 class="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">{{ r.title }}</h3>
+                    <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed">
+                      {{ r.text }}
+                    </p>
                   </div>
                 </div>
 
-                <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-11">
-                  {{ r.text }}
-                </p>
-
                 <!-- Penalty Box Badge -->
-                <div v-if="r.penalty" class="ml-11 mt-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-200 text-xs font-medium flex items-center gap-2.5 shadow-sm">
+                <div v-if="r.penalty" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-200 text-xs font-medium flex items-center gap-2.5 shadow-sm">
                   <IconRenderer name="AlertTriangle" size="15" class="text-rose-400 shrink-0" />
                   <span><strong class="font-extrabold text-rose-300">Наказание:</strong> {{ r.penalty }}</span>
                 </div>
               </div>
+
             </template>
 
             <!-- SERVER RULES SECTIONED LIST (OneBlock / HiTech) -->
@@ -512,33 +512,36 @@ const handleAutoParseRules = async () => {
                 <div
                   v-for="r in sec.rules"
                   :key="r.rule_id"
-                  class="p-4 sm:p-5 rounded-2xl bg-[#14161a] border border-white/5 hover:border-cyan-500/40 transition-all duration-200 space-y-2.5 group hover:shadow-[0_4px_20px_rgba(6,182,212,0.05)]"
+                  class="p-4 sm:p-5 rounded-2xl bg-[#14161a] border border-white/5 hover:border-cyan-500/40 transition-all duration-200 space-y-3 group hover:shadow-[0_4px_20px_rgba(6,182,212,0.05)]"
                 >
-                  <div class="flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3">
-                      <span class="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono text-xs font-black flex items-center justify-center shrink-0">
-                        {{ r.rule_id }}
-                      </span>
-                      <h4 v-if="r.title" class="text-xs sm:text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">{{ r.title }}</h4>
+                  <div class="flex items-start gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono text-xs font-black flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                      {{ r.rule_id }}
+                    </span>
+
+                    <div class="space-y-1.5 flex-1 min-w-0">
+                      <h4 v-if="r.title" class="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">
+                        {{ r.title }}
+                      </h4>
+                      <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed font-normal">
+                        {{ r.description }}
+                      </p>
                     </div>
                   </div>
 
-                  <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-11 font-normal">
-                    {{ r.description }}
-                  </p>
-
                   <!-- Note Box if exists -->
-                  <div v-if="r.note" class="ml-11 mt-2.5 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-200 text-xs font-medium space-y-1">
+                  <div v-if="r.note" class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-200 text-xs font-medium space-y-1">
                     <div class="font-extrabold text-[10px] text-cyan-400 uppercase tracking-wider">Примечание:</div>
                     <div class="leading-relaxed">{{ r.note }}</div>
                   </div>
 
                   <!-- Penalty Box -->
-                  <div v-if="r.punishment" class="ml-11 mt-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-200 text-xs font-medium flex items-center gap-2.5">
+                  <div v-if="r.punishment" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-200 text-xs font-medium flex items-center gap-2.5">
                     <IconRenderer name="AlertTriangle" size="15" class="text-rose-400 shrink-0" />
                     <span><strong class="font-extrabold text-rose-300">Наказание:</strong> {{ r.punishment }}</span>
                   </div>
                 </div>
+
               </div>
             </template>
           </div>
