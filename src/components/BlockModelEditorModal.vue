@@ -330,6 +330,86 @@ const publishModelPack = async () => {
   }
 };
 
+// Import JSON State
+const showImportModal = ref(false);
+const importJsonText = ref('');
+
+const parseAndImportJson = (jsonString: string) => {
+  if (!jsonString || !jsonString.trim()) {
+    showNotification('Вставьте JSON код или загрузите файл!');
+    return;
+  }
+
+  try {
+    const data = JSON.parse(jsonString.trim());
+    
+    // 1. Model shape
+    if (data.model_type && ['full', 'slab', 'stairs'].includes(data.model_type)) {
+      blockShape.value = data.model_type as 'full' | 'slab' | 'stairs';
+    } else if (data.elements && Array.isArray(data.elements)) {
+      if (data.elements.length > 1) {
+        blockShape.value = 'stairs';
+      } else if (data.elements[0]?.to && data.elements[0].to[1] <= 8) {
+        blockShape.value = 'slab';
+      } else {
+        blockShape.value = 'full';
+      }
+    }
+
+    // 2. Model name
+    if (data.model_name) modelName.value = data.model_name;
+    else if (data.name) modelName.value = data.name;
+
+    // 3. Model color
+    if (data.color) modelColor.value = data.color;
+
+    // 4. Textures / Faces
+    const tex = data.textures || data.faces || {};
+    if (typeof tex === 'object') {
+      faceTextures.value = {
+        top: tex.top || tex.up || tex.all || faceTextures.value.top || '',
+        bottom: tex.bottom || tex.down || tex.all || faceTextures.value.bottom || '',
+        front: tex.front || tex.north || tex.all || faceTextures.value.front || '',
+        back: tex.back || tex.south || tex.all || faceTextures.value.back || '',
+        left: tex.left || tex.west || tex.all || faceTextures.value.left || '',
+        right: tex.right || tex.east || tex.all || faceTextures.value.right || ''
+      };
+    }
+
+    showNotification('3D-модель успешно импортирована из JSON!');
+    showImportModal.value = false;
+    importJsonText.value = '';
+  } catch (err: any) {
+    showNotification('Ошибка чтения JSON: проверьте синтаксис!');
+  }
+};
+
+const handleImportFileUpload = (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target?.result as string;
+    if (text) {
+      importJsonText.value = text;
+      parseAndImportJson(text);
+    }
+  };
+  reader.readAsText(file);
+};
+
+const pasteFromClipboardToImport = async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text) {
+      importJsonText.value = text;
+      parseAndImportJson(text);
+    }
+  } catch {
+    showNotification('Вставьте JSON в поле ввода вручную!');
+  }
+};
+
 const exportAsJSON = () => {
   let elements = [];
   if (blockShape.value === 'full') {
@@ -430,6 +510,16 @@ const applyToActiveGuide = () => {
         </div>
 
         <div class="flex items-center gap-2">
+          <button
+            type="button"
+            @click="showImportModal = true"
+            class="px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 hover:text-cyan-200 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
+            title="Загрузить 3D-модель из файла или кода JSON"
+          >
+            <IconRenderer name="FileUp" size="14" />
+            <span>Импорт JSON</span>
+          </button>
+
           <button
             type="button"
             @click="exportAsJSON"
@@ -955,6 +1045,70 @@ const applyToActiveGuide = () => {
           >
             <IconRenderer name="Upload" size="14" />
             <span>{{ isPublishing ? 'Публикация...' : 'Опубликовать в Маркет' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Modal: Import JSON -->
+    <div v-if="showImportModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-[#16181a] border border-[#26292d] rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-[#26292d] pb-3">
+          <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
+            <IconRenderer name="FileUp" size="16" class="text-cyan-400" />
+            Импорт 3D-модели (JSON)
+          </h4>
+          <button type="button" @click="showImportModal = false" class="text-dark-muted hover:text-white cursor-pointer">
+            <IconRenderer name="X" size="16" />
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <p class="text-xs text-dark-muted">
+            Загрузите файл `.json` или вставьте код схемы 3D-модели:
+          </p>
+
+          <div class="flex items-center gap-2">
+            <label class="flex-1 px-3 py-2 rounded-xl bg-[#0c0d0e] hover:bg-[#1a1d21] border border-[#26292d] text-cyan-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2">
+              <IconRenderer name="Upload" size="14" />
+              <span>Загрузить .json файл</span>
+              <input type="file" accept=".json,application/json" class="hidden" @change="handleImportFileUpload" />
+            </label>
+
+            <button
+              type="button"
+              @click="pasteFromClipboardToImport"
+              class="px-3 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <IconRenderer name="Clipboard" size="14" />
+              <span>Из буфера</span>
+            </button>
+          </div>
+
+          <div>
+            <textarea
+              v-model="importJsonText"
+              placeholder='Вставьте JSON код схемы модели здесь...'
+              rows="6"
+              class="w-full bg-[#0c0d0e] border border-[#26292d] rounded-xl p-3 text-xs text-mono text-cyan-300 focus:outline-none focus:border-cyan-500 font-mono"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#26292d]">
+          <button
+            type="button"
+            @click="showImportModal = false"
+            class="px-3.5 py-1.5 rounded-xl bg-[#0c0d0e] text-xs font-bold text-dark-muted hover:text-white cursor-pointer"
+          >
+            Отмена
+          </button>
+          <button
+            type="button"
+            @click="parseAndImportJson(importJsonText)"
+            class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 text-white text-xs font-extrabold shadow-md cursor-pointer flex items-center gap-1.5"
+          >
+            <IconRenderer name="Check" size="14" />
+            <span>Применить модель</span>
           </button>
         </div>
       </div>
