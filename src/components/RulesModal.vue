@@ -236,49 +236,59 @@ const handleAutoParseRules = async () => {
     <Transition name="modal-fade">
       <div
         v-if="isOpen"
-        :class="embedded ? 'w-full' : 'fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-4'"
+        :class="embedded ? 'w-full' : 'fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto custom-scrollbar'"
         @click.self="!embedded && emit('close')"
       >
-        <!-- Backdrop (only if modal mode) -->
-        <div v-if="!embedded" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+        <!-- Backdrop (only if modal mode) with deep blur -->
+        <div v-if="!embedded" class="fixed inset-0 bg-black/80 backdrop-blur-xl transition-all duration-300"></div>
 
-        <!-- Container -->
-        <div :class="['relative w-full bg-[#16181a] border border-[#26292d] rounded-3xl shadow-2xl flex flex-col overflow-hidden', embedded ? 'min-h-[80vh]' : 'max-w-4xl max-h-[90vh]']">
+        <!-- Main Modal Container -->
+        <div :class="[
+          'relative w-full bg-[#121417]/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden transition-all duration-300',
+          embedded ? 'min-h-[85vh]' : 'max-w-5xl max-h-[92vh]'
+        ]">
+          
+          <!-- Top Accent Light Flare -->
+          <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-24 bg-gradient-to-r from-emerald-500/20 via-cyan-500/20 to-indigo-500/20 blur-3xl pointer-events-none"></div>
 
           <!-- Header -->
-          <div class="flex items-center justify-between px-6 py-4 border-b border-[#26292d] shrink-0 bg-[#121416]">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-white font-extrabold shadow-lg shadow-emerald-950/50">
-                <IconRenderer name="Shield" size="20" />
+          <div class="flex items-center justify-between px-6 py-4.5 border-b border-white/10 shrink-0 bg-[#0e1012]/80 backdrop-blur-md relative z-10">
+            <div class="flex items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 flex items-center justify-center text-white font-extrabold shadow-lg shadow-emerald-500/20 border border-white/20 transform hover:scale-105 transition-transform duration-300">
+                <IconRenderer name="Shield" size="22" />
               </div>
               <div>
-                <h2 class="text-base font-black text-white flex items-center gap-2">
+                <h2 class="text-base sm:text-lg font-black text-white flex items-center gap-2 tracking-tight">
                   Правила CubixWorld
-                  <span class="text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold px-2 py-0.5 rounded border border-emerald-500/30">Свод правил</span>
+                  <span class="text-[10px] uppercase tracking-wider bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-400 font-black px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    Свод правил
+                  </span>
                 </h2>
-                <p class="text-xs text-dark-muted">Официальные правила проекта и внутриигровые ограничение серверов</p>
+                <p class="text-xs text-slate-400 font-medium">Официальный регламент проекта и особенности локальных серверов</p>
               </div>
             </div>
+
             <button
               type="button"
               @click="emit('close')"
-              class="w-9 h-9 rounded-xl bg-[#0c0d0e] hover:bg-rose-500/10 text-dark-muted hover:text-rose-400 border border-[#26292d] hover:border-rose-500/30 flex items-center justify-center transition-all"
+              class="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/10 hover:border-rose-500/40 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95"
+              title="Закрыть"
             >
               <IconRenderer name="X" size="18" />
             </button>
           </div>
 
           <!-- MAIN TAB SWITCHER BAR: General Rules vs Server In-game Rules -->
-          <div class="px-6 py-3 border-b border-[#26292d] bg-[#16181a] shrink-0 flex items-center justify-between gap-4 flex-wrap">
-            <div class="flex items-center gap-2 bg-[#0c0d0e] p-1 rounded-2xl border border-[#26292d]">
+          <div class="px-6 py-3 border-b border-white/5 bg-[#16181c]/90 shrink-0 flex items-center justify-between gap-4 flex-wrap relative z-10">
+            <div class="flex items-center gap-1.5 bg-[#0a0b0d]/90 p-1.5 rounded-2xl border border-white/10 shadow-inner">
               <button
                 type="button"
                 @click="activeTab = 'general'"
                 :class="[
-                  'px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer',
+                  'px-4 py-2 rounded-xl text-xs font-black transition-all duration-200 flex items-center gap-2 cursor-pointer relative overflow-hidden',
                   activeTab === 'general'
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/50'
-                    : 'text-dark-muted hover:text-slate-200'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/40 border border-emerald-400/30 scale-[1.02]'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                 ]"
               >
                 <IconRenderer name="BookOpen" size="15" />
@@ -289,10 +299,10 @@ const handleAutoParseRules = async () => {
                 type="button"
                 @click="activeTab = 'server'"
                 :class="[
-                  'px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer',
+                  'px-4 py-2 rounded-xl text-xs font-black transition-all duration-200 flex items-center gap-2 cursor-pointer relative overflow-hidden',
                   activeTab === 'server'
-                    ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-950/50'
-                    : 'text-dark-muted hover:text-slate-200'
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-900/40 border border-cyan-400/30 scale-[1.02]'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                 ]"
               >
                 <IconRenderer name="Gamepad2" size="15" />
@@ -302,23 +312,27 @@ const handleAutoParseRules = async () => {
 
             <!-- Server selector dropdown when Server tab active -->
             <div v-if="activeTab === 'server'" class="flex items-center gap-2 relative">
-              <span class="text-xs font-bold text-dark-muted">Сервер:</span>
+              <span class="text-xs font-bold text-slate-400">Сервер:</span>
               <div class="relative">
                 <button
                   type="button"
                   @click="isServerPickerOpen = !isServerPickerOpen"
-                  class="bg-[#0c0d0e] border border-cyan-500/40 text-cyan-300 font-extrabold text-xs rounded-xl px-3 py-2 focus:outline-none cursor-pointer flex items-center gap-2 hover:border-cyan-400"
+                  class="bg-[#0a0b0d] border border-cyan-500/40 text-cyan-300 font-extrabold text-xs rounded-xl px-3.5 py-2 focus:outline-none cursor-pointer flex items-center gap-2.5 hover:border-cyan-400 transition-all shadow-lg hover:shadow-cyan-950/50"
                 >
+                  <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
                   <span>{{ availableServers.find(s => s.id === selectedServer)?.name || selectedServer }}</span>
-                  <IconRenderer name="ChevronDown" size="14" :class="['transition-transform', isServerPickerOpen ? 'rotate-180' : '']" />
+                  <IconRenderer name="ChevronDown" size="14" :class="['transition-transform duration-200', isServerPickerOpen ? 'rotate-180' : '']" />
                 </button>
 
                 <!-- 3-Column Dropdown Menu -->
                 <div
                   v-if="isServerPickerOpen"
-                  class="absolute top-full right-0 mt-2 w-[480px] max-w-[90vw] bg-[#121416] border border-[#26292d] rounded-2xl shadow-2xl p-3 z-50 space-y-2 backdrop-blur-xl"
+                  class="absolute top-full right-0 mt-2 w-[480px] max-w-[90vw] bg-[#0e1012]/95 border border-white/10 rounded-2xl shadow-2xl p-3 z-50 space-y-2 backdrop-blur-2xl ring-1 ring-cyan-500/20"
                 >
-                  <div class="text-[10px] font-black text-cyan-400 uppercase tracking-wider px-1">Выберите сервер:</div>
+                  <div class="text-[10px] font-black text-cyan-400 uppercase tracking-wider px-1 flex items-center justify-between">
+                    <span>Выберите игровой сервер:</span>
+                    <span class="text-slate-500 font-normal">Всего: {{ availableServers.length }}</span>
+                  </div>
                   <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-[300px] overflow-y-auto custom-scrollbar">
                     <button
                       v-for="srv in availableServers"
@@ -326,10 +340,10 @@ const handleAutoParseRules = async () => {
                       type="button"
                       @click="selectedServer = srv.id; isServerPickerOpen = false"
                       :class="[
-                        'px-2.5 py-2 rounded-xl text-xs font-bold text-left transition-all truncate border flex items-center gap-1.5',
+                        'px-3 py-2 rounded-xl text-xs font-bold text-left transition-all truncate border flex items-center gap-2',
                         selectedServer === srv.id
-                          ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-black'
-                          : 'bg-[#16181a] border-[#26292d] text-slate-300 hover:text-white hover:border-[#383d44] hover:bg-[#1c1f23]'
+                          ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-black shadow-md shadow-cyan-950/40'
+                          : 'bg-[#16181c] border-white/5 text-slate-300 hover:text-white hover:border-white/15 hover:bg-white/5'
                       ]"
                     >
                       <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="selectedServer === srv.id ? 'bg-cyan-400' : 'bg-slate-600'"></span>
@@ -342,16 +356,23 @@ const handleAutoParseRules = async () => {
           </div>
 
           <!-- Controls Bar: Categories & Search -->
-          <div class="px-6 py-3 border-b border-[#26292d] bg-[#0c0d0e] shrink-0 space-y-3">
-            <!-- Search input -->
+          <div class="px-6 py-3.5 border-b border-white/5 bg-[#0a0b0d]/60 shrink-0 space-y-3 relative z-10">
+            <!-- Search input with clear button -->
             <div class="relative">
               <input
                 type="text"
                 v-model="searchQuery"
                 :placeholder="activeTab === 'general' ? 'Поиск по номеру правила, тексту или наказанию (например: 1.11, читы, раздача)...' : `Поиск по внутриигровым правилам ${selectedServer} (варпы, макросы, лимиты)...`"
-                class="w-full bg-[#16181a] border border-[#26292d] text-white text-xs rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-emerald-accent"
+                class="w-full bg-[#16181c] border border-white/10 text-white text-xs rounded-xl pl-9 pr-8 py-2.5 focus:outline-none focus:border-emerald-500/80 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-slate-500"
               />
-              <IconRenderer name="Search" size="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" />
+              <IconRenderer name="Search" size="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <button
+                v-if="searchQuery"
+                @click="searchQuery = ''"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+              >
+                <IconRenderer name="X" size="14" />
+              </button>
             </div>
 
             <!-- Category Pills (Only for General Rules tab) -->
@@ -362,10 +383,10 @@ const handleAutoParseRules = async () => {
                 type="button"
                 @click="activeCategory = cat.id"
                 :class="[
-                  'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border',
+                  'px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 border cursor-pointer',
                   activeCategory === cat.id
-                    ? 'bg-emerald-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/40'
-                    : 'bg-[#16181a] border-[#26292d] text-dark-muted hover:text-slate-200'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-md shadow-emerald-950/50 scale-[1.03]'
+                    : 'bg-[#16181c] border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/15'
                 ]"
               >
                 <IconRenderer :name="cat.icon" size="13" />
@@ -374,16 +395,16 @@ const handleAutoParseRules = async () => {
             </div>
 
             <!-- Server Info Note (For Server tab) -->
-            <div v-else class="flex items-center justify-between bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-2.5 text-xs text-cyan-200">
-              <div class="flex items-center gap-2">
-                <IconRenderer name="Info" size="15" class="text-cyan-400 shrink-0" />
-                <span>Показаны внутриигровые правила и ограничения для сервера <strong>{{ selectedServer }}</strong>.</span>
+            <div v-else class="flex items-center justify-between bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-3 text-xs text-cyan-200">
+              <div class="flex items-center gap-2.5">
+                <IconRenderer name="Info" size="16" class="text-cyan-400 shrink-0" />
+                <span>Показаны локальные внутриигровые правила и лимиты для сервера <strong>{{ selectedServer }}</strong>.</span>
               </div>
               <a
                 href="https://cubixworld.net/forum/topic/35287-vnutriigrovihe-pravila-servera"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-[11px] font-bold text-cyan-400 hover:underline flex items-center gap-1 shrink-0"
+                class="text-[11px] font-extrabold text-cyan-300 hover:text-cyan-100 transition-colors flex items-center gap-1 shrink-0 bg-cyan-500/20 px-2.5 py-1 rounded-lg border border-cyan-500/40"
               >
                 <span>Тема на форуме</span>
                 <IconRenderer name="ExternalLink" size="12" />
@@ -392,48 +413,52 @@ const handleAutoParseRules = async () => {
           </div>
 
           <!-- Scrollable Rules list -->
-          <div class="overflow-y-auto custom-scrollbar px-6 py-5 space-y-6 flex-1 bg-[#121416]">
+          <div class="overflow-y-auto custom-scrollbar px-6 py-5 space-y-4 flex-1 bg-[#0b0c0e]">
             
             <!-- GENERAL RULES LIST -->
             <template v-if="activeTab === 'general'">
-              <div v-if="filteredGeneralRules.length === 0" class="text-center py-12 space-y-2">
-                <IconRenderer name="Search" size="32" class="mx-auto text-dark-muted/40" />
-                <p class="text-sm font-bold text-slate-400">Правила по запросу не найдены</p>
-                <p class="text-xs text-dark-muted">Попробуйте изменить поисковый запрос</p>
+              <div v-if="filteredGeneralRules.length === 0" class="text-center py-16 space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-slate-500">
+                  <IconRenderer name="Search" size="24" />
+                </div>
+                <p class="text-sm font-bold text-slate-300">Правила по запросу не найдены</p>
+                <p class="text-xs text-slate-500">Попробуйте изменить поисковый запрос или сбросить категории</p>
               </div>
 
               <div
                 v-for="r in filteredGeneralRules"
                 :key="r.num"
-                class="p-4 rounded-2xl bg-[#16181a] border border-[#26292d] hover:border-[#383d44] transition-all space-y-2 group"
+                class="p-4 sm:p-5 rounded-2xl bg-[#14161a] border border-white/5 hover:border-emerald-500/30 transition-all duration-200 space-y-2.5 group hover:shadow-[0_4px_20px_rgba(16,185,129,0.05)]"
               >
                 <div class="flex items-center justify-between gap-3">
-                  <div class="flex items-center gap-2.5">
-                    <span class="w-7 h-7 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-extrabold flex items-center justify-center shrink-0">
+                  <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black flex items-center justify-center shrink-0 shadow-inner">
                       {{ r.num }}
                     </span>
                     <h3 class="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">{{ r.title }}</h3>
                   </div>
                 </div>
 
-                <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-9">
+                <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-11">
                   {{ r.text }}
                 </p>
 
-                <!-- Penalty Box -->
-                <div v-if="r.penalty" class="ml-9 mt-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-2">
-                  <IconRenderer name="AlertTriangle" size="14" class="text-rose-400 shrink-0" />
-                  <span><strong>Наказание:</strong> {{ r.penalty }}</span>
+                <!-- Penalty Box Badge -->
+                <div v-if="r.penalty" class="ml-11 mt-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-200 text-xs font-medium flex items-center gap-2.5 shadow-sm">
+                  <IconRenderer name="AlertTriangle" size="15" class="text-rose-400 shrink-0" />
+                  <span><strong class="font-extrabold text-rose-300">Наказание:</strong> {{ r.penalty }}</span>
                 </div>
               </div>
             </template>
 
             <!-- SERVER RULES SECTIONED LIST (OneBlock / HiTech) -->
             <template v-else-if="activeTab === 'server'">
-              <div v-if="filteredServerSections.length === 0" class="text-center py-12 space-y-2">
-                <IconRenderer name="Search" size="32" class="mx-auto text-dark-muted/40" />
-                <p class="text-sm font-bold text-slate-400">Правила сервера не найдены</p>
-                <p class="text-xs text-dark-muted">Попробуйте изменить поисковый запрос или выбрать другой сервер</p>
+              <div v-if="filteredServerSections.length === 0" class="text-center py-16 space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-slate-500">
+                  <IconRenderer name="Search" size="24" />
+                </div>
+                <p class="text-sm font-bold text-slate-300">Правила сервера не найдены</p>
+                <p class="text-xs text-slate-500">Попробуйте изменить поисковый запрос или выбрать другой сервер</p>
               </div>
 
               <div
@@ -442,43 +467,43 @@ const handleAutoParseRules = async () => {
                 class="space-y-3"
               >
                 <!-- Section Header Badge -->
-                <div class="flex items-center gap-2.5 pt-2 pb-1 border-b border-[#26292d]">
-                  <div class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-black text-xs flex items-center justify-center">
+                <div class="flex items-center gap-2.5 pt-3 pb-1.5 border-b border-white/10">
+                  <div class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-black text-xs flex items-center justify-center">
                     {{ sec.section_id }}
                   </div>
                   <h3 class="text-sm font-black text-white tracking-wide uppercase">{{ sec.title }}</h3>
-                  <span class="text-[10px] text-dark-muted font-bold">({{ sec.rules.length }} правил)</span>
+                  <span class="text-[11px] text-slate-400 font-bold">({{ sec.rules.length }} правил)</span>
                 </div>
 
                 <!-- Rules in Section -->
                 <div
                   v-for="r in sec.rules"
                   :key="r.rule_id"
-                  class="p-4 rounded-2xl bg-[#16181a] border border-[#26292d] hover:border-cyan-500/40 transition-all space-y-2 group"
+                  class="p-4 sm:p-5 rounded-2xl bg-[#14161a] border border-white/5 hover:border-cyan-500/40 transition-all duration-200 space-y-2.5 group hover:shadow-[0_4px_20px_rgba(6,182,212,0.05)]"
                 >
                   <div class="flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-2.5">
-                      <span class="w-7 h-7 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono text-xs font-extrabold flex items-center justify-center shrink-0">
+                    <div class="flex items-center gap-3">
+                      <span class="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono text-xs font-black flex items-center justify-center shrink-0">
                         {{ r.rule_id }}
                       </span>
-                      <h4 class="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">Пункт {{ r.rule_id }}</h4>
+                      <h4 class="text-xs sm:text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">Пункт {{ r.rule_id }}</h4>
                     </div>
                   </div>
 
-                  <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-9 font-normal">
+                  <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed pl-11 font-normal">
                     {{ r.description }}
                   </p>
 
                   <!-- Note Box if exists -->
-                  <div v-if="r.note" class="ml-9 mt-2 p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-200 text-xs font-medium space-y-1">
+                  <div v-if="r.note" class="ml-11 mt-2.5 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-200 text-xs font-medium space-y-1">
                     <div class="font-extrabold text-[10px] text-cyan-400 uppercase tracking-wider">Примечание:</div>
                     <div class="leading-relaxed">{{ r.note }}</div>
                   </div>
 
                   <!-- Penalty Box -->
-                  <div v-if="r.punishment" class="ml-9 mt-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-2">
-                    <IconRenderer name="AlertTriangle" size="14" class="text-rose-400 shrink-0" />
-                    <span><strong>Наказание:</strong> {{ r.punishment }}</span>
+                  <div v-if="r.punishment" class="ml-11 mt-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-200 text-xs font-medium flex items-center gap-2.5">
+                    <IconRenderer name="AlertTriangle" size="15" class="text-rose-400 shrink-0" />
+                    <span><strong class="font-extrabold text-rose-300">Наказание:</strong> {{ r.punishment }}</span>
                   </div>
                 </div>
               </div>
@@ -486,14 +511,14 @@ const handleAutoParseRules = async () => {
           </div>
 
           <!-- Footer -->
-          <div class="px-6 py-3.5 border-t border-[#26292d] bg-[#16181a] shrink-0 flex items-center justify-between">
-            <span class="text-xs text-dark-muted">
-              Показано записей: <strong class="text-emerald-400">{{ activeTab === 'general' ? filteredGeneralRules.length : filteredServerSections.reduce((acc, s) => acc + s.rules.length, 0) }}</strong>
+          <div class="px-6 py-4 border-t border-white/10 bg-[#0e1012] shrink-0 flex items-center justify-between gap-4">
+            <span class="text-xs text-slate-400 font-medium">
+              Показано записей: <strong class="text-emerald-400 font-black">{{ activeTab === 'general' ? filteredGeneralRules.length : filteredServerSections.reduce((acc, s) => acc + s.rules.length, 0) }}</strong>
             </span>
             <button
               type="button"
               @click="emit('close')"
-              class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl transition-all shadow-lg shadow-emerald-950/50"
+              class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black rounded-xl transition-all duration-200 shadow-lg shadow-emerald-950/60 active:scale-95 cursor-pointer border border-emerald-400/30"
             >
               Закрыть правила
             </button>
@@ -507,10 +532,12 @@ const handleAutoParseRules = async () => {
 <style scoped>
 .modal-fade-enter-active,
 .modal-fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: all 0.25 ease;
 }
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
+  transform: scale(0.97);
 }
 </style>
+
