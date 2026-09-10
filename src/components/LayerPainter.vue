@@ -344,62 +344,54 @@ const removeMaterialFromPalette = (matId: string) => {
             <div
               v-for="mat in currentPalette"
               :key="mat.id"
-              class="relative group"
+              class="relative group flex items-center justify-between bg-[#0c0d0e] border border-[#26292d] hover:border-[#3b3f46] rounded-xl p-2 transition-all cursor-pointer shadow-sm"
+              :class="{
+                'bg-gradient-to-r from-cyan-600/20 to-indigo-600/20 border-cyan-400 text-white ring-1 ring-cyan-400/50 shadow-md': selectedMaterialId === mat.id
+              }"
+              @click="selectedMaterialId = mat.id"
             >
-              <button
-                type="button"
-                @click="selectedMaterialId = mat.id"
-                :class="[
-                  'w-full px-3 py-2 rounded-xl border text-xs font-bold flex items-center justify-between transition-all cursor-pointer shadow-sm',
-                  selectedMaterialId === mat.id 
-                    ? 'bg-gradient-to-r from-cyan-600/30 to-indigo-600/30 border-cyan-400 text-white ring-1 ring-cyan-400/50 shadow-md' 
-                    : 'bg-[#0c0d0e] border-[#26292d] hover:border-[#3b3f46] text-slate-300 hover:text-white'
-                ]"
-              >
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <img 
-                    v-if="mat.imageUrl || mat.topImageUrl || mat.sideImageUrl" 
-                    :src="mat.sideImageUrl || mat.topImageUrl || mat.imageUrl" 
-                    class="w-5 h-5 rounded border border-white/20 object-cover shrink-0" 
-                  />
-                  <template v-else>
-                    <span v-if="mat.color" class="w-4 h-4 rounded-md border border-black/40 shrink-0" :style="{ backgroundColor: mat.color }"></span>
-                    <IconRenderer v-else :name="mat.icon" size="14" :color="selectedMaterialId === mat.id ? '#ffffff' : mat.color" class="shrink-0" />
-                  </template>
-                  
-                  <span class="truncate">{{ mat.name.replace(/\s*\(.*?\)$/, '') }}</span>
+              <!-- Left: Image & Clean Name -->
+              <div class="flex items-center gap-2 min-w-0 pr-2">
+                <img 
+                  v-if="mat.imageUrl || mat.topImageUrl || mat.sideImageUrl" 
+                  :src="mat.sideImageUrl || mat.topImageUrl || mat.imageUrl" 
+                  class="w-5 h-5 rounded border border-white/20 object-cover shrink-0" 
+                />
+                <span v-else-if="mat.color" class="w-4 h-4 rounded-md border border-black/40 shrink-0" :style="{ backgroundColor: mat.color }"></span>
+                
+                <span class="text-xs font-bold text-slate-200 truncate">{{ mat.name.replace(/\s*\(.*?\)$/, '') }}</span>
 
-                  <!-- Pack Origin Info Icon Tooltip -->
-                  <div 
-                    v-if="mat.packTitle || mat.name.includes('(')" 
-                    class="relative group/pack flex items-center justify-center text-cyan-400 hover:text-cyan-300 ml-0.5 shrink-0 cursor-help"
-                    :title="`Из пака: ${mat.packTitle || (mat.name.match(/\((.*?)\)/)?.[1] || 'Ресурспак')}`"
-                    @click.stop
-                  >
-                    <IconRenderer name="HelpCircle" size="13" class="opacity-70 hover:opacity-100" />
-                    <div class="absolute right-0 bottom-full mb-1.5 hidden group-hover/pack:block z-50 pointer-events-none">
-                      <div class="bg-[#090a0b] border border-cyan-500/50 text-cyan-300 text-[11px] font-extrabold px-2.5 py-1 rounded-lg shadow-2xl whitespace-nowrap">
-                        Пак: {{ mat.packTitle || (mat.name.match(/\((.*?)\)/)?.[1] || 'Ресурспак') }}
-                      </div>
+                <!-- Pack Origin Question Icon + Custom Tooltip -->
+                <div 
+                  v-if="mat.packTitle || mat.name.includes('(')" 
+                  class="relative group/pack flex items-center justify-center text-cyan-400 hover:text-cyan-300 shrink-0 ml-0.5"
+                  @click.stop
+                >
+                  <IconRenderer name="HelpCircle" size="13" class="opacity-70 hover:opacity-100" />
+                  <div class="absolute right-0 bottom-full mb-1.5 hidden group-hover/pack:block z-50 pointer-events-none">
+                    <div class="bg-[#090a0b] border border-cyan-500/50 text-cyan-300 text-[11px] font-extrabold px-2.5 py-1 rounded-lg shadow-2xl whitespace-nowrap">
+                      Пак: {{ mat.packTitle || (mat.name.match(/\((.*?)\)/)?.[1] || 'Ресурспак') }}
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <span v-if="selectedMaterialId === mat.id" class="text-[10px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded font-mono shrink-0">
+              <!-- Right: Selected Badge or Delete Button (No overlapping) -->
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span v-if="selectedMaterialId === mat.id" class="text-[10px] font-extrabold bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded font-mono">
                   Выбран
                 </span>
-              </button>
 
-              <!-- Remove Block Button -->
-              <button
-                v-if="currentPalette.length > 1"
-                type="button"
-                @click.stop="removeMaterialFromPalette(mat.id)"
-                class="absolute right-2 top-1/2 -translate-y-1/2 hidden group-hover:flex w-5 h-5 rounded-lg bg-rose-600/90 text-white items-center justify-center text-[10px] shadow cursor-pointer"
-                title="Удалить блок из палитры"
-              >
-                ✕
-              </button>
+                <button
+                  v-if="currentPalette.length > 1"
+                  type="button"
+                  @click.stop="removeMaterialFromPalette(mat.id)"
+                  class="w-5 h-5 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white flex items-center justify-center text-[10px] transition-all cursor-pointer shadow"
+                  title="Удалить блок из палитры"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           </div>
         </div>
