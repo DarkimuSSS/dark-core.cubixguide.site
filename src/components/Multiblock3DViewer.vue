@@ -16,6 +16,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update-layers', layers: MultiblockLayer[]): void;
   (e: 'select-material', id: string): void;
+  (e: 'add-layer'): void;
 }>();
 
 // 3D Canvas / Projection Controls
@@ -437,6 +438,18 @@ const materialSummary = computed(() => {
           >
             {{ l }}
           </button>
+
+          <!-- Add Layer Y Button -->
+          <button
+            v-if="isEditing"
+            type="button"
+            @click.stop="emit('add-layer')"
+            class="h-7 px-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[11px] font-bold flex items-center gap-1 shrink-0 transition-all cursor-pointer ml-1"
+            title="Добавить новый слой Y в высоту"
+          >
+            <IconRenderer name="Plus" size="12" />
+            <span>Слой Y</span>
+          </button>
         </div>
       </div>
     </div>
@@ -457,11 +470,17 @@ const materialSummary = computed(() => {
         <div 
           v-for="item in materialSummary" 
           :key="item.material.id"
-          class="bg-[#0c0d0e] border border-[#26292d] p-2 rounded-xl flex items-center justify-between gap-2 shadow-sm"
+          class="bg-[#0c0d0e] border border-[#26292d] p-2.5 rounded-xl flex items-center justify-between gap-2 shadow-sm"
         >
           <div class="flex items-center gap-2 min-w-0">
-            <span class="w-3.5 h-3.5 rounded-md border border-white/20 shrink-0" :style="{ backgroundColor: item.material.color }"></span>
-            <span class="text-xs font-medium text-slate-200 truncate">{{ item.material.name }}</span>
+            <img 
+              v-if="item.material.imageUrl || item.material.topImageUrl || item.material.sideImageUrl" 
+              :src="item.material.sideImageUrl || item.material.topImageUrl || item.material.imageUrl" 
+              class="w-5 h-5 rounded border border-white/20 object-cover shrink-0" 
+            />
+            <span v-else-if="item.material.color" class="w-4 h-4 rounded-md border border-white/20 shrink-0" :style="{ backgroundColor: item.material.color }"></span>
+            
+            <span class="text-xs font-bold text-slate-200 truncate">{{ item.material.name.replace(/\s*\(.*?\)$/, '') }}</span>
           </div>
           <span class="text-xs font-extrabold text-cyan-400 font-mono bg-cyan-500/10 px-2 py-0.5 rounded-lg border border-cyan-500/20 shrink-0">
             x{{ item.count }}

@@ -271,21 +271,12 @@ const removeMaterialFromPalette = (matId: string) => {
 
         <button
           type="button"
-          @click="addLayer"
-          class="px-2.5 py-1 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold flex items-center gap-1 cursor-pointer transition-all"
-          title="Добавить новый уровень в высоту"
-        >
-          <IconRenderer name="Plus" size="13" />
-          <span>+Слой Y</span>
-        </button>
-
-        <button
-          type="button"
           @click="clearEntireStructure"
-          class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 cursor-pointer transition-all"
+          class="px-2.5 py-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all"
           title="Очистить всю постройку"
         >
-          <IconRenderer name="Trash2" size="14" />
+          <IconRenderer name="Trash2" size="13" />
+          <span>Очистить всё</span>
         </button>
       </div>
     </div>
@@ -305,6 +296,7 @@ const removeMaterialFromPalette = (matId: string) => {
           :grid-size-z="currentSizeZ"
           @update-layers="(newLayers) => emit('update', { ...props.block, layers: newLayers })"
           @select-material="(id) => selectedMaterialId = id"
+          @add-layer="addLayer"
         />
       </div>
 
