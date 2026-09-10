@@ -330,9 +330,41 @@ const publishModelPack = async () => {
   }
 };
 
-// Import JSON State
+// Import JSON State (Single or Batch Multi-upload)
 const showImportModal = ref(false);
 const importJsonText = ref('');
+
+const extractModelFromData = (data: any): CustomBlockModel | null => {
+  if (!data || typeof data !== 'object') return null;
+
+  // Detect shape
+  let shape: 'full' | 'slab' | 'stairs' = 'full';
+  if (data.model_type && ['full', 'slab', 'stairs'].includes(data.model_type)) {
+    shape = data.model_type as 'full' | 'slab' | 'stairs';
+  } else if (data.elements && Array.isArray(data.elements)) {
+    if (data.elements.length > 1) shape = 'stairs';
+    else if (data.elements[0]?.to && data.elements[0].to[1] <= 8) shape = 'slab';
+  }
+
+  // Extract textures
+  const tex = data.textures || data.faces || {};
+  const faceTextures = {
+    top: tex.top || tex.up || tex.all || '',
+    bottom: tex.bottom || tex.down || tex.all || '',
+    front: tex.front || tex.north || tex.all || '',
+    back: tex.back || tex.south || tex.all || '',
+    left: tex.left || tex.west || tex.all || '',
+    right: tex.right || tex.east || tex.all || ''
+  };
+
+  return {
+    id: `model_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    name: data.model_name || data.name || 'Импортированная 3D Модель',
+    type: shape,
+    color: data.color || '#06b6d4',
+    textures: faceTextures
+  };
+};
 
 const parseAndImportJson = (jsonString: string) => {
   if (!jsonString || !jsonString.trim()) {
@@ -341,42 +373,40 @@ const parseAndImportJson = (jsonString: string) => {
   }
 
   try {
-    const data = JSON.parse(jsonString.trim());
-    
-    // 1. Model shape
-    if (data.model_type && ['full', 'slab', 'stairs'].includes(data.model_type)) {
-      blockShape.value = data.model_type as 'full' | 'slab' | 'stairs';
-    } else if (data.elements && Array.isArray(data.elements)) {
-      if (data.elements.length > 1) {
-        blockShape.value = 'stairs';
-      } else if (data.elements[0]?.to && data.elements[0].to[1] <= 8) {
-        blockShape.value = 'slab';
-      } else {
-        blockShape.value = 'full';
-      }
+    const rawData = JSON.parse(jsonString.trim());
+    const itemsToImport: any[] = Array.isArray(rawData) 
+      ? rawData 
+      : (rawData.models && Array.isArray(rawData.models) ? rawData.models : [rawData]);
+
+    const newModels: CustomBlockModel[] = [];
+
+    itemsToImport.forEach(item => {
+      const m = extractModelFromData(item);
+      if (m) newModels.push(m);
+    });
+
+    if (newModels.length === 0) {
+      showNotification('Не удалось прочитать 3D-модель из JSON');
+      return;
     }
 
-    // 2. Model name
-    if (data.model_name) modelName.value = data.model_name;
-    else if (data.name) modelName.value = data.name;
+    // Append all imported models to library
+    savedModels.value = [...savedModels.value, ...newModels];
+    persistSavedModels();
 
-    // 3. Model color
-    if (data.color) modelColor.value = data.color;
+    // Load first model into active editor canvas
+    const first = newModels[0];
+    blockShape.value = first.type;
+    modelName.value = first.name;
+    modelColor.value = first.color;
+    faceTextures.value = { ...first.textures };
 
-    // 4. Textures / Faces
-    const tex = data.textures || data.faces || {};
-    if (typeof tex === 'object') {
-      faceTextures.value = {
-        top: tex.top || tex.up || tex.all || faceTextures.value.top || '',
-        bottom: tex.bottom || tex.down || tex.all || faceTextures.value.bottom || '',
-        front: tex.front || tex.north || tex.all || faceTextures.value.front || '',
-        back: tex.back || tex.south || tex.all || faceTextures.value.back || '',
-        left: tex.left || tex.west || tex.all || faceTextures.value.left || '',
-        right: tex.right || tex.east || tex.all || faceTextures.value.right || ''
-      };
+    if (newModels.length === 1) {
+      showNotification(`3D-модель "${first.name}" загружена в редактор!`);
+    } else {
+      showNotification(`Успешно импортировано ${newModels.length} моделей в библиотеку!`);
     }
 
-    showNotification('3D-модель успешно импортирована из JSON!');
     showImportModal.value = false;
     importJsonText.value = '';
   } catch (err: any) {
@@ -385,17 +415,55 @@ const parseAndImportJson = (jsonString: string) => {
 };
 
 const handleImportFileUpload = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const text = e.target?.result as string;
-    if (text) {
-      importJsonText.value = text;
-      parseAndImportJson(text);
-    }
-  };
-  reader.readAsText(file);
+  const files = (event.target as HTMLInputElement).files;
+  if (!files || files.length === 0) return;
+
+  let loadedCount = 0;
+  const fileArray = Array.from(files);
+  const importedModels: CustomBlockModel[] = [];
+
+  fileArray.forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        if (text) {
+          const rawData = JSON.parse(text.trim());
+          const items: any[] = Array.isArray(rawData) 
+            ? rawData 
+            : (rawData.models && Array.isArray(rawData.models) ? rawData.models : [rawData]);
+          
+          items.forEach(item => {
+            const m = extractModelFromData(item);
+            if (m) importedModels.push(m);
+          });
+        }
+      } catch (err) {
+        console.error('Error parsing JSON file:', file.name, err);
+      }
+
+      loadedCount++;
+      if (loadedCount === fileArray.length) {
+        if (importedModels.length > 0) {
+          savedModels.value = [...savedModels.value, ...importedModels];
+          persistSavedModels();
+
+          const first = importedModels[0];
+          blockShape.value = first.type;
+          modelName.value = first.name;
+          modelColor.value = first.color;
+          faceTextures.value = { ...first.textures };
+
+          showNotification(`Импортировано ${importedModels.length} моделей из ${fileArray.length} файлов!`);
+          showImportModal.value = false;
+          importJsonText.value = '';
+        } else {
+          showNotification('Не удалось прочитать ни одной валидной модели');
+        }
+      }
+    };
+    reader.readAsText(file);
+  });
 };
 
 const pasteFromClipboardToImport = async () => {
