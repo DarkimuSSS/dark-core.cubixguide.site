@@ -102,6 +102,7 @@ const buildAltar3D = () => {
       });
     });
 
+    // Tier 3: 5 runes per side (offsets -2 to 2) between pillars at -3 and 3
     for (let i = -2; i <= 2; i++) {
       altarGroup.add(createVoxelBlock(i, -1.5, -3, BLOCK_COLORS.rune, 'Руна (Tier 3)'));
       altarGroup.add(createVoxelBlock(i, -1.5, 3, BLOCK_COLORS.rune, 'Руна (Tier 3)'));
@@ -110,7 +111,7 @@ const buildAltar3D = () => {
     }
   }
 
-  // 4. Tier IV: 11x11 Pillars & Blood Bricks (Height 4)
+  // 4. Tier IV: 11x11 Pillars & Blood Bricks (Pillars at -5 and 5)
   if (t >= 4) {
     const r4Offsets = [-5, 5];
     r4Offsets.forEach(px => {
@@ -123,7 +124,8 @@ const buildAltar3D = () => {
       });
     });
 
-    for (let i = -4; i <= 4; i++) {
+    // Tier 4: 7 runes per side (offsets -3 to 3, leaving 1 block gap to pillars at -5 and 5 = 28 runes total, 60 total multiblock)
+    for (let i = -3; i <= 3; i++) {
       altarGroup.add(createVoxelBlock(i, -2.5, -5, BLOCK_COLORS.rune, 'Руна (Tier 4)'));
       altarGroup.add(createVoxelBlock(i, -2.5, 5, BLOCK_COLORS.rune, 'Руна (Tier 4)'));
       altarGroup.add(createVoxelBlock(-5, -2.5, i, BLOCK_COLORS.rune, 'Руна (Tier 4)'));
@@ -131,7 +133,7 @@ const buildAltar3D = () => {
     }
   }
 
-  // 5. Tier V: Beacons on 17x17 Corners
+  // 5. Tier V: Beacons on 17x17 Corners (Pillars at -8 and 8)
   if (t >= 5) {
     const r5Offsets = [-8, 8];
     r5Offsets.forEach(px => {
@@ -143,7 +145,8 @@ const buildAltar3D = () => {
       });
     });
 
-    for (let i = -7; i <= 7; i++) {
+    // Tier 5: 13 runes per side (offsets -6 to 6, leaving 1 block gap to pillars at -8 and 8 = 52 runes total, 108 total multiblock)
+    for (let i = -6; i <= 6; i++) {
       altarGroup.add(createVoxelBlock(i, -3.5, -8, BLOCK_COLORS.rune, 'Руна (Tier 5)'));
       altarGroup.add(createVoxelBlock(i, -3.5, 8, BLOCK_COLORS.rune, 'Руна (Tier 5)'));
       altarGroup.add(createVoxelBlock(-8, -3.5, i, BLOCK_COLORS.rune, 'Руна (Tier 5)'));
@@ -151,7 +154,7 @@ const buildAltar3D = () => {
     }
   }
 
-  // 6. Tier VI: Crystal Clusters on 23x23 Corners
+  // 6. Tier VI: Crystal Clusters on 23x23 Corners (Pillars at -11 and 11)
   if (t >= 6) {
     const r6Offsets = [-11, 11];
     r6Offsets.forEach(px => {
@@ -163,7 +166,8 @@ const buildAltar3D = () => {
       });
     });
 
-    for (let i = -10; i <= 10; i++) {
+    // Tier 6: 19 runes per side (offsets -9 to 9, leaving 1 block gap to pillars at -11 and 11 = 56 runes total, 164 total multiblock)
+    for (let i = -9; i <= 9; i++) {
       altarGroup.add(createVoxelBlock(i, -4.5, -11, BLOCK_COLORS.rune, 'Руна (Tier 6)'));
       altarGroup.add(createVoxelBlock(i, -4.5, 11, BLOCK_COLORS.rune, 'Руна (Tier 6)'));
       altarGroup.add(createVoxelBlock(-11, -4.5, i, BLOCK_COLORS.rune, 'Руна (Tier 6)'));
