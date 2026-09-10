@@ -409,6 +409,13 @@ const removeMaterialFromPalette = (matId: string) => {
       <Multiblock3DViewer 
         :layers="layersList" 
         :palette="currentPalette" 
+        :is-editing="isEditing"
+        :selected-material-id="selectedMaterialId"
+        :active-tool="activeTool"
+        :grid-size-x="currentSizeX"
+        :grid-size-z="currentSizeZ"
+        @update-layers="(newLayers) => emit('update', { ...props.block, layers: newLayers })"
+        @select-material="(id) => selectedMaterialId = id"
       />
     </div>
 

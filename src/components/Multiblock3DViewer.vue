@@ -6,11 +6,21 @@ import type { MultiblockLayer, MultiblockPaletteItem } from '../types/guide';
 const props = defineProps<{
   layers: MultiblockLayer[];
   palette: MultiblockPaletteItem[];
-  gridSize?: number;
+  isEditing?: boolean;
+  selectedMaterialId?: string;
+  activeTool?: 'paint' | 'erase' | 'picker';
+  gridSizeX?: number;
+  gridSizeZ?: number;
+}>();
+
+const emit = defineEmits<{
+  (e: 'update-layers', layers: MultiblockLayer[]): void;
+  (e: 'select-material', id: string): void;
 }>();
 
 // 3D Canvas / Projection Controls
 const isDragging = ref(false);
+const dragMoved = ref(false);
 const previousMousePosition = ref({ x: 0, y: 0 });
 const rotX = ref(-25); // Pitch
 const rotY = ref(45);  // Yaw
@@ -22,7 +32,7 @@ let autoRotateTimer: any = null;
 const maxVisibleLayer = ref<number>(props.layers?.length || 3);
 
 watch(() => props.layers, (newLayers) => {
-  if (newLayers && newLayers.length > 0) {
+  if (newLayers && newLayers.length > 0 && maxVisibleLayer.value > newLayers.length) {
     maxVisibleLayer.value = newLayers.length;
   }
 }, { immediate: true });
@@ -30,6 +40,7 @@ watch(() => props.layers, (newLayers) => {
 // Mouse Drag Events for 3D Orbiting
 const onMouseDown = (e: MouseEvent) => {
   isDragging.value = true;
+  dragMoved.value = false;
   previousMousePosition.value = { x: e.clientX, y: e.clientY };
   if (isAutoRotating.value) isAutoRotating.value = false;
 };
@@ -39,8 +50,12 @@ const onMouseMove = (e: MouseEvent) => {
   const deltaX = e.clientX - previousMousePosition.value.x;
   const deltaY = e.clientY - previousMousePosition.value.y;
 
-  rotY.value += deltaX * 0.6;
-  rotX.value = Math.max(-85, Math.min(85, rotX.value - deltaY * 0.6));
+  if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+    dragMoved.value = true;
+  }
+
+  rotY.value += deltaX * 0.5;
+  rotX.value = Math.max(-85, Math.min(85, rotX.value - deltaY * 0.5));
 
   previousMousePosition.value = { x: e.clientX, y: e.clientY };
 };
@@ -124,11 +139,23 @@ const getFaceTextureStyle = (matId: string | null, face: 'top' | 'bottom' | 'fro
   };
 };
 
-// Compute 3D Position offset for voxels (Supports non-square X x Z grids like 4x6, 3x5, etc)
-const getVoxelStyle = (x: number, y: number, z: number, color: string, numRows: number, numCols: number) => {
+// 3D Matrix Calculations
+const numCols = computed(() => {
+  if (props.gridSizeX) return props.gridSizeX;
+  if (props.layers?.[0]?.grid?.[0]) return props.layers[0].grid[0].length;
+  return 3;
+});
+
+const numRows = computed(() => {
+  if (props.gridSizeZ) return props.gridSizeZ;
+  if (props.layers?.[0]?.grid) return props.layers[0].grid.length;
+  return 3;
+});
+
+const getVoxelStyle = (x: number, y: number, z: number, color: string) => {
   const cubeSize = 40; // exact size of cubic voxel
-  const halfX = (numCols - 1) / 2;
-  const halfZ = (numRows - 1) / 2;
+  const halfX = (numCols.value - 1) / 2;
+  const halfZ = (numRows.value - 1) / 2;
 
   const posX = (x - halfX) * cubeSize;
   const posY = -(y * cubeSize); // Y goes up vertically
@@ -138,6 +165,89 @@ const getVoxelStyle = (x: number, y: number, z: number, color: string, numRows: 
     transform: `translate3d(${posX}px, ${posY}px, ${posZ}px)`,
     backgroundColor: color
   };
+};
+
+// Interactive 3D Click & Place Logic
+const handleVoxelFaceClick = (e: MouseEvent, colIdx: number, layerIdx: number, rowIdx: number, face: 'top' | 'bottom' | 'front' | 'back' | 'left' | 'right') => {
+  e.stopPropagation();
+  if (!props.isEditing || dragMoved.value) return;
+
+  const currentMat = props.layers[layerIdx]?.grid[rowIdx]?.[colIdx];
+
+  // Tool 1: Picker (Eyedropper)
+  if (props.activeTool === 'picker') {
+    if (currentMat) {
+      emit('select-material', currentMat);
+    }
+    return;
+  }
+
+  // Tool 2: Erase (Right click, Shift+Click, or Erase Tool)
+  if (props.activeTool === 'erase' || e.shiftKey || e.button === 2) {
+    const newLayers = JSON.parse(JSON.stringify(props.layers)) as MultiblockLayer[];
+    if (newLayers[layerIdx]?.grid[rowIdx]) {
+      newLayers[layerIdx].grid[rowIdx][colIdx] = null;
+      emit('update-layers', newLayers);
+    }
+    return;
+  }
+
+  // Tool 3: Placement (Calculate adjacent target voxel based on face clicked)
+  let targetX = colIdx;
+  let targetY = layerIdx;
+  let targetZ = rowIdx;
+
+  if (face === 'top') targetY += 1;
+  else if (face === 'bottom') targetY -= 1;
+  else if (face === 'front') targetZ += 1;
+  else if (face === 'back') targetZ -= 1;
+  else if (face === 'right') targetX += 1;
+  else if (face === 'left') targetX -= 1;
+
+  // Boundary Checks
+  if (targetX < 0 || targetX >= numCols.value || targetZ < 0 || targetZ >= numRows.value) return;
+
+  const newLayers = JSON.parse(JSON.stringify(props.layers)) as MultiblockLayer[];
+  
+  // Auto-expand Y layer if placing above current max layer
+  while (newLayers.length <= targetY) {
+    const nextNum = newLayers.length + 1;
+    newLayers.push({
+      layerNumber: nextNum,
+      grid: Array(numRows.value).fill(null).map(() => Array(numCols.value).fill(null))
+    });
+  }
+
+  if (targetY >= 0 && newLayers[targetY]) {
+    newLayers[targetY].grid[targetZ][targetX] = props.selectedMaterialId || props.palette[0]?.id || 'reactor_casing';
+    maxVisibleLayer.value = Math.max(maxVisibleLayer.value, targetY + 1);
+    emit('update-layers', newLayers);
+  }
+};
+
+// Floor Grid Base Click (Place on Layer 0)
+const handleFloorClick = (e: MouseEvent, colIdx: number, rowIdx: number) => {
+  e.stopPropagation();
+  if (!props.isEditing || dragMoved.value) return;
+
+  if (props.activeTool === 'erase' || e.shiftKey || e.button === 2) {
+    const newLayers = JSON.parse(JSON.stringify(props.layers)) as MultiblockLayer[];
+    if (newLayers[0]?.grid[rowIdx]) {
+      newLayers[0].grid[rowIdx][colIdx] = null;
+      emit('update-layers', newLayers);
+    }
+    return;
+  }
+
+  const newLayers = JSON.parse(JSON.stringify(props.layers)) as MultiblockLayer[];
+  if (!newLayers[0]) {
+    newLayers.push({
+      layerNumber: 1,
+      grid: Array(numRows.value).fill(null).map(() => Array(numCols.value).fill(null))
+    });
+  }
+  newLayers[0].grid[rowIdx][colIdx] = props.selectedMaterialId || props.palette[0]?.id || 'reactor_casing';
+  emit('update-layers', newLayers);
 };
 
 // Materials Summary Counter
@@ -241,6 +351,19 @@ const materialSummary = computed(() => {
           transform: `scale(${zoom}) rotateX(${rotX}deg) rotateY(${rotY}deg)`
         }"
       >
+        <!-- 3D Floor Base Grid for Placing First Blocks -->
+        <div v-if="isEditing" class="floor-grid-3d">
+          <template v-for="rIdx in numRows" :key="rIdx">
+            <template v-for="cIdx in numCols" :key="cIdx">
+              <div 
+                class="floor-cell-3d"
+                :style="getVoxelStyle(cIdx - 1, 0, rIdx - 1, 'transparent')"
+                @click="handleFloorClick($event, cIdx - 1, rIdx - 1)"
+              ></div>
+            </template>
+          </template>
+        </div>
+
         <!-- Render 3D Voxels Layer by Layer -->
         <template v-for="(layer, layerIdx) in layers" :key="layer.layerNumber">
           <template v-if="layerIdx < maxVisibleLayer">
@@ -248,17 +371,17 @@ const materialSummary = computed(() => {
               <template v-for="(matId, colIdx) in row" :key="colIdx">
                 <div 
                   v-if="matId"
-                  class="voxel-cube"
-                  :style="getVoxelStyle(colIdx, layerIdx, rowIdx, getMaterial(matId).color, layer.grid.length, row.length)"
+                  class="voxel-cube group"
+                  :style="getVoxelStyle(colIdx, layerIdx, rowIdx, getMaterial(matId).color)"
                   :title="`${getMaterial(matId).name} (Слой Y=${layer.layerNumber})`"
                 >
-                  <!-- Cube Faces with custom multi-face textures or color shading -->
-                  <div class="face front" :style="getFaceTextureStyle(matId, 'front')"></div>
-                  <div class="face back" :style="getFaceTextureStyle(matId, 'back')"></div>
-                  <div class="face top" :style="getFaceTextureStyle(matId, 'top')"></div>
-                  <div class="face bottom" :style="getFaceTextureStyle(matId, 'bottom')"></div>
-                  <div class="face left" :style="getFaceTextureStyle(matId, 'left')"></div>
-                  <div class="face right" :style="getFaceTextureStyle(matId, 'right')"></div>
+                  <!-- Cube Faces with custom multi-face textures & interactive clicks -->
+                  <div class="face front" :style="getFaceTextureStyle(matId, 'front')" @click="handleVoxelFaceClick($event, colIdx, layerIdx, rowIdx, 'front')"></div>
+                  <div class="face back" :style="getFaceTextureStyle(matId, 'back')" @click="handleVoxelFaceClick($event, colIdx, layerIdx, rowIdx, 'back')"></div>
+                  <div class="face top" :style="getFaceTextureStyle(matId, 'top')" @click="handleVoxelFaceClick($event, colIdx, layerIdx, rowIdx, 'top')"></div>
+                  <div class="face bottom" :style="getFaceTextureStyle(matId, 'bottom')" @click="handleVoxelFaceClick($event, colIdx, layerIdx, rowIdx, 'bottom')"></div>
+                  <div class="face left" :style="getFaceTextureStyle(matId, 'left')" @click="handleVoxelFaceClick($event, colIdx, layerIdx, rowIdx, 'left')"></div>
+                  <div class="face right" :style="getFaceTextureStyle(matId, 'right')" @click="handleVoxelFaceClick($event, colIdx, layerIdx, rowIdx, 'right')"></div>
                 </div>
               </template>
             </template>
@@ -334,6 +457,26 @@ const materialSummary = computed(() => {
   transform-style: preserve-3d;
 }
 
+.floor-grid-3d {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+
+.floor-cell-3d {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 40px;
+  height: 40px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  transform: rotateX(90deg) translateZ(20px);
+  cursor: pointer;
+}
+.floor-cell-3d:hover {
+  background-color: rgba(6, 182, 212, 0.25);
+  border-color: rgba(6, 182, 212, 0.6);
+}
+
 .voxel-cube {
   position: absolute;
   top: -20px;
@@ -353,6 +496,14 @@ const materialSummary = computed(() => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  cursor: pointer;
+  transition: filter 0.15s ease, border-color 0.15s ease;
+}
+
+.face:hover {
+  filter: brightness(1.3) !important;
+  border-color: #38bdf8 !important;
+  box-shadow: inset 0 0 8px rgba(56, 189, 248, 0.6);
 }
 
 .front  { transform: translateZ(20px); filter: brightness(0.95); }
