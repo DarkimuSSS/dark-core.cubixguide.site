@@ -309,6 +309,40 @@ const updateUrlRoute = () => {
   if (window.location.search !== `?${params.toString()}` && window.location.pathname + window.location.search !== queryString) {
     window.history.pushState({ mode: mode.value, guideId: activeGuideId.value }, '', queryString);
   }
+
+  // Dynamic SEO Title & Meta Description Update
+  let dynamicTitle = 'CubixGuide Wiki — База знаний и гайдов CubixWorld';
+  let dynamicDesc = 'Официальная база знаний CubixWorld: пошаговые гайды, правила серверов, таблицы крафтов и механизмов.';
+
+  if (mode.value === 'reader' && activeGuide.value) {
+    dynamicTitle = `${activeGuide.value.meta.title} — Гайд CubixGuide | CubixWorld`;
+    if (activeGuide.value.meta.summary) {
+      dynamicDesc = `${activeGuide.value.meta.summary} | Категория: ${activeGuide.value.meta.category} | Сервер: ${activeGuide.value.meta.server || 'Все'}`;
+    }
+  } else if (mode.value === 'rules') {
+    if (initialRulesTab.value === 'server') {
+      dynamicTitle = `Правила сервера ${initialRulesServer.value} — CubixWorld | CubixGuide`;
+      dynamicDesc = `Официальные внутриигровые правила сервера ${initialRulesServer.value} проекта CubixWorld. Регламент, ограничения и наказания.`;
+    } else {
+      dynamicTitle = 'Общие правила проекта CubixWorld — CubixGuide';
+      dynamicDesc = 'Официальный свод общих правил проекта CubixWorld: чат, игровой процесс, донат, команда проекта.';
+    }
+  } else if (mode.value === 'thaumcraft') {
+    dynamicTitle = 'Калькулятор и Таблица Аспектов Thaumcraft 4 — CubixGuide';
+    dynamicDesc = 'Интерактивная база и калькулятор объединения аспектов Таумкрафт 4 для серверов CubixWorld.';
+  } else if (mode.value === 'minecraft_color') {
+    dynamicTitle = 'Генератор Цветов и Форматирования Майнкрафт (§ & &) — CubixGuide';
+    dynamicDesc = 'Удобный генератор форматированного текста, цветов и градиентов для чата и табличек Minecraft.';
+  } else if (mode.value === 'team') {
+    dynamicTitle = 'Команда проекта и модерация — CubixGuide | CubixWorld';
+    dynamicDesc = 'Состав администрации, разработчиков и модераторов проекта CubixWorld.';
+  }
+
+  document.title = dynamicTitle;
+  const metaDescEl = document.querySelector('meta[name="description"]');
+  if (metaDescEl) {
+    metaDescEl.setAttribute('content', dynamicDesc);
+  }
 };
 
 const syncFromUrlPath = () => {
