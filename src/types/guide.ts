@@ -57,6 +57,7 @@ export interface MultiblockPaletteItem {
   name: string;
   icon: string;
   color: string;
+  packTitle?: string; // Origin asset pack title for tooltip context
   imageUrl?: string; // Custom texture / block image URL (default/sides)
   topImageUrl?: string; // Custom top face texture URL
   bottomImageUrl?: string; // Custom bottom face texture URL
@@ -114,6 +115,7 @@ export interface AuthorMediaItem {
   id: string;
   name: string;
   url: string;
+  packTitle?: string;
   uploadedAt: string;
 }
 

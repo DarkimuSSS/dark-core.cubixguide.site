@@ -120,11 +120,23 @@ const clearEntireStructure = () => {
 // Gallery & Custom Model handlers
 const handleSelectGalleryMedia = (media: AuthorMediaItem) => {
   const customPalette = [...currentPalette.value];
+  
+  // Extract clean block name without (pack name) if present
+  let cleanName = media.name;
+  let packTitle = media.packTitle;
+
+  const packMatch = media.name.match(/^(.*?)\s*\((.*?)\)$/);
+  if (packMatch) {
+    cleanName = packMatch[1].trim();
+    if (!packTitle) packTitle = packMatch[2].trim();
+  }
+
   const newMat: MultiblockPaletteItem = {
     id: `custom_${media.id}_${Date.now()}`,
-    name: media.name,
+    name: cleanName,
     icon: 'Image',
     color: '#06b6d4',
+    packTitle: packTitle,
     imageUrl: media.url
   };
 
@@ -352,7 +364,21 @@ const removeMaterialFromPalette = (matId: string) => {
                   />
                   <span v-else class="w-4 h-4 rounded-md border border-black/40 shrink-0" :style="{ backgroundColor: mat.color }"></span>
                   <IconRenderer :name="mat.icon" size="14" :color="selectedMaterialId === mat.id ? '#ffffff' : mat.color" class="shrink-0" />
-                  <span class="truncate">{{ mat.name }}</span>
+                  <span class="truncate">{{ mat.name.replace(/\s*\(.*?\)$/, '') }}</span>
+
+                  <!-- Pack Origin Info Icon Tooltip -->
+                  <div 
+                    v-if="mat.packTitle || mat.name.includes('(')" 
+                    class="relative group/pack flex items-center justify-center text-cyan-400 hover:text-cyan-300 ml-0.5 shrink-0"
+                    @click.stop
+                  >
+                    <IconRenderer name="HelpCircle" size="13" class="opacity-70 hover:opacity-100" />
+                    <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/pack:block z-30 pointer-events-none">
+                      <div class="bg-black/95 border border-cyan-500/40 text-cyan-200 text-[11px] font-medium px-2.5 py-1 rounded-lg shadow-2xl whitespace-nowrap">
+                        Пак: {{ mat.packTitle || (mat.name.match(/\((.*?)\)/)?.[1] || 'Ресурсы') }}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <span v-if="selectedMaterialId === mat.id" class="text-[10px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded font-mono shrink-0">

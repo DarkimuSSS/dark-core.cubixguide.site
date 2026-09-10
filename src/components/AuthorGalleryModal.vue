@@ -211,6 +211,7 @@ const installPack = async (pack: AssetPack) => {
         id: `media_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
         name: item.name,
         url: item.url,
+        packTitle: pack.title,
         uploadedAt: new Date().toISOString().split('T')[0]
       });
       addedCount++;
