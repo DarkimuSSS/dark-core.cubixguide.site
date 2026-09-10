@@ -279,7 +279,7 @@ const handleAutoParseRules = async () => {
           </div>
 
           <!-- Compact Modern Controls Bar: Main Tabs + Server Picker -->
-          <div class="px-6 py-3 border-b border-white/5 bg-[#121417]/80 shrink-0 flex items-center justify-between gap-3 flex-wrap relative z-10">
+          <div class="px-6 py-3 border-b border-white/5 bg-[#121417]/80 shrink-0 flex items-center justify-between gap-3 flex-wrap relative z-30">
             <!-- Main Tabs -->
             <div class="flex items-center gap-1 bg-[#090a0c] p-1 rounded-xl border border-white/10 shadow-inner">
               <button
@@ -345,7 +345,7 @@ const handleAutoParseRules = async () => {
                 <!-- 3-Column Dropdown Menu -->
                 <div
                   v-if="isServerPickerOpen"
-                  class="absolute top-full right-0 mt-2 w-[440px] max-w-[90vw] bg-[#0e1012]/95 border border-white/10 rounded-2xl shadow-2xl p-3 z-50 space-y-2 backdrop-blur-2xl ring-1 ring-cyan-500/20"
+                  class="absolute top-full right-0 mt-2 w-[440px] max-w-[90vw] bg-[#0e1012] border border-white/15 rounded-2xl shadow-2xl p-3 z-50 space-y-2 backdrop-blur-2xl ring-1 ring-cyan-500/30"
                 >
                   <div class="text-[10px] font-black text-cyan-400 uppercase tracking-wider px-1 flex items-center justify-between">
                     <span>Выберите игровой сервер:</span>
@@ -374,7 +374,8 @@ const handleAutoParseRules = async () => {
           </div>
 
           <!-- Secondary Filter Bar: Categories or Server Sections -->
-          <div class="px-6 py-2.5 border-b border-white/5 bg-[#090a0c]/60 shrink-0 relative z-10">
+          <div class="px-6 py-2.5 border-b border-white/5 bg-[#090a0c]/60 shrink-0 relative z-0">
+
             <!-- Category Pills (Only for General Rules tab) -->
             <div v-if="activeTab === 'general'" class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
               <button
