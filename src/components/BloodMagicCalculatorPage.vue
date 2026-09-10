@@ -266,42 +266,39 @@ const calculatedStats = computed(() => calculateBloodAltarStats(selectedTier.val
               </div>
             </div>
 
-            <!-- Rune Allocator Controls List -->
-            <div v-if="selectedTier > 1" class="space-y-3 pt-2">
+            <!-- Rune Allocator Controls List (Compact 2-Column Grid) -->
+            <div v-if="selectedTier > 1" class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
               <div
                 v-for="(rune, id) in BLOOD_MAGIC_RUNES"
                 :key="id"
-                class="p-3.5 rounded-2xl bg-[#090a0c] border border-white/5 hover:border-white/15 transition-all flex items-center justify-between gap-4"
+                class="p-3 rounded-2xl bg-[#090a0c] border border-white/5 hover:border-white/15 transition-all flex items-center justify-between gap-3 group"
               >
-                <div class="flex items-center gap-3 min-w-0">
-                  <div :class="['w-9 h-9 rounded-xl bg-gradient-to-br border flex items-center justify-center text-white shrink-0 shadow-md', rune.color]">
-                    <IconRenderer :name="rune.icon" size="18" />
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div :class="['w-8 h-8 rounded-xl bg-gradient-to-br border flex items-center justify-center text-white shrink-0 shadow-md', rune.color]">
+                    <IconRenderer :name="rune.icon" size="15" />
                   </div>
                   <div class="min-w-0">
-                    <div class="flex items-center gap-2">
-                      <h4 class="text-xs font-extrabold text-white truncate">{{ rune.nameRu }}</h4>
-                      <span class="text-[10px] text-slate-500 font-mono hidden sm:inline">({{ rune.nameEn }})</span>
-                    </div>
-                    <p class="text-[11px] text-slate-400 truncate">{{ rune.description }}</p>
+                    <h4 class="text-xs font-extrabold text-white truncate group-hover:text-rose-300 transition-colors">{{ rune.nameRu }}</h4>
+                    <p class="text-[10px] text-slate-400 truncate">{{ rune.effectFormula }}</p>
                   </div>
                 </div>
 
                 <!-- Number Incrementation Control -->
-                <div class="flex items-center gap-2 shrink-0">
+                <div class="flex items-center gap-1.5 shrink-0 bg-white/5 p-1 rounded-xl border border-white/5">
                   <button
                     @click="updateRuneCount(id, -1)"
                     :disabled="!runeCounts[id]"
-                    class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 border border-white/10 text-white font-bold flex items-center justify-center transition-all cursor-pointer"
+                    class="w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 border border-white/10 text-white font-bold flex items-center justify-center transition-all cursor-pointer text-xs"
                   >
                     -
                   </button>
-                  <span class="w-8 text-center font-mono font-black text-sm text-white">
+                  <span class="w-6 text-center font-mono font-black text-xs text-white">
                     {{ runeCounts[id] || 0 }}
                   </span>
                   <button
                     @click="updateRuneCount(id, 1)"
                     :disabled="remainingBlankRunes <= 0"
-                    class="w-7 h-7 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 disabled:opacity-30 border border-rose-500/40 text-rose-300 font-bold flex items-center justify-center transition-all cursor-pointer"
+                    class="w-6 h-6 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 disabled:opacity-30 border border-rose-500/40 text-rose-300 font-bold flex items-center justify-center transition-all cursor-pointer text-xs"
                   >
                     +
                   </button>
