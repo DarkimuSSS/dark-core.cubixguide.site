@@ -251,183 +251,185 @@ const handleAutoParseRules = async () => {
           <!-- Top Accent Light Flare -->
           <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-24 bg-gradient-to-r from-emerald-500/20 via-cyan-500/20 to-indigo-500/20 blur-3xl pointer-events-none"></div>
 
-          <!-- Header -->
-          <div class="flex items-center justify-between px-6 py-4.5 border-b border-white/10 shrink-0 bg-[#0e1012]/80 backdrop-blur-md relative z-10">
-            <div class="flex items-center gap-3.5">
-              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 flex items-center justify-center text-white font-extrabold shadow-lg shadow-emerald-500/20 border border-white/20 transform hover:scale-105 transition-transform duration-300">
-                <IconRenderer name="Shield" size="22" />
-              </div>
-              <div>
-                <h2 class="text-base sm:text-lg font-black text-white flex items-center gap-2 tracking-tight">
-                  Правила CubixWorld
-                  <span class="text-[10px] uppercase tracking-wider bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-400 font-black px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                    Свод правил
-                  </span>
-                </h2>
-                <p class="text-xs text-slate-400 font-medium">Официальный регламент проекта и особенности локальных серверов</p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              @click="emit('close')"
-              class="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/10 hover:border-rose-500/40 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95"
-              title="Закрыть"
-            >
-              <IconRenderer name="X" size="18" />
-            </button>
-          </div>
-
-          <!-- Compact Modern Controls Bar: Main Tabs + Server Picker -->
-          <div class="px-6 py-3 border-b border-white/5 bg-[#121417]/80 shrink-0 flex items-center justify-between gap-3 flex-wrap relative z-30">
-            <!-- Main Tabs -->
-            <div class="flex items-center gap-1 bg-[#090a0c] p-1 rounded-xl border border-white/10 shadow-inner">
-              <button
-                type="button"
-                @click="activeTab = 'general'"
-                :class="[
-                  'px-3.5 py-1.5 rounded-lg text-xs font-black transition-all duration-200 flex items-center gap-2 cursor-pointer',
-                  activeTab === 'general'
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/40 border border-emerald-400/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                ]"
-              >
-                <IconRenderer name="BookOpen" size="14" />
-                <span>Общие правила</span>
-              </button>
-
-              <button
-                type="button"
-                @click="activeTab = 'server'"
-                :class="[
-                  'px-3.5 py-1.5 rounded-lg text-xs font-black transition-all duration-200 flex items-center gap-2 cursor-pointer',
-                  activeTab === 'server'
-                    ? 'bg-cyan-600 text-white shadow-md shadow-cyan-950/40 border border-cyan-400/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                ]"
-              >
-                <IconRenderer name="Gamepad2" size="14" />
-                <span>Правила серверов</span>
-              </button>
-            </div>
-
-            <!-- Search input -->
-            <div class="flex-1 min-w-[240px] max-w-md relative">
-              <input
-                type="text"
-                v-model="searchQuery"
-                :placeholder="activeTab === 'general' ? 'Поиск по номеру, тексту, бану...' : `Поиск по правилам ${selectedServer}...`"
-                class="w-full bg-[#090a0c] border border-white/10 text-white text-xs rounded-xl pl-9 pr-8 py-2 focus:outline-none focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/20 transition-all placeholder:text-slate-500"
-              />
-              <IconRenderer name="Search" size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-              <button
-                v-if="searchQuery"
-                @click="searchQuery = ''"
-                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
-              >
-                <IconRenderer name="X" size="13" />
-              </button>
-            </div>
-
-            <!-- Server selector dropdown when Server tab active -->
-            <div v-if="activeTab === 'server'" class="flex items-center gap-2 relative">
-              <div class="relative">
-                <button
-                  type="button"
-                  @click="isServerPickerOpen = !isServerPickerOpen"
-                  class="bg-[#090a0c] border border-cyan-500/40 text-cyan-300 font-extrabold text-xs rounded-xl px-3 py-1.5 focus:outline-none cursor-pointer flex items-center gap-2 hover:border-cyan-400 transition-all shadow-md"
-                >
-                  <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                  <span>{{ availableServers.find(s => s.id === selectedServer)?.name || selectedServer }}</span>
-                  <IconRenderer name="ChevronDown" size="13" :class="['transition-transform duration-200', isServerPickerOpen ? 'rotate-180' : '']" />
-                </button>
-
-                <!-- 3-Column Dropdown Menu -->
-                <div
-                  v-if="isServerPickerOpen"
-                  class="absolute top-full right-0 mt-2 w-[440px] max-w-[90vw] bg-[#0e1012] border border-white/15 rounded-2xl shadow-2xl p-3 z-50 space-y-2 backdrop-blur-2xl ring-1 ring-cyan-500/30"
-                >
-                  <div class="text-[10px] font-black text-cyan-400 uppercase tracking-wider px-1 flex items-center justify-between">
-                    <span>Выберите игровой сервер:</span>
-                    <span class="text-slate-500 font-normal">Всего: {{ availableServers.length }}</span>
-                  </div>
-                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-[280px] overflow-y-auto custom-scrollbar">
-                    <button
-                      v-for="srv in availableServers"
-                      :key="srv.id"
-                      type="button"
-                      @click="selectedServer = srv.id; isServerPickerOpen = false"
-                      :class="[
-                        'px-2.5 py-1.5 rounded-lg text-xs font-bold text-left transition-all truncate border flex items-center gap-2',
-                        selectedServer === srv.id
-                          ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-black'
-                          : 'bg-[#14161a] border-white/5 text-slate-300 hover:text-white hover:border-white/15'
-                      ]"
-                    >
-                      <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="selectedServer === srv.id ? 'bg-cyan-400' : 'bg-slate-600'"></span>
-                      <span class="truncate">{{ srv.name }}</span>
-                    </button>
-                  </div>
+          <!-- Unified Header -->
+          <div class="px-6 py-4 border-b border-white/10 shrink-0 bg-[#0e1012] relative z-20 space-y-3.5">
+            <!-- Top Line: Title + Main Tabs + Close Button -->
+            <div class="flex items-center justify-between gap-4 flex-wrap">
+              <!-- Title Badge -->
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 flex items-center justify-center text-white font-extrabold shadow-md shadow-emerald-500/20 border border-white/20">
+                  <IconRenderer name="Shield" size="20" />
+                </div>
+                <div>
+                  <h2 class="text-base font-black text-white flex items-center gap-2">
+                    Правила CubixWorld
+                    <span class="text-[10px] uppercase tracking-wider bg-emerald-500/20 text-emerald-400 font-extrabold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      Свод правил
+                    </span>
+                  </h2>
+                  <p class="text-[11px] text-slate-400">Официальный регламент проекта и особенности локальных серверов</p>
                 </div>
               </div>
+
+              <!-- Controls: Main Tab Switcher + Server Picker + Close -->
+              <div class="flex items-center gap-2.5">
+                <!-- Main Tab Switcher -->
+                <div class="flex items-center p-1 rounded-xl bg-[#16181c] border border-white/10 shadow-inner">
+                  <button
+                    type="button"
+                    @click="activeTab = 'general'"
+                    :class="[
+                      'px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer',
+                      activeTab === 'general'
+                        ? 'bg-emerald-600 text-white shadow-sm border border-emerald-400/40'
+                        : 'text-slate-400 hover:text-slate-200'
+                    ]"
+                  >
+                    <IconRenderer name="BookOpen" size="13" />
+                    <span>Общие правила</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    @click="activeTab = 'server'"
+                    :class="[
+                      'px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer',
+                      activeTab === 'server'
+                        ? 'bg-cyan-600 text-white shadow-sm border border-cyan-400/40'
+                        : 'text-slate-400 hover:text-slate-200'
+                    ]"
+                  >
+                    <IconRenderer name="Gamepad2" size="13" />
+                    <span>Правила серверов</span>
+                  </button>
+                </div>
+
+                <!-- Server Selector Dropdown (When Server Tab active) -->
+                <div v-if="activeTab === 'server'" class="relative">
+                  <button
+                    type="button"
+                    @click="isServerPickerOpen = !isServerPickerOpen"
+                    class="bg-[#16181c] border border-cyan-500/40 text-cyan-300 font-extrabold text-xs rounded-xl px-3 py-1.5 focus:outline-none cursor-pointer flex items-center gap-2 hover:border-cyan-400 transition-all"
+                  >
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span>{{ availableServers.find(s => s.id === selectedServer)?.name || selectedServer }}</span>
+                    <IconRenderer name="ChevronDown" size="13" :class="['transition-transform duration-200', isServerPickerOpen ? 'rotate-180' : '']" />
+                  </button>
+
+                  <!-- 3-Column Dropdown Menu -->
+                  <div
+                    v-if="isServerPickerOpen"
+                    class="absolute top-full right-0 mt-2 w-[440px] max-w-[90vw] bg-[#0e1012] border border-white/15 rounded-2xl shadow-2xl p-3 z-50 space-y-2 backdrop-blur-2xl ring-1 ring-cyan-500/30"
+                  >
+                    <div class="text-[10px] font-black text-cyan-400 uppercase tracking-wider px-1 flex items-center justify-between">
+                      <span>Выберите игровой сервер:</span>
+                      <span class="text-slate-500 font-normal">Всего: {{ availableServers.length }}</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-[280px] overflow-y-auto custom-scrollbar">
+                      <button
+                        v-for="srv in availableServers"
+                        :key="srv.id"
+                        type="button"
+                        @click="selectedServer = srv.id; isServerPickerOpen = false"
+                        :class="[
+                          'px-2.5 py-1.5 rounded-lg text-xs font-bold text-left transition-all truncate border flex items-center gap-2',
+                          selectedServer === srv.id
+                            ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-black'
+                            : 'bg-[#14161a] border-white/5 text-slate-300 hover:text-white hover:border-white/15'
+                        ]"
+                      >
+                        <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="selectedServer === srv.id ? 'bg-cyan-400' : 'bg-slate-600'"></span>
+                        <span class="truncate">{{ srv.name }}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Close Button -->
+                <button
+                  type="button"
+                  @click="emit('close')"
+                  class="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/10 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer"
+                  title="Закрыть"
+                >
+                  <IconRenderer name="X" size="18" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Bottom Line: Search Bar + Filter Pills -->
+            <div class="flex items-center gap-3 flex-wrap">
+              <!-- Search Bar -->
+              <div class="flex-1 min-w-[240px] relative">
+                <input
+                  type="text"
+                  v-model="searchQuery"
+                  :placeholder="activeTab === 'general' ? 'Поиск по номеру правила, тексту или наказанию...' : `Поиск по правилам ${selectedServer}...`"
+                  class="w-full bg-[#16181c] border border-white/10 text-white text-xs rounded-xl pl-9 pr-8 py-2 focus:outline-none focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/20 transition-all placeholder:text-slate-500"
+                />
+                <IconRenderer name="Search" size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <button
+                  v-if="searchQuery"
+                  @click="searchQuery = ''"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                >
+                  <IconRenderer name="X" size="13" />
+                </button>
+              </div>
+
+              <!-- Filter Pills (General rules categories or Server sections) -->
+              <div v-if="activeTab === 'general'" class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar max-w-full">
+                <button
+                  v-for="cat in categories"
+                  :key="cat.id"
+                  type="button"
+                  @click="activeCategory = cat.id"
+                  :class="[
+                    'px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 border cursor-pointer',
+                    activeCategory === cat.id
+                      ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300 font-black shadow-sm'
+                      : 'bg-[#16181c] border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/15'
+                  ]"
+                >
+                  <IconRenderer :name="cat.icon" size="12" />
+                  <span>{{ cat.title }}</span>
+                </button>
+              </div>
+
+              <div v-else-if="currentServerData?.sections?.length" class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar max-w-full">
+                <button
+                  type="button"
+                  @click="activeSectionId = 'all'"
+                  :class="[
+                    'px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 border cursor-pointer',
+                    activeSectionId === 'all'
+                      ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 font-black shadow-sm'
+                      : 'bg-[#16181c] border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/15'
+                  ]"
+                >
+                  <IconRenderer name="Layers" size="12" />
+                  <span>Все разделы</span>
+                </button>
+
+                <button
+                  v-for="sec in currentServerData.sections"
+                  :key="sec.section_id"
+                  type="button"
+                  @click="activeSectionId = sec.section_id"
+                  :class="[
+                    'px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 border cursor-pointer',
+                    activeSectionId === sec.section_id
+                      ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 font-black shadow-sm'
+                      : 'bg-[#16181c] border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/15'
+                  ]"
+                >
+                  <span class="w-3.5 h-3.5 rounded bg-cyan-500/30 text-cyan-300 text-[9px] font-black flex items-center justify-center">{{ sec.section_id }}</span>
+                  <span>{{ sec.title }}</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- Secondary Filter Bar: Categories or Server Sections -->
-          <div class="px-6 py-2.5 border-b border-white/5 bg-[#090a0c]/60 shrink-0 relative z-0">
-
-            <!-- Category Pills (Only for General Rules tab) -->
-            <div v-if="activeTab === 'general'" class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
-              <button
-                v-for="cat in categories"
-                :key="cat.id"
-                type="button"
-                @click="activeCategory = cat.id"
-                :class="[
-                  'px-3 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 border cursor-pointer',
-                  activeCategory === cat.id
-                    ? 'bg-emerald-500/20 border-emerald-400/60 text-emerald-300 font-black shadow-sm'
-                    : 'bg-[#14161a] border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/15'
-                ]"
-              >
-                <IconRenderer :name="cat.icon" size="12" />
-                <span>{{ cat.title }}</span>
-              </button>
-            </div>
-
-            <!-- Section Pills (For Server Rules tab) -->
-            <div v-else-if="currentServerData?.sections?.length" class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
-              <button
-                type="button"
-                @click="activeSectionId = 'all'"
-                :class="[
-                  'px-3 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 border cursor-pointer',
-                  activeSectionId === 'all'
-                    ? 'bg-cyan-500/20 border-cyan-400/60 text-cyan-300 font-black shadow-sm'
-                    : 'bg-[#14161a] border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/15'
-                ]"
-              >
-                <IconRenderer name="Layers" size="12" />
-                <span>Все разделы</span>
-              </button>
-
-              <button
-                v-for="sec in currentServerData.sections"
-                :key="sec.section_id"
-                type="button"
-                @click="activeSectionId = sec.section_id"
-                :class="[
-                  'px-3 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 border cursor-pointer',
-                  activeSectionId === sec.section_id
-                    ? 'bg-cyan-500/20 border-cyan-400/60 text-cyan-300 font-black shadow-sm'
-                    : 'bg-[#14161a] border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/15'
-                ]"
-              >
-                <span class="w-3.5 h-3.5 rounded bg-cyan-500/30 text-cyan-300 text-[9px] font-black flex items-center justify-center">{{ sec.section_id }}</span>
-                <span>{{ sec.title }}</span>
-              </button>
-            </div>
-          </div>
 
 
           <!-- Server Info Note (For Server tab) -->
