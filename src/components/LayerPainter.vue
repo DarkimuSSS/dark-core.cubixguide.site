@@ -64,22 +64,23 @@ const layersList = computed<MultiblockLayer[]>(() => {
   ];
 });
 
-// Set Custom Grid Size
-const setCustomDimensions = (newWidth: number, newDepth: number) => {
-  const width = Math.max(1, Math.min(12, newWidth));
-  const depth = Math.max(1, Math.min(12, newDepth));
+// Set 3D Dimensions (X: Width, Y: Height, Z: Depth) with max limit of 16
+const setDimensions = (newWidth: number, newHeight: number, newDepth: number) => {
+  const width = Math.max(1, Math.min(16, newWidth));
+  const height = Math.max(1, Math.min(16, newHeight));
+  const depth = Math.max(1, Math.min(16, newDepth));
   
   const createGrid = () => Array(depth).fill(null).map(() => Array(width).fill(null));
-  const numLayers = layersList.value.length || 3;
   const newLayers: MultiblockLayer[] = [];
   
-  for (let i = 0; i < numLayers; i++) {
+  for (let i = 0; i < height; i++) {
     newLayers.push({ layerNumber: i + 1, grid: createGrid() });
   }
 
-  // Preserve existing center if resizing
-  for (let i = 0; i < Math.min(numLayers, layersList.value.length); i++) {
-    const oldGrid = layersList.value[i].grid;
+  // Preserve existing voxel data within new bounds
+  const oldLayers = layersList.value;
+  for (let i = 0; i < Math.min(height, oldLayers.length); i++) {
+    const oldGrid = oldLayers[i].grid;
     for (let r = 0; r < Math.min(depth, oldGrid.length); r++) {
       for (let c = 0; c < Math.min(width, oldGrid[r].length); c++) {
         newLayers[i].grid[r][c] = oldGrid[r][c];
@@ -93,19 +94,31 @@ const setCustomDimensions = (newWidth: number, newDepth: number) => {
     gridSizeZ: depth,
     layers: newLayers
   });
+
+  if (maxVisibleLayer.value > height) {
+    maxVisibleLayer.value = height;
+  }
 };
 
-// Add Layer Y
+// Max visible layer state
+const maxVisibleLayer = ref<number>(3);
+
+watch(() => layersList.value.length, (newLen) => {
+  if (maxVisibleLayer.value > newLen) {
+    maxVisibleLayer.value = newLen;
+  }
+}, { immediate: true });
+
+// Add Layer Y (up to 16)
 const addLayer = () => {
-  const newLayers = JSON.parse(JSON.stringify(layersList.value)) as MultiblockLayer[];
-  const nextNum = newLayers.length + 1;
-  const width = currentSizeX.value;
-  const depth = currentSizeZ.value;
-  newLayers.push({
-    layerNumber: nextNum,
-    grid: Array(depth).fill(null).map(() => Array(width).fill(null))
-  });
-  emit('update', { ...props.block, layers: newLayers });
+  if (layersList.value.length >= 16) return;
+  setDimensions(currentSizeX.value, layersList.value.length + 1, currentSizeZ.value);
+};
+
+// Remove Top Layer Y
+const removeTopLayer = () => {
+  if (layersList.value.length <= 1) return;
+  setDimensions(currentSizeX.value, layersList.value.length - 1, currentSizeZ.value);
 };
 
 // Clear Entire Multiblock Structure
@@ -190,38 +203,98 @@ const removeMaterialFromPalette = (matId: string) => {
     <!-- Header Controls (Only when editing) -->
     <div v-if="isEditing" class="flex flex-wrap items-center justify-between gap-3 bg-[#16181a] border border-[#26292d] p-3 rounded-2xl shadow-lg">
       
-      <!-- Grid Dimensions & Presets -->
-      <div class="flex items-center gap-3 flex-wrap">
-        <div class="flex items-center gap-1.5 bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
-          <span class="text-xs font-bold text-dark-muted px-2">Сетка:</span>
+      <!-- 3D Grid Dimensions (X, Y, Z) -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs font-bold text-dark-muted px-1">Размеры (макс. 16):</span>
+        
+        <!-- X: Width -->
+        <div class="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
+          <span class="text-[11px] font-bold text-cyan-400 px-1 font-mono">X:</span>
           <button
             type="button"
-            @click="setCustomDimensions(currentSizeX - 1, currentSizeZ - 1)"
-            class="w-6 h-6 rounded-lg bg-[#16181a] border border-[#26292d] hover:bg-[#202328] text-white font-mono font-bold text-xs flex items-center justify-center cursor-pointer"
+            @click="setDimensions(currentSizeX - 1, layersList.length, currentSizeZ)"
+            :disabled="currentSizeX <= 1"
+            class="w-5 h-5 rounded-lg bg-[#16181a] border border-[#26292d] hover:bg-[#202328] disabled:opacity-30 text-white font-mono font-bold text-xs flex items-center justify-center cursor-pointer"
           >-</button>
-          <span class="font-mono text-cyan-400 text-xs font-extrabold px-1.5">
-            {{ currentSizeX }}×{{ currentSizeZ }}
-          </span>
+          <input 
+            type="number" 
+            min="1" 
+            max="16" 
+            :value="currentSizeX" 
+            @change="(e) => setDimensions(parseInt((e.target as HTMLInputElement).value) || 1, layersList.length, currentSizeZ)"
+            class="w-7 text-center font-mono text-cyan-400 text-xs font-extrabold bg-transparent focus:outline-none"
+          />
           <button
             type="button"
-            @click="setCustomDimensions(currentSizeX + 1, currentSizeZ + 1)"
-            class="w-6 h-6 rounded-lg bg-[#16181a] border border-[#26292d] hover:bg-[#202328] text-white font-mono font-bold text-xs flex items-center justify-center cursor-pointer"
+            @click="setDimensions(currentSizeX + 1, layersList.length, currentSizeZ)"
+            :disabled="currentSizeX >= 16"
+            class="w-5 h-5 rounded-lg bg-[#16181a] border border-[#26292d] hover:bg-[#202328] disabled:opacity-30 text-white font-mono font-bold text-xs flex items-center justify-center cursor-pointer"
+          >+</button>
+        </div>
+
+        <!-- Y: Height -->
+        <div class="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
+          <span class="text-[11px] font-bold text-cyan-400 px-1 font-mono">Y:</span>
+          <button
+            type="button"
+            @click="setDimensions(currentSizeX, layersList.length - 1, currentSizeZ)"
+            :disabled="layersList.length <= 1"
+            class="w-5 h-5 rounded-lg bg-[#16181a] border border-[#26292d] hover:bg-[#202328] disabled:opacity-30 text-white font-mono font-bold text-xs flex items-center justify-center cursor-pointer"
+          >-</button>
+          <input 
+            type="number" 
+            min="1" 
+            max="16" 
+            :value="layersList.length" 
+            @change="(e) => setDimensions(currentSizeX, parseInt((e.target as HTMLInputElement).value) || 1, currentSizeZ)"
+            class="w-7 text-center font-mono text-cyan-400 text-xs font-extrabold bg-transparent focus:outline-none"
+          />
+          <button
+            type="button"
+            @click="setDimensions(currentSizeX, layersList.length + 1, currentSizeZ)"
+            :disabled="layersList.length >= 16"
+            class="w-5 h-5 rounded-lg bg-[#16181a] border border-[#26292d] hover:bg-[#202328] disabled:opacity-30 text-white font-mono font-bold text-xs flex items-center justify-center cursor-pointer"
+          >+</button>
+        </div>
+
+        <!-- Z: Depth -->
+        <div class="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
+          <span class="text-[11px] font-bold text-cyan-400 px-1 font-mono">Z:</span>
+          <button
+            type="button"
+            @click="setDimensions(currentSizeX, layersList.length, currentSizeZ - 1)"
+            :disabled="currentSizeZ <= 1"
+            class="w-5 h-5 rounded-lg bg-[#16181a] border border-[#26292d] hover:bg-[#202328] disabled:opacity-30 text-white font-mono font-bold text-xs flex items-center justify-center cursor-pointer"
+          >-</button>
+          <input 
+            type="number" 
+            min="1" 
+            max="16" 
+            :value="currentSizeZ" 
+            @change="(e) => setDimensions(currentSizeX, layersList.length, parseInt((e.target as HTMLInputElement).value) || 1)"
+            class="w-7 text-center font-mono text-cyan-400 text-xs font-extrabold bg-transparent focus:outline-none"
+          />
+          <button
+            type="button"
+            @click="setDimensions(currentSizeX, layersList.length, currentSizeZ + 1)"
+            :disabled="currentSizeZ >= 16"
+            class="w-5 h-5 rounded-lg bg-[#16181a] border border-[#26292d] hover:bg-[#202328] disabled:opacity-30 text-white font-mono font-bold text-xs flex items-center justify-center cursor-pointer"
           >+</button>
         </div>
 
         <!-- Size Presets -->
-        <div class="hidden sm:flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
+        <div class="hidden xl:flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-xl border border-[#26292d]">
           <button 
-            v-for="dim in [[3,3], [5,5], [7,7], [4,6]]"
-            :key="`${dim[0]}x${dim[1]}`"
+            v-for="p in [[3,3,3], [5,5,5], [7,5,7], [9,9,9], [16,16,16]]"
+            :key="`${p[0]}x${p[1]}x${p[2]}`"
             type="button"
-            @click="setCustomDimensions(dim[0], dim[1])"
+            @click="setDimensions(p[0], p[1], p[2])"
             :class="[
-              'px-2 py-0.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer', 
-              currentSizeX === dim[0] && currentSizeZ === dim[1] ? 'bg-cyan-600 text-white shadow' : 'text-dark-muted hover:text-white'
+              'px-2 py-0.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer font-mono', 
+              currentSizeX === p[0] && layersList.length === p[1] && currentSizeZ === p[2] ? 'bg-cyan-600 text-white shadow' : 'text-dark-muted hover:text-white'
             ]"
           >
-            {{ dim[0] }}×{{ dim[1] }}
+            {{ p[0] }}×{{ p[1] }}×{{ p[2] }}
           </button>
         </div>
       </div>
@@ -281,7 +354,7 @@ const removeMaterialFromPalette = (matId: string) => {
       </div>
     </div>
 
-    <!-- MAIN 3D BUILDER WORKSPACE: 3D Canvas (Left) + Palette (Right) -->
+    <!-- MAIN 3D BUILDER WORKSPACE: 3D Canvas (Left) + Palette & Layer Control (Right) -->
     <div :class="['grid gap-3 font-sans', isEditing ? 'grid-cols-1 lg:grid-cols-12' : 'grid-cols-1']">
       
       <!-- LEFT: 3D INTERACTIVE CANVAS -->
@@ -294,42 +367,117 @@ const removeMaterialFromPalette = (matId: string) => {
           :active-tool="activeTool"
           :grid-size-x="currentSizeX"
           :grid-size-z="currentSizeZ"
+          :max-visible-layer="maxVisibleLayer"
           @update-layers="(newLayers) => emit('update', { ...props.block, layers: newLayers })"
+          @update:max-visible-layer="(val) => maxVisibleLayer = val"
           @select-material="(id) => selectedMaterialId = id"
           @add-layer="addLayer"
         />
       </div>
 
-      <!-- RIGHT: BLOCK PALETTE & TOOLBOX (Only when editing) -->
-      <div v-if="isEditing" class="lg:col-span-4 bg-[#16181a] border border-[#26292d] p-4 rounded-2xl space-y-4 shadow-2xl flex flex-col justify-between">
+      <!-- RIGHT: LAYER CONTROL & BLOCK PALETTE (Only when editing) -->
+      <div v-if="isEditing" class="lg:col-span-4 space-y-3 flex flex-col justify-between">
         <div class="space-y-3">
-          <div class="flex items-center justify-between gap-2 border-b border-[#26292d] pb-3">
-            <span class="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
-              <IconRenderer name="Palette" size="15" class="text-cyan-400" />
-              <span>Палитра блоков</span>
-            </span>
+          <!-- 1. Layer Management Card -->
+          <div class="bg-[#16181a] border border-[#26292d] p-3.5 rounded-2xl space-y-3 shadow-xl">
+            <div class="flex items-center justify-between border-b border-[#26292d] pb-2.5">
+              <div class="flex items-center gap-2">
+                <IconRenderer name="Layers" size="15" class="text-cyan-400" />
+                <span class="text-xs font-extrabold text-white uppercase tracking-wider">Слои по высоте (Y)</span>
+              </div>
+              <span class="text-[11px] font-mono text-cyan-400 font-extrabold bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-lg">
+                {{ maxVisibleLayer === layersList.length ? 'Все (' + layersList.length + ')' : maxVisibleLayer + ' / ' + layersList.length }}
+              </span>
+            </div>
 
-            <div class="flex items-center gap-1">
-              <button
-                type="button"
-                @click="showNewMaterialModal = true"
-                class="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all cursor-pointer"
-                title="Добавить новый цвет блока"
-              >
-                <IconRenderer name="Plus" size="13" />
-              </button>
+            <!-- Layer Slice Filter Pills -->
+            <div class="space-y-2">
+              <div class="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+                <button
+                  type="button"
+                  @click="maxVisibleLayer = layersList.length"
+                  :class="[
+                    'px-2.5 py-1 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border',
+                    maxVisibleLayer === layersList.length 
+                      ? 'bg-cyan-500 text-white border-cyan-400 shadow-md shadow-cyan-950/50' 
+                      : 'bg-[#0c0d0e] text-dark-muted border-[#26292d] hover:text-white hover:border-[#3b3f46]'
+                  ]"
+                >
+                  Все
+                </button>
 
-              <button
-                type="button"
-                @click="isGalleryOpen = true"
-                class="px-2 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
-                title="Папка текстур и моделей"
-              >
-                <IconRenderer name="FolderPlus" size="12" />
-                <span>Текстуры</span>
-              </button>
+                <button
+                  v-for="l in layersList.length"
+                  :key="l"
+                  type="button"
+                  @click="maxVisibleLayer = l"
+                  :class="[
+                    'w-7 h-7 rounded-xl text-xs font-extrabold flex items-center justify-center transition-all shrink-0 cursor-pointer border',
+                    maxVisibleLayer === l 
+                      ? 'bg-cyan-500 text-white border-cyan-400 shadow-md shadow-cyan-950/50' 
+                      : 'bg-[#0c0d0e] text-dark-muted border-[#26292d] hover:text-white hover:border-[#3b3f46]'
+                  ]"
+                >
+                  {{ l }}
+                </button>
+              </div>
+
+              <!-- Add/Delete Layer Buttons -->
+              <div class="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  @click="addLayer"
+                  :disabled="layersList.length >= 16"
+                  class="flex-1 py-1.5 px-3 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 disabled:opacity-30 text-cyan-300 border border-cyan-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                  title="Добавить новый слой Y в высоту"
+                >
+                  <IconRenderer name="Plus" size="14" />
+                  <span>+ Слой Y</span>
+                </button>
+
+                <button
+                  v-if="layersList.length > 1"
+                  type="button"
+                  @click="removeTopLayer"
+                  class="py-1.5 px-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0"
+                  title="Удалить верхний слой Y"
+                >
+                  <IconRenderer name="Trash2" size="13" />
+                  <span>Удалить Y</span>
+                </button>
+              </div>
             </div>
           </div>
+
+          <!-- 2. Block Palette Card -->
+          <div class="bg-[#16181a] border border-[#26292d] p-3.5 rounded-2xl space-y-3 shadow-xl">
+            <div class="flex items-center justify-between gap-2 border-b border-[#26292d] pb-2.5">
+              <span class="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
+                <IconRenderer name="Palette" size="15" class="text-cyan-400" />
+                <span>Палитра блоков</span>
+              </span>
+
+              <div class="flex items-center gap-1">
+                <button
+                  type="button"
+                  @click="showNewMaterialModal = true"
+                  class="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all cursor-pointer"
+                  title="Добавить новый цвет блока"
+                >
+                  <IconRenderer name="Plus" size="13" />
+                </button>
+
+                <button
+                  type="button"
+                  @click="isGalleryOpen = true"
+                  class="px-2 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  title="Папка текстур и моделей"
+                >
+                  <IconRenderer name="FolderPlus" size="12" />
+                  <span>Текстуры</span>
+                </button>
+              </div>
+            </div>
 
           <!-- Vertical Palette List -->
           <div class="space-y-1.5 max-h-[380px] overflow-y-auto pr-1">
@@ -383,6 +531,7 @@ const removeMaterialFromPalette = (matId: string) => {
                 >
                   ✕
                 </button>
+              </div>
               </div>
             </div>
           </div>

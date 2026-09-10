@@ -11,12 +11,14 @@ const props = defineProps<{
   activeTool?: 'paint' | 'erase' | 'picker';
   gridSizeX?: number;
   gridSizeZ?: number;
+  maxVisibleLayer?: number;
 }>();
 
 const emit = defineEmits<{
   (e: 'update-layers', layers: MultiblockLayer[]): void;
   (e: 'select-material', id: string): void;
   (e: 'add-layer'): void;
+  (e: 'update:maxVisibleLayer', val: number): void;
 }>();
 
 // 3D Canvas / Projection Controls
@@ -30,13 +32,23 @@ const isAutoRotating = ref(false);
 let autoRotateTimer: any = null;
 
 // Slicing Control (Show layers up to maxLayer)
-const maxVisibleLayer = ref<number>(props.layers?.length || 3);
+const internalMaxVisibleLayer = ref<number>(props.maxVisibleLayer ?? props.layers?.length ?? 3);
+
+watch(() => props.maxVisibleLayer, (val) => {
+  if (val !== undefined) internalMaxVisibleLayer.value = val;
+});
 
 watch(() => props.layers, (newLayers) => {
-  if (newLayers && newLayers.length > 0 && maxVisibleLayer.value > newLayers.length) {
-    maxVisibleLayer.value = newLayers.length;
+  if (newLayers && newLayers.length > 0 && internalMaxVisibleLayer.value > newLayers.length) {
+    internalMaxVisibleLayer.value = newLayers.length;
+    emit('update:maxVisibleLayer', newLayers.length);
   }
 }, { immediate: true });
+
+const setMaxVisibleLayer = (val: number) => {
+  internalMaxVisibleLayer.value = val;
+  emit('update:maxVisibleLayer', val);
+};
 
 // Mouse Drag Events for 3D Orbiting
 const onMouseDown = (e: MouseEvent) => {
@@ -379,7 +391,7 @@ const materialSummary = computed(() => {
 
         <!-- Render 3D Voxels Layer by Layer -->
         <template v-for="(layer, layerIdx) in layers" :key="layer.layerNumber">
-          <template v-if="layerIdx < maxVisibleLayer">
+          <template v-if="layerIdx < internalMaxVisibleLayer">
             <template v-for="(row, rowIdx) in layer.grid" :key="rowIdx">
               <template v-for="(matId, colIdx) in row" :key="colIdx">
                 <div 
@@ -401,56 +413,64 @@ const materialSummary = computed(() => {
           </template>
         </template>
       </div>
+    </div>
 
-      <!-- Overlay Layer Slicer Controls (Bottom Left) -->
-      <div class="absolute bottom-3 left-3 bg-[#16181a]/90 backdrop-blur-md border border-[#26292d] rounded-2xl p-2.5 space-y-1.5 shadow-2xl z-20">
-        <div class="flex items-center justify-between gap-3 text-[11px] font-bold text-slate-300">
-          <span class="flex items-center gap-1">
-            <IconRenderer name="Layers" size="13" class="text-cyan-400" />
-            Срез слоев:
-          </span>
-          <div class="flex items-center gap-1.5">
-            <span class="text-cyan-300 font-mono">1 – {{ maxVisibleLayer }} / {{ layers.length }}</span>
-            <button
-              v-if="isEditing && layers.length > 1"
-              type="button"
-              @click.stop="removeTopLayer"
-              class="text-rose-400 hover:text-rose-300 p-0.5 rounded hover:bg-rose-500/10 cursor-pointer"
-              title="Удалить верхний слой Y"
-            >
-              <IconRenderer name="Trash2" size="12" />
-            </button>
-          </div>
-        </div>
+    <!-- Viewer Mode Layer Stepper (Below 3D canvas when viewing) -->
+    <div v-if="!isEditing && layers.length > 1" class="bg-[#111315] border-t border-[#26292d] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2 text-xs font-bold text-slate-300">
+        <IconRenderer name="Layers" size="14" class="text-cyan-400" />
+        <span>Срез слоев:</span>
+        <span class="text-cyan-300 font-mono font-extrabold bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-lg">
+          {{ internalMaxVisibleLayer === layers.length ? 'Все слои (1–' + layers.length + ')' : 'Слой ' + internalMaxVisibleLayer + ' из ' + layers.length }}
+        </span>
+      </div>
 
-        <div class="flex items-center gap-1 max-w-[280px] sm:max-w-md overflow-x-auto pb-0.5">
-          <button
-            v-for="l in layers.length"
-            :key="l"
-            type="button"
-            @click="maxVisibleLayer = l"
-            :class="[
-              'w-7 h-7 rounded-lg text-xs font-extrabold flex items-center justify-center transition-all shrink-0 cursor-pointer',
-              maxVisibleLayer === l 
-                ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-950/50' 
-                : (l <= maxVisibleLayer ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-[#0c0d0e] text-dark-muted border border-[#26292d] hover:text-white')
-            ]"
-          >
-            {{ l }}
-          </button>
+      <div class="flex items-center gap-1.5 overflow-x-auto">
+        <button
+          type="button"
+          @click="setMaxVisibleLayer(internalMaxVisibleLayer === layers.length ? 1 : Math.max(1, internalMaxVisibleLayer - 1))"
+          class="px-2 py-1 rounded-lg bg-[#16181a] border border-[#26292d] hover:bg-[#202328] text-xs font-bold text-slate-200 cursor-pointer flex items-center gap-1 transition-all"
+          title="Предыдущий слой"
+        >
+          <IconRenderer name="ChevronLeft" size="13" />
+          <span>Пред.</span>
+        </button>
 
-          <!-- Add Layer Y Button -->
-          <button
-            v-if="isEditing"
-            type="button"
-            @click.stop="emit('add-layer')"
-            class="h-7 px-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[11px] font-bold flex items-center gap-1 shrink-0 transition-all cursor-pointer ml-1"
-            title="Добавить новый слой Y в высоту"
-          >
-            <IconRenderer name="Plus" size="12" />
-            <span>Слой Y</span>
-          </button>
-        </div>
+        <button
+          v-for="l in layers.length"
+          :key="l"
+          type="button"
+          @click="setMaxVisibleLayer(l)"
+          :class="[
+            'w-7 h-7 rounded-lg text-xs font-extrabold flex items-center justify-center transition-all cursor-pointer border',
+            internalMaxVisibleLayer === l 
+              ? 'bg-cyan-500 text-white border-cyan-400 shadow-md' 
+              : 'bg-[#0c0d0e] text-dark-muted border-[#26292d] hover:text-white'
+          ]"
+        >
+          {{ l }}
+        </button>
+
+        <button
+          type="button"
+          @click="setMaxVisibleLayer(internalMaxVisibleLayer === layers.length ? 1 : Math.min(layers.length, internalMaxVisibleLayer + 1))"
+          class="px-2 py-1 rounded-lg bg-[#16181a] border border-[#26292d] hover:bg-[#202328] text-xs font-bold text-slate-200 cursor-pointer flex items-center gap-1 transition-all"
+          title="Следующий слой"
+        >
+          <span>След.</span>
+          <IconRenderer name="ChevronRight" size="13" />
+        </button>
+
+        <button
+          type="button"
+          @click="setMaxVisibleLayer(layers.length)"
+          :class="[
+            'px-2.5 py-1 rounded-lg border text-xs font-bold transition-all cursor-pointer',
+            internalMaxVisibleLayer === layers.length ? 'bg-cyan-500 text-white border-cyan-400 shadow-md' : 'bg-[#16181a] border-[#26292d] text-slate-300 hover:text-white'
+          ]"
+        >
+          Все
+        </button>
       </div>
     </div>
 
