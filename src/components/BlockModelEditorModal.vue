@@ -131,7 +131,67 @@ const persistSavedModels = () => {
   }
 };
 
+// Global Texture Registry (Stores short_name <-> long_data_url pairs)
+const TEXTURE_REGISTRY_KEY = 'cubix_texture_registry';
+const textureRegistry = ref<Record<string, string>>({});
+
+const loadTextureRegistry = () => {
+  try {
+    const raw = localStorage.getItem(TEXTURE_REGISTRY_KEY);
+    if (raw) {
+      textureRegistry.value = JSON.parse(raw);
+    }
+  } catch (e) {
+    console.error('Error loading texture registry:', e);
+  }
+};
+
+const persistTextureRegistry = () => {
+  try {
+    localStorage.setItem(TEXTURE_REGISTRY_KEY, JSON.stringify(textureRegistry.value));
+  } catch (e) {
+    console.error('Error persisting texture registry:', e);
+  }
+};
+
+// Fast Hash calculation for base64 / URLs to generate readable short IDs
+const generateTextureShortKey = (val: string): string => {
+  if (!val) return '';
+  if (val.startsWith('#tex_') || val.startsWith('minecraft:')) return val; // Already a key or standard ID
+  
+  let hash = 0;
+  for (let i = 0; i < val.length; i++) {
+    hash = ((hash << 5) - hash) + val.charCodeAt(i);
+    hash |= 0;
+  }
+  const key = `#tex_${Math.abs(hash).toString(36)}`;
+  return key;
+};
+
+// Register long texture string in database and return its short ID
+const registerTexture = (longUrlOrBase64: string): string => {
+  if (!longUrlOrBase64) return '';
+  if (longUrlOrBase64.startsWith('#tex_') || longUrlOrBase64.startsWith('minecraft:')) return longUrlOrBase64;
+  
+  const shortKey = generateTextureShortKey(longUrlOrBase64);
+  if (!textureRegistry.value[shortKey]) {
+    textureRegistry.value[shortKey] = longUrlOrBase64;
+    persistTextureRegistry();
+  }
+  return shortKey;
+};
+
+// Resolve short ID or returns actual long URL / base64 string
+const resolveTexture = (keyOrUrl: string): string => {
+  if (!keyOrUrl) return '';
+  if (keyOrUrl.startsWith('#tex_')) {
+    return textureRegistry.value[keyOrUrl] || keyOrUrl;
+  }
+  return keyOrUrl;
+};
+
 onMounted(() => {
+  loadTextureRegistry();
   loadSavedModels();
   autoRotateTimer = setInterval(() => {
     if (isAutoRotating.value && !isDragging.value) {
@@ -238,13 +298,20 @@ const saveCurrentModel = () => {
 const loadModelIntoEditor = (m: CustomBlockModel) => {
   modelName.value = m.name;
   modelColor.value = m.color || '#06b6d4';
+  const rawTop = m.topImageUrl || m.imageUrl || (m.textures ? m.textures.top : '');
+  const rawBottom = m.bottomImageUrl || m.imageUrl || (m.textures ? m.textures.bottom : '');
+  const rawFront = m.frontImageUrl || m.imageUrl || (m.textures ? m.textures.front : '');
+  const rawBack = m.backImageUrl || m.imageUrl || (m.textures ? m.textures.back : '');
+  const rawLeft = m.leftImageUrl || m.imageUrl || (m.textures ? m.textures.left : '');
+  const rawRight = m.rightImageUrl || m.imageUrl || (m.textures ? m.textures.right : '');
+
   faceTextures.value = {
-    top: m.topImageUrl || m.imageUrl || '',
-    bottom: m.bottomImageUrl || m.imageUrl || '',
-    front: m.frontImageUrl || m.imageUrl || '',
-    back: m.backImageUrl || m.imageUrl || '',
-    left: m.leftImageUrl || m.imageUrl || '',
-    right: m.rightImageUrl || m.imageUrl || ''
+    top: resolveTexture(rawTop),
+    bottom: resolveTexture(rawBottom),
+    front: resolveTexture(rawFront),
+    back: resolveTexture(rawBack),
+    left: resolveTexture(rawLeft),
+    right: resolveTexture(rawRight)
   };
   showNotification(`Загружена модель "${m.name}"`);
 };
@@ -337,6 +404,16 @@ const importJsonText = ref('');
 const extractModelFromData = (data: any): CustomBlockModel | null => {
   if (!data || typeof data !== 'object') return null;
 
+  // If payload contains texture_dictionary, register entries into local textureRegistry
+  if (data.texture_dictionary && typeof data.texture_dictionary === 'object') {
+    Object.entries(data.texture_dictionary).forEach(([k, v]) => {
+      if (typeof v === 'string' && k.startsWith('#tex_')) {
+        textureRegistry.value[k] = v;
+      }
+    });
+    persistTextureRegistry();
+  }
+
   // Detect shape
   let shape: 'full' | 'slab' | 'stairs' = 'full';
   if (data.model_type && ['full', 'slab', 'stairs'].includes(data.model_type)) {
@@ -346,7 +423,7 @@ const extractModelFromData = (data: any): CustomBlockModel | null => {
     else if (data.elements[0]?.to && data.elements[0].to[1] <= 8) shape = 'slab';
   }
 
-  // Extract textures
+  // Extract textures (either keys or URLs/base64)
   const tex = data.textures || data.faces || {};
   const faceTextures = {
     top: tex.top || tex.up || tex.all || '',
@@ -399,7 +476,14 @@ const parseAndImportJson = (jsonString: string) => {
     blockShape.value = first.type;
     modelName.value = first.name;
     modelColor.value = first.color;
-    faceTextures.value = { ...first.textures };
+    faceTextures.value = {
+      top: resolveTexture(first.textures.top),
+      bottom: resolveTexture(first.textures.bottom),
+      front: resolveTexture(first.textures.front),
+      back: resolveTexture(first.textures.back),
+      left: resolveTexture(first.textures.left),
+      right: resolveTexture(first.textures.right)
+    };
 
     if (newModels.length === 1) {
       showNotification(`3D-модель "${first.name}" загружена в редактор!`);
@@ -479,6 +563,24 @@ const pasteFromClipboardToImport = async () => {
 };
 
 const exportAsJSON = () => {
+  // Register all 6 face textures in dictionary and get short keys
+  const shortTextures = {
+    top: registerTexture(faceTextures.value.top),
+    bottom: registerTexture(faceTextures.value.bottom),
+    front: registerTexture(faceTextures.value.front),
+    back: registerTexture(faceTextures.value.back),
+    left: registerTexture(faceTextures.value.left),
+    right: registerTexture(faceTextures.value.right)
+  };
+
+  // Build dictionary of referenced texture keys
+  const referencedDict: Record<string, string> = {};
+  Object.values(shortTextures).forEach(key => {
+    if (key && key.startsWith('#tex_') && textureRegistry.value[key]) {
+      referencedDict[key] = textureRegistry.value[key];
+    }
+  });
+
   let elements = [];
   if (blockShape.value === 'full') {
     elements = [{
@@ -486,7 +588,7 @@ const exportAsJSON = () => {
       from: [0, 0, 0],
       to: [16, 16, 16],
       color: modelColor.value,
-      faces: faceTextures.value
+      faces: shortTextures
     }];
   } else if (blockShape.value === 'slab') {
     elements = [{
@@ -494,7 +596,7 @@ const exportAsJSON = () => {
       from: [0, 0, 0],
       to: [16, 8, 16],
       color: modelColor.value,
-      faces: faceTextures.value
+      faces: shortTextures
     }];
   } else if (blockShape.value === 'stairs') {
     elements = [
@@ -503,30 +605,34 @@ const exportAsJSON = () => {
         from: [0, 0, 0],
         to: [16, 8, 16],
         color: modelColor.value,
-        faces: faceTextures.value
+        faces: shortTextures
       },
       {
         name: `${modelName.value} (Ступень)`,
         from: [0, 8, 8],
         to: [16, 16, 16],
         color: modelColor.value,
-        faces: faceTextures.value
+        faces: shortTextures
       }
     ];
   }
 
-  const exportData = {
+  const exportData: any = {
     format_version: "1.20.0",
     model_type: blockShape.value,
     model_name: modelName.value,
     color: modelColor.value,
     elements,
-    textures: faceTextures.value
+    textures: shortTextures
   };
+
+  if (Object.keys(referencedDict).length > 0) {
+    exportData.texture_dictionary = referencedDict;
+  }
 
   const str = JSON.stringify(exportData, null, 2);
   navigator.clipboard.writeText(str);
-  showNotification('JSON схемы 3D-модели скопирован в буфер обмена!');
+  showNotification('JSON схемы 3D-модели (с короткими ключами текстур) скопирован!');
 };
 
 const applyToActiveGuide = () => {
