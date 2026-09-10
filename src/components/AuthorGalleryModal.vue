@@ -209,7 +209,7 @@ const installPack = async (pack: AssetPack) => {
     if (!exists) {
       mediaList.value.unshift({
         id: `media_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-        name: `${item.name} (${pack.title})`,
+        name: item.name,
         url: item.url,
         uploadedAt: new Date().toISOString().split('T')[0]
       });

@@ -278,88 +278,109 @@ const removeMaterialFromPalette = (matId: string) => {
       </div>
     </div>
 
-    <!-- MAIN INTERACTIVE 3D CANVAS -->
-    <div class="relative rounded-2xl overflow-hidden shadow-2xl">
-      <Multiblock3DViewer 
-        :layers="layersList" 
-        :palette="currentPalette" 
-        :is-editing="isEditing"
-        :selected-material-id="selectedMaterialId"
-        :active-tool="activeTool"
-        :grid-size-x="currentSizeX"
-        :grid-size-z="currentSizeZ"
-        @update-layers="(newLayers) => emit('update', { ...props.block, layers: newLayers })"
-        @select-material="(id) => selectedMaterialId = id"
-      />
-    </div>
-
-    <!-- BOTTOM BLOCK PALETTE BAR (Only when editing) -->
-    <div v-if="isEditing" class="bg-[#16181a] border border-[#26292d] p-3 rounded-2xl space-y-2.5 shadow-xl">
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
-          <IconRenderer name="Palette" size="14" class="text-cyan-400" />
-          <span>Выбор блока для строительства:</span>
-        </span>
-
-        <div class="flex items-center gap-1.5">
-          <button
-            type="button"
-            @click="showNewMaterialModal = true"
-            class="px-2.5 py-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-          >
-            <IconRenderer name="Plus" size="13" />
-            <span>Новый цвет</span>
-          </button>
-
-          <button
-            type="button"
-            @click="isGalleryOpen = true"
-            class="px-2.5 py-1 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-            title="Загрузить текстуры или 3D модели"
-          >
-            <IconRenderer name="FolderPlus" size="13" />
-            <span>Папка текстур</span>
-          </button>
-        </div>
+    <!-- MAIN 3D BUILDER WORKSPACE: 3D Canvas (Left) + Palette (Right) -->
+    <div :class="['grid gap-3 font-sans', isEditing ? 'grid-cols-1 lg:grid-cols-12' : 'grid-cols-1']">
+      
+      <!-- LEFT: 3D INTERACTIVE CANVAS -->
+      <div :class="[isEditing ? 'lg:col-span-8' : 'w-full', 'relative rounded-2xl overflow-hidden shadow-2xl']">
+        <Multiblock3DViewer 
+          :layers="layersList" 
+          :palette="currentPalette" 
+          :is-editing="isEditing"
+          :selected-material-id="selectedMaterialId"
+          :active-tool="activeTool"
+          :grid-size-x="currentSizeX"
+          :grid-size-z="currentSizeZ"
+          @update-layers="(newLayers) => emit('update', { ...props.block, layers: newLayers })"
+          @select-material="(id) => selectedMaterialId = id"
+        />
       </div>
 
-      <!-- Horizontal Palette Scroll -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-1">
-        <div
-          v-for="mat in currentPalette"
-          :key="mat.id"
-          class="relative group shrink-0"
-        >
-          <button
-            type="button"
-            @click="selectedMaterialId = mat.id"
-            :class="[
-              'px-3 py-1.5 rounded-xl border text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shadow-md',
-              selectedMaterialId === mat.id 
-                ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 border-cyan-400 text-white ring-2 ring-cyan-400/50 scale-105' 
-                : 'bg-[#0c0d0e] border-[#26292d] hover:border-[#3b3f46] text-slate-300 hover:text-white'
-            ]"
-          >
-            <img 
-              v-if="mat.imageUrl || mat.topImageUrl || mat.sideImageUrl" 
-              :src="mat.sideImageUrl || mat.topImageUrl || mat.imageUrl" 
-              class="w-4 h-4 rounded border border-white/20 object-cover" 
-            />
-            <span v-else class="w-3 h-3 rounded-full border border-black/40" :style="{ backgroundColor: mat.color }"></span>
-            <IconRenderer :name="mat.icon" size="14" :color="selectedMaterialId === mat.id ? '#ffffff' : mat.color" />
-            <span>{{ mat.name }}</span>
-          </button>
+      <!-- RIGHT: BLOCK PALETTE & TOOLBOX (Only when editing) -->
+      <div v-if="isEditing" class="lg:col-span-4 bg-[#16181a] border border-[#26292d] p-4 rounded-2xl space-y-4 shadow-2xl flex flex-col justify-between">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between gap-2 border-b border-[#26292d] pb-3">
+            <span class="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <IconRenderer name="Palette" size="15" class="text-cyan-400" />
+              <span>Палитра блоков</span>
+            </span>
 
-          <!-- Remove Block Button -->
-          <button
-            v-if="currentPalette.length > 1"
-            type="button"
-            @click.stop="removeMaterialFromPalette(mat.id)"
-            class="absolute -top-1.5 -right-1.5 hidden group-hover:flex w-4 h-4 rounded-full bg-rose-600 text-white items-center justify-center text-[10px] shadow-lg cursor-pointer"
-            title="Удалить блок из палитры"
-          >
-            ✕
-          </button>
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                @click="showNewMaterialModal = true"
+                class="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all cursor-pointer"
+                title="Добавить новый цвет блока"
+              >
+                <IconRenderer name="Plus" size="13" />
+              </button>
+
+              <button
+                type="button"
+                @click="isGalleryOpen = true"
+                class="px-2 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                title="Папка текстур и моделей"
+              >
+                <IconRenderer name="FolderPlus" size="12" />
+                <span>Текстуры</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Vertical Palette List -->
+          <div class="space-y-1.5 max-h-[380px] overflow-y-auto pr-1">
+            <div
+              v-for="mat in currentPalette"
+              :key="mat.id"
+              class="relative group"
+            >
+              <button
+                type="button"
+                @click="selectedMaterialId = mat.id"
+                :class="[
+                  'w-full px-3 py-2 rounded-xl border text-xs font-bold flex items-center justify-between transition-all cursor-pointer shadow-sm',
+                  selectedMaterialId === mat.id 
+                    ? 'bg-gradient-to-r from-cyan-600/30 to-indigo-600/30 border-cyan-400 text-white ring-1 ring-cyan-400/50 shadow-md' 
+                    : 'bg-[#0c0d0e] border-[#26292d] hover:border-[#3b3f46] text-slate-300 hover:text-white'
+                ]"
+              >
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <img 
+                    v-if="mat.imageUrl || mat.topImageUrl || mat.sideImageUrl" 
+                    :src="mat.sideImageUrl || mat.topImageUrl || mat.imageUrl" 
+                    class="w-5 h-5 rounded border border-white/20 object-cover shrink-0" 
+                  />
+                  <span v-else class="w-4 h-4 rounded-md border border-black/40 shrink-0" :style="{ backgroundColor: mat.color }"></span>
+                  <IconRenderer :name="mat.icon" size="14" :color="selectedMaterialId === mat.id ? '#ffffff' : mat.color" class="shrink-0" />
+                  <span class="truncate">{{ mat.name }}</span>
+                </div>
+
+                <span v-if="selectedMaterialId === mat.id" class="text-[10px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded font-mono shrink-0">
+                  Выбран
+                </span>
+              </button>
+
+              <!-- Remove Block Button -->
+              <button
+                v-if="currentPalette.length > 1"
+                type="button"
+                @click.stop="removeMaterialFromPalette(mat.id)"
+                class="absolute right-2 top-1/2 -translate-y-1/2 hidden group-hover:flex w-5 h-5 rounded-lg bg-rose-600/90 text-white items-center justify-center text-[10px] shadow cursor-pointer"
+                title="Удалить блок из палитры"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Help Info Box -->
+        <div class="bg-[#0c0d0e] border border-[#26292d] p-3 rounded-xl text-[11px] text-dark-muted space-y-1">
+          <div class="font-bold text-slate-300 flex items-center gap-1">
+            <IconRenderer name="Info" size="12" class="text-cyan-400" />
+            <span>Подсказка:</span>
+          </div>
+          <p>Выберите блок в палитре и кликайте по граням 3D-модели для установки.</p>
         </div>
       </div>
     </div>

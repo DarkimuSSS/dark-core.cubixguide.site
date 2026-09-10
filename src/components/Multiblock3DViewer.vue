@@ -250,6 +250,18 @@ const handleFloorClick = (e: MouseEvent, colIdx: number, rowIdx: number) => {
   emit('update-layers', newLayers);
 };
 
+// Remove top layer
+const removeTopLayer = () => {
+  if (props.layers.length <= 1) return;
+  const newLayers = JSON.parse(JSON.stringify(props.layers)) as MultiblockLayer[];
+  newLayers.pop();
+  newLayers.forEach((l, i) => l.layerNumber = i + 1);
+  if (maxVisibleLayer.value > newLayers.length) {
+    maxVisibleLayer.value = newLayers.length;
+  }
+  emit('update-layers', newLayers);
+};
+
 // Materials Summary Counter
 const materialSummary = computed(() => {
   const counts: Record<string, number> = {};
@@ -396,17 +408,28 @@ const materialSummary = computed(() => {
             <IconRenderer name="Layers" size="13" class="text-cyan-400" />
             Срез слоев:
           </span>
-          <span class="text-cyan-300 font-mono">1 – {{ maxVisibleLayer }} / {{ layers.length }}</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-cyan-300 font-mono">1 – {{ maxVisibleLayer }} / {{ layers.length }}</span>
+            <button
+              v-if="isEditing && layers.length > 1"
+              type="button"
+              @click.stop="removeTopLayer"
+              class="text-rose-400 hover:text-rose-300 p-0.5 rounded hover:bg-rose-500/10 cursor-pointer"
+              title="Удалить верхний слой Y"
+            >
+              <IconRenderer name="Trash2" size="12" />
+            </button>
+          </div>
         </div>
 
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-1 max-w-[280px] sm:max-w-md overflow-x-auto pb-0.5">
           <button
             v-for="l in layers.length"
             :key="l"
             type="button"
             @click="maxVisibleLayer = l"
             :class="[
-              'w-7 h-7 rounded-lg text-xs font-extrabold flex items-center justify-center transition-all cursor-pointer',
+              'w-7 h-7 rounded-lg text-xs font-extrabold flex items-center justify-center transition-all shrink-0 cursor-pointer',
               maxVisibleLayer === l 
                 ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-950/50' 
                 : (l <= maxVisibleLayer ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-[#0c0d0e] text-dark-muted border border-[#26292d] hover:text-white')
