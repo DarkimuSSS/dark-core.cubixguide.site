@@ -175,10 +175,21 @@ const buildAltar3D = () => {
     }
   }
 
-  // Closer Camera distance calculation (Much closer view!)
-  const camDist = 6 + t * 2.8;
-  camera.position.set(camDist, camDist * 0.75, camDist);
-  camera.lookAt(0, 0, 0);
+const resetRotationAndCamera = () => {
+  currentRotationX = 0;
+  currentRotationY = 0;
+  if (altarGroup) {
+    altarGroup.rotation.x = 0;
+    altarGroup.rotation.y = 0;
+  }
+  const camDist = 6 + props.tier * 2.8;
+  if (camera) {
+    camera.position.set(camDist, camDist * 0.75, camDist);
+    camera.lookAt(0, 0, 0);
+  }
+};
+
+  resetRotationAndCamera();
 };
 
 // Spawn Ritual Blood LP Explosion Particles
@@ -400,17 +411,18 @@ onUnmounted(() => {
           <span class="w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
           <span>Интерактивный 3D Алтарь Blood Magic (Tier {{ tier }})</span>
         </h3>
-        <p class="text-xs text-slate-400">Вращайте зажатием мыши, приближайте колесиком и нажимайте Ритуал</p>
+        <p class="text-xs text-slate-400">Вращайте зажатием мыши, приближайте колесиком и наводите на блоки</p>
       </div>
 
       <!-- 3D Controls & Interactive Buttons -->
       <div class="flex items-center gap-2 flex-wrap">
         <button
-          @click="createBloodSacrificeEffect"
-          :disabled="isSacrificing"
-          class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 disabled:opacity-50 text-white text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-rose-950/60 active:scale-95 border border-rose-400/40"
+          @click="resetRotationAndCamera"
+          class="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white border border-white/15 text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95"
+          title="Сбросить камеру и ракурс структуры"
         >
-          <span>🩸 Совершить Ритуал LP</span>
+          <IconRenderer name="RotateCcw" size="13" class="text-rose-400" />
+          <span>Сброс позиции</span>
         </button>
 
         <button
