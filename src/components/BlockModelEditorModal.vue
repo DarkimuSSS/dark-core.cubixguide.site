@@ -912,12 +912,12 @@ const applyToActiveGuide = () => {
               :style="{ transform: `rotateX(${rotX}deg) rotateY(${rotY}deg)` }"
             >
               <div class="floor-pedestal"></div>
-              <div class="face-single front" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"><span class="face-label">Front</span></div>
-              <div class="face-single back" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"><span class="face-label">Back</span></div>
-              <div class="face-single top" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"><span class="face-label">Top</span></div>
-              <div class="face-single bottom" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.bottom ? `url('${faceTextures.bottom}')` : 'none' }"><span class="face-label">Bottom</span></div>
-              <div class="face-single left" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"><span class="face-label">Left</span></div>
-              <div class="face-single right" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"><span class="face-label">Right</span></div>
+              <div class="face-single front" :style="{ backgroundColor: faceTextures.front ? 'transparent' : modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"><span class="face-label">Front</span></div>
+              <div class="face-single back" :style="{ backgroundColor: faceTextures.back ? 'transparent' : modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"><span class="face-label">Back</span></div>
+              <div class="face-single top" :style="{ backgroundColor: faceTextures.top ? 'transparent' : modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"><span class="face-label">Top</span></div>
+              <div class="face-single bottom" :style="{ backgroundColor: faceTextures.bottom ? 'transparent' : modelColor, backgroundImage: faceTextures.bottom ? `url('${faceTextures.bottom}')` : 'none' }"><span class="face-label">Bottom</span></div>
+              <div class="face-single left" :style="{ backgroundColor: faceTextures.left ? 'transparent' : modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"><span class="face-label">Left</span></div>
+              <div class="face-single right" :style="{ backgroundColor: faceTextures.right ? 'transparent' : modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"><span class="face-label">Right</span></div>
             </div>
 
             <!-- 2. HALF BLOCK (SLAB) 3D GEOMETRY -->
@@ -927,12 +927,12 @@ const applyToActiveGuide = () => {
               :style="{ transform: `rotateX(${rotX}deg) rotateY(${rotY}deg)` }"
             >
               <div class="floor-pedestal"></div>
-              <div class="face-slab front" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"><span class="face-label">Front</span></div>
-              <div class="face-slab back" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"><span class="face-label">Back</span></div>
-              <div class="face-slab top" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"><span class="face-label">Top</span></div>
-              <div class="face-slab bottom" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.bottom ? `url('${faceTextures.bottom}')` : 'none' }"><span class="face-label">Bottom</span></div>
-              <div class="face-slab left" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"><span class="face-label">Left</span></div>
-              <div class="face-slab right" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"><span class="face-label">Right</span></div>
+              <div class="face-slab front" :style="{ backgroundColor: faceTextures.front ? 'transparent' : modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"><span class="face-label">Front</span></div>
+              <div class="face-slab back" :style="{ backgroundColor: faceTextures.back ? 'transparent' : modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"><span class="face-label">Back</span></div>
+              <div class="face-slab top" :style="{ backgroundColor: faceTextures.top ? 'transparent' : modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"><span class="face-label">Top</span></div>
+              <div class="face-slab bottom" :style="{ backgroundColor: faceTextures.bottom ? 'transparent' : modelColor, backgroundImage: faceTextures.bottom ? `url('${faceTextures.bottom}')` : 'none' }"><span class="face-label">Bottom</span></div>
+              <div class="face-slab left" :style="{ backgroundColor: faceTextures.left ? 'transparent' : modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"><span class="face-label">Left</span></div>
+              <div class="face-slab right" :style="{ backgroundColor: faceTextures.right ? 'transparent' : modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"><span class="face-label">Right</span></div>
             </div>
 
             <!-- 3. STAIRS 3D GEOMETRY -->
@@ -945,21 +945,21 @@ const applyToActiveGuide = () => {
               
               <!-- Bottom Base Cuboid (130x65x130) -->
               <div class="stair-sub-base">
-                <div class="face-sb front" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"></div>
-                <div class="face-sb back" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"></div>
-                <div class="face-sb top" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"></div>
-                <div class="face-sb bottom" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.bottom ? `url('${faceTextures.bottom}')` : 'none' }"></div>
-                <div class="face-sb left" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"></div>
-                <div class="face-sb right" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"></div>
+                <div class="face-sb front" :style="{ backgroundColor: faceTextures.front ? 'transparent' : modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"></div>
+                <div class="face-sb back" :style="{ backgroundColor: faceTextures.back ? 'transparent' : modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"></div>
+                <div class="face-sb top" :style="{ backgroundColor: faceTextures.top ? 'transparent' : modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"></div>
+                <div class="face-sb bottom" :style="{ backgroundColor: faceTextures.bottom ? 'transparent' : modelColor, backgroundImage: faceTextures.bottom ? `url('${faceTextures.bottom}')` : 'none' }"></div>
+                <div class="face-sb left" :style="{ backgroundColor: faceTextures.left ? 'transparent' : modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"></div>
+                <div class="face-sb right" :style="{ backgroundColor: faceTextures.right ? 'transparent' : modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"></div>
               </div>
               
               <!-- Upper Step Cuboid (130x65x65) -->
               <div class="stair-sub-step">
-                <div class="face-ss top" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"><span class="face-label">Step</span></div>
-                <div class="face-ss front" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"></div>
-                <div class="face-ss back" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"></div>
-                <div class="face-ss left" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"></div>
-                <div class="face-ss right" :style="{ backgroundColor: modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"></div>
+                <div class="face-ss top" :style="{ backgroundColor: faceTextures.top ? 'transparent' : modelColor, backgroundImage: faceTextures.top ? `url('${faceTextures.top}')` : 'none' }"><span class="face-label">Step</span></div>
+                <div class="face-ss front" :style="{ backgroundColor: faceTextures.front ? 'transparent' : modelColor, backgroundImage: faceTextures.front ? `url('${faceTextures.front}')` : 'none' }"></div>
+                <div class="face-ss back" :style="{ backgroundColor: faceTextures.back ? 'transparent' : modelColor, backgroundImage: faceTextures.back ? `url('${faceTextures.back}')` : 'none' }"></div>
+                <div class="face-ss left" :style="{ backgroundColor: faceTextures.left ? 'transparent' : modelColor, backgroundImage: faceTextures.left ? `url('${faceTextures.left}')` : 'none' }"></div>
+                <div class="face-ss right" :style="{ backgroundColor: faceTextures.right ? 'transparent' : modelColor, backgroundImage: faceTextures.right ? `url('${faceTextures.right}')` : 'none' }"></div>
               </div>
             </div>
           </div>
