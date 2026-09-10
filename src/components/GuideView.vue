@@ -675,6 +675,11 @@ const getVariantClass = (variant?: BlockVariant) => {
                         </div>
                       </div>
 
+                      <!-- Sub 3D Multiblock Structure -->
+                      <div v-else-if="sub.type === 'multiblock'" class="w-full">
+                        <LayerPainter :block="sub" :is-editing="false" />
+                      </div>
+
                       <!-- Sub Image -->
                       <div v-else-if="sub.type === 'image'" class="w-full flex flex-col items-center gap-2">
                         <div v-if="sub.imageUrl" class="rounded-xl overflow-hidden bg-[#0c0d0e] border border-[#26292d] w-full h-56 sm:h-64 flex items-center justify-center p-1.5 shadow-md relative group/imgview cursor-zoom-in" @click="activeZoomImage = sub.imageUrl">

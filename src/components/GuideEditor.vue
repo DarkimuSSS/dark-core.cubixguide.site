@@ -1374,7 +1374,19 @@ const addSubBlock = (parentSection: GuideBlock, colId: string, type: BlockType) 
     calloutTitle: '',
     calloutText: '',
     imageUrl: '',
-    imageCaption: ''
+    imageCaption: '',
+    gridSizeX: 3,
+    gridSizeZ: 3,
+    palette: type === 'multiblock' ? [
+      { id: 'reactor_casing', name: 'Корпус реактора', icon: 'Box', color: '#475569' },
+      { id: 'reactor_glass', name: 'Стекло реактора', icon: 'Grid', color: '#38bdf8' }
+    ] : undefined,
+    layers: type === 'multiblock' ? [
+      { layerNumber: 1, grid: Array(3).fill(null).map(() => Array(3).fill('reactor_casing')) },
+      { layerNumber: 2, grid: Array(3).fill(null).map(() => Array(3).fill('reactor_glass')) }
+    ] : undefined,
+    grid: type === 'crafting' ? Array(9).fill(null) : undefined,
+    output: type === 'crafting' ? { id: '', count: 1 } : undefined
   };
 
   const newCols = parentSection.columns.map(col => {
@@ -1452,7 +1464,17 @@ const changeSubBlockType = (parentSection: GuideBlock, colId: string, subBlock: 
     calloutTitle: subBlock.calloutTitle || 'Совет',
     calloutText: subBlock.calloutText || subBlock.textContent || 'Содержимое совета',
     spoilerTitle: subBlock.spoilerTitle || subBlock.headingText || 'Спойлер',
-    spoilerContent: subBlock.spoilerContent || subBlock.textContent || 'Содержимое спойлера'
+    spoilerContent: subBlock.spoilerContent || subBlock.textContent || 'Содержимое спойлера',
+    palette: newType === 'multiblock' ? (subBlock.palette || [
+      { id: 'reactor_casing', name: 'Корпус реактора', icon: 'Box', color: '#475569' },
+      { id: 'reactor_glass', name: 'Стекло реактора', icon: 'Grid', color: '#38bdf8' }
+    ]) : subBlock.palette,
+    layers: newType === 'multiblock' ? (subBlock.layers || [
+      { layerNumber: 1, grid: Array(3).fill(null).map(() => Array(3).fill('reactor_casing')) },
+      { layerNumber: 2, grid: Array(3).fill(null).map(() => Array(3).fill('reactor_glass')) }
+    ]) : subBlock.layers,
+    grid: newType === 'crafting' ? (subBlock.grid || Array(9).fill(null)) : subBlock.grid,
+    output: newType === 'crafting' ? (subBlock.output || { id: '', count: 1 }) : subBlock.output
   };
   updateSubBlock(parentSection, colId, updatedSub);
 };
@@ -2405,6 +2427,7 @@ const stopOutlineDrag = () => {
                                     { type: 'spoiler', label: 'Спойлер', icon: 'HelpCircle', color: 'text-cyan-400' },
                                     { type: 'before_after', label: 'До / После', icon: 'Maximize2', color: 'text-emerald-400' },
                                     { type: 'image', label: 'Картинка', icon: 'Image', color: 'text-pink-400' },
+                                    { type: 'multiblock', label: '3D Мультиблок', icon: 'Box', color: 'text-cyan-400' },
                                     { type: 'youtube', label: 'YouTube', icon: 'Video', color: 'text-rose-400' },
                                     { type: 'embed', label: 'Embed', icon: 'Code', color: 'text-purple-400' },
                                     { type: 'spreadsheet', label: 'Таблица', icon: 'Table', color: 'text-cyan-400' }
@@ -2450,6 +2473,9 @@ const stopOutlineDrag = () => {
                         </div>
                         <div v-else-if="sub.type === 'before_after'">
                           <BeforeAfterSlider :block="sub" :is-editing="true" @update="(updated) => updateSubBlock(block, col.id, updated)" />
+                        </div>
+                        <div v-else-if="sub.type === 'multiblock'">
+                          <LayerPainter :block="sub" :is-editing="true" :current-username="author" @update="(updated) => updateSubBlock(block, col.id, updated)" />
                         </div>
                         <div v-else-if="sub.type === 'youtube'" class="space-y-1.5">
                           <input type="text" :value="sub.youtubeUrl" @input="updateSubBlock(block, col.id, { ...sub, youtubeUrl: ($event.target as HTMLInputElement).value })" placeholder="URL YouTube..." class="w-full bg-[#121416] border border-[#26292d] text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-rose-500" />
