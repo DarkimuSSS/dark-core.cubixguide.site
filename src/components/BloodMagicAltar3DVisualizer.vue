@@ -179,8 +179,7 @@ const resetRotationAndCamera = () => {
   currentRotationX = 0;
   currentRotationY = 0;
   if (altarGroup) {
-    altarGroup.rotation.x = 0;
-    altarGroup.rotation.y = 0;
+    altarGroup.rotation.set(0, 0, 0);
   }
   const camDist = 6 + props.tier * 2.8;
   if (camera) {
@@ -190,6 +189,25 @@ const resetRotationAndCamera = () => {
 };
 
   resetRotationAndCamera();
+};
+
+// Animation Loop
+const animate = () => {
+  animationFrameId = requestAnimationFrame(animate);
+
+  if (altarGroup) {
+    if (isRotating.value && !isDragging) {
+      altarGroup.rotation.y += 0.005;
+      currentRotationY = altarGroup.rotation.y;
+    } else {
+      altarGroup.rotation.y = currentRotationY;
+      altarGroup.rotation.x = currentRotationX;
+    }
+  }
+
+  if (renderer && scene && camera) {
+    renderer.render(scene, camera);
+  }
 };
 
 // Spawn Ritual Blood LP Explosion Particles
@@ -293,20 +311,6 @@ const initThree = () => {
   scene.add(bloodParticlesGroup);
 
   buildAltar3D();
-
-  // Animation Loop
-  const animate = () => {
-    animationFrameId = requestAnimationFrame(animate);
-
-    if (isRotating.value && altarGroup && !isDragging) {
-      altarGroup.rotation.y += 0.005;
-    } else if (altarGroup) {
-      altarGroup.rotation.y = currentRotationY;
-      altarGroup.rotation.x = currentRotationX;
-    }
-
-    renderer.render(scene, camera);
-  };
   animate();
 };
 
@@ -403,12 +407,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="p-6 sm:p-8 rounded-3xl bg-[#121417] border border-rose-500/30 shadow-2xl space-y-4 relative overflow-hidden group">
+  <div class="p-5 sm:p-6 rounded-3xl bg-[#121417] border border-white/10 shadow-2xl space-y-4 relative overflow-hidden">
     <!-- Header Controls for Interactive 3D View -->
-    <div class="flex items-center justify-between flex-wrap gap-4 pb-3 border-b border-white/10 relative z-10">
+    <div class="flex items-center justify-between flex-wrap gap-4 pb-4 border-b border-white/10 relative z-10">
       <div>
-        <h3 class="text-lg font-black text-white flex items-center gap-2.5">
-          <span class="w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
+        <h3 class="text-base font-black text-white flex items-center gap-2">
+          <IconRenderer name="Box" size="18" class="text-rose-400" />
           <span>Интерактивный 3D Алтарь Blood Magic (Tier {{ tier }})</span>
         </h3>
         <p class="text-xs text-slate-400">Вращайте зажатием мыши, приближайте колесиком и наводите на блоки</p>
