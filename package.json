@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/three": "^0.185.4",
     "autoprefixer": "^10.5.4",
     "better-sqlite3": "^13.0.3",
     "cors": "^2.8.6",
@@ -19,6 +20,7 @@
     "node-telegram-bot-api": "^2.1.0",
     "postcss": "^8.5.26",
     "tailwindcss": "^4.3.3",
+    "three": "^0.186.0",
     "vue": "^3.5.41",
     "zod": "^4.5.4"
   },
