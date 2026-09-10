@@ -38,13 +38,13 @@ const BLOCK_COLORS = {
   crystal: 0xa855f7      // Purple crystal
 };
 
-// Voxel Box Geometry Helper
+// Voxel Box Geometry Helper (Zero Gaps between blocks: 0.99x0.99x0.99)
 const createVoxelBlock = (x: number, y: number, z: number, color: number, name: string, isAltar = false, isGlow = false) => {
-  const geometry = new THREE.BoxGeometry(0.92, 0.92, 0.92);
+  const geometry = new THREE.BoxGeometry(0.99, 0.99, 0.99);
   const material = new THREE.MeshStandardMaterial({
     color: color,
-    roughness: isAltar ? 0.15 : 0.5,
-    metalness: isAltar ? 0.8 : 0.3,
+    roughness: isAltar ? 0.15 : 0.4,
+    metalness: isAltar ? 0.8 : 0.2,
     wireframe: isWireframe.value,
     emissive: isAltar || isGlow ? color : 0x000000,
     emissiveIntensity: isAltar ? 0.8 : (isGlow ? 0.5 : 0)
@@ -335,13 +335,20 @@ const onMouseUp = () => {
   isDragging = false;
 };
 
+const MIN_ZOOM_DIST = 5;
+const MAX_ZOOM_DIST = 45;
+
 const onWheel = (e: WheelEvent) => {
   e.preventDefault();
   if (camera) {
-    const zoomFactor = e.deltaY * 0.02;
-    camera.position.x += zoomFactor * (camera.position.x > 0 ? 1 : -1);
-    camera.position.y += zoomFactor * (camera.position.y > 0 ? 1 : -1);
-    camera.position.z += zoomFactor * (camera.position.z > 0 ? 1 : -1);
+    const currentDist = camera.position.length();
+    const zoomDelta = e.deltaY * 0.025;
+    const newDist = Math.max(MIN_ZOOM_DIST, Math.min(MAX_ZOOM_DIST, currentDist + zoomDelta));
+    const factor = newDist / currentDist;
+
+    camera.position.x *= factor;
+    camera.position.y *= factor;
+    camera.position.z *= factor;
   }
 };
 
