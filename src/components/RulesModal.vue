@@ -468,7 +468,7 @@ const handleAutoParseRules = async () => {
                 class="p-4 sm:p-5 rounded-2xl bg-[#14161a] border border-white/5 hover:border-emerald-500/30 transition-all duration-200 space-y-3 group hover:shadow-[0_4px_20px_rgba(16,185,129,0.05)]"
               >
                 <div class="flex items-start gap-3">
-                  <span class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black flex items-center justify-center shrink-0 shadow-inner mt-0.5">
+                  <span class="px-2.5 h-8 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-black flex items-center justify-center shrink-0 shadow-inner mt-0.5 whitespace-nowrap min-w-[36px]">
                     {{ r.num }}
                   </span>
                   <div class="space-y-1.5 flex-1 min-w-0">
@@ -519,7 +519,7 @@ const handleAutoParseRules = async () => {
                   class="p-4 sm:p-5 rounded-2xl bg-[#14161a] border border-white/5 hover:border-cyan-500/40 transition-all duration-200 space-y-3 group hover:shadow-[0_4px_20px_rgba(6,182,212,0.05)]"
                 >
                   <div class="flex items-start gap-3">
-                    <span class="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono text-xs font-black flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                    <span class="px-2.5 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono text-xs font-black flex items-center justify-center shrink-0 shadow-sm mt-0.5 whitespace-nowrap min-w-[36px]">
                       {{ r.rule_id }}
                     </span>
 
