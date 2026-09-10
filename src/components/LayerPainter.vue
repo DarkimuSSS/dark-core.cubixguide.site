@@ -362,20 +362,24 @@ const removeMaterialFromPalette = (matId: string) => {
                     :src="mat.sideImageUrl || mat.topImageUrl || mat.imageUrl" 
                     class="w-5 h-5 rounded border border-white/20 object-cover shrink-0" 
                   />
-                  <span v-else class="w-4 h-4 rounded-md border border-black/40 shrink-0" :style="{ backgroundColor: mat.color }"></span>
-                  <IconRenderer :name="mat.icon" size="14" :color="selectedMaterialId === mat.id ? '#ffffff' : mat.color" class="shrink-0" />
+                  <template v-else>
+                    <span v-if="mat.color" class="w-4 h-4 rounded-md border border-black/40 shrink-0" :style="{ backgroundColor: mat.color }"></span>
+                    <IconRenderer v-else :name="mat.icon" size="14" :color="selectedMaterialId === mat.id ? '#ffffff' : mat.color" class="shrink-0" />
+                  </template>
+                  
                   <span class="truncate">{{ mat.name.replace(/\s*\(.*?\)$/, '') }}</span>
 
                   <!-- Pack Origin Info Icon Tooltip -->
                   <div 
                     v-if="mat.packTitle || mat.name.includes('(')" 
-                    class="relative group/pack flex items-center justify-center text-cyan-400 hover:text-cyan-300 ml-0.5 shrink-0"
+                    class="relative group/pack flex items-center justify-center text-cyan-400 hover:text-cyan-300 ml-0.5 shrink-0 cursor-help"
+                    :title="`Из пака: ${mat.packTitle || (mat.name.match(/\((.*?)\)/)?.[1] || 'Ресурспак')}`"
                     @click.stop
                   >
                     <IconRenderer name="HelpCircle" size="13" class="opacity-70 hover:opacity-100" />
-                    <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/pack:block z-30 pointer-events-none">
-                      <div class="bg-black/95 border border-cyan-500/40 text-cyan-200 text-[11px] font-medium px-2.5 py-1 rounded-lg shadow-2xl whitespace-nowrap">
-                        Пак: {{ mat.packTitle || (mat.name.match(/\((.*?)\)/)?.[1] || 'Ресурсы') }}
+                    <div class="absolute right-0 bottom-full mb-1.5 hidden group-hover/pack:block z-50 pointer-events-none">
+                      <div class="bg-[#090a0b] border border-cyan-500/50 text-cyan-300 text-[11px] font-extrabold px-2.5 py-1 rounded-lg shadow-2xl whitespace-nowrap">
+                        Пак: {{ mat.packTitle || (mat.name.match(/\((.*?)\)/)?.[1] || 'Ресурспак') }}
                       </div>
                     </div>
                   </div>
