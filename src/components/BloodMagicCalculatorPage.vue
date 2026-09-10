@@ -109,50 +109,35 @@ const calculatedStats = computed(() => calculateBloodAltarStats(selectedTier.val
 
 <template>
   <div class="min-h-screen bg-[#0c0d0e] text-[#e2e8f0] pb-16">
-    <!-- Top Decorative Banner / Gradient Header -->
-    <div class="relative overflow-hidden bg-gradient-to-b from-rose-950/40 via-crimson-950/20 to-[#0c0d0e] border-b border-rose-500/20 pt-8 pb-10 px-4 sm:px-6 lg:px-8">
-      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-48 bg-rose-600/10 blur-[100px] pointer-events-none"></div>
-
-      <div class="max-w-7xl mx-auto space-y-4">
-        <!-- Back Navigation button -->
-        <button
-          @click="emit('back')"
-          class="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white text-xs font-bold transition-all flex items-center gap-2 cursor-pointer w-fit"
-        >
-          <IconRenderer name="ArrowLeft" size="14" />
-          <span>Назад в каталок гайдов</span>
-        </button>
-
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="space-y-2">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-black tracking-wider uppercase">
-              <IconRenderer name="Droplet" size="14" class="text-rose-400" />
-              <span>Blood Magic Calculator</span>
-            </div>
-            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
-              Калькулятор Кровавого Алтаря (Tier 1–6)
-            </h1>
-            <p class="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
-              Интерактивный расчет характеристик алтаря Blood Magic: емкость LP, бонус ножа и кинжала жертвоприношения, мультипликатор скорости и полная смета блоков для сервера.
-            </p>
+    <!-- Compact Top Navigation Header -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+      <div class="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <button
+            @click="emit('back')"
+            class="p-2 rounded-xl bg-white/5 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-white/10 hover:border-rose-500/40 transition-all cursor-pointer"
+            title="Назад в каталог гайдов"
+          >
+            <IconRenderer name="ArrowLeft" size="18" />
+          </button>
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-600 via-crimson-600 to-red-700 flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-950/60 border border-white/20">
+            <IconRenderer name="Droplet" size="20" />
           </div>
-
-          <!-- Quick Action Buttons -->
-          <div class="flex items-center gap-2.5 flex-wrap">
-            <button
-              @click="emit('open-guide', 'guide_blood_magic')"
-              class="px-4 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-200 text-xs font-black rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-rose-950/50"
-            >
-              <IconRenderer name="BookOpen" size="15" />
-              <span>Гайд по Blood Magic</span>
-            </button>
+          <div>
+            <h1 class="text-lg font-black text-white flex items-center gap-2">
+              Калькулятор Алтаря Blood Magic
+              <span class="text-[10px] uppercase font-mono font-black text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded-full border border-rose-500/30">
+                Tier 1–6
+              </span>
+            </h1>
+            <p class="text-xs text-slate-400">Интерактивный расчет характеристик, рун и сметы блоков для сервера</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Main Content Container -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-6">
       
       <!-- 1. TIER SELECTION TABS -->
       <div class="space-y-3">
