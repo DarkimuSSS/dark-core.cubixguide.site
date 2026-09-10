@@ -111,7 +111,7 @@ const resetView = () => {
   rotX.value = -25;
   rotY.value = 45;
   zoom.value = 1;
-  maxVisibleLayer.value = props.layers.length;
+  setMaxVisibleLayer(props.layers.length);
 };
 
 const toggleAutoRotate = () => {
@@ -233,7 +233,7 @@ const handleVoxelFaceClick = (e: MouseEvent, colIdx: number, layerIdx: number, r
 
   if (targetY >= 0 && newLayers[targetY]) {
     newLayers[targetY].grid[targetZ][targetX] = props.selectedMaterialId || props.palette[0]?.id || 'reactor_casing';
-    maxVisibleLayer.value = Math.max(maxVisibleLayer.value, targetY + 1);
+    setMaxVisibleLayer(Math.max(internalMaxVisibleLayer.value, targetY + 1));
     emit('update-layers', newLayers);
   }
 };
@@ -269,8 +269,8 @@ const removeTopLayer = () => {
   const newLayers = JSON.parse(JSON.stringify(props.layers)) as MultiblockLayer[];
   newLayers.pop();
   newLayers.forEach((l, i) => l.layerNumber = i + 1);
-  if (maxVisibleLayer.value > newLayers.length) {
-    maxVisibleLayer.value = newLayers.length;
+  if (internalMaxVisibleLayer.value > newLayers.length) {
+    setMaxVisibleLayer(newLayers.length);
   }
   emit('update-layers', newLayers);
 };
