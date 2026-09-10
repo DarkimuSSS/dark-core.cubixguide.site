@@ -1,7 +1,8 @@
 import { createRequire } from 'module';
 import crypto from 'crypto';
 const require = createRequire(import.meta.url);
-const TelegramBot = require('node-telegram-bot-api');
+const rawTelegramBot = require('node-telegram-bot-api');
+const TelegramBot = rawTelegramBot.default || rawTelegramBot;
 import { registerAuthorByAdmin, getAuthorUserByUsername } from './db';
 
 let bot: any = null;
