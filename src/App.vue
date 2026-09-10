@@ -188,8 +188,10 @@ const fetchCurrentAuthorProfile = async (usernameToFetch?: string) => {
 
 const fetchAuthorProfiles = async () => {
   const authors = Array.from(new Set(guides.value.map(g => g.meta.author).filter(Boolean)));
-  for (const author of authors) {
-    if (authorProfilesMap.value[author.toLowerCase()]) continue;
+  const missingAuthors = authors.filter(a => !authorProfilesMap.value[a.toLowerCase()]);
+  if (missingAuthors.length === 0) return;
+
+  await Promise.all(missingAuthors.map(async (author) => {
     try {
       const res = await fetch(`/api/profiles/${encodeURIComponent(author)}`);
       if (res.ok) {
@@ -200,8 +202,9 @@ const fetchAuthorProfiles = async () => {
         };
       }
     } catch (e) {}
-  }
+  }));
 };
+
 
 // External link redirect warning modal state
 const isExternalLinkModalOpen = ref(false);
