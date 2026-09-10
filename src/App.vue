@@ -18,6 +18,7 @@ const AdminPanel = defineAsyncComponent(() => import('./components/AdminPanel.vu
 const TelemetryPage = defineAsyncComponent(() => import('./components/TelemetryPage.vue'));
 const RulesModal = defineAsyncComponent(() => import('./components/RulesModal.vue'));
 const ThaumcraftAspectPage = defineAsyncComponent(() => import('./components/ThaumcraftAspectPage.vue'));
+const BloodMagicCalculatorPage = defineAsyncComponent(() => import('./components/BloodMagicCalculatorPage.vue'));
 const MinecraftColorGeneratorPage = defineAsyncComponent(() => import('./components/MinecraftColorGeneratorPage.vue'));
 const BecomeAuthorModal = defineAsyncComponent(() => import('./components/BecomeAuthorModal.vue'));
 const BlockModelGalleryModal = defineAsyncComponent(() => import('./components/BlockModelGalleryModal.vue'));
@@ -39,8 +40,8 @@ const guides = ref<Guide[]>([]);
 const activeGuideId = ref<string>('');
 const activeGuide = ref<Guide | null>(null);
 
-// MODE: 'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color' | 'apply' | 'assets' | 'market'
-const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'minecraft_color' | 'apply' | 'assets' | 'market'>('home');
+// MODE: 'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'bloodmagic' | 'minecraft_color' | 'apply' | 'assets' | 'market'
+const mode = ref<'home' | 'reader' | 'editor' | 'favorites' | 'drafts' | 'rules' | 'author_dashboard' | 'admin' | 'telemetry' | 'team' | 'thaumcraft' | 'bloodmagic' | 'minecraft_color' | 'apply' | 'assets' | 'market'>('home');
 const isLoading = ref<boolean>(true);
 
 const handleExportData = () => {
@@ -294,6 +295,8 @@ const updateUrlRoute = () => {
     params.set('tab', 'team');
   } else if (mode.value === 'thaumcraft') {
     params.set('tab', 'thaumcraft');
+  } else if (mode.value === 'bloodmagic') {
+    params.set('tab', 'bloodmagic');
   } else if (mode.value === 'minecraft_color') {
     params.set('tab', 'colors');
   } else if (mode.value === 'rules') {
@@ -330,6 +333,9 @@ const updateUrlRoute = () => {
   } else if (mode.value === 'thaumcraft') {
     dynamicTitle = 'Калькулятор и Таблица Аспектов Thaumcraft 4 — CubixGuide';
     dynamicDesc = 'Интерактивная база и калькулятор объединения аспектов Таумкрафт 4 для серверов CubixWorld.';
+  } else if (mode.value === 'bloodmagic') {
+    dynamicTitle = 'Калькулятор Кровавого Алтаря Blood Magic (Tier 1–6) — CubixGuide';
+    dynamicDesc = 'Интерактивный расчет рун, емкости LP, скорости и сметы блоков Кровавого Алтаря Blood Magic.';
   } else if (mode.value === 'minecraft_color') {
     dynamicTitle = 'Генератор Цветов и Форматирования Майнкрафт (§ & &) — CubixGuide';
     dynamicDesc = 'Удобный генератор форматированного текста, цветов и градиентов для чата и табличек Minecraft.';
@@ -392,6 +398,8 @@ const syncFromUrlPath = () => {
     mode.value = 'team';
   } else if (tab === 'thaumcraft' || tab === 'Таумкрафт' || tab === 'Аспекты') {
     mode.value = 'thaumcraft';
+  } else if (tab === 'bloodmagic' || tab === 'БладМагик' || tab === 'Алтарь') {
+    mode.value = 'bloodmagic';
   } else if (tab === 'colors' || tab === 'minecraft_color' || tab === 'Цвета' || tab === 'Градиент') {
     mode.value = 'minecraft_color';
   } else if (tab === 'wiki' || tab === 'reader' || tab === 'Вики') {
@@ -1305,6 +1313,19 @@ const handleViewAllAuthorGuides = (username: string) => {
                   </button>
 
                   <button
+                    @click="mode = 'bloodmagic'; isHeaderNavMenuOpen = false"
+                    :class="['p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center gap-2.5 cursor-pointer group', mode === 'bloodmagic' ? 'bg-rose-500/15 border-rose-500/50 text-rose-300 shadow-lg shadow-rose-950/30' : 'bg-[#090a0c]/80 border-[#262a30] text-slate-300 hover:border-rose-500/40 hover:bg-[#15181e]']"
+                  >
+                    <div class="p-1.5 rounded-xl bg-rose-500/10 text-rose-400 group-hover:scale-110 transition-transform shrink-0">
+                      <IconRenderer name="Droplet" size="16" />
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold text-rose-300 truncate">Алтарь Blood Magic</div>
+                      <div class="text-[9.5px] text-dark-muted truncate">Калькулятор Tier 1-6</div>
+                    </div>
+                  </button>
+
+                  <button
                     @click="mode = 'minecraft_color'; isHeaderNavMenuOpen = false"
                     :class="['p-2.5 rounded-2xl border text-left transition-all duration-200 flex items-center gap-2.5 cursor-pointer group', mode === 'minecraft_color' ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300 shadow-lg shadow-emerald-950/30' : 'bg-[#090a0c]/80 border-[#262a30] text-slate-300 hover:border-emerald-500/40 hover:bg-[#15181e]']"
                   >
@@ -1845,6 +1866,14 @@ const handleViewAllAuthorGuides = (username: string) => {
           <!-- THAUMCRAFT 4 ASPECT GRAPH & RESEARCH CALCULATOR PAGE -->
           <div v-else-if="mode === 'thaumcraft'">
             <ThaumcraftAspectPage
+              @back="mode = 'home'"
+              @open-guide="(id) => { selectGuide(id); mode = 'reader'; }"
+            />
+          </div>
+
+          <!-- BLOOD MAGIC ALTAR CALCULATOR PAGE -->
+          <div v-else-if="mode === 'bloodmagic'">
+            <BloodMagicCalculatorPage
               @back="mode = 'home'"
               @open-guide="(id) => { selectGuide(id); mode = 'reader'; }"
             />
