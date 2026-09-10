@@ -356,7 +356,7 @@ const materialSummary = computed(() => {
 
     <!-- 3D Canvas Area -->
     <div 
-      class="h-80 sm:h-96 w-full relative flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden bg-radial-gradient"
+      class="h-80 sm:h-96 w-full relative flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden bg-radial-gradient viewport-3d-container"
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
@@ -512,15 +512,25 @@ const materialSummary = computed(() => {
 </template>
 
 <style scoped>
+.viewport-3d-container {
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+  perspective-origin: 50% 50%;
+  -webkit-perspective-origin: 50% 50%;
+}
+
 .scene-3d {
   position: relative;
   width: 0;
   height: 0;
+  -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .floor-grid-3d {
   position: absolute;
+  -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
 }
 
@@ -530,8 +540,10 @@ const materialSummary = computed(() => {
   left: -20px;
   width: 40px;
   height: 40px;
-  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
   transform: rotateX(90deg) translateZ(20px);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   cursor: pointer;
 }
 .floor-cell-3d:hover {
@@ -545,6 +557,7 @@ const materialSummary = computed(() => {
   left: -20px;
   width: 40px;
   height: 40px;
+  -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
 }
 
@@ -554,6 +567,7 @@ const materialSummary = computed(() => {
   height: 40px;
   border: 1px solid rgba(0, 0, 0, 0.4);
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
+  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   background-size: cover;
   background-position: center;
