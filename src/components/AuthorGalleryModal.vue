@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, defineAsyncComponent } from 'vue';
 import IconRenderer from './IconRenderer.vue';
 import BlockModelEditorModal from './BlockModelEditorModal.vue';
-import BlockModelGalleryModal from './BlockModelGalleryModal.vue';
+const BlockModelGalleryModal = defineAsyncComponent(() => import('./BlockModelGalleryModal.vue'));
 import type { AuthorMediaItem, AssetPack, MultiblockPaletteItem } from '../types/guide';
 
 const props = defineProps<{

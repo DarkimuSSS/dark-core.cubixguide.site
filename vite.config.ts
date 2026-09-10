@@ -12,5 +12,24 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rolldownOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('lucide-vue-next')) {
+              return 'lucide-icons';
+            }
+            if (id.includes('three') || id.includes('@three')) {
+              return 'three-vendor';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
   }
 })
+
