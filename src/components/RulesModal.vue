@@ -519,7 +519,7 @@ const handleAutoParseRules = async () => {
                       <span class="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono text-xs font-black flex items-center justify-center shrink-0">
                         {{ r.rule_id }}
                       </span>
-                      <h4 class="text-xs sm:text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">Пункт {{ r.rule_id }}</h4>
+                      <h4 v-if="r.title" class="text-xs sm:text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">{{ r.title }}</h4>
                     </div>
                   </div>
 
