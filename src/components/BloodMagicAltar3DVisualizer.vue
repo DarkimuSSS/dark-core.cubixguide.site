@@ -27,27 +27,28 @@ let previousMousePosition = { x: 0, y: 0 };
 let currentRotationX = 0;
 let currentRotationY = 0;
 
-// Color Palette for Voxel Blocks
+// Color Palette for Voxel Blocks (Authentic Minecraft & Blood Magic Palette)
 const BLOCK_COLORS = {
-  bloodAltar: 0xe11d48, // Crimson / Red glow
-  rune: 0x881337,       // Dark rune red
-  runeGlow: 0xf43f5e,   // Rune accent line
-  stone: 0x334155,       // Slate / Stone pillar
-  glowstone: 0xf59e0b,   // Amber glow
-  beacon: 0x06b6d4,      // Cyan beacon
-  crystal: 0xa855f7      // Purple crystal
+  bloodAltar: 0xd97706,  // Blood Altar base gold/red stone accent
+  rune: 0x475569,        // Rune stone slate / dark grey
+  runeGlow: 0xe11d48,    // Crimson Rune accent
+  stone: 0x1e293b,       // Dark Slate / Wool pillar stripes
+  pillarSecondary: 0xf8fafc, // White wool / quartz pillar stripes
+  glowstone: 0xd97706,   // Glowstone / Sea Lantern
+  beacon: 0x06b6d4,      // Beacon cyan crystal
+  crystal: 0xd946ef      // Crystal Cluster magenta glow
 };
 
-// Voxel Box Geometry Helper (Zero Gaps between blocks: 0.99x0.99x0.99)
+// Voxel Box Geometry Helper (Exact unit voxel grid)
 const createVoxelBlock = (x: number, y: number, z: number, color: number, name: string, isAltar = false, isGlow = false) => {
   const geometry = new THREE.BoxGeometry(0.99, 0.99, 0.99);
   const material = new THREE.MeshStandardMaterial({
     color: color,
-    roughness: isAltar ? 0.15 : 0.4,
-    metalness: isAltar ? 0.8 : 0.2,
+    roughness: isAltar ? 0.3 : 0.5,
+    metalness: isAltar ? 0.4 : 0.1,
     wireframe: isWireframe.value,
     emissive: isAltar || isGlow ? color : 0x000000,
-    emissiveIntensity: isAltar ? 0.8 : (isGlow ? 0.5 : 0)
+    emissiveIntensity: isAltar ? 0.6 : (isGlow ? 0.6 : 0)
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.position.set(x, y, z);
@@ -70,109 +71,118 @@ const buildAltar3D = () => {
     altarGroup.remove(obj);
   }
 
-  // 1. Central Blood Altar Core (x:0, y:0, z:0)
-  const altarCore = createVoxelBlock(0, 0.5, 0, BLOCK_COLORS.bloodAltar, 'Кровавый Алтарь (Blood Altar)', true);
+  // Altar center is at y = 0
+  // 1. Central Blood Altar Core (0, 0, 0)
+  const altarCore = createVoxelBlock(0, 0, 0, BLOCK_COLORS.bloodAltar, 'Кровавый Алтарь (Blood Altar)', true);
   altarGroup.add(altarCore);
 
-  // Add PointLight inside Altar
   const altarLight = new THREE.PointLight(0xf43f5e, 4, 12);
-  altarLight.position.set(0, 1.2, 0);
+  altarLight.position.set(0, 0.8, 0);
   altarGroup.add(altarLight);
 
   const t = props.tier;
 
-  // 2. Tier II: Ring 3x3 of 8 Runes under altar (y = -1)
+  // 2. Tier II: Ring 3x3 of 8 Runes directly under altar (y = -1)
   if (t >= 2) {
     for (let x = -1; x <= 1; x++) {
       for (let z = -1; z <= 1; z++) {
-        if (x === 0 && z === 0) continue; // Altar is above
-        altarGroup.add(createVoxelBlock(x, -0.5, z, BLOCK_COLORS.rune, 'Руна (Rune Block)'));
+        if (x === 0 && z === 0) continue; // Under altar core
+        altarGroup.add(createVoxelBlock(x, -1, z, BLOCK_COLORS.rune, 'Руна Tier 2'));
       }
     }
   }
 
-  // 3. Tier III: 7x7 Ring & Corner Pillars (Height 2) + Glowstone
+  // 3. Tier III: 7x7 outer ring at y = -2, with 4 corner pillars (Height 2 stone/wool + Glowstone on top at y = 0)
   if (t >= 3) {
-    const r3Offsets = [-3, 3];
-    r3Offsets.forEach(px => {
-      r3Offsets.forEach(pz => {
-        altarGroup.add(createVoxelBlock(px, -0.5, pz, BLOCK_COLORS.stone, 'Каменный столб'));
-        altarGroup.add(createVoxelBlock(px, 0.5, pz, BLOCK_COLORS.stone, 'Каменный столб'));
-        altarGroup.add(createVoxelBlock(px, 1.5, pz, BLOCK_COLORS.glowstone, 'Светящийся камень (Glowstone)', false, true));
+    // 5 runes per side connecting corners at (-3, -2, -2..2), (3, -2, -2..2), etc. Total = 20 runes for T3 ring (28 cumulative)
+    for (let i = -2; i <= 2; i++) {
+      altarGroup.add(createVoxelBlock(i, -2, -3, BLOCK_COLORS.rune, 'Руна Tier 3'));
+      altarGroup.add(createVoxelBlock(i, -2, 3, BLOCK_COLORS.rune, 'Руна Tier 3'));
+      altarGroup.add(createVoxelBlock(-3, -2, i, BLOCK_COLORS.rune, 'Руна Tier 3'));
+      altarGroup.add(createVoxelBlock(3, -2, i, BLOCK_COLORS.rune, 'Руна Tier 3'));
+    }
+
+    // 4 Corner Pillars: at (-3, -3), (-3, 3), (3, -3), (3, 3)
+    // Base at y = -2, body at y = -1, cap (Glowstone/Glass) at y = 0
+    const r3Corners = [-3, 3];
+    r3Corners.forEach(px => {
+      r3Corners.forEach(pz => {
+        altarGroup.add(createVoxelBlock(px, -2, pz, BLOCK_COLORS.stone, 'Основание столба Tier 3'));
+        altarGroup.add(createVoxelBlock(px, -1, pz, BLOCK_COLORS.stone, 'Каменный столб Tier 3'));
+        altarGroup.add(createVoxelBlock(px, 0, pz, BLOCK_COLORS.glowstone, 'Светящийся камень / Колпак', false, true));
       });
     });
-
-    // Tier 3: 5 runes per side (offsets -2 to 2) between pillars at -3 and 3
-    for (let i = -2; i <= 2; i++) {
-      altarGroup.add(createVoxelBlock(i, -1.5, -3, BLOCK_COLORS.rune, 'Руна (Tier 3)'));
-      altarGroup.add(createVoxelBlock(i, -1.5, 3, BLOCK_COLORS.rune, 'Руна (Tier 3)'));
-      altarGroup.add(createVoxelBlock(-3, -1.5, i, BLOCK_COLORS.rune, 'Руна (Tier 3)'));
-      altarGroup.add(createVoxelBlock(3, -1.5, i, BLOCK_COLORS.rune, 'Руна (Tier 3)'));
-    }
   }
 
-  // 4. Tier IV: 11x11 Pillars & Blood Bricks (Pillars at -5 and 5)
+  // 4. Tier IV: 11x11 outer ring at y = -3, with 4 corner pillars (Height 4 stone/wool + Blood Stone Brick cap at y = 2)
   if (t >= 4) {
-    const r4Offsets = [-5, 5];
-    r4Offsets.forEach(px => {
-      r4Offsets.forEach(pz => {
-        for (let h = -1.5; h <= 1.5; h++) {
+    // 7 runes per side at (-5, -3, -3..3), etc. Total = 28 runes for T4 ring (60 cumulative)
+    for (let i = -3; i <= 3; i++) {
+      altarGroup.add(createVoxelBlock(i, -3, -5, BLOCK_COLORS.rune, 'Руна Tier 4'));
+      altarGroup.add(createVoxelBlock(i, -3, 5, BLOCK_COLORS.rune, 'Руна Tier 4'));
+      altarGroup.add(createVoxelBlock(-5, -3, i, BLOCK_COLORS.rune, 'Руна Tier 4'));
+      altarGroup.add(createVoxelBlock(5, -3, i, BLOCK_COLORS.rune, 'Руна Tier 4'));
+    }
+
+    // 4 Corner Pillars: at (-5, -5), (-5, 5), (5, -5), (5, 5)
+    // Heights y = -3, -2, -1, 0, 1 (Body height 4), cap (Blood Stone Brick) at y = 2
+    const r4Corners = [-5, 5];
+    r4Corners.forEach(px => {
+      r4Corners.forEach(pz => {
+        for (let h = -3; h <= 1; h++) {
           altarGroup.add(createVoxelBlock(px, h, pz, BLOCK_COLORS.stone, 'Столб Tier 4'));
         }
-        altarGroup.add(createVoxelBlock(px, 2.5, pz, BLOCK_COLORS.stone, 'Столб Tier 4'));
-        altarGroup.add(createVoxelBlock(px, 3.5, pz, BLOCK_COLORS.bloodAltar, 'Большой кровавый кирпич', false, true));
+        altarGroup.add(createVoxelBlock(px, 2, pz, BLOCK_COLORS.bloodAltar, 'Большой кровавый кирпич (Blood Stone Brick)', false, true));
       });
     });
-
-    // Tier 4: 7 runes per side (offsets -3 to 3, leaving 1 block gap to pillars at -5 and 5 = 28 runes total, 60 total multiblock)
-    for (let i = -3; i <= 3; i++) {
-      altarGroup.add(createVoxelBlock(i, -2.5, -5, BLOCK_COLORS.rune, 'Руна (Tier 4)'));
-      altarGroup.add(createVoxelBlock(i, -2.5, 5, BLOCK_COLORS.rune, 'Руна (Tier 4)'));
-      altarGroup.add(createVoxelBlock(-5, -2.5, i, BLOCK_COLORS.rune, 'Руна (Tier 4)'));
-      altarGroup.add(createVoxelBlock(5, -2.5, i, BLOCK_COLORS.rune, 'Руна (Tier 4)'));
-    }
   }
 
-  // 5. Tier V: Beacons on 17x17 Corners (Pillars at -8 and 8)
+  // 5. Tier V: 17x17 outer ring at y = -4, with 4 corner pillars (Height 6 stone/wool + Beacon cap at y = 3)
   if (t >= 5) {
-    const r5Offsets = [-8, 8];
-    r5Offsets.forEach(px => {
-      r5Offsets.forEach(pz => {
-        for (let h = -2.5; h <= 2.5; h++) {
+    // 12 runes per side at (-8, -4, -5..6), etc. Total = 48 runes for T5 ring (108 cumulative)
+    for (let i = -5; i <= 6; i++) {
+      if (i === -6 || i === 7) continue;
+      altarGroup.add(createVoxelBlock(i, -4, -8, BLOCK_COLORS.rune, 'Руна Tier 5'));
+      altarGroup.add(createVoxelBlock(i, -4, 8, BLOCK_COLORS.rune, 'Руна Tier 5'));
+      altarGroup.add(createVoxelBlock(-8, -4, i, BLOCK_COLORS.rune, 'Руна Tier 5'));
+      altarGroup.add(createVoxelBlock(8, -4, i, BLOCK_COLORS.rune, 'Руна Tier 5'));
+    }
+
+    // 4 Corner Pillars: at (-8, -8), (-8, 8), (8, -8), (8, 8)
+    // Heights y = -4 to 2 (Body height 6), cap (Beacon) at y = 3
+    const r5Corners = [-8, 8];
+    r5Corners.forEach(px => {
+      r5Corners.forEach(pz => {
+        for (let h = -4; h <= 2; h++) {
           altarGroup.add(createVoxelBlock(px, h, pz, BLOCK_COLORS.stone, 'Столб Tier 5'));
         }
-        altarGroup.add(createVoxelBlock(px, 3.5, pz, BLOCK_COLORS.beacon, 'Маяк (Beacon)', false, true));
+        altarGroup.add(createVoxelBlock(px, 3, pz, BLOCK_COLORS.beacon, 'Маяк (Beacon)', false, true));
       });
     });
-
-    // Tier 5: 13 runes per side (offsets -6 to 6, leaving 1 block gap to pillars at -8 and 8 = 52 runes total, 108 total multiblock)
-    for (let i = -6; i <= 6; i++) {
-      altarGroup.add(createVoxelBlock(i, -3.5, -8, BLOCK_COLORS.rune, 'Руна (Tier 5)'));
-      altarGroup.add(createVoxelBlock(i, -3.5, 8, BLOCK_COLORS.rune, 'Руна (Tier 5)'));
-      altarGroup.add(createVoxelBlock(-8, -3.5, i, BLOCK_COLORS.rune, 'Руна (Tier 5)'));
-      altarGroup.add(createVoxelBlock(8, -3.5, i, BLOCK_COLORS.rune, 'Руна (Tier 5)'));
-    }
   }
 
-  // 6. Tier VI: Crystal Clusters on 23x23 Corners (Pillars at -11 and 11)
+  // 6. Tier VI: 23x23 outer ring at y = -5, with 4 corner pillars (Height 8 stone/wool + Crystal Cluster cap at y = 4)
   if (t >= 6) {
-    const r6Offsets = [-11, 11];
-    r6Offsets.forEach(px => {
-      r6Offsets.forEach(pz => {
-        for (let h = -3.5; h <= 4.5; h++) {
+    // 14 runes per side at (-11, -5, -6..7), etc. Total = 56 runes for T6 ring (164 cumulative)
+    for (let i = -6; i <= 7; i++) {
+      if (i === -7 || i === 8) continue;
+      altarGroup.add(createVoxelBlock(i, -5, -11, BLOCK_COLORS.rune, 'Руна Tier 6'));
+      altarGroup.add(createVoxelBlock(i, -5, 11, BLOCK_COLORS.rune, 'Руна Tier 6'));
+      altarGroup.add(createVoxelBlock(-11, -5, i, BLOCK_COLORS.rune, 'Руна Tier 6'));
+      altarGroup.add(createVoxelBlock(11, -5, i, BLOCK_COLORS.rune, 'Руна Tier 6'));
+    }
+
+    // 4 Corner Pillars: at (-11, -11), (-11, 11), (11, -11), (11, 11)
+    // Heights y = -5 to 3 (Body height 8), cap (Crystal Cluster) at y = 4
+    const r6Corners = [-11, 11];
+    r6Corners.forEach(px => {
+      r6Corners.forEach(pz => {
+        for (let h = -5; h <= 3; h++) {
           altarGroup.add(createVoxelBlock(px, h, pz, BLOCK_COLORS.stone, 'Столб Tier 6'));
         }
-        altarGroup.add(createVoxelBlock(px, 5.5, pz, BLOCK_COLORS.crystal, 'Кристальный пилон (Crystal Cluster)', false, true));
+        altarGroup.add(createVoxelBlock(px, 4, pz, BLOCK_COLORS.crystal, 'Кристальный пилон (Crystal Cluster)', false, true));
       });
     });
-
-    // Tier 6: 19 runes per side (offsets -9 to 9, leaving 1 block gap to pillars at -11 and 11 = 56 runes total, 164 total multiblock)
-    for (let i = -9; i <= 9; i++) {
-      altarGroup.add(createVoxelBlock(i, -4.5, -11, BLOCK_COLORS.rune, 'Руна (Tier 6)'));
-      altarGroup.add(createVoxelBlock(i, -4.5, 11, BLOCK_COLORS.rune, 'Руна (Tier 6)'));
-      altarGroup.add(createVoxelBlock(-11, -4.5, i, BLOCK_COLORS.rune, 'Руна (Tier 6)'));
-      altarGroup.add(createVoxelBlock(11, -4.5, i, BLOCK_COLORS.rune, 'Руна (Tier 6)'));
-    }
   }
 
 const resetRotationAndCamera = () => {
