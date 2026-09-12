@@ -169,7 +169,7 @@ const buildAltar3D = () => {
     });
   }
 
-  // 6. Tier VI: 9 stone body blocks (y = -5..3) + Crystal Cluster cap at y = 4 (+1 block higher)
+  // 6. Tier VI: 8 stone body blocks (y = -5..2) + Crystal Cluster cap at y = 3
   if (t >= 6) {
     for (let i = -9; i <= 9; i++) {
       altarGroup.add(createVoxelBlock(i, -5, -11, BLOCK_COLORS.rune, 'Руна Tier 6'));
@@ -181,10 +181,10 @@ const buildAltar3D = () => {
     const r6Corners = [-11, 11];
     r6Corners.forEach(px => {
       r6Corners.forEach(pz => {
-        for (let h = -5; h <= 3; h++) {
+        for (let h = -5; h <= 2; h++) {
           altarGroup.add(createVoxelBlock(px, h, pz, BLOCK_COLORS.stone, 'Столб T6'));
         }
-        altarGroup.add(createVoxelBlock(px, 4, pz, BLOCK_COLORS.crystal, 'Кристальный пилон', false, true));
+        altarGroup.add(createVoxelBlock(px, 3, pz, BLOCK_COLORS.crystal, 'Кристальный пилон', false, true));
       });
     });
   }
