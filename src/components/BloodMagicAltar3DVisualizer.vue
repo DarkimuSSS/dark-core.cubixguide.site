@@ -7,7 +7,7 @@ const props = defineProps<{
 }>();
 
 const containerRef = ref<HTMLDivElement | null>(null);
-const isRotating = ref(true);
+const isRotating = ref(false);
 const isWireframe = ref(false);
 const isSacrificing = ref(false);
 const hoveredBlockInfo = ref<string | null>(null);
