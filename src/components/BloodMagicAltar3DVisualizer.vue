@@ -109,11 +109,10 @@ const buildAltar3D = () => {
     }
   }
 
-  // 3. Tier III: 5 runes per side at (-2..2), leaving 1 block gap to corner pillars at (-3, -3), (3, 3) etc.
+  // 3. Tier III: 5 runes per side connecting directly to corner pillars at (-3, -3), (-3, 3), (3, -3), (3, 3)
   if (t >= 3) {
-    // Runes span i = -1 to 1 (5 runes per side: -2, -1, 0, 1, 2)
-    // Pillars are at (-3, -3), (-3, 3), (3, -3), (3, 3)
-    for (let i = -1; i <= 1; i++) {
+    // 5 runes per side spanning -2 to 2 (without gap to T3 Glowstone pillars)
+    for (let i = -2; i <= 2; i++) {
       altarGroup.add(createVoxelBlock(i, -2, -3, BLOCK_COLORS.rune, 'Руна Tier 3'));
       altarGroup.add(createVoxelBlock(i, -2, 3, BLOCK_COLORS.rune, 'Руна Tier 3'));
       altarGroup.add(createVoxelBlock(-3, -2, i, BLOCK_COLORS.rune, 'Руна Tier 3'));
